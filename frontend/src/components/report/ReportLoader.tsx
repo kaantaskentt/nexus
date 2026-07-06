@@ -60,7 +60,7 @@ export function ReportLoader({
           <h1 className="font-display text-2xl text-ink">Compiling the report…</h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             The interview just finished. We&apos;re turning the conversation into a
-            verified workflow, findings, and follow-ups — this takes a few seconds and
+            verified workflow, findings, and follow-ups. This takes a few seconds and
             updates here as each part lands.
           </p>
           <p className="mt-4 inline-flex items-center gap-1.5 text-xs text-ink-faint">

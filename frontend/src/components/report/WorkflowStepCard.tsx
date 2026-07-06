@@ -53,7 +53,7 @@ export function WorkflowStepCard({
       <button
         onClick={onClick}
         className={cn(
-          "flex flex-1 flex-col rounded-card border bg-surface p-4 text-left shadow-card transition-colors hover:border-line-strong",
+          "lift flex flex-1 flex-col rounded-card border bg-surface p-4 text-left hover:border-line-strong",
           dashed ? "border-dashed border-line-strong" : "border-line",
         )}
       >
@@ -72,7 +72,7 @@ export function WorkflowStepCard({
         {step.action && <Field label="Action">{step.action}</Field>}
         {step.output && <Field label="Output">{step.output}</Field>}
 
-        <span className={cn("mt-4 inline-flex items-center gap-1.5 self-start rounded-lg px-3 py-1.5 text-xs font-semibold", s.pill)}>
+        <span className={cn("mt-4 inline-flex items-center gap-1.5 self-start rounded-chip px-3 py-1.5 text-xs font-semibold", s.pill)}>
           <StatusIcon className="h-3.5 w-3.5" strokeWidth={2} />
           {s.label}
         </span>

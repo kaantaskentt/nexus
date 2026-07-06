@@ -13,12 +13,12 @@ import {
   UserPlus,
   Star,
   FileText,
-  CalendarDays,
   MessageSquare,
   X,
 } from "lucide-react";
 import type { Report, Workspace, WorkflowStep } from "@/lib/types";
 import { AppShell, ConfidenceBadge } from "@/components";
+import { scrimFade, drawerSpring } from "@/lib/variants";
 import { WorkflowStepCard } from "./WorkflowStepCard";
 
 export function ReportView({
@@ -54,7 +54,7 @@ export function ReportView({
               <span className="text-line-strong">·</span>
               <span>
                 {report.interviewee_name}
-                {report.interviewee_role ? ` — ${report.interviewee_role}` : ""}
+                {report.interviewee_role ? ` · ${report.interviewee_role}` : ""}
               </span>
             </>
           )}
@@ -68,12 +68,12 @@ export function ReportView({
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_20rem]">
           {/* ── Left: workflow canvas + perception gap ─────────────── */}
           <div className="min-w-0">
-            <section className="rounded-card border border-line bg-surface-raised p-5">
+            <section className="card-hairline rounded-card border border-line bg-surface-raised p-5">
               <h2 className="mb-4 font-display text-xl text-ink">{report.workflow_name}</h2>
               {report.steps.length === 0 ? (
                 <div className="flex items-center gap-3 rounded-card border border-dashed border-line-strong bg-surface p-6 text-sm text-ink-soft">
                   <Loader2 className="h-5 w-5 shrink-0 animate-spin text-accent" strokeWidth={1.75} />
-                  Mapping the workflow from the conversation — this lands a moment after
+                  Mapping the workflow from the conversation. This lands a moment after
                   the findings.
                 </div>
               ) : (
@@ -115,8 +115,8 @@ export function ReportView({
               </div>
             ) : (
               // A single interview legitimately has no gaps (they need a second voice).
-              <div className="mt-5 rounded-card border border-line bg-surface p-4 text-sm text-ink-soft">
-                No perception gaps yet — these surface once a second interview
+              <div className="card-hairline mt-5 rounded-card border border-line bg-surface p-4 text-sm text-ink-soft">
+                No perception gaps yet. These surface once a second interview
                 contradicts the founder&apos;s account.
               </div>
             )}
@@ -200,18 +200,14 @@ export function ReportView({
           </aside>
         </div>
 
-        {/* Bottom action bar */}
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {/* Bottom action bar. SOP export is the report's next step (ships with the
+            workflow editor, #21); the transcript view opens the verbatim record. */}
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Action
             primary
             icon={FileText}
             label="Generate SOP"
             sub="Creates the standard operating procedure from verified steps, with the respondent's own words as evidence."
-          />
-          <Action
-            icon={CalendarDays}
-            label="Schedule next interview"
-            sub="Find the right person to fill the gaps and strengthen this workflow."
           />
           <Action
             icon={MessageSquare}
@@ -240,7 +236,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-card border border-line bg-surface p-5 shadow-card">
+    <section className="card-hairline rounded-card border border-line bg-surface p-5">
       <h2 className="mb-3 flex items-center gap-2 font-display text-lg text-ink">
         <Icon className="h-[18px] w-[18px] text-accent" strokeWidth={1.75} />
         {title}
@@ -265,9 +261,9 @@ function Action({
     <div className="text-center">
       <button
         className={
-          "inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold transition-colors " +
+          "inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-semibold transition-all duration-150 ease-standard " +
           (primary
-            ? "bg-accent text-on-accent hover:opacity-90"
+            ? "bg-accent text-on-accent shadow-elev-1 hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
             : "border border-line-strong text-ink hover:bg-surface-raised")
         }
       >
@@ -295,18 +291,19 @@ function StepDetailDrawer({
       {step && (
         <>
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            variants={scrimFade}
+            initial="hidden"
+            animate="show"
+            exit="hidden"
             onClick={onClose}
-            className="fixed inset-0 z-40 bg-scrim"
+            className="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]"
           />
           <motion.aside
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
-            className="fixed right-0 top-0 z-50 flex h-screen w-full max-w-md flex-col overflow-y-auto border-l border-line bg-canvas p-6 shadow-card"
+            transition={drawerSpring}
+            className="glass fixed right-0 top-0 z-50 flex h-screen w-full max-w-md flex-col overflow-y-auto border-l p-6 shadow-elev-3"
           >
             <div className="mb-2 flex items-start justify-between gap-3">
               <div>
