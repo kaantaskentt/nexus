@@ -100,6 +100,30 @@ async def test_upload_rejects_empty_transcript(db):
     assert r.status_code == 422
 
 
+async def test_recon_status_reports_scraped_counts(db):
+    ws = await _make_company(name="Scan Co", contact=None)
+    async with _client() as c:
+        started = (await c.post(f"/api/workspaces/{ws['id']}/recon", json={"website_url": "https://x.example"})).json()
+    job_id = started["job_id"]
+    # Simulate the worker having produced one SCRAPED record + one scraped person.
+    await db.execute(
+        "insert into claim_records (workspace_id, kind, topic, tag, claim_text) "
+        "values ($1,'statement','company_fact','SCRAPED','Ten boutiques')",
+        ws["id"],
+    )
+    await db.execute(
+        "insert into entities (workspace_id, entity_type, canonical_name, source) "
+        "values ($1,'person','Web Person','scraped')",
+        ws["id"],
+    )
+    await db.execute("update jobs set status = 'done' where id = $1", job_id)
+    async with _client() as c:
+        st = (await c.get(f"/api/workspaces/{ws['id']}/recon/status?job_id={job_id}")).json()
+    assert st["job_status"] == "done"
+    assert st["scraped_records"] == 1
+    assert st["people"] == 1
+
+
 async def test_status_reports_stages_from_jobs(db):
     ws = await _make_company()
     async with _client() as c:

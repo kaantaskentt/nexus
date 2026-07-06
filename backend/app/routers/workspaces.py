@@ -368,3 +368,26 @@ async def trigger_recon(workspace_id: str, body: ReconIn):
          "linkedin": body.linkedin, "fixtures": body.fixtures},
     )
     return {"enqueued": "run_recon", "job_id": job_id}
+
+
+@router.get("/{workspace_id}/recon/status")
+async def recon_status(workspace_id: str, job_id: int):
+    """Best-effort recon progress for the website-scan button (#7). Reports the run_recon
+    job's real state plus how many SCRAPED reference records + scraped people it produced.
+    A scrape that reaches nothing (no key, unreachable site) completes as 'done' with zero
+    records — the UI reads that as "found nothing", never as a hard error."""
+    pool = await get_pool()
+    job = await pool.fetchrow("select status from jobs where id = $1", job_id)
+    scraped = await pool.fetchval(
+        "select count(*) from claim_records where workspace_id = $1 and tag = 'SCRAPED'",
+        workspace_id,
+    ) or 0
+    people = await pool.fetchval(
+        "select count(*) from entities where workspace_id = $1 and source = 'scraped'",
+        workspace_id,
+    ) or 0
+    return {
+        "job_status": job["status"] if job else "unknown",
+        "scraped_records": scraped,
+        "people": people,
+    }

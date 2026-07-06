@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { upload_discovery, discovery_status, type DiscoveryStatus } from "@/lib/live";
 import { rise, staggerParent } from "@/lib/variants";
+import { WebsiteScan } from "./WebsiteScan";
 import brand from "@/lib/brand";
 
 // Guided empty state + the demo moment (A17 / #6). A fresh company lands here: paste or
@@ -38,9 +39,11 @@ type Phase = "idle" | "compiling" | "done" | "error";
 export function DiscoveryUpload({
   workspaceId,
   defaultSpeaker,
+  website,
 }: {
   workspaceId: string;
   defaultSpeaker?: string;
+  website?: string;
 }) {
   const router = useRouter();
   const [transcript, setTranscript] = useState("");
@@ -199,6 +202,8 @@ export function DiscoveryUpload({
             {error}
           </p>
         )}
+
+        {website && <WebsiteScan workspaceId={workspaceId} website={website} />}
       </motion.div>
     </div>
   );

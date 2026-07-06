@@ -95,6 +95,29 @@ export async function discovery_status(
   );
 }
 
+// ── Optional Stage-1 website scan (A17 / #7, best-effort) ────────────────────
+export async function trigger_recon(
+  workspace_id: string,
+  website_url: string,
+): Promise<{ job_id: number }> {
+  return api(`/api/workspaces/${workspace_id}/recon`, {
+    method: "POST",
+    body: JSON.stringify({ website_url }),
+  });
+}
+
+export interface ReconStatus {
+  job_status: "queued" | "running" | "done" | "failed" | "unknown";
+  scraped_records: number;
+  people: number;
+}
+export async function recon_status(
+  workspace_id: string,
+  job_id: number,
+): Promise<ReconStatus> {
+  return api<ReconStatus>(`/api/workspaces/${workspace_id}/recon/status?job_id=${job_id}`);
+}
+
 // ── Claims (GET /api/claims/{workspace_id}) ──────────────────────────────────
 interface RawClaim extends Omit<ClaimRecord, "hedge_signals" | "is_paraphrased"> {
   hedge_signals: unknown;

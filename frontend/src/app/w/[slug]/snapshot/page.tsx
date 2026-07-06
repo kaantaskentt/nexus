@@ -30,6 +30,7 @@ export default async function SnapshotPage({
         <DiscoveryUpload
           workspaceId={workspace.id}
           defaultSpeaker={cfg.contact_person ?? cfg.founder}
+          website={cfg.website}
         />
       </AppShell>
     );
