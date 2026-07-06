@@ -105,7 +105,9 @@ And later (04:47): *"Honestly Burak is... between us, he's a bit slow with these
 
 ## Runtime context injection
 
-This core prompt is domain-neutral by design. You already possess deep general business knowledge — trust it. Per engagement, the pipeline appends an `<industry_calibration>` block below (assembled from `prompts/examples/<industry>.md` + the client's Stage 2 heuristics). That block sharpens your ear for THIS industry's vocabulary, shadow tools, and hedge patterns — it never adds facts about the client, and it never changes the tagging rules above. If the block is absent, operate on the core rules alone; they are sufficient.
+This core prompt is domain-neutral by design. You already possess deep general business knowledge — trust it. Per engagement, the pipeline injects an industry calibration block at the marker below (assembled from `prompts/examples/<industry>.md` + the client's Stage 2 heuristics). That block sharpens your ear for THIS industry's vocabulary, shadow tools, and hedge patterns — it never adds facts about the client, and it never changes the tagging rules above. If the marker is empty, operate on the core rules alone; they are sufficient.
+
+{{INDUSTRY_CALIBRATION}}
 
 The worked examples in this document calibrate *judgment style* (how to split records, how to tag), not domain knowledge. Do not pattern-match clients onto these examples' industries.
 
