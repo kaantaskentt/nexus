@@ -145,8 +145,10 @@ gaps DO form — 2 in `conflict_points`** — but adjudication of both changes t
 
 **Proposed eligibility rule (policy call, your F21/F41 lane):** exclude a claim from cross-person comparison only when its
 superseder has the SAME speaker (authorial self-correction); keep it when supersession is cross-speaker tag-precedence.
-A naive "exclude all superseded claims" would kill the real yıldırım gap. No prompt or comparator was patched — evidence
-and rule staged for your ratification; eval case follows the ruling.
+A naive "exclude all superseded claims" would kill the real yıldırım gap. **PRE-STAGED (task #29, not merged):** the
+comparator guard + prompt rule + a two-sided eval (boutique self-retraction produces no gap; yıldırım cross-speaker gap
+survives) are ready as `evals/adjudication/staged/29-perception-gap-same-speaker-retraction.patch` (verified 4/4). Nothing
+is on main or prod until you ratify — one `git apply` lands it the moment you say go.
 
 **UI note (acted on, not waiting):** report `perception_gaps[]` renders empty while the real findings live in
 `conflict_points` — the Insights build was pointed at the populated field.

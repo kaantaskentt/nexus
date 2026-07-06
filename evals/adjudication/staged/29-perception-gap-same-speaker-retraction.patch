@@ -1,0 +1,137 @@
+diff --git a/backend/app/pipeline/conflicts.py b/backend/app/pipeline/conflicts.py
+index 816d3d0..c296054 100644
+--- a/backend/app/pipeline/conflicts.py
++++ b/backend/app/pipeline/conflicts.py
+@@ -38,17 +38,36 @@ def precedence_lean(a: dict, b: dict) -> dict | None:
+     return {"favored_record": winner["id"], "reason": f"{winner['tag']} outranks the other (provisional F21)"}
+ 
+ 
++def _mark_self_retracted(recs: list[dict]) -> list[dict]:
++    """Flag every claim that its OWN author later retracted (a same-speaker correction
++    supersedes it). Such a claim is no longer that speaker's belief, so it must not seed a
++    perception gap (packet §6 / #29). A CROSS-speaker supersede is left comparable — that
++    divergence IS the gap material (tag precedence). Mutates and returns recs."""
++    by_id = {r["id"]: r for r in recs}
++    retracted: set[str] = set()
++    for r in recs:
++        sup = r.get("supersedes_id")
++        if sup is None:
++            continue
++        old = by_id.get(str(sup))
++        if old is not None and old.get("speaker_id") is not None and old["speaker_id"] == r.get("speaker_id"):
++            retracted.add(str(sup))
++    for r in recs:
++        r["self_retracted"] = r["id"] in retracted
++    return recs
++
++
+ async def _records(workspace_id: str) -> list[dict]:
+     pool = await get_pool()
+     rows = await pool.fetch(
+         """select c.id, c.kind, c.topic, c.tag, c.claim_text, c.session_id, c.speaker_id,
+-                  e.role as speaker_role, e.canonical_name as speaker_name
++                  c.supersedes_id, e.role as speaker_role, e.canonical_name as speaker_name
+            from client_visible_claims c
+            left join entities e on e.id = c.speaker_id
+            where c.workspace_id = $1""",
+         workspace_id,
+     )
+-    return [dict(r) | {"id": str(r["id"])} for r in rows]
++    return _mark_self_retracted([dict(r) | {"id": str(r["id"])} for r in rows])
+ 
+ 
+ _LEADERSHIP = re.compile(
+@@ -69,7 +88,13 @@ def _valid_perception_gap(a: dict, b: dict) -> bool:
+          worker-vs-worker COLLISION, not a perception gap, and a single-operator
+          interview (no leadership record) yields zero gaps.
+     Fabricating a 'leadership believes…' framing from an operator's own words is the
+-    exact confident fiction this guard prevents."""
++    exact confident fiction this guard prevents.
++
++    #29 (packet §6): a claim its OWN author retracted (a same-speaker correction supersedes
++    it) is no longer that speaker's belief, so it can seed no gap on either side. A claim
++    superseded CROSS-speaker is kept — that divergence is the gap material."""
++    if a.get("self_retracted") or b.get("self_retracted"):
++        return False
+     sa, sb = a.get("speaker_id"), b.get("speaker_id")
+     if sa is not None and sb is not None and sa == sb:
+         return False
+diff --git a/backend/tests/test_perception_gap_retraction.py b/backend/tests/test_perception_gap_retraction.py
+new file mode 100644
+index 0000000..1fa958b
+--- /dev/null
++++ b/backend/tests/test_perception_gap_retraction.py
+@@ -0,0 +1,64 @@
++"""STAGED (task #29 / packet §6) — same-speaker-retraction guard for the perception-gap
++comparator. Proves BOTH sides deterministically (no DB, no model): a claim its own author
++retracted seeds NO gap; a claim superseded by a DIFFERENT speaker still does. A12: fictional.
++
++This test ships together with the conflicts.py guard in the staged patch; it is NOT on main
++until Emre ratifies (his F21/F41 lane)."""
++
++from app.pipeline.conflicts import _mark_self_retracted, _valid_perception_gap
++
++CEO = "e-ceo"
++OPERATOR = "e-op"
++
++
++def _boutique_records() -> list[dict]:
++    # Founder said "12 boutiques", then the SAME founder corrected to "9, closed Ankara"
++    # (kind=correction supersedes the 12). An operator gives a floor account. The retracted
++    # 12 must NOT seed a gap against the operator.
++    return [
++        {"id": "a1", "speaker_id": CEO, "speaker_role": "Founder", "supersedes_id": None,
++         "kind": "statement", "claim_text": "The brand operates 12 boutiques"},
++        {"id": "a2", "speaker_id": CEO, "speaker_role": "Founder", "supersedes_id": "a1",
++         "kind": "correction", "claim_text": "The brand operates 9 boutiques, Ankara closed"},
++        {"id": "a3", "speaker_id": OPERATOR, "speaker_role": "Boutique Manager", "supersedes_id": None,
++         "kind": "statement", "claim_text": "I cover the boutiques myself and there are nine"},
++    ]
++
++
++def _yildirim_records() -> list[dict]:
++    # Founder believes the yıldırım (rush) orders always ship same-day; a DIFFERENT speaker
++    # (bench operator) supersedes that with the lived reality. Cross-speaker supersede must
++    # stay comparable — that IS the gap.
++    return [
++        {"id": "b1", "speaker_id": CEO, "speaker_role": "Founder", "supersedes_id": None,
++         "kind": "statement", "claim_text": "Yıldırım orders always ship the same day"},
++        {"id": "b2", "speaker_id": OPERATOR, "speaker_role": "Bench Craftsperson", "supersedes_id": "b1",
++         "kind": "statement", "claim_text": "Yıldırım orders often slip a day or two at the bench"},
++    ]
++
++
++def test_same_speaker_retraction_marks_only_the_retracted_claim():
++    recs = {r["id"]: r for r in _mark_self_retracted(_boutique_records())}
++    assert recs["a1"]["self_retracted"] is True     # the 12, retracted by its own author
++    assert recs["a2"]["self_retracted"] is False    # the current 9 stands
++    assert recs["a3"]["self_retracted"] is False
++
++
++def test_retracted_claim_seeds_no_gap():
++    recs = {r["id"]: r for r in _mark_self_retracted(_boutique_records())}
++    # The retracted founder claim vs the operator: no gap (its author already corrected it).
++    assert _valid_perception_gap(recs["a1"], recs["a3"]) is False
++
++
++def test_cross_speaker_supersede_still_seeds_a_gap():
++    recs = {r["id"]: r for r in _mark_self_retracted(_yildirim_records())}
++    assert recs["b1"]["self_retracted"] is False    # superseded, but by a DIFFERENT speaker
++    # Founder belief vs the bench operator's lived account: the gap survives.
++    assert _valid_perception_gap(recs["b1"], recs["b2"]) is True
++
++
++def test_current_corrected_claim_can_still_gap_if_floor_differs():
++    # Sanity: the guard only kills the RETRACTED claim, not the corrected one. If the
++    # founder's current "9" genuinely diverged from a floor account, that could still gap.
++    recs = {r["id"]: r for r in _mark_self_retracted(_boutique_records())}
++    assert recs["a2"]["self_retracted"] is False
+diff --git a/prompts/agents/perception-gap.md b/prompts/agents/perception-gap.md
+index 9d71150..a54c377 100644
+--- a/prompts/agents/perception-gap.md
++++ b/prompts/agents/perception-gap.md
+@@ -49,3 +49,4 @@ Return **ONLY a JSON array** of gap objects shaped exactly like the one below, o
+ 4. **Never use quarantined sentiment** as a baseline or a lived record.
+ 5. **Precedence is provisional** until Emre's F21 policy; label the lean, don't hard-resolve.
+ 6. Coarse magnitudes only — never invent decimal precision the records don't carry.
++7. **A self-retracted claim is dead for gaps.** If a claim was superseded by a correction from the SAME speaker (its own author changed the number or fact), that old claim is no longer their belief. Never use it as a baseline or a lived record. A claim superseded by a DIFFERENT speaker stays in play: that cross-speaker divergence is exactly the gap. (The backend enforces this too; prompt and guard must agree.)
