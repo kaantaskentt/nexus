@@ -5,7 +5,7 @@
 
 | Persona | Style | Hidden surfaced | Traps taken | Stage 2 heuristics |
 |---|---|---|---|---|
-| jewelry-ops-manager | proud maker | — | — | (run pending) |
+| jewelry-ops-manager | proud maker | 3/3 | 0/3 | h-jw-1=confirmed, h-jw-2=confirmed, h-jw-3=confirmed, h-jw-4=busted |
 | hotel-frontdesk-lead | rambler/tangent | 3/3 | 0/3 | h-ho-1=confirmed, h-ho-2=confirmed, h-ho-3=confirmed |
 | agency-account-manager | polished/hedger | 3/3 | 0/4 | h-ag-1=confirmed, h-ag-2=confirmed, h-ag-3=confirmed |
 | bookkeeper | terse/hedger | 2/3 | 0/3 | h-bk-1=confirmed, h-bk-2=confirmed, h-bk-3=untouched, h-bk-4=busted |
