@@ -1,0 +1,120 @@
+# Sources: docs/MERGE_PLAN.md Phase 1 eval (40→10 retraction supersedes; quote-supports-claim) +
+#   A9 canonical regressions ("I'm ready to begin" = filler; credentials request = fail; new-content-domain = fail) +
+#   stage4-compiler.md Steps 1-5 + A12 (fictional names). Target: prompts/agents/stage4-compiler.md.
+# Each case: a transcript snippet in → assertions about the records out.
+
+- id: reg-retraction-supersedes
+  category: correction
+  intent: A correction supersedes the earlier record — the canonical 40→10 retraction.
+  input:
+    turn: |
+      Derya (11:20): "Returns take us about forty minutes each, start to finish."
+      Derya (11:52): "Actually — no. Since we moved to the new label printer it's more like ten minutes now. Ten."
+  pass_if:
+    - Emits a CORRECTION record for the 10-minute claim with supersedes_id pointing at the 40-minute record
+    - The superseded 40-minute record still exists (not deleted)
+    - The 10-minute correction is treated as high-reliability (corrections are among the most reliable data)
+  fail_if:
+    - Averages the two into ~25 minutes
+    - Deletes the 40-minute record instead of superseding
+    - Emits both as independent statements with no supersedes link
+
+- id: reg-filler-discarded
+  category: filler
+  intent: Greetings / meta-talk are filler — never a record. Hard fail if extracted.
+  input:
+    turn: |
+      Kerem (00:04): "Can you hear me okay? Alright. I'm ready to begin."
+  pass_if:
+    - Emits ZERO records for this snippet
+  fail_if:
+    - Emits any record (statement/directive/admission) from "I'm ready to begin" or "can you hear me"
+
+- id: reg-quote-supports-claim
+  category: anti-confabulation
+  intent: The evidence quote must actually carry the claim; no record without supporting words.
+  input:
+    turn: |
+      Kerem (03:10): "I handle the daily repricing on my own spreadsheet."
+  pass_if:
+    - Any record's evidence.quote is verbatim from the snippet and genuinely supports its claim text
+    - Does NOT emit a record for something not said (e.g. "repricing is error-prone" — never stated)
+  fail_if:
+    - Emits a record whose claim is not supported by a verbatim quote from the input
+    - Invents detail (a time, a tool, a judgment) not present in the words
+
+- id: reg-hedged-number-is-guess
+  category: tag
+  intent: Any number is CLAIMED at most; hedged → GUESS (full-utterance judgment).
+  input:
+    turn: |
+      Kerem (04:02): "It takes, I don't know, maybe two hours? Every morning I think."
+  pass_if:
+    - The time record is tagged GUESS (hedges "I don't know", "maybe", "I think", uptalk)
+    - Emits an INTERVIEW-OBJECTIVE trigger to verify the actual repricing time
+  fail_if:
+    - Tags the time record CLAIMED or CONFIRMED
+    - Treats the specific "two hours" as reliable despite the hedges
+
+- id: reg-firsthand-number-is-claimed-not-confirmed
+  category: tag
+  intent: Firsthand + a number, unhedged, is still CLAIMED (a number caps at CLAIMED); habitual is not episodic.
+  input:
+    turn: |
+      Kerem (04:30): "Every morning I reprice about sixty items. That's just the routine."
+  pass_if:
+    - The record is tagged CLAIMED (number + habitual framing "every morning / the routine")
+  fail_if:
+    - Tags it CONFIRMED (there is no specific episode; it is a generalization with a number)
+
+- id: reg-episodic-is-confirmed
+  category: tag
+  intent: Firsthand + specific episode + concrete detail + no hedge = CONFIRMED.
+  input:
+    turn: |
+      Derya (09:15): "We stopped with the old wax caster in March. March — I remember because it was right before the fair."
+  pass_if:
+    - The record is tagged CONFIRMED (episodic, self-corrected for precision, named moment)
+  fail_if:
+    - Tags it GUESS or CLAIMED despite the clear episodic, unhedged recall
+
+- id: reg-scraped-never-overrides-call
+  category: trust-ladder
+  intent: Scraped data never overrides spoken; a correction kills the scrape.
+  input:
+    context: "SCRAPED record exists: 'Auria Jewellery operates 12 boutiques.'"
+    turn: |
+      Derya (06:40): "It's nine boutiques now — we closed the two in Izmir and one in Bursa last year."
+  pass_if:
+    - Emits a CORRECTION (company-fact) superseding the scraped 12-boutiques record
+    - The spoken '9 boutiques' wins over the scrape
+  fail_if:
+    - Keeps 12 as authoritative
+    - Refuses to supersede a SCRAPED record with a call correction
+
+- id: reg-sentiment-quarantine-splits
+  category: quarantine
+  intent: One sentence with fact + judgment → two records; the judgment is quarantined.
+  input:
+    turn: |
+      Kerem (07:22): "Metin owns the returns desk, but honestly he's pretty disorganized about it."
+  pass_if:
+    - Emits a normal record for the fact ("Metin owns the returns desk") with no sentiment flag
+    - Emits a SEPARATE record for the judgment ("disorganized") with flags.sentiment_quarantine = true
+  fail_if:
+    - Emits a single record carrying both fact and judgment
+    - Fails to quarantine the competence judgment
+    - Lets the judgment feed pain scoring or client-visible surfaces
+
+- id: reg-directive-verbatim-never-list
+  category: kind
+  intent: A directive to the Nexus team is stored verbatim, untagged, and feeds the NEVER list.
+  input:
+    turn: |
+      Derya (12:05): "Don't bring up the acquisition with anyone on the floor — we haven't announced it."
+  pass_if:
+    - Emits a DIRECTIVE record stored verbatim with no trust tag
+    - Flags it to feed the NEVER list / sequencing (not client-visible as a claim)
+  fail_if:
+    - Tags the directive with a trust tag as if it were a statement
+    - Turns it into an interview objective that could reach a respondent

@@ -1,0 +1,51 @@
+# Sources: stage4-compiler.md "Calibration pair" (same true workflow, two phrasings — tag the wording not the content) +
+#   A9 (tagging pairs, Kaan's Apollo two-phrasings example, fictionalized) + A12 (fictional names/industries).
+# Target: prompts/agents/stage4-compiler.md. Purpose: prove tags track WORDING, not content.
+
+# Same underlying workflow, two phrasings — the tag must differ on delivery, not on the facts.
+- id: tagpair-hedged-vs-crisp
+  category: tag-calibration
+  intent: Identical workflow content; hedged delivery = GUESS, crisp habitual delivery = CLAIMED.
+  pair:
+    - id: a-hedged
+      turn: |
+        (Agency, fictional) "Most of the time I go into the CRM, I'll pull... it depends actually...
+        and then based on whatever's in there I'll sort of draft the update, I guess."
+      expect_tag: guess
+      why: "hedges ('most of the time', 'it depends', 'sort of', 'I guess') + inconsistent frame → GUESS"
+    - id: b-crisp
+      turn: |
+        (Agency, fictional) "Every morning I open the CRM, pull the two accounts flagged overnight,
+        and draft one update referencing the newest note in the first line."
+      expect_tag: claimed
+      why: "crisp, habitual, unhedged — but still a generalization and unverified → CLAIMED, not CONFIRMED"
+  pass_if:
+    - Case a-hedged is tagged GUESS
+    - Case b-crisp is tagged CLAIMED
+    - Neither is tagged CONFIRMED (no specific episode in either)
+  fail_if:
+    - Both get the same tag
+    - b-crisp is tagged CONFIRMED because it sounds confident
+
+# Someone else's work vs own episodic memory — same topic (a repricing task), different reliability.
+- id: tagpair-otherswork-vs-episodic
+  category: tag-calibration
+  intent: Describing another's work caps at CLAIMED; own specific episode can be CONFIRMED.
+  pair:
+    - id: a-others-work
+      turn: |
+        (Jewelry, fictional) "Metin does the repricing every morning, takes him a couple hours I think."
+      expect_tag: guess
+      why: "someone else's work (CLAIMED ceiling) AND hedged number ('a couple hours I think') → GUESS"
+    - id: b-own-episode
+      turn: |
+        (Jewelry, fictional) "Yesterday I repriced the whole rush batch myself — forty-two pieces,
+        finished right as the courier buzzed at eleven."
+      expect_tag: confirmed
+      why: "firsthand, specific episode, concrete detail, unhedged, named moment → CONFIRMED"
+  pass_if:
+    - a-others-work is GUESS (hedge overrides) and never above CLAIMED
+    - b-own-episode is CONFIRMED
+  fail_if:
+    - a-others-work is tagged CONFIRMED or CLAIMED-unhedged
+    - b-own-episode is downgraded despite clear episodic recall

@@ -1,0 +1,212 @@
+# Sources: golden-jewelry-transcript.md + stage4-compiler.md (record schema, Steps 1-5) + A12 (fictional).
+# Target: prompts/agents/stage4-compiler.md. The compiler's output is diffed against this fixture.
+# NOTE: a real 30-min call yields 60+ records; this condensed golden covers the LOAD-BEARING records the
+# compiler must get right. Judge on the assertions block + presence/absence + tag correctness, not exact count.
+
+meta:
+  company: "Auria Jewellery (fictional)"
+  speaker_under_extraction: "Derya (founder)"
+  scraped_context_present:
+    - id: scraped-boutiques
+      claim: "Auria Jewellery operates 12 boutiques"
+      tag: scraped
+      note: "must be superseded by the call correction to 9"
+
+# ---- records the compiler MUST NOT emit ----
+must_not_extract:
+  - reason: "filler — greeting/meta-talk (Step 1 FILLER, hard fail in evals)"
+    quotes: ["Can you hear me alright?", "Okay.", "I'm ready to begin."]
+
+# ---- expected records (load-bearing subset) ----
+expected_records:
+
+  - ref: company-type
+    kind: statement
+    topic: company-fact
+    tag: claimed
+    claim: "Auria is a fine jewellery brand making handmade gold pieces with coloured stones"
+    evidence_quote: "We're a fine jewellery brand, handmade pieces, mostly gold with coloured stones"
+    timestamp: "00:35"
+
+  - ref: boutique-correction
+    kind: correction
+    topic: company-fact
+    tag: confirmed
+    claim: "Auria operates nine boutiques (closed two in Izmir and one in Bursa last year)"
+    evidence_quote: "We've got nine boutiques now ... We closed the two in Izmir and one in Bursa last year. So nine."
+    timestamp: "00:35"
+    supersedes: scraped-boutiques
+    assert: "supersedes the SCRAPED 12-boutiques record; the scraped record is not deleted"
+
+  - ref: craftspeople-count
+    kind: statement
+    topic: company-fact
+    tag: guess
+    claim: "The atelier has roughly twelve craftspeople"
+    evidence_quote: "Twelve craftspeople, I'd say — roughly twelve, I'd have to check"
+    timestamp: "01:08"
+    assert: "hedges ('I'd say', 'roughly', 'I'd have to check') → GUESS despite a specific number"
+
+  - ref: selin-role
+    kind: statement
+    topic: person
+    tag: claimed
+    claim: "Selin is the master jeweller, leading the atelier since the beginning"
+    evidence_quote: "Led by Selin, she's been our master jeweller since the beginning"
+    timestamp: "01:08"
+    flags: { sentiment_quarantine: false, approach_note: false }
+    triggers: ["NEW-PERSON: Selin"]
+
+  - ref: order-flow
+    kind: statement
+    topic: process-step
+    tag: claimed
+    claim: "Standard pieces ship from stock; custom orders go to the atelier queue"
+    evidence_quote: "If it's a standard piece we usually have stock. If it's custom, it goes to the atelier queue."
+    timestamp: "01:36"
+    assert: "'usually' → habitual generalization, CLAIMED not CONFIRMED"
+
+  - ref: vocab-yildirim
+    kind: statement
+    topic: vocabulary
+    tag: claimed
+    claim: "Rush orders are called 'yıldırım sipariş' and jump the queue"
+    evidence_quote: "we have what we call \"yıldırım sipariş\" — the rush orders"
+    timestamp: "01:36"
+    assert: "vocabulary captured VERBATIM, untranslated"
+
+  - ref: kerem-repricing-owner
+    kind: statement
+    topic: person
+    tag: claimed
+    claim: "Kerem owns the daily morning repricing and flags the rush orders"
+    evidence_quote: "Kerem handles that. Every morning he goes through the overnight orders and reprices anything where the gold price moved, then flags the rush ones."
+    timestamp: "02:12"
+    triggers: ["NEW-PERSON: Kerem"]
+    assert: "someone else's work + habitual → CLAIMED ceiling"
+
+  - ref: kerem-spreadsheet
+    kind: statement
+    topic: tool
+    tag: claimed
+    claim: "Repricing runs on Kerem's personal spreadsheet, maintained for years"
+    evidence_quote: "He's got his own spreadsheet for it, had it for years."
+    timestamp: "02:12"
+    assert: "shadow tool — counts double as a tool signal"
+
+  - ref: repricing-time
+    kind: statement
+    topic: time-or-cost
+    tag: guess
+    claim: "Repricing takes roughly two hours each morning"
+    evidence_quote: "It takes him, I don't know, maybe two hours? Every morning I think."
+    timestamp: "02:12"
+    triggers: ["INTERVIEW-OBJECTIVE: measure actual repricing time (owner: Kerem)"]
+    assert: "hedges + uptalk + describing another's work → GUESS; reinforced at 02:52 ('that's a guess honestly')"
+
+  - ref: returns-time-superseded
+    kind: statement
+    topic: time-or-cost
+    tag: claimed
+    claim: "Returns take about forty minutes each"
+    evidence_quote: "Returns take about forty minutes each, start to finish."
+    timestamp: "03:12"
+    assert: "number + habitual → CLAIMED; THIS record is superseded by returns-time-correction"
+
+  - ref: returns-time-correction
+    kind: correction
+    topic: time-or-cost
+    tag: confirmed
+    claim: "Returns now take about ten minutes each since the new label printer"
+    evidence_quote: "Actually — no. Since we moved to the new label printer it's more like ten minutes now. Ten."
+    timestamp: "03:12"
+    supersedes: returns-time-superseded
+    assert: "the canonical retraction — correction supersedes the earlier 40-min record; both survive; NOT averaged to 25"
+
+  - ref: pinar-role
+    kind: statement
+    topic: person
+    tag: claimed
+    claim: "Pınar runs the returns desk and set up the new label-printer process"
+    evidence_quote: "She runs the returns desk. ... Pınar set that up."
+    timestamp: "03:12"
+    flags: { sentiment_quarantine: false, approach_note: false }
+    triggers: ["NEW-PERSON: Pınar"]
+
+  - ref: pinar-tenure
+    kind: statement
+    topic: person
+    tag: guess
+    claim: "Pınar joined roughly eight months ago"
+    evidence_quote: "joined maybe eight months ago"
+    timestamp: "03:12"
+    assert: "'maybe' → GUESS"
+
+  - ref: metin-fact
+    kind: statement
+    topic: person
+    tag: claimed
+    claim: "Metin previously owned the returns desk and now works on the packing side"
+    evidence_quote: "Metin, who used to own returns ... Metin's on the packing side now."
+    timestamp: "03:44"
+    flags: { sentiment_quarantine: false, approach_note: false }
+    triggers: ["NEW-PERSON: Metin"]
+    assert: "the FACT half of the sentence — no sentiment flag"
+
+  - ref: metin-judgment-quarantined
+    kind: statement
+    topic: person
+    tag: claimed
+    claim: "Derya considers Metin disorganized about returns (her characterization)"
+    evidence_quote: "he's a good man but he was pretty disorganized about it, honestly"
+    timestamp: "03:44"
+    flags: { sentiment_quarantine: true, approach_note: false }
+    assert: "the JUDGMENT half — split into its own record, quarantined; NEVER client-visible, never feeds pain scoring"
+
+  - ref: success-criteria
+    kind: statement
+    topic: success-criteria
+    tag: claimed
+    claim: "Success = one screen showing where every custom order is and who is holding it up"
+    evidence_quote: "If I could see, on one screen, exactly where every custom order is and who's holding it up"
+    timestamp: "04:30"
+    assert: "success-criteria captured verbatim — becomes the demo script"
+
+  - ref: shadow-tool-whatsapp
+    kind: statement
+    topic: tool
+    tag: claimed
+    claim: "Custom-order chasing happens in a WhatsApp group called 'Müşteri Takip'"
+    evidence_quote: "We even have a group we call \"Müşteri Takip\" for it."
+    timestamp: "04:30"
+    assert: "shadow tool (WhatsApp) + vocabulary 'Müşteri Takip' captured verbatim"
+
+  - ref: directive-acquisition
+    kind: directive
+    topic: null
+    tag: null
+    claim: "Do not raise the acquisition talks with floor staff"
+    evidence_quote: "don't bring up the acquisition talks with anyone on the floor"
+    timestamp: "05:08"
+    assert: "DIRECTIVE — stored verbatim, NO trust tag, feeds the NEVER list; never becomes a respondent-facing objective"
+
+  - ref: pain-handoff-episode
+    kind: statement
+    topic: pain
+    tag: confirmed
+    claim: "A finished bridal set sat unshipped for two days because the completion was not communicated, surfacing only when the customer emailed the founder"
+    evidence_quote: "Last week. A bridal set ... the piece had been sitting finished in the atelier for two days because nobody told Kerem it was done. I only found out when the customer emailed me directly."
+    timestamp: "05:40"
+    assert: "episodic (last week, named piece, concrete detail, unhedged) → CONFIRMED even in a founder call; the pain evidence for the chasing problem"
+
+# ---- top-level assertions the judge checks across the whole extraction ----
+assertions:
+  - "The 00:20 filler produced ZERO records."
+  - "boutique-correction supersedes scraped-boutiques; scraped record still exists."
+  - "returns-time-correction supersedes returns-time-superseded; neither deleted; not averaged."
+  - "metin-fact and metin-judgment-quarantined are TWO separate records; only the judgment is quarantined."
+  - "All hedged items (craftspeople-count, repricing-time, pinar-tenure) are GUESS regardless of specificity."
+  - "yıldırım sipariş and Müşteri Takip appear verbatim, untranslated."
+  - "directive-acquisition has no trust tag and feeds the NEVER list."
+  - "pain-handoff-episode is the only CONFIRMED-episodic statement (plus the two corrections); everything habitual is CLAIMED at most."
+  - "NEW-PERSON triggers fired for Selin, Kerem, Pınar, Metin."
