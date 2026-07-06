@@ -13,6 +13,7 @@ import {
 import brand from "@/lib/brand";
 import { list_workspaces, list_plans, list_snapshot_cards } from "@/lib/live";
 import { BrandMark } from "@/components/BrandMark";
+import { SignOutButton } from "@/components/SignOutButton";
 
 // Workspace picker (A11.5 — no auth v1). Matches the right panel of
 // stage5-signin-workspace-picker.png: a centered welcome and a prepared-pilot
@@ -42,15 +43,8 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <header className="flex h-16 items-center justify-end gap-4 px-8">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-ink ring-1 ring-inset ring-accent/10">
-            {(hero.ws.config?.founder ?? "N X").split(/\s+/).slice(0, 2).map((p) => p[0]).join("")}
-          </div>
-          {hero.ws.config?.founder && (
-            <span className="text-sm font-medium text-ink">{hero.ws.config.founder}</span>
-          )}
-        </div>
+      <header className="flex h-16 items-center justify-end gap-2 px-8">
+        <SignOutButton />
       </header>
 
       <main className="mx-auto max-w-2xl px-6 pb-24 pt-10 text-center">
