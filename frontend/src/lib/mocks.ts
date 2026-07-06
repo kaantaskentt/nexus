@@ -13,6 +13,7 @@
 import type {
   ClaimRecord,
   InterviewPlan,
+  Report,
   SnapshotCard,
   Workspace,
 } from "./types";
@@ -607,8 +608,133 @@ const PLANS: Record<string, InterviewPlan[]> = {
   "ws-marmara": [],
 };
 
+// ── Post-Interview Reports (Phase 6 / stage8) ────────────────────────────────
+// Burak's completed interview compiled into a verified workflow map + findings.
+// captured_paraphrase is PARAPHRASED (F33/A3) — no verbatim attributed employee quote.
+const REPORTS: Record<string, Report> = {
+  "plan-burak": {
+    workspace_id: "ws-bee-goddess",
+    plan_id: "plan-burak",
+    interviewee_name: "Burak",
+    interviewee_role: "Pricing & Operations",
+    status_label: "Interview completed",
+    duration_min: 19,
+    workflow_name: "Daily Repricing Workflow — as Burak runs it",
+    steps: [
+      {
+        index: 1,
+        title: "Check morning gold rate",
+        description: "How the day's gram price arrives and where it comes from.",
+        tool: { kind: "whatsapp", name: "Kapalıçarşı WhatsApp group" },
+        input: "Daily rate message",
+        output: "Today's gram price",
+        status: "verified",
+        captured_from: "Burak",
+        captured_paraphrase:
+          "Burak describes reading the day's gram price off a Kapalıçarşı WhatsApp group each morning — the only source he uses.",
+        confidence: "high",
+        unverified_questions: ["Is there any backup if the group is quiet that morning?"],
+      },
+      {
+        index: 2,
+        title: "Update the master Excel",
+        description: "Applying the new rate across the catalogue.",
+        tool: { kind: "excel", name: "Burak's Excel (personal file)" },
+        action: "Apply rate to 900+ SKUs via his formula",
+        output: "New price list",
+        status: "verified",
+        captured_from: "Burak",
+        captured_paraphrase:
+          "Burak enters the rate into a personal Excel that reprices 900+ SKUs through a formula he built and maintains himself.",
+        confidence: "high",
+        unverified_questions: [
+          "What exactly is in the formula, and who else can read it?",
+          "How is the 'psychological .90 endings' rounding applied?",
+        ],
+      },
+      {
+        index: 3,
+        title: "Update website prices",
+        description: "Getting the new prices onto the store.",
+        tool: { kind: "shopify", name: "Shopify admin" },
+        action: "Manual entry, top 50 SKUs only",
+        output: "Web prices",
+        status: "verified",
+        note: "Only top 50 — rest updated weekly",
+        captured_from: "Burak",
+        captured_paraphrase:
+          "Burak re-keys the top ~50 SKUs into Shopify by hand each day; everything beyond that is refreshed only once a week.",
+        confidence: "high",
+        unverified_questions: ["How are the weekly-updated SKUs chosen and batched?"],
+      },
+      {
+        index: 4,
+        title: "Print boutique tags",
+        description: "Getting prices to the physical boutiques.",
+        tool: { kind: "printer", name: "Excel → printer" },
+        action: "Sends list to each boutique on WhatsApp",
+        output: "Printed price tags per boutique",
+        status: "partial",
+        captured_from: "Burak",
+        captured_paraphrase:
+          "Burak prints tags from the Excel and messages each boutique its list on WhatsApp — the boutique side of the handoff wasn't fully walked through.",
+        confidence: "reported",
+        unverified_questions: [
+          "Who at each boutique applies the tags, and when?",
+          "What happens if a boutique misses the message?",
+        ],
+      },
+      {
+        index: 5,
+        title: "Update wholesale lists",
+        description: "The wholesale channel — least clear step.",
+        tool: { kind: "unknown", name: "Unknown" },
+        action: "Handled by someone else?",
+        output: "Wholesale price lists",
+        status: "needs_clarification",
+        note: "Burak deflected twice — handled by someone else? Possibly Deniz.",
+        captured_from: "Burak",
+        captured_paraphrase:
+          "Burak indicated the wholesale lists are handled by someone else and moved past the question twice; ownership is unconfirmed.",
+        confidence: "guess",
+        unverified_questions: [
+          "Who actually owns the wholesale list update?",
+          "Is it the same rate and rounding as retail?",
+        ],
+      },
+    ],
+    perception_gap: {
+      estimate: "Estimated at ~2 hours in the discovery call.",
+      actual: "Burak's actual morning: 3.5–4 hours.",
+      driver: "Gap driver: manual Shopify entry + boutique WhatsApp coordination.",
+    },
+    key_findings: [
+      { text: "The Excel contains 6 years of pricing logic — only Burak can read it", emphasis: "key-person risk: HIGH" },
+      { text: "Website beyond top-50 SKUs reprices only weekly — prices can be stale up to 6 days" },
+      { text: "Rate source is an informal WhatsApp group, no backup source" },
+      { text: "He built a rounding rule of his own (“psychological .90 endings”) — undocumented anywhere" },
+    ],
+    follow_ups: [
+      { text: "Who actually updates wholesale lists? (Burak deflected — route to Deniz interview)" },
+      { text: "What happens when Burak is away? (holiday question got a vague answer)" },
+      { text: "The Excel formula logic — needs a screen-share session" },
+    ],
+    quality: {
+      objectives_captured: 7,
+      objectives_total: 8,
+      percent: 88,
+      partial_dodged: 1,
+      note: "Burak opened up after the first 5 minutes — episodic detail was excellent.",
+    },
+  },
+};
+
 // ── Router-shaped accessors ──────────────────────────────────────────────────
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
+
+export async function get_report(plan_id: string): Promise<Report | undefined> {
+  return clone(REPORTS[plan_id]);
+}
 
 export async function list_workspaces(): Promise<Workspace[]> {
   return clone(WORKSPACES);

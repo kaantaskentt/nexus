@@ -195,3 +195,48 @@ export type SnapshotCard =
   | { id: string; card_type: "area_to_investigate"; confidence: Confidence; render_batch: number; content: AreaContent }
   | { id: string; card_type: "suggested_person"; confidence: Confidence; render_batch: number; content: SuggestedPersonContent }
   | { id: string; card_type: "conflict_point"; confidence: Confidence; render_batch: number; content: ConflictContent };
+
+// ── Post-Interview Report (Phase 6 / stage8) ─────────────────────────────────
+// Verified workflow map from workflow_steps (tool/action/input/output + spine slots),
+// perception gaps, key findings, follow-ups, interview-quality score.
+export type StepStatus = "verified" | "partial" | "needs_clarification";
+export type ToolKind = "whatsapp" | "excel" | "shopify" | "printer" | "notion" | "apify" | "email" | "unknown";
+
+export interface WorkflowStep {
+  index: number;
+  title: string;
+  description?: string;
+  tool: { kind: ToolKind; name: string };
+  input?: string;
+  action?: string;
+  output?: string;
+  status: StepStatus;
+  note?: string; // caveat shown under the card (e.g. "Only top 50 — rest weekly")
+  // Step detail (drawer): the respondent's account is PARAPHRASED in client views
+  // (F33/A3 — never a verbatim attributed employee quote), plus follow-up gaps.
+  captured_from?: string; // person name
+  captured_paraphrase?: string;
+  confidence?: Confidence;
+  unverified_questions?: string[];
+}
+
+export interface Report {
+  workspace_id: string;
+  plan_id: string;
+  interviewee_name: string;
+  interviewee_role: string;
+  status_label: string; // "Interview completed"
+  duration_min: number;
+  workflow_name: string;
+  steps: WorkflowStep[];
+  perception_gap?: { estimate: string; actual: string; driver: string };
+  key_findings: { text: string; emphasis?: string }[];
+  follow_ups: { text: string }[];
+  quality: {
+    objectives_captured: number;
+    objectives_total: number;
+    percent: number;
+    partial_dodged: number;
+    note: string;
+  };
+}
