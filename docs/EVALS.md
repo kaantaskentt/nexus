@@ -113,3 +113,28 @@ Every dress rehearsal and every real interview is an eval source. After each:
 
 The suite is not a fixed asset; it grows monotonically from every real contact with a respondent. A failure that
 isn't turned into a case is a failure we've agreed to repeat.
+
+## 8. Voice path — proving status & what cannot be tested offline (#17)
+
+Exercised by driving `/api/voice/chat/completions` (custom-LLM SSE) and `/api/voice/webhook` directly with
+synthetic-persona turns — no live VAPI account. See `docs/voice-config.md` for the assistant settings these prove.
+
+**Proven offline (green):**
+- **SSE format** — OpenAI `chat.completion.chunk` frames (opening role frame → content deltas → `data: [DONE]`), valid
+  across varied speaking styles: rambler / run-on, terse, mid-turn topic jump, interruption-shaped fragment
+  ("So the first thing I do is—"), and a hedged Turkish turn.
+- **First-chunk latency** ~1.0–1.6s on opening turns (the longest replies); mid-interview replies are shorter. Near
+  the <1.5s budget — prompt caching in the cost phase ("make it cheap") tightens it. This is our token latency only;
+  real spoken latency also includes VAPI STT + TTS.
+- **TR/EN switch** — a Turkish turn gets a Turkish reply, vocabulary kept untranslated.
+- **Verbatim webhook storage** — a `transcript` (final) event stores the utterance EXACTLY ("Umm, sanırım maybe two
+  hours, I dunno.") with word-level timestamps. Cleanup would destroy the compiler's hedge signal; it doesn't.
+- **end-of-call-report** → session marked completed, recording URL stored as evidence, Stage 4 compile enqueued.
+
+**CANNOT be tested without a live VAPI call (deferred until the account exists — config-verified only):**
+- Real endpointing / the patient 2–3s recall-pause tuning (VAPI-side turn detection).
+- Barge-in / interruption yield (`stopSpeakingPlan.numWords`) — needs real TTS + a mic to interrupt.
+- Actual STT verbatim fidelity + word-timestamp accuracy from the transcriber (we prove we STORE what's sent, not
+  what Deepgram actually produces).
+- True end-to-end spoken latency (STT → our first token → TTS) and silence / gentle-check-in timing.
+- Voice selection / prosody.
