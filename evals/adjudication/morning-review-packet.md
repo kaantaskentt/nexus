@@ -119,6 +119,11 @@ it is plan-generator work, not turn-engine work. **Decisions for you:** (a) acce
 granularity, and (b) a taste heads-up — when `coverage_routing` is on, the gate makes the interviewer more insistent
 about must-hits before it will close; that is a client-facing feel change, Kaan's call whether to ever activate it.
 
+**Secondary V3 (product, from editor QA):** there is no way to retract a fat-fingered workflow annotation — `annotate`
+is append-only (correct for real client truth, ontology rule 1), but a mistaken note is then unremovable through the
+product. A `superseded-by` or reversible-hide affordance for annotations (mirroring soft-hide on steps) is a legitimate
+V3 candidate. Surfaced when QA residue on the demo tenant had to be cleared by a scoped one-off DB delete.
+
 ## 4b. Live demo material — the interviewer produces meeting-worthy findings from a sim
 
 The second-round Burak interview (bee-goddess-demo, driven this session) compiled into **20 real findings** via
