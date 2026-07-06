@@ -44,6 +44,16 @@ export interface Workspace {
   slug: string;
   industry: string | null;
   is_demo: boolean;
+  // workspaces.config jsonb — display fields the picker/shell render (the live
+  // router will need to select `config`; the demo carries it inline).
+  config?: {
+    founder?: string;
+    founder_role?: string;
+    tagline?: string; // e.g. "Fine jewelry — handcrafted in Istanbul"
+    starting_focus?: string; // e.g. "daily repricing → content approval"
+    source?: string; // e.g. "CEO Discovery Call + Website Scan"
+    approved_for_pilot?: boolean;
+  };
 }
 
 // client_visible_claims view row (quarantined = false rows of claim_records).

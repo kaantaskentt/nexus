@@ -42,7 +42,9 @@
 
   /* Semantic */
   --danger: #b3452c;
+  --danger-soft: #f6e0d9;
   --success: #2e7d4f;
+  --success-soft: #dcece0;
 
   /* Shape */
   --radius-card: 14px;

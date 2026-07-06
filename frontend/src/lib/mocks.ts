@@ -24,6 +24,14 @@ const WORKSPACES: Workspace[] = [
     slug: "bee-goddess",
     industry: "jewelry",
     is_demo: true,
+    config: {
+      founder: "Ece Şirin",
+      founder_role: "Founder & Creative Director",
+      tagline: "Fine jewelry — handcrafted in Istanbul",
+      starting_focus: "daily repricing → content approval",
+      source: "CEO Discovery Call + Website Scan",
+      approved_for_pilot: true,
+    },
   },
   {
     id: "ws-time-pr",

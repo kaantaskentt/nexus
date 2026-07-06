@@ -21,7 +21,9 @@ const config: Config = {
         "on-accent": "var(--on-accent)",
         scrim: "var(--scrim)",
         danger: "var(--danger)",
+        "danger-soft": "var(--danger-soft)",
         success: "var(--success)",
+        "success-soft": "var(--success-soft)",
         tag: {
           scraped: "var(--tag-scraped)",
           guess: "var(--tag-guess)",
