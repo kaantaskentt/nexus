@@ -108,3 +108,15 @@ recommendations.
   non-executable. Cheap (reuses SOP export path), high wow, shows the moat without
   claiming deployment. If #21 core doesn't land tonight, this becomes a 3-line
   proposal in the morning packet instead.
+
+## Upgrade license (Kaan) — F-registry clinical audit
+
+Act as clinical/neuropsychologist over the F-registry (F1-F37) + failure taxonomy.
+Emre's work is used and upgraded, never silently edited: every upgrade ships as a NEW
+flag (F38+) with a one-line evidence rationale. Candidates to evaluate: acquiescence
+bias (terse respondents), telescoping in time estimates, memory conflation across
+similar episodes, demand characteristics, fundamental attribution error in CEO reads
+of people, halo effects in proud-maker accounts, cognitive-load signals as data
+(slowed speech near complex steps = tacit knowledge, not confusion). Where a new flag
+changes agent behavior: wire the prompt AND add an eval case. All additions batch to
+the morning packet as night-shift proposals for Emre — his lane stays his, we stock it.
