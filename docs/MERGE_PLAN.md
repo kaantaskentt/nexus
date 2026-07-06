@@ -191,3 +191,16 @@ Owned by the build now: Stage 7 interviewer system prompt (md, voice-ready) · p
 4. **Voice:** sensible default chosen by build (one male + one female variant, warm-professional); dedicated voice-selection session with Kaan later. Hume = phase 2 analytics, not v1.
 5. **Auth: none.** Workspace-picker page with seeded companies (matches the mockup's "click your admin portal" cards) — internal use only. Interview links stay token-based (unauthenticated by design). Real auth is a later layer; nothing in the schema assumes its absence.
 6. **Repo:** Tunç gets access and may work in it. Vendored pieces attributed in reference/SOURCES.md + brief "why we kept/killed" notes; history kept clean.
+
+## A12 — Real client roster + bias firewall (July 6)
+
+Clients: **Bee Goddess** (jewelry — yes, the demo subject is a real prospect) · **Time PR** (Mine Kalpakcıoğlu — PR/comms) · **Marmara Hotels Taksim** (hospitality — also the subject of Emre's mint example).
+
+Four contamination risks, four rules:
+
+1. **Fixture ≠ reality.** The Ece transcript, Burak/Mia/Selin, and every demo record are fiction. Demo workspace carries a hard `is_demo` flag; real engagements start as fresh tenants with ZERO fixture records. When the real Bee Goddess engagement begins, nothing from the demo storyline exists in their workspace — the system must not "remember" fictional employees at a real company.
+2. **Prompt examples teach format, not facts.** Worked examples in agent prompts stay multi-industry (jewelry, hospitality, agency, accounting) so no single client's industry dominates the model's priors. Conveniently, the planned example library already covers all three client industries.
+3. **Eval fixtures get fictional names.** Emre's "Marmara Hotel" mint scenario is renamed to a fictional hotel in our eval suite — we do not test with a real prospect's name in the fixtures.
+4. **Cross-client boundary (F2) is now live, not theoretical.** What compounds across clients is per-industry heuristic accuracy only — never records, names, or workflows. Three real tenants makes this enforcement day-one, not someday.
+
+**Language priority upgraded:** all three clients are Turkish companies. English remains the build language, but TR interview capability (invite copy, interviewer persona lines, hedge lexicon already in compiler) moves from "designed-in" to "tested before the first real call."
