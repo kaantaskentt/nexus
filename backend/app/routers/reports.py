@@ -16,6 +16,21 @@ def _loads(v):
     return json.loads(v) if isinstance(v, str) else v
 
 
+@router.get("/by-plan/{plan_id}")
+async def report_by_plan(plan_id: str):
+    """Resolve a plan to its compiled interview session, then render its report — the
+    Plan page links straight here without having to know the session id."""
+    pool = await get_pool()
+    sid = await pool.fetchval(
+        "select id from interview_sessions where plan_id = $1 and status = 'completed' "
+        "order by ended_at desc nulls last limit 1",
+        plan_id,
+    )
+    if sid is None:
+        return {"error": "no compiled session for this plan yet"}
+    return await report(str(sid))
+
+
 @router.get("/{session_id}")
 async def report(session_id: str):
     pool = await get_pool()

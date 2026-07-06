@@ -11,5 +11,6 @@ from . import (  # noqa: F401  (importing registers each @handles job)
     pain,
     quality,
     recon,
+    snapshot,
     workflow,
 )

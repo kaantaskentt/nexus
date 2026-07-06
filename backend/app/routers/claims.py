@@ -12,13 +12,24 @@ router = APIRouter()
 
 @router.get("/{workspace_id}")
 async def list_claims(workspace_id: str, topic: str | None = None):
+    """Client-visible claims with two UI aids: the speaker's role, and is_paraphrased
+    (F33) — evidence from an EMPLOYEE interview is paraphrased in client views, while
+    CEO-call and scraped records keep their verbatim quote. The rule lives here so the
+    evidence rail can render the paraphrase affordance honestly, not guess."""
     pool = await get_pool()
-    q = "select * from client_visible_claims where workspace_id = $1"
+    q = """select c.*, sp.role as speaker_role,
+             (c.session_id is not null
+              and coalesce(iv.role, '') !~* '(founder|ceo|owner|chief|executive)') as is_paraphrased
+           from client_visible_claims c
+           left join entities sp on sp.id = c.speaker_id
+           left join interview_sessions s on s.id = c.session_id
+           left join entities iv on iv.id = s.interviewee_id
+           where c.workspace_id = $1"""
     args: list = [workspace_id]
     if topic:
-        q += " and topic = $2"
+        q += " and c.topic = $2"
         args.append(topic)
-    rows = await pool.fetch(q + " order by created_at desc limit 200", *args)
+    rows = await pool.fetch(q + " order by c.created_at desc limit 200", *args)
     return [dict(r) for r in rows]
 
 

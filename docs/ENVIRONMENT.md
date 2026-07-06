@@ -4,6 +4,21 @@ Sorted by what actually blocks the build. Fill in Tier 1 first; Tier 2 before th
 
 ---
 
+## Deploy: run TWO processes, not one
+
+The backend is a web process **and** a worker process — both must run:
+
+- `uvicorn app.main:app` — the API (enqueues jobs).
+- `python -m app.worker` — the queue worker (drains them: handoff build on plan
+  approval, compile + Phase-6 fan-out + snapshot render on interview completion).
+
+The Dockerfile / hosting setup must start both (two services, or a process manager). A
+web-only deploy fails silently at the payoff moment: interviews complete but no report
+is ever generated. Rehearsal finding — the failure mode is "a queue nobody drains,"
+with no error, just a missing artifact.
+
+---
+
 ## Tier 1 — Blocking (demo path cannot start/finish without these)
 
 | # | Service | What I need | How I use it | Notes |

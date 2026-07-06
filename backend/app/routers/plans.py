@@ -29,7 +29,11 @@ TRANSITIONS: dict[str, set[str]] = {
 async def list_plans(workspace_id: str):
     pool = await get_pool()
     rows = await pool.fetch(
-        "select * from interview_plans where workspace_id = $1 order by created_at desc",
+        """select p.*, e.canonical_name as interviewee_name, e.role as interviewee_role,
+                  p.mission->>'interview_topic' as interview_topic
+           from interview_plans p
+           left join entities e on e.id = p.interviewee_id
+           where p.workspace_id = $1 order by p.created_at desc""",
         workspace_id,
     )
     return [dict(r) for r in rows]

@@ -14,9 +14,12 @@ reachable via local asyncpg here) the same dataset is ported via the Supabase MC
 
 import argparse
 import asyncio
+import json
 
 from app.db import close_pool, get_pool
-from app.pipeline import compiler, pain
+from app.pipeline import (
+    compiler, conflicts, handoff, heuristics, pain, quality, snapshot, workflow,
+)
 
 SLUG = "bee-goddess-demo"
 # Pinned so the demo tenant keeps a stable id across reseeds (frontend can rely on it).
@@ -87,11 +90,18 @@ async def seed(compile_transcript: bool = True) -> str:
         ws = existing["id"]
         await _wipe_workspace(pool, ws)
 
+    config = {
+        "founder": "Ece", "founder_role": "Founder & Creative Director",
+        "tagline": "Fine jewelry — handcrafted in Istanbul",
+        "starting_focus": "daily repricing → online returns",
+        "source": "CEO Discovery Call + Website Scan", "approved_for_pilot": True,
+    }
     ws = await pool.fetchval(
-        "insert into workspaces (id, name, slug, industry, is_demo) "
-        "values ($1, 'Bee Goddess', $2, 'jewelry', true) returning id",
+        "insert into workspaces (id, name, slug, industry, is_demo, config) "
+        "values ($1, 'Bee Goddess', $2, 'jewelry', true, $3) returning id",
         DEMO_WS_ID,
         SLUG,
+        json.dumps(config),
     )
 
     people = {}
@@ -119,14 +129,49 @@ async def seed(compile_transcript: bool = True) -> str:
             session_id, i, spk, txt,
         )
 
+    # A plan for the next interviewee (Burak) — APPROVED so the gate + handoff show,
+    # with a full mission the Plan page renders. interview_topic is the NEUTRAL area.
+    mission = {
+        "goal": "Understand the daily repricing process end to end and where it breaks",
+        "interview_topic": "how the morning repricing and order flow works day to day",
+        "known_context": ["Operates ten boutiques", "Repricing runs on a personal Excel"],
+        "topics": [
+            {"label": "The morning repricing steps", "must_hit": True,
+             "detail": "sources, tools, the actual sequence"},
+            {"label": "How rush (yıldırım) orders get flagged", "must_hit": True},
+            {"label": "Handoffs to the returns desk", "must_hit": False},
+        ],
+        "definition_of_done": ["One specific recent morning walked through, steps in order, tools named"],
+        "handling_notes": ["Founder read him as slow with systems — keep it light, never rate him"],
+        "time_budget_minutes": 30,
+    }
+    plan_id = await pool.fetchval(
+        """insert into interview_plans (workspace_id, round_id, interviewee_id, state, mission,
+             suggested_questions, never_list)
+           values ($1,$2,$3,'APPROVED',$4,$5,$6) returning id""",
+        ws, round_id, people["Burak"], json.dumps(mission),
+        json.dumps([{"text": "Walk me through the last morning you did the repricing.", "topic": "process_step"}]),
+        json.dumps(["Do not mention the Harrods renegotiation"]),
+    )
+
     if compile_transcript:
+        # Full production fan-out, inline so the demo tenant is complete without a worker.
         await compiler.compile_session({"session_id": str(session_id)})
-        # Run the pain rater inline (the seed has no worker draining the queue).
         await pain.rate_pain({"workspace_id": str(ws)})
+        await conflicts.detect_conflicts({"workspace_id": str(ws)})
+        await workflow.build_workflow_schema({"session_id": str(session_id)})
+        await quality.score_interview_quality({"session_id": str(session_id)})
+        await heuristics.score_heuristics({"workspace_id": str(ws), "session_id": str(session_id)})
+        await handoff.build_handoff_package(str(plan_id))
+        await snapshot.render_snapshot({"workspace_id": str(ws), "round_id": str(round_id)})
 
     n_claims = await pool.fetchval("select count(*) from claim_records where workspace_id=$1", ws)
     n_ent = await pool.fetchval("select count(*) from entities where workspace_id=$1", ws)
-    print(f"Seeded {SLUG}: workspace={ws} entities={n_ent} claim_records={n_claims}")
+    n_cards = await pool.fetchval("select count(*) from snapshot_cards where workspace_id=$1", ws)
+    print(f"Seeded {SLUG}: workspace={ws}")
+    print(f"  entities={n_ent} claim_records={n_claims} snapshot_cards={n_cards}")
+    print(f"  compiled_session_id={session_id}")
+    print(f"  plan_id={plan_id}")
     return str(ws)
 
 
