@@ -13,4 +13,5 @@ from . import (  # noqa: F401  (importing registers each @handles job)
     recon,
     snapshot,
     workflow,
+    workflow_edit,
 )
