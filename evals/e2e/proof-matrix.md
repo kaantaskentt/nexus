@@ -94,6 +94,30 @@ scope-creep dimensions as explicit sub-objectives; the baseline already covers e
 objectives close the gap without a turn-engine classifier. That is the smallest feasible next step, and it is
 plan-generator work (with Emre's Q1/Q2 as the parallel technique calls), not turn-engine work.
 
+## Plan-objective granularity (task #21) — the REAL lever, verified
+
+Follow-on from the coverage-routing finding above: the fix is at the PLAN, not the turn engine.
+Added a "Surface the hidden operational levers" section + hard rule 9 to `prompts/agents/plan-generator.md`
+(domain-neutral categories: shadow tools, deadline/compliance tracking, scope-creep, manual re-keying,
+single-point-of-knowledge; signal-gated, neutral, ranked, capped). Eval: `evals/plan/hidden-lever-objectives.yaml`
+(SPEC-ONLY, judge-compatible, like leading-question-catch.yaml). Live A/B (old HEAD prompt vs new, same crafted
+records, real model):
+
+| Case | Old prompt | New prompt |
+|---|---|---|
+| bookkeeper records signal filing-deadline tracking (admission + a single-owner sheet) | topicizes a deadline objective (the record names it) | explicit **must-hit** "Filing Deadlines (Hidden Lever: single-point + deadline tracking)" with a resilience probe ("what if you are out two weeks") + an exception probe ("ever slipped") |
+| retail control — NO lever signal in records | (n/a) | **no lever invented** — the plan self-documents "No signal, no lever: none were invented" |
+
+Read honestly: when a record NAMES the lever, even the old prompt topicizes it; the new prompt's gain is (a)
+generalizing to signals that are not on-the-nose (a stated target, an export step) via the named categories,
+(b) the resilience/exception/single-point framing that makes the objective actually surface the hidden
+knowledge, and (c) the signal-gated cap so it never manufactures a lever (control passed). **This closes the
+causal chain from the coverage A/B:** records signal a lever -> plan emits it as an explicit must-hit -> the
+interviewer already covers explicit must-hits at baseline (3/3, above). So plan granularity closes h-bk-3/ag-2
+WITHOUT the turn-engine classifier. Full E2E before/after (plan -> handoff -> interview matrix) is blocked only
+by the plan_generator seat not yet being wired into a pipeline (plan evals are SPEC-ONLY; the single-prompt
+plan adapter is the next infra step, and it unblocks leading-question-catch.yaml too).
+
 ## Note for the FULL E2E (#15)
 The agent-vs-agent driver exercises the synchronous turn engine only. The full
 journey (compile → Phase-6 fan-out → report) also needs the QUEUE WORKER running (`python -m app.worker`) — per

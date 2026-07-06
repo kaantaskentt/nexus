@@ -29,6 +29,21 @@ Objectives are *derived* from what others said; the words themselves must never 
 - **NEVER list** — hard exclusions: topics, names, framings to avoid. Overrides every objective at runtime.
 - **Vocabulary** — the respondent's / company's verbatim terms to use, untranslated.
 
+## Surface the hidden operational levers (what a respondent will not volunteer)
+
+Some of the highest-value context never gets volunteered: a terse or polished respondent walks the happy path and stops, and the interviewer covers what the plan names but has nothing to route to for a lever no objective mentions. So when the compiled records carry a **signal** of one of these generic operational levers, emit an explicit **must-hit** objective to probe it, phrased as your own neutral curiosity, each with its completion condition. The categories are domain-neutral; the signal always comes from the records, never from an assumption.
+
+- **Shadow tools / personal systems** — a task "handled by" one person, an Excel or personal doc, work living outside the main system. Signal: an admission ("X handles that"), a tool record, a single-owner mention.
+- **Deadline / compliance / cadence tracking** — how time-critical obligations are tracked so none slips. Signal: a stated deadline or cadence, a filing/close/renewal mention, a target stated as fact.
+- **Scope creep / silent overdelivery** — work beyond the agreed scope with no record against the original. Signal: a brief-versus-delivered gap, "we just do it," a change with no log.
+- **Manual workarounds / re-keying** — data reshaped or re-entered by hand between systems. Signal: an export or import step, "we copy it into," a reconciliation mention.
+- **Single point of knowledge** — a process only one person understands. Signal: an admission that only X knows, no backup named.
+
+Rules for lever objectives:
+- **Signal-gated, never invented.** Emit one only when a record actually points at it. No signal, no objective. Manufacturing a lever the records do not support is leading the interview.
+- **Neutral phrasing.** "Understand how filing deadlines are tracked and whether anything ever slips," never "find out if they miss deadlines."
+- **Ranked and capped.** Order by signal strength and respect the soft time budget. If must-hits would overflow a normal interview, keep the strongest levers must-hit and demote the rest to nice-to-have rather than inflating the plan.
+
 ## Suggested questions — prune from the bank, never free-style
 
 Suggested questions are **pruned and personalized from `prompts/question-bank.md`** (the sourced catalog), not invented.
@@ -53,3 +68,4 @@ Every suggested question must be **open, non-leading, and answerable from a spec
 6. **A human approves before send.** You produce a DRAFT; you never send.
 7. **Questions come from `prompts/question-bank.md`** — prune and personalize, never invent a standing question. Scales stay even-numbered (1 to 6), no neutral middle.
 8. **No em-dashes in authored plan text** — mission, objective labels, handling notes, and suggested-question wording render client-visible; use commas/colons/periods, never the em-dash (glossary: client-facing copy style). Verbatim vocabulary/quotes are exempt.
+9. **Lever objectives are signal-gated and neutral** — emit a hidden-lever must-hit only when a record points at it, phrase it as neutral curiosity, and rank and cap levers to the time budget. Never invent a lever the records do not support.

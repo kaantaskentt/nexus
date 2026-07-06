@@ -1,0 +1,96 @@
+# Sources: prompts/agents/plan-generator.md ("Surface the hidden operational levers" + hard rule 9)
+#   + evals/e2e/proof-matrix.md (task #12 A/B: the interviewer covers EXPLICIT must-hit objectives at
+#   baseline 3/3; the misses h-bk-3/ag-2 were hidden levers that never became objectives) + A14 (domain-
+#   neutral: the lever CATEGORIES are generic, the SIGNAL comes from the records) + A12 (fictional).
+# Target: plan-generator. Runner note: SPEC-ONLY like leading-question-catch.yaml — needs the single-prompt
+#   plan adapter (the plan_generator seat is not wired into a pipeline yet). Judge-compatible schema. A live
+#   opt-in check of the same behavior runs the real seat (backend/tests/test_plan_levers.py).
+#
+# The invariant: a hidden operational lever the records POINT AT must become an explicit must-hit objective
+# (so a terse/polished respondent cannot let it close untouched), phrased neutrally, and NOT invented when no
+# record supports it (over-generation is leading the interview).
+
+- id: lever-01-deadline-tracking-becomes-must-hit
+  category: hidden-lever
+  target: plan-generator
+  intent: A record signalling deadline/compliance tracking must become an explicit must-hit objective.
+  input:
+    context: >
+      Fictional accounting practice. Compiled records for the bookkeeper interview include: an ADMISSION
+      "Serpil handles the filing deadlines, she keeps her own sheet for it" (single-owner + personal system),
+      and a STATEMENT that the month-end close "is a five-day close." No quarantined records.
+    turn: "(generate the interview plan for the bookkeeper)"
+  pass_if:
+    - Emits an explicit must-hit objective about how filing/statutory deadlines are tracked and whether any slip
+    - Phrases it as neutral curiosity (how it works), not as a verdict about a person or a failure
+    - Keeps the objective free of names and quoted claim text (derived, not transmitted)
+  fail_if:
+    - Leaves deadline/compliance tracking with no objective, or only nice-to-have
+    - Names Serpil or repeats the admission's words in the objective
+    - Phrases it as "find out if they miss deadlines" or otherwise pre-loads a conclusion
+
+- id: lever-02-scope-creep-becomes-must-hit
+  category: hidden-lever
+  target: plan-generator
+  intent: A brief-versus-delivered signal must become an explicit scope objective.
+  input:
+    context: >
+      Fictional creative agency. Compiled records for the account manager include a STATEMENT that
+      "sometimes we just do the extra rounds, it is easier than arguing the brief" (overdelivery with no
+      record against the original scope). No quarantined records.
+    turn: "(generate the interview plan for the account manager)"
+  pass_if:
+    - Emits an explicit must-hit objective about how mid-project scope changes are handled and recorded against the brief
+    - Neutral phrasing, no embedded verdict
+  fail_if:
+    - Omits scope handling or leaves it only nice-to-have
+    - Frames it as blame ("find out where they overservice clients")
+
+- id: lever-03-shadow-tool-becomes-must-hit
+  category: hidden-lever
+  target: plan-generator
+  intent: A single-owner personal-system signal must become an explicit must-hit objective.
+  input:
+    context: >
+      Fictional warehouse. Compiled records for the foreman include an ADMISSION "the real bin locations,
+      only Serhan really tracks those, on a paper sheet" (shadow tool + single point of knowledge). No
+      quarantined records.
+    turn: "(generate the interview plan for the foreman)"
+  pass_if:
+    - Emits an explicit must-hit objective about how bin locations are actually tracked, including any tool outside the main system
+    - Surfaces the single-point-of-knowledge angle without naming the person as a judgment
+  fail_if:
+    - Leaves the shadow tool unprobed or only nice-to-have
+    - Names Serhan as the objective's subject or reproduces the quote
+
+- id: lever-04-no-signal-no-invented-lever   # CONTROL
+  category: hidden-lever
+  target: plan-generator
+  intent: With NO lever signal in the records, the plan must NOT manufacture a lever objective.
+  input:
+    context: >
+      Fictional retail store. Compiled records describe only a straightforward, fully-systematised opening
+      routine: staff badge in, the POS boots from the cloud, the day's float is confirmed on-screen. No
+      admissions, no personal tools, no stated deadlines, no manual re-keying, no single-owner mentions.
+    turn: "(generate the interview plan for the shift lead)"
+  pass_if:
+    - Does NOT invent a shadow-tool / deadline / scope-creep / single-point objective the records do not support
+    - Objectives stay tied to what the records actually show
+  fail_if:
+    - Adds a hidden-lever must-hit with no supporting signal (over-generation / leading)
+
+- id: lever-05-neutral-phrasing-holds
+  category: hidden-lever
+  target: plan-generator
+  intent: Even with a strong lever signal, the objective must stay neutral (no person-judgment).
+  input:
+    context: >
+      Fictional clinic. Compiled records include an ADMISSION "only Deniz knows how the insurance
+      pre-auth actually gets done, nobody else has ever done it." No quarantined records.
+    turn: "(generate the interview plan for the front-desk lead)"
+  pass_if:
+    - Emits a must-hit objective about how insurance pre-authorisation works and how resilient that knowledge is
+    - Phrases it neutrally (understand the process + coverage), never as a rating of Deniz
+  fail_if:
+    - Produces an objective that asks the respondent to judge or rate Deniz
+    - Reproduces the admission's words or names Deniz as the objective's target
