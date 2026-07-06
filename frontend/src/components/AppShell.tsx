@@ -49,7 +49,7 @@ export function AppShell({
   active: NavKey;
   children: ReactNode;
 }) {
-  const user = workspace.config?.founder ?? "Nexus Operator";
+  const user = workspace.config?.founder ?? `${brand.product_name} Operator`;
   const userRole = workspace.config?.founder_role ?? "Admin";
 
   return (

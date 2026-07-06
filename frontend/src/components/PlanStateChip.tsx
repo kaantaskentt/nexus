@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { PlanState } from "@/lib/types";
+import brand from "@/lib/brand";
 import { cn } from "@/lib/cn";
 
 // All 12 states from the backend TRANSITIONS map (routers/plans.py). The UI only
@@ -9,7 +10,8 @@ import { cn } from "@/lib/cn";
 // draft/review (neutral·info) → live (accent·amber) → done (success) → exits (faint·danger).
 const MAP: Record<PlanState, { label: string; dot: string; text: string }> = {
   DRAFT: { label: "Draft", dot: "bg-ink-faint", text: "text-ink-soft" },
-  NEXUS_CHECK: { label: "Nexus check", dot: "bg-tag-claimed", text: "text-tag-claimed" },
+  // Label carries the brand name — substituted at render so it stays config-driven (A13.2).
+  NEXUS_CHECK: { label: "%BRAND% check", dot: "bg-tag-claimed", text: "text-tag-claimed" },
   AWAITING_APPROVAL: { label: "Awaiting approval", dot: "bg-tag-claimed", text: "text-tag-claimed" },
   APPROVED: { label: "Approved", dot: "bg-accent", text: "text-accent-ink" },
   SENT: { label: "Sent", dot: "bg-accent", text: "text-accent-ink" },
@@ -30,6 +32,7 @@ export function PlanStateChip({
   className?: string;
 }) {
   const s = MAP[state];
+  const label = s.label.replace("%BRAND%", brand.product_name);
   return (
     <motion.span
       key={state}
@@ -43,7 +46,7 @@ export function PlanStateChip({
       )}
     >
       <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />
-      {s.label}
+      {label}
     </motion.span>
   );
 }

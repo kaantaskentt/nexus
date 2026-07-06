@@ -18,6 +18,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import type { InterviewPlan, PlanState, Workspace } from "@/lib/types";
+import brand from "@/lib/brand";
 import { AppShell, PlanStateChip, MustHitDot, DiscoveryTag, BrandMark } from "@/components";
 import { SendInterviewFlow } from "./SendInterviewFlow";
 
@@ -65,7 +66,7 @@ export function PlanView({
             <StatusTracker current={state} />
             <p className="mt-3 text-xs text-ink-faint">
               Non-response ages here — one gentle reminder, no decline. Declines happen
-              offline and are visible to the Nexus team only.
+              offline and are visible to the {brand.product_name} team only.
             </p>
           </div>
         )}
@@ -369,7 +370,7 @@ function RefinePlan({ plan }: { plan: InterviewPlan }) {
             <div key={i} className="flex gap-2">
               <BrandMark className="mt-1 h-4 w-4 shrink-0 text-accent" />
               <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-surface-raised px-3.5 py-2">
-                <div className="mb-0.5 text-[11px] text-ink-faint">Nexus · {m.at}</div>
+                <div className="mb-0.5 text-[11px] text-ink-faint">{brand.product_name} · {m.at}</div>
                 <p className="text-sm text-ink">{m.text}</p>
               </div>
             </div>
@@ -382,7 +383,7 @@ function RefinePlan({ plan }: { plan: InterviewPlan }) {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Ask Nexus to refine the plan…"
+          placeholder={`Ask ${brand.product_name} to refine the plan…`}
           className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint"
         />
         <button

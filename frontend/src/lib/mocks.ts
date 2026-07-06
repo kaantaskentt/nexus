@@ -463,10 +463,9 @@ const PLANS: Record<string, InterviewPlan[]> = {
       is_custom_path: false,
       mission: {
         goal: "Map how content actually gets prepared and moved toward approval, in Mia's words.",
-        known_context: [
-          "Every post needs founder approval and can sit 3–4 days.",
-          "An outside agency attempt ended in March 2026.",
-        ],
+        // Respondent-safe facts only (QA F1): her own responsibility, already public in
+        // her snapshot why-line — no who-said-what, no founder admission to leak.
+        known_context: ["Mia prepares and schedules content across channels."],
         topics: [
           { label: "Her role and a normal week, in her words", must_hit: true },
           { label: "How a post goes from idea to ready-for-approval", must_hit: true },
@@ -581,8 +580,10 @@ const PLANS: Record<string, InterviewPlan[]> = {
       state: "DRAFT",
       is_custom_path: false,
       mission: {
-        goal: "Map the online returns flow end to end — the area the founder can't see.",
-        known_context: ["Returns are handled online by Selin.", "The founder has no visibility into the steps."],
+        goal: "Map the online returns flow end to end — currently undocumented.",
+        // Respondent-safe fact only (QA F1/F2): her responsibility, not the founder's
+        // admission that she can't see it.
+        known_context: ["Selin runs the online store and owns the returns flow."],
         topics: [
           { label: "The returns flow start to finish", must_hit: true },
           { label: "How often returns happen and why", must_hit: true },

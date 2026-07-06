@@ -29,6 +29,7 @@ import {
   PainBandChip,
   PersonRow,
 } from "@/components";
+import brand from "@/lib/brand";
 
 const rise = { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 } };
 
@@ -91,8 +92,8 @@ export function SnapshotView({
               </div>
             </div>
 
-            {/* What Nexus Learned */}
-            <Section title="What Nexus Learned">
+            {/* What {brand} Learned */}
+            <Section title={`What ${brand.product_name} Learned`}>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {learned.map((card, i) => {
                   const c = card.content as LearnedContent;
@@ -405,7 +406,7 @@ function AreaDrawer({
               </p>
               <div className="flex items-center justify-center gap-4 pt-1 text-xs font-medium text-accent">
                 <button className="hover:underline">View full transcript</button>
-                <button className="hover:underline">Add context (chat with Nexus)</button>
+                <button className="hover:underline">Add context (chat with {brand.product_name})</button>
               </div>
             </div>
           </motion.aside>
