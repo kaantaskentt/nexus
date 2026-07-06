@@ -152,8 +152,21 @@ export interface SessionSummary {
   interviewee_role?: string | null;
 }
 
+interface RawSessionSummary {
+  id: string;
+  status: string;
+  has_report: boolean;
+  interviewee?: string | null; // the endpoint returns a name string under `interviewee`
+}
+
 export async function list_sessions(workspace_id: string): Promise<SessionSummary[]> {
-  return api<SessionSummary[]>(`/api/workspaces/${workspace_id}/sessions`);
+  const rows = await api<RawSessionSummary[]>(`/api/workspaces/${workspace_id}/sessions`);
+  return rows.map((r) => ({
+    id: r.id,
+    status: r.status,
+    has_report: r.has_report,
+    interviewee_name: r.interviewee ?? undefined,
+  }));
 }
 
 // ── Report (GET /api/reports/{session_id}) ───────────────────────────────────
@@ -172,7 +185,11 @@ interface RawReport {
   }>;
   key_findings: Array<{ text: string; pain_band?: string | null }>;
   follow_up_on: Array<{ text: string }>;
-  interview_quality: { headline?: string; objectives?: unknown[] } | null;
+  interview_quality: {
+    headline?: string;
+    objectives?: unknown[];
+    counts?: { satisfied: number; partial: number; dodged: number; untouched: number };
+  } | null;
   error?: string;
 }
 
@@ -186,7 +203,10 @@ export async function get_report(
   const steps: WorkflowStep[] = r.workflow?.steps ?? [];
 
   const gap = r.perception_gaps[0];
-  const objs = r.interview_quality?.objectives?.length ?? 0;
+  // Prefer the real objective counts when present; fall back to the qualitative
+  // headline when the compiler set no plan objectives.
+  const c = r.interview_quality?.counts;
+  const total = c ? c.satisfied + c.partial + c.dodged + c.untouched : 0;
   return {
     workspace_id: r.workspace_id,
     plan_id: r.session_id,
@@ -205,13 +225,19 @@ export async function get_report(
       : undefined,
     key_findings: r.key_findings.map((f) => ({ text: f.text })),
     follow_ups: r.follow_up_on.map((f) => ({ text: f.text })),
-    // Live quality is qualitative (a headline + spine scores), not counts/percent.
     quality: {
-      objectives_captured: objs,
-      objectives_total: objs,
-      percent: 0,
-      partial_dodged: 0,
+      objectives_captured: c?.satisfied ?? 0,
+      objectives_total: total,
+      percent: total > 0 ? Math.round(((c?.satisfied ?? 0) / total) * 100) : 0,
+      partial_dodged: c ? c.partial + c.dodged : 0,
       note: r.interview_quality?.headline ?? "",
     },
   };
+}
+
+// A report is still compiling if the Phase-6 fan-out hasn't produced a workflow or
+// findings yet (backend populates progressively after /complete). Used by the report
+// screen to show a "compiling…" state and poll instead of rendering an empty shell.
+export function reportIsCompiling(report: Report): boolean {
+  return report.steps.length === 0 && report.key_findings.length === 0;
 }

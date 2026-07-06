@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { get_workspace, list_plans } from "@/lib/live";
+import { FileText } from "lucide-react";
+import { get_workspace, list_plans, list_sessions } from "@/lib/live";
 import { AppShell, PlanStateChip } from "@/components";
 
 // Interview Plans index — one row per plan, state rendered from the lifecycle
-// machine (the UI never decides transitions). Click through to the plan detail.
+// machine (the UI never decides transitions). Click a row for the plan detail; once
+// an interview has completed and compiled, a "View report" link appears on its plan.
 export default async function PlansPage({
   params,
 }: {
@@ -12,7 +14,18 @@ export default async function PlansPage({
 }) {
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
-  const plans = await list_plans(workspace.id);
+
+  const [plans, sessions] = await Promise.all([
+    list_plans(workspace.id),
+    list_sessions(workspace.id).catch(() => []),
+  ]);
+  // Map an interviewee (by name) to their compiled session, so a completed interview
+  // links straight to its report — closing the journey without a typed URL.
+  const reportByName = new Map(
+    sessions
+      .filter((s) => s.has_report && s.interviewee_name)
+      .map((s) => [s.interviewee_name!.toLowerCase(), s.id]),
+  );
 
   return (
     <AppShell workspace={workspace} active="plans">
@@ -26,13 +39,16 @@ export default async function PlansPage({
         </header>
 
         <ul className="space-y-3">
-          {plans.map((plan) => (
-            <li key={plan.id}>
-              <Link
-                href={`/w/${workspace.slug}/plans/${plan.id}`}
-                className="flex items-center justify-between gap-4 rounded-card border border-line bg-surface p-5 shadow-card transition-colors hover:border-line-strong hover:bg-surface-raised"
+          {plans.map((plan) => {
+            const reportId = plan.interviewee_name
+              ? reportByName.get(plan.interviewee_name.toLowerCase())
+              : undefined;
+            return (
+              <li
+                key={plan.id}
+                className="flex items-center justify-between gap-4 rounded-card border border-line bg-surface p-5 shadow-card transition-colors hover:border-line-strong"
               >
-                <div className="min-w-0">
+                <Link href={`/w/${workspace.slug}/plans/${plan.id}`} className="min-w-0 flex-1">
                   <div className="font-display text-lg text-ink">
                     {plan.interviewee_name ?? "Unassigned"}
                   </div>
@@ -42,11 +58,22 @@ export default async function PlansPage({
                   <p className="mt-1.5 line-clamp-1 text-sm text-ink-soft">
                     {plan.mission.goal}
                   </p>
+                </Link>
+                <div className="flex shrink-0 items-center gap-3">
+                  {reportId && (
+                    <Link
+                      href={`/w/${workspace.slug}/report/${reportId}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-accent-ink transition-colors hover:bg-accent-soft"
+                    >
+                      <FileText className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      View report
+                    </Link>
+                  )}
+                  <PlanStateChip state={plan.state} />
                 </div>
-                <PlanStateChip state={plan.state} />
-              </Link>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </AppShell>

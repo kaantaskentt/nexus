@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Lock,
   Zap,
+  Loader2,
   Lightbulb,
   UserPlus,
   Star,
@@ -68,25 +69,33 @@ export function ReportView({
           <div className="min-w-0">
             <section className="rounded-card border border-line bg-surface-raised p-5">
               <h2 className="mb-4 font-display text-xl text-ink">{report.workflow_name}</h2>
-              <div className="flex items-stretch gap-1 overflow-x-auto pb-2">
-                {report.steps.map((step, i) => (
-                  <div key={step.index} className="flex items-start gap-1">
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                    >
-                      <WorkflowStepCard step={step} onClick={() => setOpenStep(step)} />
-                    </motion.div>
-                    {i < report.steps.length - 1 && (
-                      <ArrowRight className="mt-16 h-4 w-4 shrink-0 text-ink-faint" strokeWidth={2} />
-                    )}
-                  </div>
-                ))}
-              </div>
+              {report.steps.length === 0 ? (
+                <div className="flex items-center gap-3 rounded-card border border-dashed border-line-strong bg-surface p-6 text-sm text-ink-soft">
+                  <Loader2 className="h-5 w-5 shrink-0 animate-spin text-accent" strokeWidth={1.75} />
+                  Mapping the workflow from the conversation — this lands a moment after
+                  the findings.
+                </div>
+              ) : (
+                <div className="flex items-stretch gap-1 overflow-x-auto pb-2">
+                  {report.steps.map((step, i) => (
+                    <div key={step.index} className="flex items-start gap-1">
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                      >
+                        <WorkflowStepCard step={step} onClick={() => setOpenStep(step)} />
+                      </motion.div>
+                      {i < report.steps.length - 1 && (
+                        <ArrowRight className="mt-16 h-4 w-4 shrink-0 text-ink-faint" strokeWidth={2} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
 
-            {report.perception_gap && (
+            {report.perception_gap ? (
               <div className="mt-5 flex gap-4 rounded-card border border-accent bg-accent-soft p-5">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent">
                   <Zap className="h-5 w-5" strokeWidth={1.75} />
@@ -102,6 +111,12 @@ export function ReportView({
                     {report.perception_gap.actual} {report.perception_gap.driver}
                   </p>
                 </div>
+              </div>
+            ) : (
+              // A single interview legitimately has no gaps (they need a second voice).
+              <div className="mt-5 rounded-card border border-line bg-surface p-4 text-sm text-ink-soft">
+                No perception gaps yet — these surface once a second interview
+                contradicts the founder&apos;s account.
               </div>
             )}
           </div>
