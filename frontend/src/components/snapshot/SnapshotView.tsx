@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { User, Rocket, Lock, ArrowRight, X } from "lucide-react";
+import { Rocket, Lock, ArrowRight, X } from "lucide-react";
 import type {
   AreaContent,
   ClaimRecord,
@@ -22,6 +22,7 @@ import {
 import { TOPIC_META, NEUTRAL_TOPIC } from "@/lib/topics";
 import { rise, staggerParent, drawerSpring, scrimFade, drawerSection } from "@/lib/variants";
 import brand from "@/lib/brand";
+import { GeneratePlanButton } from "./GeneratePlanButton";
 
 // The quote a claim shows in the evidence rail (same fallback EvidenceQuoteCard uses).
 function railQuote(c: ClaimRecord): string {
@@ -218,14 +219,11 @@ export function SnapshotView({
                       key={card.id}
                       person={p}
                       action={
-                        <button
-                          disabled
-                          title="Starting an interview for a suggested person is being wired in this build"
-                          className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-ink-faint opacity-60"
-                        >
-                          <User className="h-4 w-4" strokeWidth={1.75} />
-                          Interview
-                        </button>
+                        <GeneratePlanButton
+                          workspaceId={workspace.id}
+                          slug={workspace.slug}
+                          person={p}
+                        />
                       }
                     />
                   );
