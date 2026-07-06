@@ -2,21 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  User,
-  Rocket,
-  Lock,
-  ArrowRight,
-  X,
-  Flame,
-  GitBranch,
-  Wrench,
-  BookOpen,
-  Clock,
-  Building2,
-  Target,
-  Sparkles,
-} from "lucide-react";
+import { User, Rocket, Lock, ArrowRight, X } from "lucide-react";
 import type {
   AreaContent,
   ClaimRecord,
@@ -34,24 +20,9 @@ import {
   PainBandChip,
   PersonRow,
 } from "@/components";
+import { TOPIC_META, NEUTRAL_TOPIC } from "@/lib/topics";
 import { rise, staggerParent, drawerSpring, scrimFade, drawerSection } from "@/lib/variants";
 import brand from "@/lib/brand";
-
-// A learned card's glyph + label come from what KIND of thing it captured (the linked
-// claim's topic), not where it arrived from — so cards read as distinct at a glance
-// instead of six identical source icons. Falls back to a neutral "Insight" when a
-// card has no resolvable topic.
-const TOPIC_META: Record<ClaimTopic, { icon: typeof Flame; label: string }> = {
-  pain: { icon: Flame, label: "Pain point" },
-  process_step: { icon: GitBranch, label: "Process" },
-  person: { icon: User, label: "People" },
-  tool: { icon: Wrench, label: "Tool" },
-  vocabulary: { icon: BookOpen, label: "Vocabulary" },
-  time_or_cost: { icon: Clock, label: "Time & cost" },
-  company_fact: { icon: Building2, label: "Company" },
-  success_criteria: { icon: Target, label: "Goal" },
-};
-const NEUTRAL_TOPIC = { icon: Sparkles, label: "Insight" };
 
 export function SnapshotView({
   workspace,

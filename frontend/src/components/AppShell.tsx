@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import {
-  LayoutGrid,
   FileText,
   CalendarDays,
   Users,
@@ -12,22 +11,25 @@ import brand from "@/lib/brand";
 import type { Workspace } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { BrandMark } from "./BrandMark";
+import { SignOutButton } from "./SignOutButton";
 
-type NavKey = "overview" | "snapshot" | "plans" | "interviews" | "insights" | "knowledge";
+type NavKey = "snapshot" | "plans" | "interviews" | "insights" | "knowledge";
 
+// Every item routes to a live screen. The former "Overview" item was removed rather than
+// left dead: the Company Snapshot IS the workspace landing (the picker opens straight to
+// it), so a separate Overview only duplicated it (named deviation, docs/FOR-TUNC.md).
 const NAV: {
   key: NavKey;
   label: string;
-  icon: typeof LayoutGrid;
+  icon: typeof FileText;
   href: (slug: string) => string;
   ready: boolean;
 }[] = [
-  { key: "overview", label: "Overview", icon: LayoutGrid, href: () => "#", ready: false },
   { key: "snapshot", label: "Snapshot", icon: FileText, href: (s) => `/w/${s}/snapshot`, ready: true },
   { key: "plans", label: "Interview Plan", icon: CalendarDays, href: (s) => `/w/${s}/plans`, ready: true },
-  { key: "interviews", label: "Interviews", icon: Users, href: () => "#", ready: false },
-  { key: "insights", label: "Insights", icon: BarChart3, href: () => "#", ready: false },
-  { key: "knowledge", label: "Knowledge Base", icon: BookOpen, href: () => "#", ready: false },
+  { key: "interviews", label: "Interviews", icon: Users, href: (s) => `/w/${s}/interviews`, ready: true },
+  { key: "insights", label: "Insights", icon: BarChart3, href: (s) => `/w/${s}/insights`, ready: true },
+  { key: "knowledge", label: "Knowledge Base", icon: BookOpen, href: (s) => `/w/${s}/knowledge`, ready: true },
 ];
 
 function initials(name: string): string {
@@ -117,6 +119,7 @@ export function AppShell({
               <div className="truncate text-xs text-ink-faint">{userRole}</div>
             </div>
           </div>
+          <SignOutButton variant="row" className="mt-1" />
         </div>
       </aside>
 
