@@ -6,3 +6,5 @@ __pycache__/
 .next/
 .DS_Store
 *.pyc
+*.egg-info/
+.pytest_cache/

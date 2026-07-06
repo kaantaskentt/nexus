@@ -1,0 +1,65 @@
+"""Test harness — runs against a LOCAL throwaway Postgres+pgvector, never a real
+tenant (A12: fixtures never touch a real workspace). The DSN is overridden before
+app modules read settings; each test gets a freshly-migrated schema."""
+
+import os
+from pathlib import Path
+
+import pytest
+
+# Point the app at the local test container BEFORE settings are cached.
+os.environ["DATABASE_URL"] = os.environ.get(
+    "TEST_DATABASE_URL", "postgresql://postgres:nexus@localhost:55432/nexus_test"
+)
+os.environ["OPENAI_API_KEY"] = ""  # keep embeddings offline in tests
+
+from app.config import get_settings  # noqa: E402
+
+get_settings.cache_clear()
+
+from app.db import get_pool  # noqa: E402
+
+BACKEND = Path(__file__).resolve().parents[1]
+MIGRATIONS = [
+    BACKEND / "db" / "migrations" / "0001_foundation.sql",
+    BACKEND / "db" / "migrations" / "0002_ontology_ops.sql",
+]
+
+
+@pytest.fixture
+async def db():
+    # pytest-asyncio gives each test its own event loop; the module-global asyncpg
+    # pool must be rebound to the current loop or asyncpg raises "loop is closed".
+    import app.db as dbmod
+
+    if dbmod._pool is not None:
+        await dbmod._pool.close()
+        dbmod._pool = None
+
+    pool = await get_pool()
+    await pool.execute("drop schema public cascade; create schema public;")
+    for m in MIGRATIONS:
+        await pool.execute(m.read_text())
+    yield pool
+    await pool.close()
+    dbmod._pool = None
+
+
+async def make_workspace(pool, *, is_demo=False, industry=None):
+    return await pool.fetchval(
+        "insert into workspaces (name, slug, industry, is_demo) "
+        "values ($1, $2, $3, $4) returning id",
+        "Test Co",
+        f"test-{os.urandom(4).hex()}",
+        industry,
+        is_demo,
+    )
+
+
+async def make_session(pool, workspace_id, *, interviewee_id=None):
+    return await pool.fetchval(
+        "insert into interview_sessions (workspace_id, interviewee_id) "
+        "values ($1, $2) returning id",
+        workspace_id,
+        interviewee_id,
+    )

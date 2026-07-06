@@ -18,6 +18,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-asyncio>=0.24", "ruff>=0.6"]
 
+[tool.setuptools]
+packages = ["app"]
+
 [tool.ruff]
 line-length = 100
 
