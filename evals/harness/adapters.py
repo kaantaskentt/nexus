@@ -26,9 +26,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PROMPT_PATH = REPO_ROOT / "prompts" / "agents" / "stage7-interviewer.md"
 BRAND_PATH = REPO_ROOT / "config" / "brand.json"
 
-# ── The ONLY backend coupling — swap these when task #7 exposes the routes. ──────────
-BOOTSTRAP_PATH = "/sessions/eval-bootstrap"
-TURN_PATH = "/sessions/by-token/{token}/turn"
+# ── The ONLY backend coupling — confirmed live against backend push 8e46fe6 (routes under /api,
+#    server gated by EVAL_MODE=1). ─────────────────────────────────────────────────────────────
+BOOTSTRAP_PATH = "/api/sessions/eval-bootstrap"
+TURN_PATH = "/api/sessions/by-token/{token}/turn"
 
 
 class InterviewerAdapter(Protocol):
@@ -146,7 +147,15 @@ class HttpInterviewerAdapter:
                 json={"handoff": handoff, "modality": "text", "language": handoff.get("language", "en")},
             )
             r.raise_for_status()
-            return r.json()["token"]
+            token = r.json()["token"]
+        # Warm up the session with the interviewer's OPENING (null-message turn) so the
+        # case message below lands mid-interview — the real engine builds context from
+        # stored utterances, so this stands in for "the interview is already underway"
+        # (mirrors the direct adapter). Any case turn is then a genuine mid-flow reply.
+        async with httpx.AsyncClient(timeout=60) as c:
+            r = await c.post(self.base + TURN_PATH.format(token=token), json={"message": None})
+            r.raise_for_status()
+        return token
 
     async def turn(self, token: str, message: str) -> str:
         import httpx
