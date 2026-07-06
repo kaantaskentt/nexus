@@ -96,6 +96,19 @@ async def run_case(case: dict, adapter, sem: asyncio.Semaphore, judge_model: str
 
 
 async def main_async(args) -> int:
+    # Anti-theater preflight (task #12): before trusting any http result, prove the engine is
+    # generating fresh replies, not serving a script. A canned engine fails the whole gate here.
+    if args.adapter == "http" and not args.skip_mock_check:
+        from .mock_detection import run_check
+
+        mc = await run_check(args.base_url)
+        if not mc["passed"]:
+            print("MOCK-DETECTION FAILED — refusing to run the suite against a scripted engine:")
+            for p in mc["problems"]:
+                print(f"  ✗ {p}")
+            return 2
+        print("mock-detection: PASS (fresh generation confirmed)\n")
+
     cases = load_file(args.file) if args.file else load_cases(args.suite)
     if args.limit:
         cases = cases[: args.limit]
@@ -134,6 +147,7 @@ def main() -> None:
     p.add_argument("--adapter", choices=["direct", "http"], default="direct")
     p.add_argument("--suite", choices=["taxonomy", "whatif", "all", "heldout"], default="all")
     p.add_argument("--file", default=None, help="run an arbitrary case file (e.g. a scenario_gen batch)")
+    p.add_argument("--skip-mock-check", dest="skip_mock_check", action="store_true", help="skip the http anti-theater preflight")
     p.add_argument("--base-url", dest="base_url", default=None, help="http adapter base URL")
     p.add_argument("--limit", type=int, default=0)
     p.add_argument("--concurrency", type=int, default=4)

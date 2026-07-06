@@ -34,7 +34,8 @@ an engine or server exists, and what cannot be tested offline at all. Read it be
 | Perception-gap comparator | match / contradiction / partial + quarantine guard | **SPEC-ONLY** | `evals/compiler/perception-gap-cases.yaml` — aligns with backend #11 engine. |
 | Handoff builder — no-leak | strips claim text / known_context / quarantined | **TESTED (backend)** | backend asserts on construction (verified with the "founder quotes ~10 days" fixture). |
 | Frontend — badge/quarantine rendering | tag→badge, quarantine-never-renders, coarse pain, no-decline | **SPEC-ONLY (frontend owns tests)** | `evals/frontend/badge-mapping-spec.yaml` — handed to frontend as unit-test expectations. |
-| Interviewer via REAL runtime | the whole persona over the actual turn engine | **BLOCKED** | `harness --adapter http` — waiting on a running EVAL_MODE server (bootstrap code exists). |
+| Interviewer via REAL runtime | the whole persona over the actual turn engine | **TESTED (live)** | `harness --adapter http` against the EVAL_MODE server. Real-engine baseline 23/26 + 2/3 heldout (§6). |
+| Anti-theater / mock-detection | the engine generates fresh replies, not a canned script | **TESTED (live)** | `mock_detection.py` — two fresh sessions, same turn, replies must NOT be byte-identical; runs as an http-suite preflight; PASS on the live engine. |
 | Pain rater | coarse-band judgment | **UNTESTED** | v1 rubric ships; Emre's anchored rubric + a rater eval land later. |
 | Voice — endpointing / prosody / latency / barge-in | see §5 | **CANNOT-TEST-OFFLINE** | live VAPI dress rehearsal only. |
 
@@ -46,7 +47,8 @@ python -m evals.harness --adapter direct --suite all            # 26 fixed inter
 python -m evals.harness --adapter direct --suite heldout        # 3 sealed overfit-check cases
 python -m evals.harness.scenario_gen --n 2 --out evals/interviewer/generated/$(date +%s).yaml
 python -m evals.harness --file <that file> --adapter direct     # fresh held-out stream
-python -m evals.harness --adapter http --base-url http://HOST --suite all   # against the real runtime
+python -m evals.harness --adapter http --base-url http://HOST --suite all   # real runtime (auto anti-theater preflight)
+python -m evals.harness.mock_detection --base-url http://HOST                # anti-theater check on its own
 ```
 The compiler/plan/perception-gap/frontend YAMLs are LLM-judge-runnable specs (schema in `evals/README.md`);
 their runners attach as each target engine lands.
