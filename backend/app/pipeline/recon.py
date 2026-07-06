@@ -11,7 +11,7 @@ import json
 import logging
 
 from ..db import get_pool
-from ..llm import extract_json, run_agent
+from ..llm import run_agent_json
 from ..queue import handles
 from ..scrape import apify_linkedin_people, firecrawl_scrape
 
@@ -66,11 +66,7 @@ async def run_recon(payload: dict) -> None:
         f"WEBSITE (markdown):\n{website_md[:15000]}\n\n"
         f"LINKEDIN PEOPLE (raw):\n{json.dumps(people_raw[:60], ensure_ascii=False)[:6000]}\n\n{_CONTRACT}"
     )
-    try:
-        data = extract_json(await run_agent("stage1_recon", content, workspace_id=workspace_id))
-    except ValueError as e:
-        log.warning("recon structuring failed: %s", e)
-        return
+    data = await run_agent_json("stage1_recon", content, workspace_id=workspace_id)
 
     # ── Company facts → SCRAPED claim records (never above SCRAPED).
     for rec in data.get("company_records", []):

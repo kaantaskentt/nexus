@@ -11,7 +11,7 @@ import json
 import logging
 
 from ..db import get_pool
-from ..llm import extract_json, run_agent
+from ..llm import run_agent_json
 from ..queue import handles
 
 log = logging.getLogger("nexus.snapshot")
@@ -75,11 +75,7 @@ async def render_snapshot(payload: dict) -> None:
     ppl = "\n".join(f"{p['id']} · {p['canonical_name']} ({p['role'] or '?'})" for p in people)
     content = f"Client-visible records:\n{lines}\n\nKnown people:\n{ppl}\n\n{_CONTRACT}"
 
-    try:
-        data = extract_json(await run_agent("snapshot_renderer", content, workspace_id=workspace_id))
-    except ValueError as e:
-        log.warning("snapshot render failed for %s: %s", workspace_id, e)
-        return
+    data = await run_agent_json("snapshot_renderer", content, workspace_id=workspace_id)
 
     batch = (await pool.fetchval(
         "select coalesce(max(render_batch), 0) + 1 from snapshot_cards where workspace_id=$1",

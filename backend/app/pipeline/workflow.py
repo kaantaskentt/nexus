@@ -7,14 +7,12 @@ the store without redesign — A10: this measures understanding, never promises 
 Every step traces to claim record ids; nothing enters that isn't in the store."""
 
 import json
-import logging
 import re
 
 from ..db import get_pool
-from ..llm import extract_json, run_agent
+from ..llm import run_agent_json
 from ..queue import handles
 
-log = logging.getLogger("nexus.workflow")
 _UUID = re.compile(r"^[0-9a-f-]{36}$", re.I)
 
 _SCHEMA = (
@@ -52,15 +50,11 @@ async def build_workflow_schema(payload: dict) -> None:
     valid_ids = {str(r["id"]) for r in rows}
     lines = "\n".join(f"{r['id']} · {r['topic']}/{r['tag']} · {r['claim_text']}" for r in rows)
 
-    try:
-        schema = extract_json(await run_agent(
-            "report_sop_generator",
-            f"Records for this session:\n{lines}\n\n{_SCHEMA}",
-            workspace_id=workspace_id, session_id=session_id,
-        ))
-    except ValueError as e:
-        log.warning("workflow build failed for %s: %s", session_id, e)
-        return
+    schema = await run_agent_json(
+        "report_sop_generator",
+        f"Records for this session:\n{lines}\n\n{_SCHEMA}",
+        workspace_id=workspace_id, session_id=session_id,
+    )
 
     steps = schema.get("steps") or []
     if not steps:

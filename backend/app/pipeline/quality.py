@@ -7,7 +7,7 @@ import json
 import logging
 
 from ..db import get_pool
-from ..llm import extract_json, get_agent_config, run_agent
+from ..llm import get_agent_config, run_agent_json
 from ..queue import handles
 from ..config import REPO_ROOT
 from . import interview
@@ -42,14 +42,10 @@ async def score_interview_quality(payload: dict) -> None:
         "\n\nDefinition of done: " + str(package.get("definition_of_done")) +
         "\n\nTranscript:\n" + transcript
     )
-    try:
-        result = extract_json(await run_agent(
-            "interview_quality", content,
-            workspace_id=str(session["workspace_id"]), session_id=session_id,
-        ))
-    except ValueError as e:
-        log.warning("interview-quality parse failed for %s: %s", session_id, e)
-        return
+    result = await run_agent_json(
+        "interview_quality", content,
+        workspace_id=str(session["workspace_id"]), session_id=session_id,
+    )
 
     state = session["resumable_state"]
     state = json.loads(state) if isinstance(state, str) else (state or {})

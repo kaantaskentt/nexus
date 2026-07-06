@@ -32,7 +32,7 @@ async def test_render_snapshot_inserts_cards(db, monkeypatch):
                      "beliefs": [{"text": "no system", "confidence": "guess"}],
                      "evidence_claim_ids": [], "what_we_dont_know": ["the actual steps"]}},
     ]})
-    monkeypatch.setattr(snapshot, "run_agent", _agent(cards))
+    monkeypatch.setattr("app.llm.run_agent", _agent(cards))
     await snapshot.render_snapshot({"workspace_id": str(ws)})
 
     rows = await db.fetch("select card_type, render_batch, confidence from snapshot_cards where workspace_id=$1", ws)
@@ -40,7 +40,7 @@ async def test_render_snapshot_inserts_cards(db, monkeypatch):
     assert all(r["render_batch"] == 1 for r in rows)
 
     # A second render appends a new batch (append-only, never edits).
-    monkeypatch.setattr(snapshot, "run_agent", _agent(cards))
+    monkeypatch.setattr("app.llm.run_agent", _agent(cards))
     await snapshot.render_snapshot({"workspace_id": str(ws)})
     batches = {r["render_batch"] for r in await db.fetch("select render_batch from snapshot_cards where workspace_id=$1", ws)}
     assert batches == {1, 2}

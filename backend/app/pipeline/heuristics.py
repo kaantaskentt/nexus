@@ -7,7 +7,7 @@ unprompted (F13 — a fished-for yes is not a confirm)."""
 import logging
 
 from ..db import get_pool
-from ..llm import extract_json, run_agent
+from ..llm import run_agent_json
 from ..queue import handles
 
 log = logging.getLogger("nexus.heuristics")
@@ -39,12 +39,8 @@ async def generate_heuristics(payload: dict) -> None:
         log.info("no scraped records to seed heuristics for %s", workspace_id)
         return
     lines = "\n".join(f"- {r['claim_text']}" for r in scraped)
-    try:
-        items = extract_json(await run_agent("stage2_heuristics", f"SCRAPED records:\n{lines}\n\n{_GEN}",
-                                             workspace_id=workspace_id))
-    except ValueError as e:
-        log.warning("heuristic generation failed: %s", e)
-        return
+    items = await run_agent_json("stage2_heuristics", f"SCRAPED records:\n{lines}\n\n{_GEN}",
+                                 workspace_id=workspace_id)
     for h in items:
         if not h.get("heuristic"):
             continue
@@ -76,15 +72,11 @@ async def score_heuristics(payload: dict) -> None:
     r_lines = "\n".join(f"{r['id']} · {r['kind']}/{r['topic']}/{r['tag']} · {r['claim_text']}" for r in records)
     valid_h = {str(h["id"]) for h in open_h}
     valid_r = {str(r["id"]) for r in records}
-    try:
-        scored = extract_json(await run_agent(
-            "stage2_heuristics",
-            f"Open heuristics:\n{h_lines}\n\nCompiled records:\n{r_lines}\n\n{_SCORE}",
-            workspace_id=workspace_id, session_id=session_id,
-        ))
-    except ValueError as e:
-        log.warning("heuristic scoring failed: %s", e)
-        return
+    scored = await run_agent_json(
+        "stage2_heuristics",
+        f"Open heuristics:\n{h_lines}\n\nCompiled records:\n{r_lines}\n\n{_SCORE}",
+        workspace_id=workspace_id, session_id=session_id,
+    )
     for s in scored:
         hid = s.get("heuristic_id")
         status = s.get("status")

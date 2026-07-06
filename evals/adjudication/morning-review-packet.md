@@ -146,6 +146,12 @@ and rule staged for your ratification; eval case follows the ruling.
 **UI note (acted on, not waiting):** report `perception_gaps[]` renders empty while the real findings live in
 `conflict_points` — the Insights build was pointed at the populated field.
 
+**Data-layer correction (not only UI):** `perception_gaps[]` is empty at the source too — the perception_gap agent
+produced a full analysis (1559 tokens) that `extract_json` couldn't parse, and the leg silently swallowed it (same bug
+as the empty interview_quality). Fixed in #22 (parse failure now fails/retries the job and persists the raw output);
+the prompt that emits unparseable output is constrained in #23. So a truly empty `perception_gaps[]` will now mean
+"no gap," not "a gap was dropped."
+
 ## Standing after the review
 
 - The suite grows from every dress rehearsal + real interview (`docs/EVALS.md` §7). I own the transcript-mining

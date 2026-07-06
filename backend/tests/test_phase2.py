@@ -27,7 +27,7 @@ async def test_recon_fixtures_scraped_records_and_client_pool(db, monkeypatch):
             {"person": "Some Agency Rep", "role_title": "Account Manager", "side": "non-client", "confidence": "low"},
         ],
     })
-    monkeypatch.setattr(recon, "run_agent", _agent(structured))
+    monkeypatch.setattr("app.llm.run_agent", _agent(structured))
     await recon.run_recon({"workspace_id": str(ws), "fixtures": {
         "website_markdown": "We have 12 boutiques and rush 'yıldırım' orders.",
         "linkedin_people": [{"name": "Derya Aksoy"}],
@@ -58,7 +58,7 @@ async def test_generate_heuristics_from_scraped(db, monkeypatch):
     out = json.dumps([{"heuristic": "Repricing is a manual single-person spreadsheet task",
                       "predicts": ["named owner", "manual tool"], "topic": "tool",
                       "prior_confidence": "low", "verification_objective": "who reprices and how"}])
-    monkeypatch.setattr(heuristics, "run_agent", _agent(out))
+    monkeypatch.setattr("app.llm.run_agent", _agent(out))
     await heuristics.generate_heuristics({"workspace_id": str(ws)})
 
     row = await db.fetchrow("select * from heuristics where workspace_id=$1", ws)
@@ -77,7 +77,7 @@ async def test_score_heuristics_credits_unprompted(db, monkeypatch):
         "values ($1,$2,'statement','tool','CLAIMED','Burak reprices in a personal Excel') returning id", ws, sess)
     out = json.dumps([{"heuristic_id": str(hid), "status": "confirmed",
                       "raised_unprompted": True, "evidence_record_ids": [str(rid)]}])
-    monkeypatch.setattr(heuristics, "run_agent", _agent(out))
+    monkeypatch.setattr("app.llm.run_agent", _agent(out))
     await heuristics.score_heuristics({"workspace_id": str(ws), "session_id": str(sess)})
 
     row = await db.fetchrow("select * from heuristics where id=$1", hid)

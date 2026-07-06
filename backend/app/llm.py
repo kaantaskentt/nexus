@@ -3,6 +3,7 @@ agent_runs audit record. Grounded generations must pass non-empty retrieval_quer
 or this module raises (Phase 0 #2 — fail loudly, never silently ungrounded)."""
 
 import json
+import logging
 import re
 import time
 
@@ -11,7 +12,16 @@ import anthropic
 from .config import REPO_ROOT, get_brand, get_settings
 from .db import get_pool
 
+log = logging.getLogger("nexus.llm")
+
 _client: anthropic.AsyncAnthropic | None = None
+
+
+class AgentParseError(RuntimeError):
+    """An agent produced output that couldn't be parsed as JSON. Raised (not swallowed)
+    so the owning job fails and retries instead of silently dropping the result (#22).
+    The raw output is on the agent_runs audit row (output_ref.text) for debugging.
+    Deliberately NOT a ValueError, so a stray `except ValueError` can't re-swallow it."""
 
 
 def extract_json(text: str):
@@ -104,7 +114,9 @@ async def run_agent(
             workspace_id,
             session_id,
             json.dumps({"chars": len(user_content)}),
-            json.dumps({"chars": len(text)}),
+            # Persist the raw output, not just its length, so a parse failure downstream
+            # is debuggable from the audit row instead of unrecoverable (#22).
+            json.dumps({"chars": len(text), "text": text}),
             json.dumps(retrieval_queries or []),
             usage_in,
             usage_out,
@@ -112,6 +124,22 @@ async def run_agent(
             status,
             error,
         )
+
+
+async def run_agent_json(agent_name: str, user_content: str, **kwargs):
+    """run_agent + strict JSON parse. On parse failure, log at ERROR and raise
+    AgentParseError so the owning job fails and retries — never a silent drop that
+    leaves the job 'done' with no output written (#22). The raw output is on the
+    agent_runs audit row (output_ref.text)."""
+    text = await run_agent(agent_name, user_content, **kwargs)
+    try:
+        return extract_json(text)
+    except ValueError as e:
+        log.error(
+            "agent %r produced unparseable JSON (%d chars) — job will fail/retry: %s",
+            agent_name, len(text), e,
+        )
+        raise AgentParseError(f"{agent_name} output not parseable as JSON: {e}") from e
 
 
 async def run_chat(

@@ -13,15 +13,12 @@ until Emre delivers the final policy — it's isolated in precedence_lean() belo
 swap is one function, and it only annotates a lean, never hard-resolves a conflict."""
 
 import json
-import logging
 import re
 
 from ..db import get_pool
-from ..llm import extract_json, get_agent_config, run_agent
+from ..llm import get_agent_config, run_agent_json
 from ..queue import handles
 from ..config import REPO_ROOT
-
-log = logging.getLogger("nexus.conflicts")
 
 _TAG_RANK = {None: -1, "SCRAPED": 0, "GUESS": 1, "CLAIMED": 2, "CONFIRMED": 3, "VERIFIED": 4}
 _COLLISION_KIND = {
@@ -126,18 +123,15 @@ async def detect_conflicts(payload: dict) -> None:
             '"kind":"ceo-vs-floor|worker-vs-worker|now-vs-prior|call-vs-scrape"}. '
             "Empty array if none. Never invent collisions from vocabulary differences."
         )
-        try:
-            for c in extract_json(await run_agent("collision_detector", content, workspace_id=workspace_id)):
-                a, b = by_id.get(c.get("record_a")), by_id.get(c.get("record_b"))
-                if not a or not b:
-                    continue
-                await _insert_conflict(
-                    pool, workspace_id, a["id"], b["id"],
-                    _COLLISION_KIND.get(c.get("kind"), "now_vs_prior"),
-                    {"axis": c.get("axis"), "why": c.get("why"), "lean": precedence_lean(a, b)},
-                )
-        except (ValueError, KeyError) as e:
-            log.warning("collision pass failed: %s", e)
+        for c in await run_agent_json("collision_detector", content, workspace_id=workspace_id):
+            a, b = by_id.get(c.get("record_a")), by_id.get(c.get("record_b"))
+            if not a or not b:
+                continue
+            await _insert_conflict(
+                pool, workspace_id, a["id"], b["id"],
+                _COLLISION_KIND.get(c.get("kind"), "now_vs_prior"),
+                {"axis": c.get("axis"), "why": c.get("why"), "lean": precedence_lean(a, b)},
+            )
 
     # ── Perception-gap pass — leadership baseline vs operator lived account (F27).
     cfg = await get_agent_config("perception_gap")
@@ -149,18 +143,15 @@ async def detect_conflicts(payload: dict) -> None:
             '"gap":"leadership believes X; the floor is Y","magnitude":"coarse"}. '
             "Empty array if there is no operator counterpart to an exec baseline."
         )
-        try:
-            for g in extract_json(await run_agent("perception_gap", content, workspace_id=workspace_id)):
-                a, b = by_id.get(g.get("baseline_record")), by_id.get(g.get("lived_record"))
-                if not a or not b or not _valid_perception_gap(a, b):
-                    continue  # gap needs a leadership baseline vs a different-speaker floor account
-                await _insert_conflict(
-                    pool, workspace_id, a["id"], b["id"], "perception_gap",
-                    {"axis": g.get("axis"), "gap": g.get("gap"), "magnitude": g.get("magnitude"),
-                     "render": "report-only", "lean": precedence_lean(a, b)},
-                )
-        except (ValueError, KeyError) as e:
-            log.warning("perception-gap pass failed: %s", e)
+        for g in await run_agent_json("perception_gap", content, workspace_id=workspace_id):
+            a, b = by_id.get(g.get("baseline_record")), by_id.get(g.get("lived_record"))
+            if not a or not b or not _valid_perception_gap(a, b):
+                continue  # gap needs a leadership baseline vs a different-speaker floor account
+            await _insert_conflict(
+                pool, workspace_id, a["id"], b["id"], "perception_gap",
+                {"axis": g.get("axis"), "gap": g.get("gap"), "magnitude": g.get("magnitude"),
+                 "render": "report-only", "lean": precedence_lean(a, b)},
+            )
 
 
 @handles("detect_conflicts")

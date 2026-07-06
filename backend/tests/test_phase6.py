@@ -41,7 +41,7 @@ async def test_detect_conflicts_links_both_records(db, monkeypatch):
 
     collision = json.dumps([{"record_a": str(a), "record_b": str(b), "axis": "time-or-cost",
                              "why": "40 min vs 2 hours", "kind": "ceo-vs-floor"}])
-    monkeypatch.setattr(conflicts, "run_agent", _agent_mock({"collision_detector": collision}))
+    monkeypatch.setattr("app.llm.run_agent", _agent_mock({"collision_detector": collision}))
     await conflicts.detect_conflicts({"workspace_id": str(ws)})
 
     row = await db.fetchrow("select * from claim_conflicts where workspace_id=$1", ws)
@@ -72,7 +72,7 @@ async def test_perception_gap_requires_two_sources(db, monkeypatch):
         ws, sess, burak)
     gap = json.dumps([{"baseline_record": str(a), "lived_record": str(b), "axis": "time-or-cost",
                       "gap": "believed 40; lived 10", "magnitude": "4x"}])
-    monkeypatch.setattr(conflicts, "run_agent", _agent_mock({"perception_gap": gap}))
+    monkeypatch.setattr("app.llm.run_agent", _agent_mock({"perception_gap": gap}))
     await conflicts.detect_conflicts({"workspace_id": str(ws)})
 
     assert await db.fetchval(
@@ -105,7 +105,7 @@ async def test_perception_gap_needs_leadership_baseline(db, monkeypatch):
         {"baseline_record": str(exec_c), "lived_record": str(op_c), "axis": "time-or-cost", "gap": "10 vs 40"},
         {"baseline_record": str(op2_c), "lived_record": str(op_c), "axis": "time-or-cost", "gap": "20 vs 40"},
     ])
-    monkeypatch.setattr(conflicts, "run_agent", _agent_mock({"perception_gap": gaps}))
+    monkeypatch.setattr("app.llm.run_agent", _agent_mock({"perception_gap": gaps}))
     await conflicts.detect_conflicts({"workspace_id": str(ws)})
 
     rows = await db.fetch("select claim_a_id, claim_b_id from claim_conflicts where kind='perception_gap' and workspace_id=$1", ws)
@@ -122,7 +122,7 @@ async def test_build_workflow_schema_inserts_steps(db, monkeypatch):
          "output": "logged return", "verified": "partial",
          "spine_slots": {"task": "process a return"}, "slot_scores": {"steps": 1},
          "claim_ids": [str(c1)]}]})
-    monkeypatch.setattr(workflow, "run_agent", _agent_mock({"report_sop_generator": schema}))
+    monkeypatch.setattr("app.llm.run_agent", _agent_mock({"report_sop_generator": schema}))
     await workflow.build_workflow_schema({"session_id": str(sess)})
 
     wf = await db.fetchrow("select * from workflows where session_id=$1", sess)
@@ -140,7 +140,7 @@ async def test_quality_writes_resumable_state(db, monkeypatch):
     await db.execute("insert into utterances (session_id,turn_index,speaker,text) values ($1,1,'respondent','we check then refund')", sess)
     result = json.dumps({"objectives": [{"id": "o1", "outcome": "partial", "note": "general"}],
                          "headline": "1 partial to follow up", "follow_ups": ["ask for an episode"]})
-    monkeypatch.setattr(quality, "run_agent", _agent_mock({"interview_quality": result}))
+    monkeypatch.setattr("app.llm.run_agent", _agent_mock({"interview_quality": result}))
     await quality.score_interview_quality({"session_id": str(sess)})
 
     state = await db.fetchval("select resumable_state from interview_sessions where id=$1", sess)
