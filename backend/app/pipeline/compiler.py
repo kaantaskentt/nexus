@@ -40,6 +40,15 @@ _KIND = {"statement", "directive", "admission", "correction"}
 _TAG = {"guess": "GUESS", "claimed": "CLAIMED", "confirmed": "CONFIRMED"}
 # Kinds that are not points on the trust ladder carry a null tag (migration 0002).
 _UNTAGGED_KINDS = {"directive", "admission"}
+# Trust ladder rank for capping unverified sources (e.g. admin "add as context",
+# which is one person's account and may never compile above CLAIMED).
+_TAG_RANK = {"SCRAPED": 0, "GUESS": 1, "CLAIMED": 2, "CONFIRMED": 3, "VERIFIED": 4}
+
+
+def _cap_tag(tag: str | None, max_tag: str | None) -> str | None:
+    if tag is None or max_tag is None:
+        return tag
+    return max_tag if _TAG_RANK.get(tag, 0) > _TAG_RANK.get(max_tag, 4) else tag
 
 OUTPUT_CONTRACT = """
 ## Output — return ONE json object, nothing else
@@ -155,6 +164,9 @@ async def compile_session(payload: dict) -> None:
         raise RuntimeError(f"compile_session: no session {session_id}")
     workspace_id = str(session["workspace_id"])
     default_speaker_id = session["interviewee_id"]
+    # Unverified sources cap here: admin "add as context" compiles CLAIMED-at-best,
+    # never CONFIRMED/VERIFIED (V2-PLAN #20). None = the normal transcript path.
+    max_tag = payload.get("max_tag")
 
     utterances = await pool.fetch(
         "select turn_index, speaker, text from utterances "
@@ -218,7 +230,7 @@ async def compile_session(payload: dict) -> None:
         if topic is None:
             topic = "company_fact"  # never drop a record over a bad topic label
         raw_tag = (str(rec.get("tag")) or "").lower()
-        tag = None if kind in _UNTAGGED_KINDS else _TAG.get(raw_tag)
+        tag = None if kind in _UNTAGGED_KINDS else _cap_tag(_TAG.get(raw_tag), max_tag)
 
         flags = rec.get("flags") or {}
         sentiment = bool(flags.get("sentiment_quarantine"))
