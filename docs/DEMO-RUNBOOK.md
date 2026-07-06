@@ -4,7 +4,8 @@ The one-page script for showing Nexus to a client. Everything below runs against
 site. Read the "Rough edges" section once before you present so nothing surprises you.
 
 - **Site:** https://nexus-v2-alpha.vercel.app
-- **Login:** admin@nexus.app  /  Nexus-Demo-2026  (real account, no signup on screen)
+- **Login:** the admin account relayed to you separately (or your personal admin login). No
+  signup on screen; admins are created by hand.
 - **What is live:** admin login, the multi-company picker, "Add company", CEO-call upload
   with a live progressive compile, the Company Snapshot, Insights, the workflow editor,
   and the post-interview report. Interview links open without a login by design.
@@ -51,12 +52,16 @@ compiled interviews.
 
 ## Rough edges (know these so you are never caught out)
 
-- **Report completeness:** the report's quality score and one finding leg are being
-  re-run on prod (task #24). If a report looks thin in that one panel, it is the pending
-  re-run, not missing data. The workflow, findings, and conflicts render fine.
-- **Em-dashes on the Bee Goddess tenant:** a handful of older records on that prepared
-  workspace still contain em-dashes in the generated text (task #25 clears them). A company
-  you create live in Act 1 will be clean, since the compiler no longer emits them.
+- **New company ends at the snapshot for now:** a company you build live in Act 1 stops at
+  its Company Snapshot. The control to launch the next interview from a suggested person is
+  still landing (the generate-plan API is live; the button is in flight). This is exactly
+  why the demo pivots to Bee Goddess for Act 2, which already has interviews, plans, and a
+  report. Frame the pivot as "now let me show you a workspace a few interviews in".
+- **Em-dashes on the Bee Goddess tenant:** a few older records on this prepared workspace
+  contain em-dashes in generated text; they clear at the next demo reseed. A company you
+  create live in Act 1 is clean.
+- **Report:** renders fully, the workflow, key findings, and cross-interview conflicts. An
+  earlier gap in the quality leg was re-run on prod and closed (task #24).
 - **First voice call:** voice is provisioned. If you want to show it, send a voice-modality
   interview from a plan; the respondent page shows "Start voice conversation".
 
