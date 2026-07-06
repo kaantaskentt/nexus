@@ -67,3 +67,27 @@ def test_extract_json_parses_clean_object_and_array():
 def test_extract_json_recovers_a_fenced_block():
     # Even if a stray fence slips through, a single fenced object is still recoverable.
     assert extract_json('```json\n{"headline": "x", "objectives": []}\n```')["headline"] == "x"
+
+
+def test_quality_content_puts_the_output_instruction_after_the_transcript():
+    # First-attempt reliability (prod evidence): a 6932-char TRANSCRIPT-ECHO failed parse
+    # because the content ended with the transcript and the model continued it. The fix is
+    # recency — the task instruction must be the LAST thing the model reads, like perception_gap.
+    from app.pipeline.quality import _build_quality_content
+
+    transcript = "[agent] walk me through it\n[respondent] I just do the thing and that's it"
+    content = _build_quality_content([{"id": "o1"}], "each must-hit has an episode", transcript)
+    assert not content.rstrip().endswith(transcript), "transcript must not be the tail of the content"
+    tail = content[-320:]
+    assert "ONLY the single JSON object" in tail
+    assert "echo" in tail  # the anti-echo instruction lands last
+
+
+def test_transcript_echo_output_is_rejected_by_the_parser():
+    # The observed failure shape: the model echoed the transcript, no JSON at all. extract_json
+    # must RAISE (so run_agent_json fails the job and #22 retries) rather than return garbage.
+    import pytest
+
+    echoed = "[respondent] Not yet. That's the honest answer.\n\n[END OF TRANSCRIPT]"
+    with pytest.raises(ValueError):
+        extract_json(echoed)

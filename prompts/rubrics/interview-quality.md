@@ -25,6 +25,8 @@ For each workflow surfaced, rate slot completeness — task / trigger / steps / 
 
 Return **ONLY this single JSON object** and nothing else: no prose or reasoning before or after it, no markdown code fence, no comments, no second object. Do all your scoring internally and emit only the result. If a section has no entries, use an empty array (`[]`), never a sentence outside the object.
 
+**The transcript you are given is INPUT, never output.** Never repeat, echo, quote at length, or continue the transcript. Your entire response is the JSON object above, even when the transcript is long. Continuing the transcript instead of scoring it is the one failure that breaks this seat.
+
 ```json
 { "objectives": [ { "id": "…", "outcome": "satisfied|partial|dodged|untouched", "note": "…" } ],
   "workflows": [ { "name": "…", "slot_scores": { "task":2, "trigger":2, "steps":1, "rules":0, "exceptions":1, "tools":2, "output":2, "success":1, "examples":0 }, "spine_complete": false } ],
