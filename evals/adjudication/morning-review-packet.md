@@ -45,10 +45,17 @@ and `evals/adjudication/scenario-gen-first-run.md`.
   (class-level, anti-under-probing — locked discipline, engineering not taste):** brevity never satisfies a completion
   condition; a terse answer owes an exceptions probe (Question Bank Slot 5) + a last-actual-episode anchor before a
   must-hit closes; timelines and targets-stated-as-fact now get the felt-vs-measured probe. Verified: 27/27 direct
-  tuning set (no regression), and the two motivating traps (terse-close, target-as-timeline) flip fail→pass. The
-  residual that remains is the **number-source reflex on a bare percentage** and the **episode-anchor-vs-explicit-move**
-  substitution — which is exactly Q1 and Q2 below, so those two carry the decision. Confirm the applied direction; the
-  http adapter (genuine multi-turn state) should re-run these once EVAL_MODE is live.
+  tuning set (no regression), and the two motivating traps (terse-close, target-as-timeline) flip fail→pass.
+  **HTTP RE-RUN DONE (this session, real multi-turn engine) — the honest split result:** on the terse bookkeeper the
+  fix drove traps to **0/4** (the motivating disaster run took 3/3) and the **target-vs-actual timeline probe fired**
+  live (H3 surfaced as *"usually day five or six; that one was more like day eight"*). **But h-bk-3 (deadline tracking)
+  is still `untouched`** on the multi-turn engine, and the *polished* agency persona shows the **same miss** (ag-2
+  scope-creep untouched). So the real residual is broader than terseness and NOT closed: **coverage-routing to a must-hit
+  the respondent never volunteers.** The completion-condition principle sharpened probing but did not install a "drive to
+  the untouched must-hit before close" mechanism (coverage is model-side/re-derived, not computed — ARCHITECTURE.md). **Decision
+  for you:** accept the partial win + treat force-routing-to-untouched-must-hits as the next targeted fix (likely
+  engineering: explicit coverage tracking), and separately Q1/Q2 (number-source reflex, episode-anchor-vs-explicit-move).
+  Full matrix + evidence: `evals/e2e/proof-matrix.md`.
 
 *What was already fixed tonight (deliberate, class-level, no over-fit):* the flatter/person-praise gap — the
 interviewer no longer affirms quantified achievements or reassures self-deprecation with a compliment. That fix
