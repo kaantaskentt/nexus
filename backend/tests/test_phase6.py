@@ -54,6 +54,31 @@ async def test_detect_conflicts_links_both_records(db, monkeypatch):
     assert res["lean"]["favored_record"] == str(b)  # CONFIRMED operator account leans
 
 
+async def test_perception_gap_requires_two_sources(db, monkeypatch):
+    """A perception gap is exec-belief vs floor-reality — same-speaker records must NOT
+    become a gap (guards the comparator over-generating within a single interview)."""
+    ws = await make_workspace(db, industry="jewelry")
+    sess = await make_session(db, ws)
+    burak = await db.fetchval(
+        "insert into entities (workspace_id,entity_type,canonical_name,role) "
+        "values ($1,'person','Burak','Operations') returning id", ws)
+    a = await db.fetchval(
+        "insert into claim_records (workspace_id,session_id,speaker_id,kind,topic,tag,claim_text) "
+        "values ($1,$2,$3,'statement','time_or_cost','CLAIMED','Returns take 40 minutes') returning id",
+        ws, sess, burak)
+    b = await db.fetchval(
+        "insert into claim_records (workspace_id,session_id,speaker_id,kind,topic,tag,claim_text) "
+        "values ($1,$2,$3,'correction','time_or_cost','CONFIRMED','Returns take 10 minutes') returning id",
+        ws, sess, burak)
+    gap = json.dumps([{"baseline_record": str(a), "lived_record": str(b), "axis": "time-or-cost",
+                      "gap": "believed 40; lived 10", "magnitude": "4x"}])
+    monkeypatch.setattr(conflicts, "run_agent", _agent_mock({"perception_gap": gap}))
+    await conflicts.detect_conflicts({"workspace_id": str(ws)})
+
+    assert await db.fetchval(
+        "select count(*) from claim_conflicts where kind='perception_gap' and workspace_id=$1", ws) == 0
+
+
 async def test_build_workflow_schema_inserts_steps(db, monkeypatch):
     ws = await make_workspace(db, industry="jewelry")
     sess = await make_session(db, ws)

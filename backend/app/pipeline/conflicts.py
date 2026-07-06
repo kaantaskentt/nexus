@@ -43,7 +43,7 @@ def precedence_lean(a: dict, b: dict) -> dict | None:
 async def _records(workspace_id: str) -> list[dict]:
     pool = await get_pool()
     rows = await pool.fetch(
-        """select c.id, c.kind, c.topic, c.tag, c.claim_text, c.session_id,
+        """select c.id, c.kind, c.topic, c.tag, c.claim_text, c.session_id, c.speaker_id,
                   e.role as speaker_role, e.canonical_name as speaker_name
            from client_visible_claims c
            left join entities e on e.id = c.speaker_id
@@ -51,6 +51,18 @@ async def _records(workspace_id: str) -> list[dict]:
         workspace_id,
     )
     return [dict(r) | {"id": str(r["id"])} for r in rows]
+
+
+def _cross_source(a: dict, b: dict) -> bool:
+    """A perception gap is EXEC-belief vs FLOOR-reality — it requires two DIFFERENT
+    sources. Same-speaker records aren't a perception gap (at most a self-correction,
+    which is a collision). This structural guard stops the comparator over-generating
+    gaps within a single interview, regardless of prompt behavior."""
+    sa, sb = a.get("speaker_id"), b.get("speaker_id")
+    if sa is not None and sb is not None:
+        return sa != sb
+    # Fall back to session when speaker is unknown (scraped vs call is cross-source).
+    return a.get("session_id") != b.get("session_id")
 
 
 def _record_lines(records: list[dict]) -> str:
@@ -126,8 +138,8 @@ async def detect_conflicts(payload: dict) -> None:
         try:
             for g in extract_json(await run_agent("perception_gap", content, workspace_id=workspace_id)):
                 a, b = by_id.get(g.get("baseline_record")), by_id.get(g.get("lived_record"))
-                if not a or not b:
-                    continue
+                if not a or not b or not _cross_source(a, b):
+                    continue  # a gap needs two different sources — never same-speaker
                 await _insert_conflict(
                     pool, workspace_id, a["id"], b["id"], "perception_gap",
                     {"axis": g.get("axis"), "gap": g.get("gap"), "magnitude": g.get("magnitude"),
