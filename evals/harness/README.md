@@ -21,12 +21,20 @@ from a local dry-run to the real runtime is a **URL swap**, not a rewrite.
 ## Endpoint contract the `http` adapter expects (for backend-ontology to confirm)
 
 ```
-POST {base}/sessions/eval-bootstrap   {handoff, modality:"text", language}  -> {token}
-POST {base}/sessions/by-token/{token}/turn   {message}                      -> {reply, state}
+POST {base}/sessions/eval-bootstrap        {handoff, modality:"text", language}  -> {token}   # NEEDED (test-only)
+POST {base}/sessions/by-token/{token}/turn  {message}  -> {reply, turn_index, elapsed_minutes, should_offer_pause}
 ```
-`eval-bootstrap` is a **test-only** hook that mints an `is_demo` session from a handoff package
-(never a real tenant — A12). If you'd rather the harness seed a session row directly, only
-`bootstrap()` changes; the cases and judge don't.
+The **turn route already exists** (routers/sessions.py, task #7) and returns `reply` among other
+fields — the `http` adapter reads `reply`, so it matches as-is. The runtime injects the handoff
+package as system context and keys pause/elapsed off REAL stored utterances + wall-clock, so the
+`http` path has genuine multi-turn state (the `direct` adapter's synthetic mid-interview note is
+only a stand-in for that history).
+
+The one missing piece is **`eval-bootstrap`** — a test-only hook that mints an `is_demo` session
+plus its `handoff_packages` row from the given package and returns the invite token (never a real
+tenant — A12; gate it behind `EVAL_MODE`/`is_demo` per team-lead). The runtime loads the package
+via `plan_id -> handoff_packages`, so bootstrap must attach the package that way (or the harness
+seeds the session + handoff row directly — then only `bootstrap()` changes, cases/judge don't).
 
 ## Run
 
@@ -36,7 +44,14 @@ python -m evals.harness --adapter direct --suite all          # dry-run, all cas
 python -m evals.harness --adapter direct --suite whatif --limit 3
 python -m evals.harness --adapter http --base-url http://localhost:8000 --suite taxonomy
 python -m evals.harness --adapter direct --suite all --json out.json
+python -m evals.harness --adapter http --suite heldout          # sealed overfit check (see below)
 ```
+
+**`--suite all` is the tuning set (taxonomy + whatif, 26 cases) only.** `heldout`
+(`heldout-overfit-check.yaml`, 3 cases) is a **sealed overfit check** — deliberately excluded from
+`all` and never used to tune the persona. Run it ONCE, unseen, against the real runtime (`--adapter
+http --suite heldout`): if the class-level persona fixes generalized, it passes first try; if the
+persona over-fit to the 26 tuning cases, it exposes that. Don't fold it into the tuning loop.
 
 Env overrides: `NEXUS_EVAL_INTERVIEWER_MODEL`, `NEXUS_EVAL_JUDGE_MODEL` (default the repo's
 strong seat), `NEXUS_APP_BASE_URL`. Exit code is non-zero if any case fails or errors (CI-friendly).

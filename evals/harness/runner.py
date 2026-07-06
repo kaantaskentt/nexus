@@ -24,7 +24,10 @@ INTERVIEWER_DIR = HERE.parent / "interviewer"
 SUITES = {
     "taxonomy": INTERVIEWER_DIR / "failure-taxonomy.yaml",
     "whatif": INTERVIEWER_DIR / "what-if-pairs.yaml",
+    "heldout": INTERVIEWER_DIR / "heldout-overfit-check.yaml",
 }
+# 'all' = the tuning suites only. heldout is a sealed overfit check — opt-in, never bundled.
+TUNING_SUITES = ["taxonomy", "whatif"]
 
 # A neutral default handoff. Per-case input.context is injected as a scenario note so
 # situational cases (NEVER-list, ~20-min pause) have their setup. Deliberately carries a
@@ -53,7 +56,7 @@ DEFAULT_HANDOFF = {
 
 
 def load_cases(suite: str) -> list[dict]:
-    files = SUITES.values() if suite == "all" else [SUITES[suite]]
+    files = [SUITES[k] for k in TUNING_SUITES] if suite == "all" else [SUITES[suite]]
     cases: list[dict] = []
     for f in files:
         doc = yaml.safe_load(f.read_text())
@@ -119,7 +122,7 @@ async def main_async(args) -> int:
 def main() -> None:
     p = argparse.ArgumentParser(description="Run the interviewer eval suite.")
     p.add_argument("--adapter", choices=["direct", "http"], default="direct")
-    p.add_argument("--suite", choices=["taxonomy", "whatif", "all"], default="all")
+    p.add_argument("--suite", choices=["taxonomy", "whatif", "all", "heldout"], default="all")
     p.add_argument("--base-url", dest="base_url", default=None, help="http adapter base URL")
     p.add_argument("--limit", type=int, default=0)
     p.add_argument("--concurrency", type=int, default=4)
