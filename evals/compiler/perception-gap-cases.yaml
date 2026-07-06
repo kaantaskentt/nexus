@@ -66,6 +66,22 @@
     - Reports a total contradiction (overstates), or
     - Reports full agreement and drops the rework-loop divergence (understates)
 
+# ── Guardrail: same-speaker records are never a perception gap (different sources required). ──
+# From the live E2E (backend flagged the prompt over-generating on a single 54-claim interview): a gap is
+# exec-belief vs floor-reality across DIFFERENT people. Backend also guards this structurally (speaker_id check).
+- id: pgap-never-same-speaker
+  category: perception-gap
+  outcome: guardrail
+  intent: Two records from the SAME speaker are never a perception gap — that's a self-correction/hedge, not exec-vs-floor.
+  input:
+    baseline: "CEO (CLAIMED, time_or_cost): returns take about ten minutes."
+    lived: "Same CEO, later in the same call (GUESS): actually, maybe closer to twenty, I'm not sure."
+  pass_if:
+    - Emits NO perception gap (same speaker — this is one person revising/hedging, handled by supersede/hedge, not a gap)
+  fail_if:
+    - Constructs a perception gap from two records by the same speaker
+    - Treats a single person's self-correction as exec-vs-floor divergence
+
 # ── Guardrail: quarantined sentiment never enters a comparison. ──
 - id: pgap-never-uses-quarantined
   category: perception-gap
