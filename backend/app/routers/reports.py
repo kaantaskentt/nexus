@@ -16,6 +16,18 @@ def _loads(v):
     return json.loads(v) if isinstance(v, str) else v
 
 
+_TOOL_KIND = {"whatsapp": "whatsapp", "excel": "excel", "spreadsheet": "excel",
+              "shopify": "shopify", "printer": "printer", "notion": "notion",
+              "apify": "apify", "email": "email"}
+_STEP_STATUS = {"verified": "verified", "partial": "partial", "unverified": "needs_clarification"}
+_STEP_CONF = {"verified": "verified", "partial": "reported", "unverified": "scraped"}
+
+
+def _tool_kind(name: str | None) -> str:
+    n = (name or "").lower()
+    return next((v for k, v in _TOOL_KIND.items() if k in n), "unknown")
+
+
 @router.get("/by-plan/{plan_id}")
 async def report_by_plan(plan_id: str):
     """Resolve a plan to its compiled interview session, then render its report — the
@@ -54,14 +66,39 @@ async def report(session_id: str):
                from workflow_steps where workflow_id = $1 order by step_index""",
             wf["id"],
         )
-        workflow = {
-            "name": wf["name"],
-            "steps": [
-                {**dict(s), "spine_slots": _loads(s["spine_slots"]),
-                 "slot_scores": _loads(s["slot_scores"]), "claim_ids": [str(c) for c in s["claim_ids"]]}
-                for s in steps
-            ],
-        }
+        # One lookup for the paraphrase + who-it-came-from behind each step (F33: the
+        # client view shows the compiler's third-person paraphrase, never a verbatim
+        # employee quote).
+        all_ids = [str(c) for s in steps for c in s["claim_ids"]]
+        claim_map = {}
+        if all_ids:
+            crows = await pool.fetch(
+                "select c.id, c.claim_text, e.canonical_name as speaker from claim_records c "
+                "left join entities e on e.id = c.speaker_id where c.id = any($1::uuid[])", all_ids)
+            claim_map = {str(r["id"]): r for r in crows}
+
+        def _step(s):
+            spine = _loads(s["spine_slots"]) or {}
+            scores = _loads(s["slot_scores"]) or {}
+            ids = [str(c) for c in s["claim_ids"]]
+            texts = [claim_map[i]["claim_text"] for i in ids if i in claim_map]
+            speakers = [claim_map[i]["speaker"] for i in ids if claim_map.get(i) and claim_map[i]["speaker"]]
+            return {
+                "index": s["step_index"],
+                "title": spine.get("task") or (s["action"] or "Step")[:60],
+                "description": s["action"],
+                "tool": {"kind": _tool_kind(s["tool"]), "name": s["tool"] or "—"},
+                "input": s["input"], "action": s["action"], "output": s["output"],
+                "status": _STEP_STATUS.get(s["verified"], "needs_clarification"),
+                "confidence": _STEP_CONF.get(s["verified"], "reported"),
+                "captured_from": speakers[0] if speakers else None,
+                "captured_paraphrase": " ".join(texts) or None,
+                "unverified_questions": [f"{slot.replace('_', ' ').capitalize()} not yet captured"
+                                         for slot, sc in scores.items() if sc == 0],
+                "spine_slots": spine, "slot_scores": scores, "claim_ids": ids,
+            }
+
+        workflow = {"name": wf["name"], "steps": [_step(s) for s in steps]}
 
     # Perception gaps + conflict points — both claim sides via the deny-by-default view.
     conflict_rows = await pool.fetch(
@@ -112,6 +149,11 @@ async def report(session_id: str):
         follow_up_on.append({"text": r["claim_text"], "kind": r["kind"], "objectives": objectives})
 
     quality = (_loads(session["resumable_state"]) or {}).get("interview_quality")
+    if quality and isinstance(quality.get("objectives"), list):
+        from collections import Counter
+        counts = Counter(o.get("outcome") for o in quality["objectives"])
+        quality["counts"] = {k: counts.get(k, 0)
+                             for k in ("satisfied", "partial", "dodged", "untouched")}
 
     return {
         "session_id": str(session["id"]),
