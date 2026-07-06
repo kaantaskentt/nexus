@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from ..config import get_settings
 from ..db import get_pool
 from ..pipeline.interview import run_interview_turn
+from ..queue import enqueue
 
 router = APIRouter()
 
@@ -97,6 +98,23 @@ async def pause(token: str):
         session["id"],
     )
     return {"status": "paused", "resumes_on": "same link"}
+
+
+@router.post("/by-token/{token}/complete")
+async def complete(token: str):
+    """Finish a text interview: mark it completed and enqueue the Stage 4 compile
+    (the voice path does this from the end-of-call webhook; text needs an explicit
+    finish). Idempotent — a re-complete won't double-enqueue an already-closed one."""
+    session = await _session_for_token(token)
+    pool = await get_pool()
+    if session["status"] == "completed":
+        return {"status": "completed", "compile": "already queued"}
+    await pool.execute(
+        "update interview_sessions set status = 'completed', ended_at = now() where id = $1",
+        session["id"],
+    )
+    await enqueue("compile_session", {"session_id": str(session["id"])})
+    return {"status": "completed", "compile": "queued"}
 
 
 class EvalBootstrapIn(BaseModel):
