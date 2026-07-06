@@ -52,8 +52,9 @@ export function EvidenceQuoteCard({
       {showLink && (
         <button
           type="button"
-          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent opacity-80 transition-all duration-150 ease-standard hover:gap-1.5 hover:opacity-100 hover:underline"
-          title="Jump to this moment in the transcript"
+          disabled
+          className="mt-3 inline-flex cursor-not-allowed items-center gap-1 text-xs font-medium text-ink-faint opacity-60"
+          title="Transcript view ships in the next build"
         >
           View transcript evidence
           <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />

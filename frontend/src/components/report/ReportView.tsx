@@ -219,7 +219,7 @@ export function ReportView({
             icon={MessageSquare}
             label="View full transcript"
             sub="Read the full conversation, including all answers and context."
-            soon="The verbatim transcript view is being wired in this build"
+            soon="Transcript view ships in the next build"
           />
         </div>
       </div>

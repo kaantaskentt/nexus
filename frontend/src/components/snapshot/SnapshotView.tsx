@@ -469,9 +469,16 @@ function AreaDrawer({
                 <p className="text-center text-xs text-ink-faint">
                   will create objectives from the unknowns above
                 </p>
-                <div className="flex items-center justify-center gap-4 pt-1 text-xs font-medium text-accent">
-                  <button className="hover:underline">View full transcript</button>
-                  <button className="hover:underline">
+                <div className="flex items-center justify-center gap-4 pt-1 text-xs font-medium">
+                  <button
+                    disabled
+                    title="Transcript view ships in the next build"
+                    className="cursor-not-allowed text-ink-faint opacity-60"
+                  >
+                    View full transcript
+                  </button>
+                  {/* Add context is the #20 chat entry point — wired live as the chat agent lands. */}
+                  <button className="text-accent hover:underline">
                     Add context (chat with {brand.product_name})
                   </button>
                 </div>
