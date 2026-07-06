@@ -2,18 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Design tokens (A15.1) ─────────────────────────────────────────
-   Extracted from the Stage 5/6/8 mockups: cream canvas, orange accent,
-   serif display over sans body, soft card radii, badge-driven trust UI.
-   Every screen and component reads these variables — no ad-hoc colors. */
+/* ── Design tokens V2 (A15.1 · A16 "10k designer" bar) ──────────────────
+   Evolution of the Stage 5/6/8 mockup identity — warm cream canvas, orange
+   accent, Fraunces display over Inter body — deepened with a real surface
+   ladder, a layered elevation scale, glass for floating surfaces, a type
+   scale, and a motion vocabulary. Every V1 token NAME is preserved; new ones
+   are grouped and commented. Components read these variables — no ad-hoc hex. */
 
 :root {
-  /* Canvas + surfaces */
-  --canvas: #faf6ef;          /* cream page background */
-  --surface: #ffffff;         /* cards */
-  --surface-raised: #fffdf9;
-  --border: #e8e0d2;
+  /* Canvas + surfaces — a real ladder so white cards lift off the cream */
+  --canvas: #f7f2e9;          /* page background (was #faf6ef — a touch deeper) */
+  --surface: #fffdf8;         /* card face */
+  --surface-raised: #fffefb;  /* hover/raised face */
+  --surface-sunken: #f2ece0;  /* wells: inputs, insets, code */
+  --border: #e6ddcd;
   --border-strong: #d6cbb8;
+  --hairline-top: rgb(255 255 255 / 0.7);  /* faux inner highlight on card top edge */
+
+  /* Glass — floating surfaces only (top bar, drawer, sticky rails) */
+  --glass: rgb(255 253 248 / 0.72);
+  --glass-border: rgb(255 255 255 / 0.55);
+  --glass-blur: 14px;
 
   /* Ink */
   --ink: #1f1a13;             /* primary text */
@@ -22,19 +31,21 @@
 
   /* Accent */
   --accent: #e8641b;          /* orange — actions, active states */
+  --accent-hover: #f0762f;    /* brighter hover */
   --accent-soft: #fdeadd;     /* orange wash — chips, hovers */
   --accent-ink: #9c3d08;      /* orange text on soft wash */
+  --accent-ring: rgb(232 100 27 / 0.35);  /* focus ring */
   --on-accent: #ffffff;       /* text/icon on a solid accent fill */
-  --scrim: rgb(31 26 19 / 0.28); /* drawer/modal backdrop */
+  --scrim: rgb(31 26 19 / 0.32); /* drawer/modal backdrop */
 
-  /* Trust ladder — one hue per tier, used by ConfidenceBadge only */
+  /* Trust ladder — one hue per tier, used by ConfidenceBadge only (F35/A2 locked) */
   --tag-scraped: #94897a;
   --tag-guess: #b08d2f;
   --tag-claimed: #2f6fb0;
   --tag-confirmed: #2e7d4f;
   --tag-verified: #1b5e20;
 
-  /* Pain bands — coarse, never decimals (F28/A2) */
+  /* Pain bands — coarse, never decimals (F28/A2 locked) */
   --pain-low: #dce8dc;
   --pain-moderate: #f5e6c4;
   --pain-high: #f8d5b8;
@@ -47,19 +58,110 @@
   --success-soft: #dcece0;
 
   /* Shape */
-  --radius-card: 14px;
+  --radius-sm: 8px;
+  --radius-md: 11px;
+  --radius-card: 16px;
+  --radius-xl: 22px;
   --radius-chip: 999px;
-  --shadow-card: 0 1px 3px rgb(31 26 19 / 0.06), 0 4px 16px rgb(31 26 19 / 0.05);
+
+  /* Elevation — 4-step layered scale (contact + ambient, ink-tinted not black) */
+  --elev-0: none;
+  --elev-1: 0 1px 2px rgb(31 26 19 / .05), 0 1px 1px rgb(31 26 19 / .04);
+  --elev-2: 0 1px 3px rgb(31 26 19 / .06), 0 6px 16px rgb(31 26 19 / .06);
+  --elev-3: 0 2px 6px rgb(31 26 19 / .08), 0 16px 40px rgb(31 26 19 / .10);
+  --elev-4: 0 4px 12px rgb(31 26 19 / .10), 0 30px 70px rgb(31 26 19 / .14);
+  --shadow-card: var(--elev-2);  /* legacy alias — components still say shadow-card */
+
+  /* Type scale (Fraunces display + Inter body) */
+  --step--1: .8125rem;   /* 13px captions/labels */
+  --step-0:  .9375rem;   /* 15px body */
+  --step-1:  1.0625rem;  /* 17px lead */
+  --step-2:  1.375rem;   /* 22px card titles */
+  --step-3:  1.875rem;   /* 30px section */
+  --step-4:  2.75rem;    /* 44px page title */
+  --step-5:  3.75rem;    /* 60px hero */
+
+  /* Motion vocabulary — app UI is fast + restrained (150–260ms), ease-out */
+  --dur-instant: 90ms;
+  --dur-fast: 150ms;
+  --dur-base: 220ms;
+  --dur-slow: 320ms;
+  --ease-standard: cubic-bezier(.2, 0, 0, 1);   /* ui default (ease-out) */
+  --ease-entrance: cubic-bezier(.16, 1, .3, 1); /* arrivals — decel */
+  --ease-exit: cubic-bezier(.4, 0, 1, 1);
+
+  /* Density (Notion-style) — one dial for Emre's 5-minute parse test */
+  --density: 1;             /* comfortable (default) */
 }
+
+:root[data-density="compact"] { --density: .82; }
 
 body {
   background: var(--canvas);
   color: var(--ink);
+  font-size: var(--step-0);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numbers/timestamps read as data, aligned */
+.tabular { font-variant-numeric: tabular-nums; }
+
+@layer base {
+  /* Display type gets tight tracking; body stays open. The "Linear-grade" tell. */
+  .font-display { letter-spacing: -0.02em; }
+
+  /* Visible focus ring on every keyboard-focused interactive element */
+  :focus-visible {
+    outline: 2px solid var(--accent-ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Honor reduced-motion: keep opacity, drop transforms/large moves */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
-  /* Shared form input — used by the Send Interview flow (A4). */
+  /* Glass surface — floating chrome only (top bar, drawer, sticky rails) */
+  .glass {
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    backdrop-filter: blur(var(--glass-blur));
+    border-color: var(--glass-border);
+  }
+
+  /* Card top-edge highlight — a 1px inner light line so cards feel physical */
+  .card-hairline {
+    box-shadow: var(--elev-1), inset 0 1px 0 0 var(--hairline-top);
+  }
+  .card-hairline-2 {
+    box-shadow: var(--elev-2), inset 0 1px 0 0 var(--hairline-top);
+  }
+
+  /* Interactive card — rests at elev-1, lifts 1px to elev-2 on hover (the signature
+     micro-interaction). Hairline highlight persists in both states. */
+  .lift {
+    box-shadow: var(--elev-1), inset 0 1px 0 0 var(--hairline-top);
+    transition: box-shadow var(--dur-fast) var(--ease-standard),
+      transform var(--dur-fast) var(--ease-standard),
+      border-color var(--dur-fast) var(--ease-standard);
+  }
+  .lift:hover {
+    box-shadow: var(--elev-2), inset 0 1px 0 0 var(--hairline-top);
+    transform: translateY(-1px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lift:hover { transform: none; }
+  }
+
+  /* Shared form input — used by the Send Interview flow (A4) */
   .input {
-    @apply w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-accent;
+    @apply w-full rounded-md border border-line bg-surface-sunken px-3 py-2 text-sm text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-accent;
   }
 }

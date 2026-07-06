@@ -21,12 +21,12 @@ export function PainBandChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-chip px-2.5 py-1 text-xs font-semibold text-ink",
+        "inline-flex items-center gap-1.5 rounded-chip px-2.5 py-1 text-xs font-semibold tracking-tight text-ink ring-1 ring-inset ring-ink/[0.05]",
         b.fill,
         className,
       )}
     >
-      <span className="opacity-60">Pain</span>
+      <span className="uppercase tracking-wide opacity-50">Pain</span>
       {b.label}
     </span>
   );

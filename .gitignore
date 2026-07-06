@@ -11,3 +11,9 @@ __pycache__/
 
 # synthetic interview run artifacts (mining material, not source)
 evals/e2e/runs/
+.vercel
+.env*
+
+# UI review screenshots + Playwright scratch (design-gate artifacts, not source)
+.playwright-mcp/
+/*.png

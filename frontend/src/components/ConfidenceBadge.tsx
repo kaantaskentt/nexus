@@ -51,10 +51,10 @@ export function ConfidenceBadge({
       key={confidence}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.18 }}
+      transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
       title={c.title}
       className={cn(
-        "inline-flex items-center rounded-chip px-2.5 py-1 text-xs font-semibold",
+        "inline-flex items-center rounded-chip px-2.5 py-1 text-xs font-semibold tracking-tight ring-1 ring-inset ring-ink/[0.04]",
         c.pill,
         className,
       )}

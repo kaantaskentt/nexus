@@ -29,9 +29,8 @@ import {
   PainBandChip,
   PersonRow,
 } from "@/components";
+import { rise, staggerParent, drawerSpring, scrimFade, drawerSection } from "@/lib/variants";
 import brand from "@/lib/brand";
-
-const rise = { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 } };
 
 const SOURCE_ICON: Record<LearnedSource, typeof Phone> = {
   call: Phone,
@@ -67,45 +66,53 @@ export function SnapshotView({
 
   return (
     <AppShell workspace={workspace} active="snapshot">
-      <div className="mx-auto max-w-6xl px-8 py-8">
+      <div className="mx-auto max-w-6xl px-8 py-10">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_19rem]">
           {/* ── Main column ─────────────────────────────────────────── */}
           <div className="min-w-0">
-            <h1 className="font-display text-4xl text-ink">Company Snapshot</h1>
+            <motion.div variants={rise} initial="hidden" animate="show">
+              <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">
+                Company Snapshot
+              </h1>
 
-            {/* Company identity */}
-            <div className="mt-5 flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-line font-display text-lg leading-none text-ink">
-                {workspace.name.split(/\s+/).slice(0, 2).map((p) => p[0]).join("")}
+              {/* Company identity */}
+              <div className="mt-5 flex items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-line bg-surface font-display text-lg leading-none text-ink shadow-elev-1 ring-1 ring-inset ring-white/40">
+                  {workspace.name.split(/\s+/).slice(0, 2).map((p) => p[0]).join("")}
+                </div>
+                <div>
+                  <div className="font-display text-2xl text-ink">{workspace.name}</div>
+                  {cfg.founder && (
+                    <div className="text-sm text-ink-soft">
+                      Meeting Owner: {cfg.founder}
+                      {cfg.founder_role && ` (${cfg.founder_role})`}
+                    </div>
+                  )}
+                  {cfg.source && (
+                    <div className="text-sm text-ink-faint">Source: {cfg.source}</div>
+                  )}
+                </div>
               </div>
-              <div>
-                <div className="font-display text-2xl text-ink">{workspace.name}</div>
-                {cfg.founder && (
-                  <div className="text-sm text-ink-soft">
-                    Meeting Owner: {cfg.founder}
-                    {cfg.founder_role && ` (${cfg.founder_role})`}
-                  </div>
-                )}
-                {cfg.source && (
-                  <div className="text-sm text-ink-faint">Source: {cfg.source}</div>
-                )}
-              </div>
-            </div>
+            </motion.div>
 
             {/* What {brand} Learned */}
             <Section title={`What ${brand.product_name} Learned`}>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {learned.map((card, i) => {
+              <motion.div
+                variants={staggerParent}
+                initial="hidden"
+                animate="show"
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+              >
+                {learned.map((card) => {
                   const c = card.content as LearnedContent;
                   const Icon = SOURCE_ICON[c.source];
                   return (
                     <motion.article
                       key={card.id}
-                      {...rise}
-                      transition={{ delay: i * 0.04 }}
-                      className="flex flex-col rounded-card border border-line bg-surface p-4 shadow-card"
+                      variants={rise}
+                      className="lift flex flex-col rounded-card border border-line bg-surface p-4 hover:border-line-strong"
                     >
-                      <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
+                      <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent-ink shadow-[inset_0_1px_2px_rgb(31_26_19/0.06)] ring-1 ring-inset ring-accent/10">
                         <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
                       </div>
                       <h3 className="flex-1 text-sm font-semibold leading-snug text-ink">
@@ -118,24 +125,28 @@ export function SnapshotView({
                     </motion.article>
                   );
                 })}
-              </div>
+              </motion.div>
             </Section>
 
             {/* Areas to Investigate */}
             <Section title="Areas to Investigate">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {areas.map((card, i) => {
+              <motion.div
+                variants={staggerParent}
+                initial="hidden"
+                animate="show"
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+              >
+                {areas.map((card) => {
                   const a = card.content as AreaContent;
                   return (
                     <motion.button
                       key={card.id}
-                      {...rise}
-                      transition={{ delay: i * 0.04 }}
+                      variants={rise}
                       onClick={() => setOpenArea(a)}
-                      className="flex flex-col rounded-card border border-line bg-surface p-4 text-left shadow-card transition-colors hover:border-line-strong hover:bg-surface-raised"
+                      className="lift group flex flex-col rounded-card border border-line bg-surface p-4 text-left hover:border-line-strong"
                     >
                       <div className="flex items-start gap-2">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-on-accent">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold tabular text-on-accent shadow-elev-1">
                           {a.rank}
                         </span>
                         <h3 className="font-semibold leading-snug text-ink">{a.title}</h3>
@@ -146,13 +157,13 @@ export function SnapshotView({
                       <p className="mt-3 flex-1 text-sm leading-relaxed text-ink-soft">
                         {a.summary}
                       </p>
-                      <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent">
+                      <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent transition-all duration-150 ease-standard group-hover:gap-1.5">
                         Open <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
                       </span>
                     </motion.button>
                   );
                 })}
-              </div>
+              </motion.div>
             </Section>
 
             {/* Conflict Points — first-class (A3), shown once contradictions exist */}
@@ -164,13 +175,13 @@ export function SnapshotView({
                     return (
                       <article
                         key={card.id}
-                        className="rounded-card border border-line-strong bg-accent-soft p-5"
+                        className="card-hairline rounded-card border border-accent/25 bg-accent-soft p-5"
                       >
                         <div className="mb-3 flex items-center justify-between gap-3">
                           <h3 className="font-display text-lg text-ink">{cf.title}</h3>
                           <ConfidenceBadge confidence={card.confidence} />
                         </div>
-                        <p className="text-sm text-ink-soft">{cf.note}</p>
+                        <p className="text-sm leading-relaxed text-ink-soft">{cf.note}</p>
                       </article>
                     );
                   })}
@@ -180,7 +191,7 @@ export function SnapshotView({
 
             {/* Suggested People to Interview */}
             <Section title="Suggested People to Interview">
-              <div className="divide-y divide-line rounded-card border border-line bg-surface">
+              <div className="card-hairline divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
                 {people.map((card) => {
                   const p = card.content as SuggestedPersonContent;
                   return (
@@ -188,7 +199,7 @@ export function SnapshotView({
                       key={card.id}
                       person={p}
                       action={
-                        <button className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:bg-surface-raised hover:text-ink">
+                        <button className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:bg-surface-sunken hover:text-ink">
                           <User className="h-4 w-4" strokeWidth={1.75} />
                           Interview
                         </button>
@@ -201,22 +212,22 @@ export function SnapshotView({
 
             {/* Next Recommended Action */}
             {topTwo.length > 0 && (
-              <div className="mt-8 flex flex-wrap items-center gap-4 rounded-card border border-line bg-accent-soft p-5">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent">
+              <div className="card-hairline mt-8 flex flex-wrap items-center gap-4 rounded-card border border-accent/25 bg-accent-soft p-5">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent shadow-elev-2 ring-1 ring-inset ring-white/25">
                   <Rocket className="h-5 w-5" strokeWidth={1.75} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-accent-ink">
+                  <div className="text-xs font-semibold uppercase tracking-[0.08em] text-accent-ink">
                     Next Recommended Action
                   </div>
-                  <p className="text-sm text-ink">
+                  <p className="text-sm leading-relaxed text-ink">
                     Start Active Run: investigate {topTwo.join(" and ")}.
                     {firstPerson && ` First interview: ${firstPerson}.`}
                   </p>
                 </div>
                 <a
                   href={`/w/${workspace.slug}/plans`}
-                  className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90"
+                  className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
                 >
                   Start Active Run <ArrowRight className="h-4 w-4" strokeWidth={2} />
                 </a>
@@ -226,12 +237,16 @@ export function SnapshotView({
 
           {/* ── Evidence rail ───────────────────────────────────────── */}
           <aside className="lg:pt-2">
-            <div className="sticky top-8">
+            <div className="sticky top-24">
               <h2 className="mb-4 font-display text-xl text-ink">Evidence</h2>
-              <div className="space-y-3">
-                {railEvidence.map((claim) => (
-                  <EvidenceQuoteCard key={claim.id} claim={claim} sourceLabel="CEO Call" />
-                ))}
+              {/* soft top fade so the rail reads as a rail, not a column */}
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-4 bg-gradient-to-b from-canvas to-transparent" />
+                <div className="space-y-3">
+                  {railEvidence.map((claim) => (
+                    <EvidenceQuoteCard key={claim.id} claim={claim} sourceLabel="CEO Call" />
+                  ))}
+                </div>
               </div>
             </div>
           </aside>
@@ -285,9 +300,10 @@ function SignalBars({ confidence }: { confidence: string }) {
   );
 }
 
-// Areas-to-Investigate sidebar (A3 + stage5-snapshot-small): admin-only marker +
-// status, pain band (never a decimal), qualitative pain signals, beliefs with
-// confidence, evidence, unknowns, who holds the knowledge, and Add-to-Plan.
+// Areas-to-Investigate drawer (A3 + stage5-snapshot-small): the flagship V2 glass
+// surface. Admin-only marker + status, pain band (never a decimal), qualitative
+// pain signals, beliefs with confidence, evidence, unknowns, who holds the
+// knowledge, and Add-to-Plan. Spring slide-in; sections cascade once settled.
 function AreaDrawer({
   area,
   claimsById,
@@ -302,111 +318,147 @@ function AreaDrawer({
       {area && (
         <>
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            variants={scrimFade}
+            initial="hidden"
+            animate="show"
+            exit="hidden"
             onClick={onClose}
-            className="fixed inset-0 z-40 bg-scrim"
+            className="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]"
           />
           <motion.aside
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
-            className="fixed right-0 top-0 z-50 flex h-screen w-full max-w-md flex-col overflow-y-auto border-l border-line bg-canvas p-6 shadow-card"
+            transition={drawerSpring}
+            className="glass fixed right-0 top-0 z-50 flex h-screen w-full max-w-md flex-col overflow-y-auto border-l shadow-elev-3"
           >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <h2 className="font-display text-2xl leading-snug text-ink">{area.title}</h2>
-              <button
-                onClick={onClose}
-                className="shrink-0 rounded-lg p-1 text-ink-faint hover:bg-surface-raised hover:text-ink"
-                aria-label="Close"
+            <div className="flex flex-col p-6">
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <h2 className="font-display text-2xl leading-snug text-ink">{area.title}</h2>
+                <button
+                  onClick={onClose}
+                  className="shrink-0 rounded-md p-1.5 text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
+                  aria-label="Close"
+                >
+                  <X className="h-5 w-5" strokeWidth={1.75} />
+                </button>
+              </div>
+
+              <motion.div
+                variants={staggerParent}
+                initial="hidden"
+                animate="show"
+                transition={{ delayChildren: 0.12 }}
               >
-                <X className="h-5 w-5" strokeWidth={1.75} />
-              </button>
-            </div>
+                <motion.div
+                  variants={drawerSection}
+                  className="mb-4 flex items-center justify-between text-xs"
+                >
+                  {area.admin_only && (
+                    <span className="inline-flex items-center gap-1 text-ink-faint">
+                      <Lock className="h-3.5 w-3.5" strokeWidth={1.75} /> visible to admins only
+                    </span>
+                  )}
+                  <span className="rounded-chip bg-surface-sunken px-2.5 py-0.5 font-medium capitalize text-ink-soft ring-1 ring-inset ring-ink/[0.04]">
+                    {area.status}
+                  </span>
+                </motion.div>
 
-            <div className="mb-4 flex items-center justify-between text-xs">
-              {area.admin_only && (
-                <span className="inline-flex items-center gap-1 text-ink-faint">
-                  <Lock className="h-3.5 w-3.5" strokeWidth={1.75} /> visible to admins only
-                </span>
-              )}
-              <span className="rounded-chip bg-surface-raised px-2 py-0.5 font-medium text-ink-soft">
-                {area.status}
-              </span>
-            </div>
+                {/* Pain band (coarse — never a decimal, F28/A2) */}
+                <motion.div
+                  variants={drawerSection}
+                  className="mb-4 flex items-center gap-2"
+                >
+                  <span className="text-sm text-ink-soft">Pain level</span>
+                  <PainBandChip band={area.pain_band} />
+                </motion.div>
 
-            {/* Pain band (coarse — never a decimal, F28/A2) */}
-            <div className="mb-4 flex items-center gap-2">
-              <span className="text-sm text-ink-soft">Pain level</span>
-              <PainBandChip band={area.pain_band} />
-            </div>
+                {/* Pain signals — qualitative, no decimals */}
+                <motion.div variants={drawerSection} className="mb-5 grid grid-cols-3 gap-2">
+                  <SignalStat label="Frequency" value={area.signals.frequency} />
+                  <SignalStat label="Emotional weight" value={area.signals.emotional_weight} />
+                  <SignalStat label="Mentions" value={area.signals.mentions} />
+                </motion.div>
 
-            {/* Pain signals — qualitative, no decimals */}
-            <div className="mb-5 grid grid-cols-3 gap-2">
-              <SignalStat label="Frequency" value={area.signals.frequency} />
-              <SignalStat label="Emotional weight" value={area.signals.emotional_weight} />
-              <SignalStat label="Mentions" value={area.signals.mentions} />
-            </div>
+                <motion.div variants={drawerSection}>
+                  <DrawerBlock title="Why ranked here">
+                    <p className="text-sm leading-relaxed text-ink-soft">{area.why_ranked}</p>
+                  </DrawerBlock>
+                </motion.div>
 
-            <DrawerBlock title="Why ranked here">
-              <p className="text-sm leading-relaxed text-ink-soft">{area.why_ranked}</p>
-            </DrawerBlock>
+                <motion.div variants={drawerSection}>
+                  <DrawerBlock title="What we believe so far">
+                    <ul className="space-y-2">
+                      {area.beliefs.map((b, i) => (
+                        <li
+                          key={i}
+                          className="flex items-start justify-between gap-3 text-sm text-ink-soft"
+                        >
+                          <span>{b.text}</span>
+                          <ConfidenceBadge confidence={b.confidence} className="shrink-0" />
+                        </li>
+                      ))}
+                    </ul>
+                  </DrawerBlock>
+                </motion.div>
 
-            <DrawerBlock title="What we believe so far">
-              <ul className="space-y-2">
-                {area.beliefs.map((b, i) => (
-                  <li key={i} className="flex items-start justify-between gap-3 text-sm text-ink-soft">
-                    <span>{b.text}</span>
-                    <ConfidenceBadge confidence={b.confidence} className="shrink-0" />
-                  </li>
-                ))}
-              </ul>
-            </DrawerBlock>
+                {area.evidence_claim_ids.length > 0 && (
+                  <motion.div variants={drawerSection}>
+                    <DrawerBlock title="Evidence">
+                      <div className="space-y-3">
+                        {area.evidence_claim_ids
+                          .map((id) => claimsById.get(id))
+                          .filter((c): c is ClaimRecord => Boolean(c))
+                          .map((c) => (
+                            <EvidenceQuoteCard
+                              key={c.id}
+                              claim={c}
+                              sourceLabel="CEO Call"
+                              showLink={false}
+                            />
+                          ))}
+                      </div>
+                    </DrawerBlock>
+                  </motion.div>
+                )}
 
-            {area.evidence_claim_ids.length > 0 && (
-              <DrawerBlock title="Evidence">
-                <div className="space-y-3">
-                  {area.evidence_claim_ids
-                    .map((id) => claimsById.get(id))
-                    .filter((c): c is ClaimRecord => Boolean(c))
-                    .map((c) => (
-                      <EvidenceQuoteCard key={c.id} claim={c} sourceLabel="CEO Call" showLink={false} />
-                    ))}
+                <motion.div variants={drawerSection}>
+                  <DrawerBlock title="What we don't know yet">
+                    <ul className="space-y-2">
+                      {area.what_we_dont_know.map((q, i) => (
+                        <li key={i} className="flex gap-2 text-sm text-ink-soft">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full border border-accent" />
+                          <span>{q}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </DrawerBlock>
+                </motion.div>
+
+                {area.who_holds && (
+                  <motion.div variants={drawerSection}>
+                    <DrawerBlock title="Who holds this knowledge">
+                      <div className="card-hairline rounded-card border border-line bg-surface">
+                        <PersonRow person={area.who_holds} />
+                      </div>
+                    </DrawerBlock>
+                  </motion.div>
+                )}
+              </motion.div>
+
+              <div className="mt-6 flex flex-col gap-2 pt-2">
+                <button className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2">
+                  Add to Interview Plan <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                </button>
+                <p className="text-center text-xs text-ink-faint">
+                  creates objectives from the unknowns above
+                </p>
+                <div className="flex items-center justify-center gap-4 pt-1 text-xs font-medium text-accent">
+                  <button className="hover:underline">View full transcript</button>
+                  <button className="hover:underline">
+                    Add context (chat with {brand.product_name})
+                  </button>
                 </div>
-              </DrawerBlock>
-            )}
-
-            <DrawerBlock title="What we don't know yet">
-              <ul className="space-y-2">
-                {area.what_we_dont_know.map((q, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-ink-soft">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full border border-accent" />
-                    <span>{q}</span>
-                  </li>
-                ))}
-              </ul>
-            </DrawerBlock>
-
-            {area.who_holds && (
-              <DrawerBlock title="Who holds this knowledge">
-                <div className="rounded-card border border-line bg-surface">
-                  <PersonRow person={area.who_holds} />
-                </div>
-              </DrawerBlock>
-            )}
-
-            <div className="mt-auto flex flex-col gap-2 pt-4">
-              <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90">
-                Add to Interview Plan <ArrowRight className="h-4 w-4" strokeWidth={2} />
-              </button>
-              <p className="text-center text-xs text-ink-faint">
-                creates objectives from the unknowns above
-              </p>
-              <div className="flex items-center justify-center gap-4 pt-1 text-xs font-medium text-accent">
-                <button className="hover:underline">View full transcript</button>
-                <button className="hover:underline">Add context (chat with {brand.product_name})</button>
               </div>
             </div>
           </motion.aside>
@@ -416,16 +468,15 @@ function AreaDrawer({
   );
 }
 
+// Qualitative pain signal (frequency / emotional weight / mentions). Elevated well —
+// the value is the signal; no invented proportion bar (values are qualitative, F28/A2).
 function SignalStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-line bg-surface p-2.5">
-      <div className="text-[10px] font-medium uppercase tracking-wide text-ink-faint">
+    <div className="card-hairline rounded-md border border-line bg-surface p-2.5">
+      <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-ink-faint">
         {label}
       </div>
-      <div className="mt-0.5 text-sm font-semibold leading-tight text-ink">{value}</div>
-      <div className="mt-1.5 h-1 w-full rounded-full bg-accent-soft">
-        <div className="h-1 w-2/3 rounded-full bg-accent" />
-      </div>
+      <div className="mt-1 text-sm font-semibold leading-tight text-ink">{value}</div>
     </div>
   );
 }
@@ -433,7 +484,7 @@ function SignalStat({ label, value }: { label: string; value: string }) {
 function DrawerBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-5">
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-faint">
+      <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-ink-faint">
         {title}
       </h3>
       {children}

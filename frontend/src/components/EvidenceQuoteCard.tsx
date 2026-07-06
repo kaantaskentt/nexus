@@ -24,13 +24,18 @@ export function EvidenceQuoteCard({
   const quote = (claim.evidence_quote ?? claim.claim_text).replace(/^\[paraphrased\]\s*/i, "");
 
   return (
-    <figure className={cn("rounded-card border border-line bg-surface p-4", className)}>
+    <figure
+      className={cn(
+        "group lift rounded-card border border-line bg-surface p-4",
+        className,
+      )}
+    >
       <div className="mb-2 flex items-center justify-between">
-        <span className="rounded-md bg-surface-raised px-2 py-0.5 text-[11px] font-medium text-ink-soft">
+        <span className="rounded-sm bg-surface-sunken px-2 py-0.5 text-[11px] font-medium tracking-tight text-ink-soft">
           {paraphrased ? "Paraphrased" : sourceLabel}
         </span>
         {claim.evidence_ts && (
-          <span className="text-xs tabular-nums text-ink-faint">{claim.evidence_ts}</span>
+          <span className="tabular text-xs text-ink-faint">{claim.evidence_ts}</span>
         )}
       </div>
 
@@ -40,14 +45,14 @@ export function EvidenceQuoteCard({
           paraphrased ? "text-ink-soft" : "text-ink",
         )}
       >
-        <Quote className="mt-0.5 h-4 w-4 shrink-0 text-accent" fill="currentColor" strokeWidth={0} />
+        <Quote className="mt-0.5 h-4 w-4 shrink-0 text-accent/80" fill="currentColor" strokeWidth={0} />
         <span className={paraphrased ? "" : "font-display italic"}>{quote}</span>
       </blockquote>
 
       {showLink && (
         <button
           type="button"
-          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent opacity-80 transition-all duration-150 ease-standard hover:gap-1.5 hover:opacity-100 hover:underline"
           title="Jump to this moment in the transcript"
         >
           View transcript evidence

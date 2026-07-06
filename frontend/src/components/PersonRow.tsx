@@ -27,7 +27,7 @@ export function PersonRow({
         className,
       )}
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-ink">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-ink ring-1 ring-inset ring-accent/15">
         {initials(person.name)}
       </div>
       <div className="w-28 shrink-0">

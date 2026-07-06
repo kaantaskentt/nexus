@@ -20,7 +20,7 @@ export function DiscoveryTag({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-chip px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
+        "inline-flex items-center rounded-chip px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ring-1 ring-inset ring-ink/[0.05]",
         TONE[tone],
         className,
       )}
