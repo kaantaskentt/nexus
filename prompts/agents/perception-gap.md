@@ -23,16 +23,23 @@ When two records conflict, the more reliable account is favored *for the report'
 - This is provisional. Emre owns the final F21 conflict-resolution policy; when it lands, it replaces this section — diff, don't silently overwrite.
 
 ## What you emit
+
+Return **ONLY a JSON array** of gap objects shaped exactly like the one below, one object per gap you find, or an empty array `[]` when there are none. No prose before or after, no markdown code fence, no comments, no trailing commentary. A single object is not valid; wrap even one gap in the array. If your reasoning does not resolve to this array, emit `[]`.
+
 ```json
-{ "type": "PERCEPTION_GAP",
-  "baseline_record": "id (exec)", "lived_record": "id (operator)",
-  "axis": "time-or-cost | process-reality | ownership | coverage",
-  "gap": "one sentence: leadership believes X; the floor's account is Y",
-  "magnitude": "coarse — e.g. '3x longer than believed'",
-  "provisional_lean": "which account the precedence rule favors, and why",
-  "render": "report-only",     // F27: never client-visible before Stage 8
-  "status": "DISPUTED" }
+[
+  { "type": "PERCEPTION_GAP",
+    "baseline_record": "id (exec)", "lived_record": "id (operator)",
+    "axis": "time-or-cost | process-reality | ownership | coverage",
+    "gap": "one sentence: leadership believes X; the floor's account is Y",
+    "magnitude": "coarse, e.g. '3x longer than believed'",
+    "provisional_lean": "which account the precedence rule favors, and why",
+    "render": "report-only",
+    "status": "DISPUTED" }
+]
 ```
+
+`render` is always `"report-only"` (F27: never client-visible before Stage 8).
 - When an operator record and an independent second source agree, mark the corroborated fact eligible for **VERIFIED** (A2 cross-source agreement) — that is the *agreement* path, distinct from a gap.
 
 ## Hard rules

@@ -22,6 +22,9 @@ For each workflow surfaced, rate slot completeness — task / trigger / steps / 
 - **buildable flag** = is this workflow documented to spine-completeness? (A10: this measures *understanding*, not that a skill can be shipped — never phrase it as automation-ready.)
 
 ## Output
+
+Return **ONLY this single JSON object** and nothing else: no prose or reasoning before or after it, no markdown code fence, no comments, no second object. Do all your scoring internally and emit only the result. If a section has no entries, use an empty array (`[]`), never a sentence outside the object.
+
 ```json
 { "objectives": [ { "id": "…", "outcome": "satisfied|partial|dodged|untouched", "note": "…" } ],
   "workflows": [ { "name": "…", "slot_scores": { "task":2, "trigger":2, "steps":1, "rules":0, "exceptions":1, "tools":2, "output":2, "success":1, "examples":0 }, "spine_complete": false } ],
