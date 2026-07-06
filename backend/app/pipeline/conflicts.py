@@ -14,6 +14,7 @@ swap is one function, and it only annotates a lean, never hard-resolves a confli
 
 import json
 import logging
+import re
 
 from ..db import get_pool
 from ..llm import extract_json, get_agent_config, run_agent
@@ -53,16 +54,29 @@ async def _records(workspace_id: str) -> list[dict]:
     return [dict(r) | {"id": str(r["id"])} for r in rows]
 
 
-def _cross_source(a: dict, b: dict) -> bool:
-    """A perception gap is EXEC-belief vs FLOOR-reality — it requires two DIFFERENT
-    sources. Same-speaker records aren't a perception gap (at most a self-correction,
-    which is a collision). This structural guard stops the comparator over-generating
-    gaps within a single interview, regardless of prompt behavior."""
+_LEADERSHIP = re.compile(
+    r"founder|ceo|owner|chief|exec|director|head|president|partner|leadership|principal", re.I)
+
+
+def _is_leadership(rec: dict) -> bool:
+    role = rec.get("speaker_role") or ""
+    return bool(_LEADERSHIP.search(role))
+
+
+def _valid_perception_gap(a: dict, b: dict) -> bool:
+    """A perception gap is LEADERSHIP-belief vs FLOOR-reality. Two structural
+    requirements the prompt can't be trusted to hold alone (prompts-evals §7 finding):
+      1. different speakers — same-speaker general-vs-episodic is a self-hedge/correction,
+         never a gap;
+      2. EXACTLY ONE side is leadership-sourced — two operators disagreeing is a
+         worker-vs-worker COLLISION, not a perception gap, and a single-operator
+         interview (no leadership record) yields zero gaps.
+    Fabricating a 'leadership believes…' framing from an operator's own words is the
+    exact confident fiction this guard prevents."""
     sa, sb = a.get("speaker_id"), b.get("speaker_id")
-    if sa is not None and sb is not None:
-        return sa != sb
-    # Fall back to session when speaker is unknown (scraped vs call is cross-source).
-    return a.get("session_id") != b.get("session_id")
+    if sa is not None and sb is not None and sa == sb:
+        return False
+    return _is_leadership(a) != _is_leadership(b)
 
 
 def _record_lines(records: list[dict]) -> str:
@@ -138,8 +152,8 @@ async def detect_conflicts(payload: dict) -> None:
         try:
             for g in extract_json(await run_agent("perception_gap", content, workspace_id=workspace_id)):
                 a, b = by_id.get(g.get("baseline_record")), by_id.get(g.get("lived_record"))
-                if not a or not b or not _cross_source(a, b):
-                    continue  # a gap needs two different sources — never same-speaker
+                if not a or not b or not _valid_perception_gap(a, b):
+                    continue  # gap needs a leadership baseline vs a different-speaker floor account
                 await _insert_conflict(
                     pool, workspace_id, a["id"], b["id"], "perception_gap",
                     {"axis": g.get("axis"), "gap": g.get("gap"), "magnitude": g.get("magnitude"),

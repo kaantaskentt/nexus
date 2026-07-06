@@ -79,6 +79,40 @@ async def test_perception_gap_requires_two_sources(db, monkeypatch):
         "select count(*) from claim_conflicts where kind='perception_gap' and workspace_id=$1", ws) == 0
 
 
+async def test_perception_gap_needs_leadership_baseline(db, monkeypatch):
+    """A gap is LEADERSHIP-belief vs floor-reality: exactly one side must be
+    leadership-sourced. Founder-vs-operator = gap; operator-vs-operator = not a gap."""
+    ws = await make_workspace(db, industry="jewelry")
+    sess = await make_session(db, ws)
+    ece = await db.fetchval("insert into entities (workspace_id,entity_type,canonical_name,role) "
+                            "values ($1,'person','Ece','Founder') returning id", ws)
+    burak = await db.fetchval("insert into entities (workspace_id,entity_type,canonical_name,role) "
+                              "values ($1,'person','Burak','Operations') returning id", ws)
+    selin = await db.fetchval("insert into entities (workspace_id,entity_type,canonical_name,role) "
+                              "values ($1,'person','Selin','Returns desk') returning id", ws)
+
+    async def claim(speaker, tag, text):
+        return await db.fetchval(
+            "insert into claim_records (workspace_id,session_id,speaker_id,kind,topic,tag,claim_text) "
+            "values ($1,$2,$3,'statement','time_or_cost',$4,$5) returning id", ws, sess, speaker, tag, text)
+
+    exec_c = await claim(ece, "CLAIMED", "Returns take about ten minutes")       # leadership belief
+    op_c = await claim(burak, "CONFIRMED", "Returns actually take forty minutes")  # floor reality
+    op2_c = await claim(selin, "CONFIRMED", "Returns take twenty minutes")         # a second operator
+
+    # The agent proposes two pairs; only the leadership-vs-operator one is a real gap.
+    gaps = json.dumps([
+        {"baseline_record": str(exec_c), "lived_record": str(op_c), "axis": "time-or-cost", "gap": "10 vs 40"},
+        {"baseline_record": str(op2_c), "lived_record": str(op_c), "axis": "time-or-cost", "gap": "20 vs 40"},
+    ])
+    monkeypatch.setattr(conflicts, "run_agent", _agent_mock({"perception_gap": gaps}))
+    await conflicts.detect_conflicts({"workspace_id": str(ws)})
+
+    rows = await db.fetch("select claim_a_id, claim_b_id from claim_conflicts where kind='perception_gap' and workspace_id=$1", ws)
+    assert len(rows) == 1  # only the founder-vs-operator pair
+    assert exec_c in (rows[0]["claim_a_id"], rows[0]["claim_b_id"])
+
+
 async def test_build_workflow_schema_inserts_steps(db, monkeypatch):
     ws = await make_workspace(db, industry="jewelry")
     sess = await make_session(db, ws)
