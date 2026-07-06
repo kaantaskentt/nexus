@@ -293,16 +293,22 @@ async def compile_session(payload: dict) -> None:
                 count,
             )
 
-    # Post-compile fan-out (all async — none of this sits in an interview reply path):
-    # pain bands, conflict/perception-gap linking, workflow schema, interview-quality.
+    # Post-compile fan-out (all async — none of this sits in an interview reply path).
+    # Ordered by report-criticality: on a single worker the queue is serial, so the
+    # jobs the report screen needs first (workflow, quality, pain) run ahead of the
+    # heavier, less time-critical passes. detect_conflicts does two LLM passes over
+    # every record — on a 50+ claim interview that's the slowest job, and its output
+    # (conflicts / perception gaps) is report-only and often needs a 2nd interview
+    # anyway — so it runs LAST (higher priority number = later). Run multiple workers
+    # to parallelize the fan-out; the ordering just makes a single worker feel fast.
     from ..queue import enqueue
 
-    await enqueue("rate_pain", {"workspace_id": workspace_id, "session_id": session_id})
-    await enqueue("detect_conflicts", {"workspace_id": workspace_id, "session_id": session_id})
-    await enqueue("build_workflow_schema", {"session_id": session_id})
-    await enqueue("score_interview_quality", {"session_id": session_id})
+    await enqueue("build_workflow_schema", {"session_id": session_id}, priority=90)
+    await enqueue("score_interview_quality", {"session_id": session_id}, priority=90)
+    await enqueue("rate_pain", {"workspace_id": workspace_id, "session_id": session_id}, priority=95)
     # Stage 2: score pre-call heuristics against what the call actually surfaced (F13).
-    await enqueue("score_heuristics", {"workspace_id": workspace_id, "session_id": session_id})
+    await enqueue("score_heuristics", {"workspace_id": workspace_id, "session_id": session_id}, priority=100)
+    await enqueue("detect_conflicts", {"workspace_id": workspace_id, "session_id": session_id}, priority=150)
 
 
 @handles("compile_session")
