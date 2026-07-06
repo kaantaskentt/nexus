@@ -11,7 +11,7 @@
       Derya (11:20): "Returns take us about forty minutes each, start to finish."
       Derya (11:52): "Actually — no. Since we moved to the new label printer it's more like ten minutes now. Ten."
   pass_if:
-    - Emits a CORRECTION record for the 10-minute claim with supersedes_id pointing at the 40-minute record
+    - Emits a CORRECTION record for the 10-minute claim with supersedes pointing at the 40-minute record's local id
     - The superseded 40-minute record still exists (not deleted)
     - The 10-minute correction is treated as high-reliability (corrections are among the most reliable data)
   fail_if:

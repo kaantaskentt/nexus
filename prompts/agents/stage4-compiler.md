@@ -25,7 +25,7 @@ Everything the client ever sees renders from your records. If you extract garbag
 
 **ADMISSION** — a stated unknown ("Honestly? I don't know how returns work online. Selin handles it."). → store; auto-emit an INTERVIEW-OBJECTIVE trigger. An admission is a treasure: it marks exactly where knowledge lives in one person's head.
 
-**CORRECTION** — the speaker fixing earlier information. → new record **supersedes** the old one (`supersedes_id` set). **A correction may supersede ANY prior record regardless of source — earlier in this call, a previous session, or a SCRAPED record.** (*"Ayşe? She left us two months ago"* kills the scraped LinkedIn record. *"It's 12 boutiques now, we closed Ankara"* kills the scraped company fact.) Corrections are among the most reliable data collected — people are sharper at spotting errors than producing facts.
+**CORRECTION** — the speaker fixing earlier information. → new record **supersedes** the old one (`supersedes` set to that record's id). **A correction may supersede ANY prior record regardless of source — earlier in this call, a previous session, or a SCRAPED record.** (*"Ayşe? She left us two months ago"* kills the scraped LinkedIn record. *"It's 12 boutiques now, we closed Ankara"* kills the scraped company fact.) Corrections are among the most reliable data collected — people are sharper at spotting errors than producing facts.
 
 **FILLER** — greetings, acknowledgments, meta-talk ("I'm ready to begin", "can you hear me?"). → **discard. Never a record.** Extracting filler as findings is a known failure of the previous system; it is a hard fail in evals.
 
@@ -79,19 +79,22 @@ Facts about what a person DOES ("James answers the DMs") get neither flag.
 
 ```json
 {
+  "id": "r1",
   "kind": "statement | directive | admission | correction",
   "topic": "pain | process-step | person | tool | vocabulary | time-or-cost | company-fact | success-criteria",
   "tag": "guess | claimed | confirmed",
   "claim": "one clean sentence, third person",
   "evidence": { "quote": "verbatim words, untranslated", "timestamp": "MM:SS", "speaker": "name" },
   "flags": { "sentiment_quarantine": false, "approach_note": false },
-  "supersedes_id": null,
+  "supersedes": null,
   "triggers": ["NEW-PERSON: …", "INTERVIEW-OBJECTIVE: …"],
   "mention_of": null
 }
 ```
 
-**The evidence quote is your anti-confabulation guardrail: the quote must actually support the claim.** If you cannot point to words that carry the claim, the record does not exist. Repetition: when a speaker repeats an already-recorded claim, emit `mention_of: <record>` instead of a duplicate — mention counts feed pain relevance.
+**Local ids.** Assign every record a stable local id `r1, r2, r3…` in emission order for this batch. `supersedes` and `mention_of` reference **either** a local id from this same batch (e.g. the 10-minute correction supersedes `r7`) **or** a real record id from the prior-session context the caller injects — so within-call corrections (the 40→10 case) and cross-session links both work. Null when neither applies. (If the caller's output schema in the request specifies a different field shape, follow the caller — this block is the judgment contract; the caller owns the wire format.)
+
+**The evidence quote is your anti-confabulation guardrail: the quote must actually support the claim.** If you cannot point to words that carry the claim, the record does not exist. Repetition: when a speaker repeats an already-recorded claim, emit `mention_of: <id>` instead of a duplicate — mention counts feed pain relevance.
 
 ## Worked example — one utterance, three records
 

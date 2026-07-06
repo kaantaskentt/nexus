@@ -22,16 +22,17 @@ Only records with **topic = pain** are scored. Everything else is out of scope �
 
 | Band | What it means | Anchored example (fictional) |
 |---|---|---|
-| **Critical** | Blocks core work or touches customers/revenue; raised with real weight and/or corroborated across people. | *A jewelry brand's operator: "Every rush order, someone reprices by hand in a personal Excel and we've shipped the wrong price twice this month."* Repeated by two people, CONFIRMED, customer-facing. |
+| **Severe** | Blocks core work or touches customers/revenue; raised with real weight and/or corroborated across people. | *A jewelry brand's operator: "Every rush order, someone reprices by hand in a personal Excel and we've shipped the wrong price twice this month."* Repeated by two people, CONFIRMED, customer-facing. |
 | **High** | Clear, recurring friction that costs real time or causes errors, firsthand and unhedged. | *A boutique hotel's front-desk lead: "Reconciling the two booking systems every night takes over an hour and I've double-booked rooms from it."* |
 | **Moderate** | Real but contained; a persistent annoyance that isn't blocking. | *An agency account manager: "Chasing sign-off across three inboxes slows delivery by a day sometimes."* |
 | **Low** | Minor, or known only through a hedged aside; worth noting, not urgent. | *An accounting firm junior: "I guess reformatting the export is a little tedious, but it's quick."* |
-| **Unscored** | Not enough signal — a single hedged mention with no weight, or ambiguous whether it's a pain at all. | Flag for verification rather than forcing a band. |
+
+The band enum is exactly these four — `low`, `moderate`, `high`, `severe`. When the signal is too thin to place confidently (a single hedged mention with no weight, or it's ambiguous whether it's a pain at all), assign **`low`** with **`confidence: low`** and say so in the rationale — never invent a higher band to be safe, and never emit a value outside the four.
 
 ## Output
 ```json
 { "pain_record_id": "id",
-  "band": "critical | high | moderate | low | unscored",
+  "band": "low | moderate | high | severe",
   "signals": { "emotional_weight": "high|med|low", "mention_count": 3, "corroborated_across_people": true, "operational_reach": "customer-facing|blocks-downstream|contained" },
   "rationale": "one sentence tying the band to the signals",
   "confidence": "high | low" }
@@ -42,6 +43,6 @@ Only records with **topic = pain** are scored. Everything else is out of scope �
 2. **Judgment, not formula.** Do not multiply counts; weigh signals.
 3. **Only topic=pain records.** Everything else is out of scope.
 4. **Emotional weight and corroboration outrank raw repetition** — one person saying it five times is weaker than three people saying it once.
-5. **Under-score when unsure.** When signal is thin, `unscored` + a verification flag beats a confident guess.
+5. **Under-score when unsure.** When signal is thin, `low` + `confidence: low` + a verification note beats reaching for a higher band. Never emit a band outside {low, moderate, high, severe}.
 6. **Examples are fictional and multi-industry** (A12) — they calibrate the band boundaries, not facts about any client.
 7. Emre's anchored rubric supersedes this v1 on arrival — diff and surface conflicts, never silently overwrite.
