@@ -91,6 +91,13 @@ export async function pauseSession(
   return api(`/api/sessions/by-token/${encodeURIComponent(token)}/pause`, { method: "POST" });
 }
 
+// Finish the interview: marks the session completed and enqueues the compile that
+// produces the report (backend-ontology). Without this, an interview never becomes a
+// report — it's the hand-off from the respondent flow to Stage 8.
+export async function completeSession(token: string): Promise<{ status: string }> {
+  return api(`/api/sessions/by-token/${encodeURIComponent(token)}/complete`, { method: "POST" });
+}
+
 // Consent copy assembled from prompts/personas/consent-landing.md with whatever merge
 // fields the session provides; missing fields degrade to neutral, honest phrasing
 // (no fabricated names). The locked promises are kept by the interviewer at open/close.

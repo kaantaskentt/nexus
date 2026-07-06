@@ -2,18 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, Pause, SendHorizontal, Check, RefreshCw, WifiOff } from "lucide-react";
+import { Lock, Pause, SendHorizontal, Check, RefreshCw, WifiOff, Flag } from "lucide-react";
 import brand from "@/lib/brand";
 import { BrandMark } from "@/components";
 import {
   getSession,
   takeTurn,
   pauseSession,
+  completeSession,
   consentCopy,
   type RespondentSession,
 } from "@/lib/respondent";
 
-type Phase = "loading" | "load_error" | "consent" | "chat" | "paused";
+type Phase = "loading" | "load_error" | "consent" | "chat" | "paused" | "done";
 type Msg = { role: "interviewer" | "respondent"; text: string };
 
 // The interviewee's live conversation. Per Kaan's P0 directive: every reply comes from
@@ -86,6 +87,22 @@ export function InterviewClient({ token }: { token: string }) {
     setPhase("paused");
   }
 
+  const [finishing, setFinishing] = useState(false);
+  async function finish() {
+    if (finishing) return;
+    setFinishing(true);
+    try {
+      // Marks the session completed + enqueues the compile that becomes the report.
+      await completeSession(token);
+      setPhase("done");
+    } catch {
+      // Honest: if completion didn't reach the server, don't pretend it did.
+      setTurnError(true);
+    } finally {
+      setFinishing(false);
+    }
+  }
+
   const ctx = session?.context;
 
   if (phase === "loading") {
@@ -143,6 +160,26 @@ export function InterviewClient({ token }: { token: string }) {
     );
   }
 
+  if (phase === "done") {
+    return (
+      <Shell>
+        <div className="mx-auto max-w-md py-16 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success-soft text-tag-verified">
+            <Check className="h-6 w-6" strokeWidth={2.5} />
+          </div>
+          <h1 className="font-display text-2xl text-ink">
+            Thank you{ctx?.respondent_name ? `, ${ctx.respondent_name}` : ""}
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            That&apos;s everything we needed. We&apos;re putting together a short summary of
+            how the work flows — you&apos;ll get to review anything attributed to you by name
+            before it&apos;s shared. You can close this page now.
+          </p>
+        </div>
+      </Shell>
+    );
+  }
+
   if (phase === "consent") {
     return (
       <Shell>
@@ -165,17 +202,28 @@ export function InterviewClient({ token }: { token: string }) {
               A relaxed chat · you&apos;re in control · pause anytime
             </div>
           </div>
-          <button
-            onClick={pause}
-            className={
-              "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors " +
-              (offerPause
-                ? "bg-accent-soft text-accent-ink hover:bg-accent hover:text-on-accent"
-                : "text-ink-faint hover:bg-surface-raised hover:text-ink")
-            }
-          >
-            <Pause className="h-4 w-4" strokeWidth={1.75} /> Pause
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={pause}
+              className={
+                "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors " +
+                (offerPause
+                  ? "bg-accent-soft text-accent-ink hover:bg-accent hover:text-on-accent"
+                  : "text-ink-faint hover:bg-surface-raised hover:text-ink")
+              }
+            >
+              <Pause className="h-4 w-4" strokeWidth={1.75} /> Pause
+            </button>
+            <button
+              onClick={finish}
+              disabled={finishing || messages.length === 0}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-faint transition-colors hover:bg-surface-raised hover:text-ink disabled:opacity-40"
+              title="Finish the conversation and send it for summary"
+            >
+              <Flag className="h-4 w-4" strokeWidth={1.75} />
+              {finishing ? "Finishing…" : "Finish"}
+            </button>
+          </div>
         </div>
 
         <div ref={scroller} className="flex-1 space-y-4 overflow-y-auto py-6">
