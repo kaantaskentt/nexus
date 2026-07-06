@@ -101,6 +101,8 @@ async def report(session_id: str):
         workflow = {"name": wf["name"], "steps": [_step(s) for s in steps]}
 
     # Perception gaps + conflict points — both claim sides via the deny-by-default view.
+    # A gap BELONGS to this session's compile if at least one side came from this
+    # interview (the other side may legitimately be a prior/cross-session record).
     conflict_rows = await pool.fetch(
         """select k.id, k.kind, k.status, k.resolution,
                   a.claim_text as claim_a, a.tag as tag_a,
@@ -108,8 +110,9 @@ async def report(session_id: str):
            from claim_conflicts k
            join client_visible_claims a on a.id = k.claim_a_id
            join client_visible_claims b on b.id = k.claim_b_id
-           where k.workspace_id = $1""",
-        workspace_id,
+           where k.workspace_id = $1
+             and ($2::uuid in (a.session_id, b.session_id))""",
+        workspace_id, session_id,
     )
     conflicts = [
         {"id": str(r["id"]), "kind": r["kind"], "status": r["status"],
@@ -120,15 +123,17 @@ async def report(session_id: str):
     ]
     perception_gaps = [c for c in conflicts if c["kind"] == "perception_gap"]
 
-    # Key findings — pains (with band) + CONFIRMED facts, traceable to evidence.
+    # Key findings — pains (with band) + CONFIRMED facts from THIS interview only
+    # (a report is one interview's findings; workspace scope floods it with other
+    # sessions' records — the multi-interview coherence bug).
     finding_rows = await pool.fetch(
         """select c.claim_text, c.topic, c.tag, c.evidence_quote, p.band
            from client_visible_claims c
            left join pain_scores p on p.claim_id = c.id
-           where c.workspace_id = $1 and (c.topic = 'pain' or c.tag = 'CONFIRMED')
+           where c.session_id = $1 and (c.topic = 'pain' or c.tag = 'CONFIRMED')
            order by case c.topic when 'pain' then 0 else 1 end, c.created_at
            limit 20""",
-        workspace_id,
+        session_id,
     )
     key_findings = [
         {"text": r["claim_text"], "topic": r["topic"], "tag": r["tag"],
@@ -136,11 +141,12 @@ async def report(session_id: str):
         for r in finding_rows
     ]
 
-    # Follow-up — stated unknowns (admissions) + INTERVIEW-OBJECTIVE triggers.
+    # Follow-up — stated unknowns (admissions) + INTERVIEW-OBJECTIVE triggers from
+    # THIS interview only.
     followup_rows = await pool.fetch(
         """select claim_text, kind, provenance from client_visible_claims
-           where workspace_id = $1 and (kind = 'admission' or provenance::text ilike '%INTERVIEW-OBJECTIVE%')""",
-        workspace_id,
+           where session_id = $1 and (kind = 'admission' or provenance::text ilike '%INTERVIEW-OBJECTIVE%')""",
+        session_id,
     )
     follow_up_on = []
     for r in followup_rows:
