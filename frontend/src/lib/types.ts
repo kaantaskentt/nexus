@@ -56,6 +56,8 @@ export interface Workspace {
     starting_focus?: string; // e.g. "daily repricing → content approval"
     source?: string; // e.g. "CEO Discovery Call + Website Scan"
     approved_for_pilot?: boolean;
+    contact_person?: string; // A17 new-company Stage 0 field
+    website?: string; // A17 new-company Stage 0 field (feeds the optional recon scan)
   };
 }
 
@@ -83,6 +85,85 @@ export interface ClaimRecord {
   // lets EvidenceQuoteCard render the paraphrase affordance honestly.
   is_paraphrased?: boolean;
   created_at: string;
+}
+
+// ── Knowledge Base record (GET /api/claims/{id}/records) ─────────────────────
+// A browsable claim row shaped for the record store: the trust tag (null for
+// directives/admissions, which carry no tag), the F33 paraphrase flag, and the
+// resolved speaker/subject/source names the topic/person/source filters key on.
+// Sourced from client_visible_claims, so quarantined records are structurally absent.
+export interface KnowledgeRecord {
+  id: string;
+  kind: ClaimKind;
+  topic: ClaimTopic;
+  tag: TrustTag | null;
+  claim_text: string;
+  evidence_quote: string | null;
+  evidence_ts: string | null;
+  mention_count: number;
+  is_paraphrased: boolean;
+  speaker_name: string | null;
+  speaker_role: string | null;
+  subject_name: string | null;
+  subject_is_person: boolean;
+  source_kind: "interview" | "scrape" | "unknown";
+  source_id: string;
+  source_label: string;
+  created_at: string;
+}
+
+// ── Insights (GET /api/workspaces/{id}/insights) ─────────────────────────────
+// Cross-interview intelligence. Conflict `kind` is left as a string because the
+// pipeline emits kinds beyond the original three (e.g. now_vs_prior, a correction
+// over time); the view labels known kinds and humanizes the rest. Both sides read
+// through client_visible_claims, so a conflict shown here is quarantine-safe on both.
+export type ConflictKind =
+  | "ceo_vs_floor" | "worker_vs_worker" | "perception_gap" | "now_vs_prior" | string;
+
+export interface ConflictSide {
+  text: string;
+  tag: TrustTag | null;
+  speaker: string | null;
+  role: string | null;
+  session_id: string | null;
+}
+
+export interface InsightConflict {
+  id: string;
+  kind: ConflictKind;
+  status: "disputed" | "resolved";
+  note: string | null;
+  a: ConflictSide;
+  b: ConflictSide;
+}
+
+export interface KeyFinding {
+  id: string;
+  text: string;
+  band: PainBand | null;
+  tag: TrustTag | null;
+  mention_count: number;
+  evidence_quote: string | null;
+  speaker: string | null;
+  role: string | null;
+  session_id: string | null;
+}
+
+export interface Admission {
+  id: string;
+  text: string;
+  evidence_quote: string | null;
+  speaker: string | null;
+  role: string | null;
+  objective: string | null; // the INTERVIEW-OBJECTIVE follow-up this admission seeds
+  session_id: string | null;
+}
+
+export interface InsightsData {
+  conflicts: InsightConflict[];
+  key_findings: KeyFinding[];
+  admissions: Admission[];
+  stats: { interviews: number; records: number; conflicts: number; gaps: number };
 }
 
 // mission jsonb shape (interview_plans.mission).

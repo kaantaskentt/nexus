@@ -322,6 +322,25 @@ async def compile_session(payload: dict) -> None:
     await enqueue("score_heuristics", {"workspace_id": workspace_id, "session_id": session_id}, priority=100)
     await enqueue("detect_conflicts", {"workspace_id": workspace_id, "session_id": session_id}, priority=150)
 
+    # Opt-in snapshot render (A17 discovery upload / #6): a single-call founder round
+    # auto-completes and renders once its records land. Runs LAST (priority 200, after
+    # conflicts) so the snapshot reflects the full record set. Normal interview compiles
+    # don't pass this flag, so their A3 round-batching behavior is unchanged.
+    if payload.get("render_snapshot"):
+        round_id = session["round_id"]
+        if round_id:
+            await pool.execute(
+                "update interview_rounds set status = 'completed', completed_at = now() "
+                "where id = $1 and status <> 'completed'",
+                round_id,
+            )
+        await enqueue(
+            "render_snapshot",
+            {"workspace_id": workspace_id, "round_id": str(round_id) if round_id else None,
+             "session_id": session_id},
+            priority=200,
+        )
+
 
 @handles("compile_session")
 async def _compile_session_job(payload: dict) -> None:

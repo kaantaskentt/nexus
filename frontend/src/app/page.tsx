@@ -14,11 +14,11 @@ import brand from "@/lib/brand";
 import { list_workspaces, list_plans, list_snapshot_cards } from "@/lib/live";
 import { BrandMark } from "@/components/BrandMark";
 import { SignOutButton } from "@/components/SignOutButton";
+import { AddCompany } from "@/components/AddCompany";
 
-// Workspace picker (A11.5 — no auth v1). Matches the right panel of
-// stage5-signin-workspace-picker.png: a centered welcome and a prepared-pilot
-// workspace card. The sign-in panel on the left of the mockup is intentionally
-// omitted — there is no auth in v1. Meta counts render from real seeded records.
+// Workspace picker + switcher (A17). After admin login this is the multi-company home:
+// a prepared workspace leads as the hero, every other company is an openable row, and
+// "Add company" mints a fresh real tenant. Counts render from real records, not JSX.
 export default async function Home() {
   const workspaces = await list_workspaces();
 
@@ -54,13 +54,16 @@ export default async function Home() {
         </h1>
         <p className="mt-3 font-display text-2xl text-ink-soft">Choose your workspace</p>
         <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-ink-soft">
-          Your pilot workspace has been prepared and is ready. Jump in to explore your
-          snapshot, interview plans, and insights.
+          {hero
+            ? "Open a workspace to explore its snapshot, interview plans, and insights, or add a new company to begin."
+            : "Add your first company to begin. Nexus creates a private workspace and walks you through the first CEO call."}
         </p>
 
-        <div className="mt-10 text-left">
-          <HeroCard {...hero} />
-        </div>
+        {hero && (
+          <div className="mt-10 text-left">
+            <HeroCard {...hero} />
+          </div>
+        )}
 
         {others.length > 0 && (
           <div className="mt-6 text-left">
@@ -68,26 +71,37 @@ export default async function Home() {
               Other workspaces
             </div>
             <ul className="space-y-2">
-              {others.map(({ ws }) => (
-                <li
-                  key={ws.id}
-                  className="card-hairline flex items-center justify-between rounded-card border border-line bg-surface px-4 py-3 opacity-80"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised font-display text-sm text-ink-soft">
-                      {ws.name.charAt(0)}
+              {others.map(({ ws, prepared }) => (
+                <li key={ws.id}>
+                  <Link
+                    href={`/w/${ws.slug}/snapshot`}
+                    className="lift card-hairline flex items-center justify-between rounded-card border border-line bg-surface px-4 py-3 hover:border-line-strong"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised font-display text-sm text-ink-soft">
+                        {ws.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-ink">{ws.name}</div>
+                        {ws.industry && (
+                          <div className="text-xs capitalize text-ink-faint">{ws.industry}</div>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-sm font-medium text-ink">{ws.name}</div>
-                      <div className="text-xs capitalize text-ink-faint">{ws.industry}</div>
-                    </div>
-                  </div>
-                  <span className="text-xs text-ink-faint">Not yet started</span>
+                    <span className="inline-flex items-center gap-1.5 text-xs text-ink-faint">
+                      {prepared ? "Open" : "Awaiting first call"}
+                      <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+                    </span>
+                  </Link>
                 </li>
               ))}
             </ul>
           </div>
         )}
+
+        <div className="mt-6 text-left">
+          <AddCompany />
+        </div>
 
         <p className="mt-10 flex items-center justify-center gap-1.5 text-xs text-ink-faint">
           <Lock className="h-3.5 w-3.5" strokeWidth={1.75} />

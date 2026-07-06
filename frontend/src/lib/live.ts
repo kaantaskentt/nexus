@@ -8,6 +8,8 @@
 import { api } from "./api";
 import type {
   ClaimRecord,
+  KnowledgeRecord,
+  InsightsData,
   InterviewPlan,
   PlanMission,
   PlanTopic,
@@ -44,6 +46,55 @@ export async function get_workspace(slug: string): Promise<Workspace | undefined
   return all.find((w) => w.slug === slug);
 }
 
+// Create a real tenant (A17 Stage 0). is_demo=false, zero records (A12 firewall).
+export interface NewCompany {
+  name: string;
+  industry?: string;
+  website?: string;
+  contact_person?: string;
+}
+export async function create_workspace(body: NewCompany): Promise<Workspace> {
+  return api<Workspace>("/api/workspaces", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+// ── CEO discovery upload (A17 / #6) ──────────────────────────────────────────
+// Upload a transcript -> standard compile job -> poll status -> snapshot renders.
+export interface DiscoveryStart {
+  session_id: string;
+  round_id: string;
+  job_id: number;
+  turns: number;
+}
+export async function upload_discovery(
+  workspace_id: string,
+  transcript: string,
+  speaker_name?: string,
+): Promise<DiscoveryStart> {
+  return api<DiscoveryStart>(`/api/workspaces/${workspace_id}/discovery`, {
+    method: "POST",
+    body: JSON.stringify({ transcript, speaker_name: speaker_name || undefined }),
+  });
+}
+
+export interface DiscoveryStatus {
+  session_id: string;
+  state: "running" | "done" | "failed";
+  stages: { kind: string; status: "pending" | "queued" | "running" | "done" | "failed" }[];
+  claims: number;
+  cards: number;
+}
+export async function discovery_status(
+  workspace_id: string,
+  session_id: string,
+): Promise<DiscoveryStatus> {
+  return api<DiscoveryStatus>(
+    `/api/workspaces/${workspace_id}/discovery/${session_id}/status`,
+  );
+}
+
 // ── Claims (GET /api/claims/{workspace_id}) ──────────────────────────────────
 interface RawClaim extends Omit<ClaimRecord, "hedge_signals" | "is_paraphrased"> {
   hedge_signals: unknown;
@@ -63,6 +114,20 @@ export async function list_claims(
     // F33 is authoritative from the backend now (false = CEO/scraped verbatim).
     is_paraphrased: r.is_paraphrased ?? false,
   }));
+}
+
+// ── Knowledge Base records (GET /api/claims/{id}/records) ────────────────────
+// The record-store browser. The backend shapes each row (resolved names, F33 flag,
+// no embedding vector), so this is passthrough onto the KnowledgeRecord type.
+export async function list_knowledge(workspace_id: string): Promise<KnowledgeRecord[]> {
+  return api<KnowledgeRecord[]>(`/api/claims/${workspace_id}/records`);
+}
+
+// ── Insights (GET /api/workspaces/{id}/insights) ─────────────────────────────
+// Cross-interview intelligence — conflicts, banded pains, admissions worth chasing.
+// The backend already shapes each field, so this is passthrough onto InsightsData.
+export async function get_insights(workspace_id: string): Promise<InsightsData> {
+  return api<InsightsData>(`/api/workspaces/${workspace_id}/insights`);
 }
 
 // ── Snapshot cards (GET /api/workspaces/{id}/snapshot) ───────────────────────
@@ -182,6 +247,7 @@ export async function send_interview(
 export interface SessionSummary {
   id: string;
   status: string;
+  modality: "text" | "voice";
   has_report: boolean;
   interviewee_name?: string | null;
   interviewee_role?: string | null;
@@ -190,8 +256,10 @@ export interface SessionSummary {
 interface RawSessionSummary {
   id: string;
   status: string;
+  modality: "text" | "voice";
   has_report: boolean;
   interviewee?: string | null; // the endpoint returns a name string under `interviewee`
+  interviewee_role?: string | null;
 }
 
 export async function list_sessions(workspace_id: string): Promise<SessionSummary[]> {
@@ -199,8 +267,10 @@ export async function list_sessions(workspace_id: string): Promise<SessionSummar
   return rows.map((r) => ({
     id: r.id,
     status: r.status,
+    modality: r.modality,
     has_report: r.has_report,
     interviewee_name: r.interviewee ?? undefined,
+    interviewee_role: r.interviewee_role ?? undefined,
   }));
 }
 
