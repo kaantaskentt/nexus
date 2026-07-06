@@ -12,11 +12,60 @@ are the plan's neutral topics (authored by the plan-generator to carry no attrib
 never raw claims."""
 
 import json
+import logging
+import re
 
 from ..db import get_pool
 from ..queue import handles
 
+log = logging.getLogger("nexus.handoff")
 DEFAULT_TIME_BUDGET_MIN = 30
+
+# Attribution guard (QA F1). A plan's free-text may be dirty — "Founder quotes ~10
+# days; production describes ~3 weeks" is exactly the who-said-what that non-negotiable
+# #2 forbids from reaching the interviewer. This matches a source (role/pronoun) next
+# to a speech-act verb, plus "according to". Applied to objectives/questions/notes/goal/
+# DoD; NOT to never_list or vocabulary (those carry intentional rules and verbatim terms).
+_SUBJECT = (
+    r"founder|ceo|owner|exec(?:utive)?|manager|director|colleague|co-?worker|teammate|"
+    r"production|operations|ops|the floor|someone|somebody|the team|employee|respondent|"
+    r"interviewee|boss|he|she|they"
+)
+_VERB = (
+    r"said|says|told|quot(?:ed|es)|describ(?:ed|es)|mention(?:ed|s)|claim(?:ed|s)|"
+    r"think(?:s)?|thought|believe[sd]?|noted|report(?:ed|s)|estimat(?:ed|es)|complain(?:ed|s)"
+)
+_ATTRIBUTION = re.compile(
+    rf"\b(?:{_SUBJECT})\b[^.?!]{{0,40}}?\b(?:{_VERB})\b|\baccording to\b",
+    re.IGNORECASE,
+)
+
+
+def _has_attribution(text: str) -> bool:
+    return bool(_ATTRIBUTION.search(text))
+
+
+def _strip_attribution(value):
+    """Recursively drop attribution-shaped free text. List entries that carry
+    attribution are removed; scalar strings that do become None; dicts are scanned
+    by their string values. Every drop is logged so a dirty plan is visible."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        if _has_attribution(value):
+            log.warning("handoff: stripped attribution-shaped text: %.80s", value)
+            return None
+        return value
+    if isinstance(value, list):
+        out = [_strip_attribution(v) for v in value]
+        return [v for v in out if v is not None]
+    if isinstance(value, dict):
+        # A dict entry (e.g. an objective) is dropped whole if any string leaks.
+        if any(isinstance(v, str) and _has_attribution(v) for v in value.values()):
+            log.warning("handoff: stripped attribution-shaped entry: %.80s", json.dumps(value)[:80])
+            return None
+        return value
+    return value
 
 
 def _as_list(v) -> list:
@@ -77,15 +126,20 @@ async def build_handoff_package(plan_id: str) -> dict:
     )
     never_list = _as_list(plan["never_list"]) + [r["claim_text"] for r in directive_rows]
 
+    # QA F1: known_context is deliberately NOT carried — it's the field where plans
+    # accumulate who-said-what, and the interviewer's persona never expects it. Every
+    # remaining free-text field is run through the attribution guard so a dirty plan
+    # (leaked quotes in an objective) still can't reach the runtime agent.
     package = {
-        "goal": mission.get("goal"),
-        "objectives": mission.get("topics", mission.get("objectives", [])),
-        "known_context": mission.get("known_context"),  # plan-curated, locked
-        "suggested_questions": _as_list(plan["suggested_questions"]),
+        "goal": _strip_attribution(mission.get("goal")),
+        "objectives": _strip_attribution(mission.get("topics", mission.get("objectives", []))),
+        "suggested_questions": _strip_attribution(_as_list(plan["suggested_questions"])),
         "vocabulary": vocabulary,
-        "handling_notes": handling_notes,
+        "handling_notes": _strip_attribution(handling_notes),
         "never_list": never_list,
-        "definition_of_done": mission.get("definition_of_done", mission.get("DoD")),
+        "definition_of_done": _strip_attribution(
+            mission.get("definition_of_done", mission.get("DoD"))
+        ),
         "time_budget_minutes": mission.get("time_budget_minutes", DEFAULT_TIME_BUDGET_MIN),
     }
 

@@ -23,6 +23,7 @@ BACKEND = Path(__file__).resolve().parents[1]
 MIGRATIONS = [
     BACKEND / "db" / "migrations" / "0001_foundation.sql",
     BACKEND / "db" / "migrations" / "0002_ontology_ops.sql",
+    BACKEND / "db" / "migrations" / "0003_client_view_columns.sql",
 ]
 
 

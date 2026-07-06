@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     default_anthropic_chat_model: str = "claude-sonnet-4-6"
     openai_embedding_model: str = "text-embedding-3-small"
 
+    # Gates the test-only eval-bootstrap route (A12: it only ever mints is_demo
+    # sessions, and the route refuses entirely unless this is on).
+    eval_mode: bool = False
+
 
 @lru_cache
 def get_settings() -> Settings:

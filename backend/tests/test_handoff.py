@@ -74,3 +74,39 @@ async def test_handoff_denies_quarantine_and_claim_text(db):
     # Persisted to handoff_packages.
     stored = await db.fetchval("select package from handoff_packages where plan_id = $1", plan_id)
     assert stored is not None
+
+
+async def test_handoff_drops_known_context_and_strips_attribution(db):
+    """QA F1: known_context is never carried, and attribution-shaped free text in a
+    dirty plan is stripped at construction — the guarantee holds even if the plan is
+    messy (the who-said-what never reaches the interviewer)."""
+    ws = await make_workspace(db, industry="jewelry")
+    mission = {
+        "goal": "Understand the returns workflow",
+        "known_context": "Founder quotes ~10 days; production describes ~3 weeks at peak",
+        "topics": [
+            {"objective": "How returns are processed today", "tier": "must_hit"},
+            {"objective": "The CEO said Metin was too slow at returns", "tier": "nice"},
+        ],
+        "handling_notes": ["Keep it light", "According to the founder he gets defensive"],
+        "definition_of_done": "One specific returns episode with steps in order",
+    }
+    plan_id = await db.fetchval(
+        "insert into interview_plans (workspace_id, state, mission, suggested_questions, never_list) "
+        "values ($1, 'APPROVED', $2, '[]'::jsonb, '[]'::jsonb) returning id",
+        ws, json.dumps(mission),
+    )
+
+    package = await build_handoff_package(str(plan_id))
+    blob = json.dumps(package, ensure_ascii=False)
+
+    assert "known_context" not in package  # never carried
+    assert "Founder quotes" not in blob
+    assert "~3 weeks" not in blob
+    # The clean objective survives; the attribution-shaped one is dropped whole.
+    objective_texts = [o.get("objective") for o in package["objectives"]]
+    assert "How returns are processed today" in objective_texts
+    assert not any("CEO said" in (t or "") for t in objective_texts)
+    # Clean handling note kept; the "According to the founder" one stripped.
+    assert any("Keep it light" in h for h in package["handling_notes"])
+    assert not any("According to" in h for h in package["handling_notes"])
