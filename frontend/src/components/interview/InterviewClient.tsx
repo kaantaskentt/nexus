@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Lock, Pause, SendHorizontal, Check, RefreshCw, WifiOff, Flag } from "lucide-react";
 import brand from "@/lib/brand";
 import { BrandMark } from "@/components";
+import { VoiceCall } from "./VoiceCall";
 import {
   getSession,
   takeTurn,
@@ -28,6 +29,7 @@ export function InterviewClient({ token }: { token: string }) {
   const [typing, setTyping] = useState(false);
   const [offerPause, setOfferPause] = useState(false);
   const [turnError, setTurnError] = useState(false);
+  const [textFallback, setTextFallback] = useState(false); // voice respondent chose text
   const lastMessage = useRef<string | null>(null); // for honest retry, not a fallback
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -184,6 +186,20 @@ export function InterviewClient({ token }: { token: string }) {
     return (
       <Shell>
         <ConsentLanding session={session} onStart={start} />
+      </Shell>
+    );
+  }
+
+  // Voice sessions open on the call widget; text chat is the honest fallback (spec rule).
+  if (session.modality === "voice" && !textFallback) {
+    return (
+      <Shell>
+        <VoiceCall
+          token={token}
+          respondentName={ctx?.respondent_name}
+          onUseText={() => setTextFallback(true)}
+          onFinish={finish}
+        />
       </Shell>
     );
   }
