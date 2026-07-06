@@ -8,3 +8,6 @@ __pycache__/
 *.pyc
 *.egg-info/
 .pytest_cache/
+
+# synthetic interview run artifacts (mining material, not source)
+evals/e2e/runs/
