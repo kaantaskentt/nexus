@@ -89,6 +89,29 @@ Per Kaan's upgrade license, audited F1-F37 as a clinical/neuropsychologist. Full
   read vs the floor's situational cause, surfaced de-personalized and quarantine-safe). Wiring drafted, ready, not applied.
 - **Demand characteristics:** assessed → already covered (anti-sycophancy + F13 + examples-from-them); no new flag.
 
+## 5. TOP V3 engineering proposal — computed coverage tracking + route-to-untouched-must-hit
+
+Persona text has sharpened probing twice now (person-praise ban; brevity/timeline completion). The third fix is
+**structural, not prose** — the top named V3 engineering item (team-lead ruling). Evidence from tonight's real-engine
+http matrix: the interviewer still misses a must-hit the respondent never volunteers — **bookkeeper h-bk-3 (deadline
+tracking) untouched** even after the terse fix drove its traps to 0/4, and **agency ag-2 (scope-creep) untouched** on
+the polished persona. Same failure, two personas: coverage-routing to a non-volunteered must-hit.
+
+Root cause is a known v1 placeholder (ARCHITECTURE.md): the interviewer's coverage map is **re-derived in the model's
+head each turn** — no computed `satisfied / partial / untouched` objective map, no engine-side enforcement of "route to
+the highest-value UNSATISFIED must-hit before close." **Proposal:** compute coverage server-side from handoff objectives
+× the running transcript, expose untouched must-hits to the turn engine, hard-gate close on any untouched must-hit
+(drive one direct probe first). Engineering, not persona prose (Emre's Q1/Q2 are the separate technique calls). Staged
+with the two data points; nobody builds it at 4am.
+
+## 4b. Live demo material — the interviewer produces meeting-worthy findings from a sim
+
+The second-round Burak interview (bee-goddess-demo, driven this session) compiled into **20 real findings** via
+episode-anchoring — including *"In March the respondent was absent sick for two days; with no backup, two boutiques sold
+pieces under cost, unnoticed for a week."* Exactly the meeting-worthy, product-promise finding, surfaced from a
+simulated respondent. (Report/perception-gap surfaces await a backend fan-out fix — routed to backend-2; reproduce with
+`python -m evals.harness.second_round_e2e --plan-id <burak-plan> --persona burak-repricing`.)
+
 ## Standing after the review
 
 - The suite grows from every dress rehearsal + real interview (`docs/EVALS.md` §7). I own the transcript-mining
