@@ -49,6 +49,15 @@ Objectives shape questions, never statements. Nothing the CEO said ever reaches 
 ### Client-facing copy style
 Copy a human reads (invite/consent, interviewer lines, snapshot cards, report + SOP prose) uses **no em-dashes** — the em-dash is the AI tell (Kaan). Recast with a comma, colon, semicolon, or two sentences; never the tidy em-dash. Exempt: verbatim quotes and transcripts (that's data — hedges and dashes are the respondent's, not ours), and this file's own prompt scaffolding (comments, section headers). Applies to every renderer and every human-experience copy file.
 
+**Prompts carrying the no-em-dash output rule** (checklist — a new prompt that authors any client-visible text inherits this by adding itself here):
+- `prompts/agents/snapshot-renderer.md` — Snapshot cards, why-lines, sidebars
+- `prompts/agents/report-sop-generator.md` — report narration, workflow-canvas text, SOP prose
+- `prompts/rubrics/interview-quality.md` — quality note, headline, follow-ups
+- `prompts/agents/plan-generator.md` — mission, objective labels, handling notes, suggested-question wording
+- `prompts/agents/stage7-interviewer.md` — the interviewer's own text-modality replies
+
+Static client-facing copy files (swept directly, guarded by `python -m evals.copy_em_dash_lint`): `prompts/personas/invite-email.md`, `consent-landing.md`, `pause-resume.md`, `reflect-back-close.md`. Seed-authored copy (taglines, handling notes) is fixed in the seed source; verbatim seeded transcript is exempt.
+
 ### Conflict resolution (F21 — Emre owns the final policy)
 Contradictions are linked as DISPUTED; both records survive; nothing is resolved automatically. Provisional precedence until Emre's policy lands: episodic beats habitual, firsthand beats secondhand. Replace on arrival — diff, don't silently overwrite.
 

@@ -13,6 +13,15 @@ tag_to_confidence:
   - { record_tag: "GUESS",     sources: "single, hedged",       expect_badge: "reported", note: "a guess is not 'high' — never upgrade visually" }
   - { record_tag: "SCRAPED",   sources: "public web only",      expect_badge: "scraped" }
 
+# ── Display labels + tooltips (letter-exact to glossary L19; single words, no "confidence" suffix) ──
+# The badge value maps to exactly one human label + tooltip. There is NO 'guess' display entry — GUESS
+# renders as 'reported' (unreachable as its own label; never a distinct lower tier, #1).
+display_labels:
+  - { badge: "verified", label: "Verified", tooltip: "Confirmed by independent sources" }
+  - { badge: "high",     label: "High",     tooltip: "Confirmed by a single source" }
+  - { badge: "reported", label: "Reported", tooltip: "Stated in an interview, not yet confirmed" }
+  - { badge: "scraped",  label: "Scraped",  tooltip: "From the website scan, not yet verified" }
+
 # ── The invariant that matters most: quarantine NEVER renders ────────────────────
 quarantine_never_renders:
   - id: badge-quar-1

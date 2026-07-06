@@ -34,3 +34,4 @@ For each workflow surfaced, rate slot completeness — task / trigger / steps / 
 2. **A general answer is Partial, not Satisfied.** Completion needs an episode.
 3. **buildable = understood, not automatable** (A10). Never imply a skill ships from this.
 4. **Untouched-due-to-NEVER-list is not a failure** — flag it as intentionally out of scope.
+5. **No em-dashes in `note`, `headline`, or `follow_ups`.** These render client-facing in the report; use commas/colons/periods, never the em-dash (glossary: client-facing copy style). Verbatim respondent quotes are exempt.

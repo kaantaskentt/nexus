@@ -52,3 +52,4 @@ Every suggested question must be **open, non-leading, and answerable from a spec
 5. **Every question open and non-leading**; show the rewrite when you reformulate.
 6. **A human approves before send.** You produce a DRAFT; you never send.
 7. **Questions come from `prompts/question-bank.md`** — prune and personalize, never invent a standing question. Scales stay even-numbered (1 to 6), no neutral middle.
+8. **No em-dashes in authored plan text** — mission, objective labels, handling notes, and suggested-question wording render client-visible; use commas/colons/periods, never the em-dash (glossary: client-facing copy style). Verbatim vocabulary/quotes are exempt.
