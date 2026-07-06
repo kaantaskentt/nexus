@@ -123,7 +123,7 @@ export function InterviewClient({ token }: { token: string }) {
           <h1 className="font-display text-2xl text-ink">We couldn&apos;t open your conversation</h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             The link may have expired, or the connection dropped. Nothing you&apos;ve shared is
-            lost — try again in a moment, and you&apos;ll pick up where you left off.
+            lost. Try again in a moment, and you&apos;ll pick up where you left off.
           </p>
           <button
             onClick={loadSession}
@@ -146,12 +146,12 @@ export function InterviewClient({ token }: { token: string }) {
           <h1 className="font-display text-2xl text-ink">Welcome back whenever you&apos;re ready</h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             Your conversation is saved. Come back to this same link anytime
-            {ctx?.respondent_name ? `, ${ctx.respondent_name}` : ""} — you&apos;ll pick up right
+            {ctx?.respondent_name ? `, ${ctx.respondent_name}` : ""}. You&apos;ll pick up right
             where you left off.
           </p>
           <button
             onClick={() => setPhase("chat")}
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90"
+            className="mt-6 inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
           >
             <RefreshCw className="h-4 w-4" strokeWidth={1.75} /> Pick up where I left off
           </button>
@@ -172,7 +172,7 @@ export function InterviewClient({ token }: { token: string }) {
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             That&apos;s everything we needed. We&apos;re putting together a short summary of
-            how the work flows — you&apos;ll get to review anything attributed to you by name
+            how the work flows. You&apos;ll get to review anything attributed to you by name
             before it&apos;s shared. You can close this page now.
           </p>
         </div>
@@ -262,7 +262,7 @@ export function InterviewClient({ token }: { token: string }) {
             <div className="flex gap-2.5">
               <WifiOff className="mt-1 h-5 w-5 shrink-0 text-ink-faint" strokeWidth={1.75} />
               <div className="rounded-2xl rounded-tl-sm border border-line bg-surface-raised px-4 py-3 text-sm text-ink-soft">
-                Connection lost — your progress is saved. Nothing you typed is gone.
+                Connection lost, but your progress is saved. Nothing you typed is gone.
                 <button
                   onClick={() => interviewerTurn(lastMessage.current)}
                   className="mt-2 flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
@@ -274,7 +274,7 @@ export function InterviewClient({ token }: { token: string }) {
           )}
           {offerPause && !typing && !turnError && (
             <p className="pl-8 text-xs text-ink-faint">
-              We&apos;re about {minutes} minutes in — keep going, or pause and resume later on
+              We&apos;re about {minutes} minutes in. Keep going, or pause and resume later on
               this same link.
             </p>
           )}
@@ -298,7 +298,7 @@ export function InterviewClient({ token }: { token: string }) {
             <button
               onClick={send}
               disabled={!draft.trim() || typing}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-on-accent transition-opacity hover:opacity-90 disabled:opacity-40"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:bg-accent-hover disabled:opacity-40 disabled:shadow-none"
               aria-label="Send"
             >
               <SendHorizontal className="h-4 w-4" strokeWidth={2} />
@@ -369,13 +369,13 @@ function ConsentLanding({
       <div className="mt-8">
         <button
           onClick={onStart}
-          className="w-full rounded-lg bg-accent px-6 py-3.5 text-base font-semibold text-on-accent transition-opacity hover:opacity-90 sm:w-auto sm:px-8"
+          className="w-full rounded-md bg-accent px-6 py-3.5 text-base font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 sm:w-auto sm:px-8"
         >
           {c.startAction}
         </button>
         <p className="mt-3 text-xs text-ink-faint">{c.consentFinePrint}</p>
         <p className="mt-1 text-xs text-ink-faint">
-          If now isn&apos;t the time, just close this page — you can return whenever suits you.
+          If now isn&apos;t the time, just close this page. You can return whenever suits you.
         </p>
       </div>
     </div>
@@ -384,7 +384,7 @@ function ConsentLanding({
 
 function Block({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="mt-6 rounded-card border border-line bg-surface p-5">
+    <section className="card-hairline mt-6 rounded-card border border-line bg-surface p-5">
       <h2 className="mb-3 font-display text-lg text-ink">{title}</h2>
       {children}
     </section>
