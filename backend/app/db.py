@@ -11,7 +11,16 @@ _pool: asyncpg.Pool | None = None
 async def get_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:
-        _pool = await asyncpg.create_pool(get_settings().database_url, min_size=1, max_size=10)
+        dsn = get_settings().database_url
+        # Supabase's transaction pooler (pgbouncer, port 6543) does not persist prepared
+        # statements across checkouts; asyncpg's implicit statement cache then throws
+        # "prepared statement already exists". Disable the cache only for the pooler —
+        # local direct connections keep it for speed.
+        pooled = "pooler.supabase.com" in dsn or ":6543" in dsn
+        _pool = await asyncpg.create_pool(
+            dsn, min_size=1, max_size=10,
+            statement_cache_size=0 if pooled else 100,
+        )
     return _pool
 
 
