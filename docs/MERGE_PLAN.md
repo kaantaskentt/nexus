@@ -217,3 +217,14 @@ Four contamination risks, four rules:
 ## A14 — Domain adaptability principle (Kaan's Stage 4 critique, accepted)
 
 The compiler prompt (and every agent prompt) stays **lean and domain-neutral at its core**, and receives a **runtime-injected industry calibration block** per engagement. Rationale = the delta principle from the Stage 2 doc: Claude already carries the "10 years at MBB" domain knowledge — stuffing business-process examples into static prompts adds retrieval noise and overfits to whichever industries we happened to write down. Examples in the core prompt exist to calibrate *judgment style* (how to tag, how to split records), never to teach *domain facts*. Per-industry worked examples live in `prompts/examples/<industry>.md`, selected and injected by the pipeline per client. This is how the system does "each domain very well" without hardcoding any domain.
+
+## A15 — UI build methodology (July 6 — Kaan's mandate: the screenshots are the spec)
+
+The mockups are not inspiration — they are the reference. The UI is built with a **screenshot-driven loop**, not one-shot generation:
+
+1. **Design tokens first.** Extract the visual system from the mockups (cream/orange palette, serif display + sans body, card radii, badge styles, left-nav pattern) into a single tokens file. Every screen reads from it — this is what guarantees consistency between screens.
+2. **Component inventory before pages.** Confidence badge, pain-band chip, evidence quote card, must-hit/nice-to-have dots, plan-state chip, person row, workflow-step card — built once as a library, reused everywhere. Tunç's shadcn/Radix setup is the vendoring source where it fits.
+3. **The compare loop (the "designer to chat with").** Each screen: build → render in the local app → screenshot → compare side-by-side against the target mockup → list deviations → fix → repeat until the diff is taste, not structure. The builder never ships a screen it hasn't visually compared against the reference.
+4. **Alive, not static.** Live-updating cards as records compile, streaming interview transcript, plan-state transitions, subtle motion (framer-motion) on card entry and badge changes. Depth/3D touches only where they serve comprehension (the knowledge-graph view) — no decoration for its own sake.
+5. **Simplify when the mockup overwhelms.** Emre's "five minutes to parse on a bad day" test governs: where a mockup packs too much, cut density before cutting features. Deviations from mockups get logged (one line) so Kaan can veto.
+6. **Demo ≠ screenshot theater.** Every element renders from real records in the database — nothing hardcoded into JSX. The fixture data is what makes the demo look full; the code path is production's.
