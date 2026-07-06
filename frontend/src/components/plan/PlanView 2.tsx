@@ -18,17 +18,10 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import type { InterviewPlan, PlanState, Workspace } from "@/lib/types";
-import brand from "@/lib/brand";
-import { transition_plan } from "@/lib/live";
 import { AppShell, PlanStateChip, MustHitDot, DiscoveryTag, BrandMark } from "@/components";
 import { SendInterviewFlow } from "./SendInterviewFlow";
 
 const TRACK: PlanState[] = ["SENT", "OPENED", "IN_PROGRESS", "COMPLETED", "COMPILED"];
-// States that imply the plan cleared approval (footer reads "Approved" even when the
-// live plan carries no approved_by stamp).
-const APPROVED_STATES = new Set<PlanState>([
-  "APPROVED", "SENT", "OPENED", "IN_PROGRESS", "PAUSED", "COMPLETED", "COMPILED",
-]);
 const TRACK_LABEL: Record<string, string> = {
   SENT: "Sent",
   OPENED: "Opened",
@@ -46,22 +39,7 @@ export function PlanView({
 }) {
   const [state, setState] = useState<PlanState>(plan.state);
   const [flowOpen, setFlowOpen] = useState(false);
-  const [approving, setApproving] = useState(false);
   const isLive = TRACK.includes(state);
-  const preApproval = (["DRAFT", "NEXUS_CHECK", "AWAITING_APPROVAL"] as PlanState[]).includes(state);
-
-  async function approve() {
-    if (approving) return;
-    setApproving(true);
-    try {
-      await transition_plan(plan.id, "APPROVED");
-      setState("APPROVED");
-    } catch {
-      /* server rejects illegal transitions; leave state unchanged */
-    } finally {
-      setApproving(false);
-    }
-  }
 
   const mustHit = plan.mission.topics.filter((t) => t.must_hit);
   const niceToHave = plan.mission.topics.filter((t) => !t.must_hit);
@@ -87,7 +65,7 @@ export function PlanView({
             <StatusTracker current={state} />
             <p className="mt-3 text-xs text-ink-faint">
               Non-response ages here — one gentle reminder, no decline. Declines happen
-              offline and are visible to the {brand.product_name} team only.
+              offline and are visible to the Nexus team only.
             </p>
           </div>
         )}
@@ -217,11 +195,6 @@ export function PlanView({
                     <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
                     Approved by {plan.approved_by.name} · {plan.approved_by.at}
                   </span>
-                ) : APPROVED_STATES.has(state) ? (
-                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-success">
-                    <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
-                    Approved
-                  </span>
                 ) : (
                   <span className="text-sm text-ink-faint">Not yet approved</span>
                 )}
@@ -298,28 +271,16 @@ export function PlanView({
           </div>
         </div>
 
-        {/* Bottom action bar. The primary action follows the lifecycle: approve a
-            pending plan, then send it; once sent it's read-only here. */}
+        {/* Bottom action bar */}
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {preApproval ? (
-            <button
-              onClick={approve}
-              disabled={approving}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
-              {approving ? "Approving…" : "Approve plan"}
-            </button>
-          ) : (
-            <button
-              onClick={() => setFlowOpen(true)}
-              disabled={isLive}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <SendHorizontal className="h-4 w-4" strokeWidth={2} />
-              {isLive ? "Interview sent" : "Send Interview"}
-            </button>
-          )}
+          <button
+            onClick={() => setFlowOpen(true)}
+            disabled={isLive}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <SendHorizontal className="h-4 w-4" strokeWidth={2} />
+            {isLive ? "Interview sent" : "Send Interview"}
+          </button>
           <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-line-strong px-5 py-3 text-sm font-medium text-ink transition-colors hover:bg-surface-raised">
             <Save className="h-4 w-4" strokeWidth={1.75} />
             Save Plan
@@ -408,7 +369,7 @@ function RefinePlan({ plan }: { plan: InterviewPlan }) {
             <div key={i} className="flex gap-2">
               <BrandMark className="mt-1 h-4 w-4 shrink-0 text-accent" />
               <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-surface-raised px-3.5 py-2">
-                <div className="mb-0.5 text-[11px] text-ink-faint">{brand.product_name} · {m.at}</div>
+                <div className="mb-0.5 text-[11px] text-ink-faint">Nexus · {m.at}</div>
                 <p className="text-sm text-ink">{m.text}</p>
               </div>
             </div>
@@ -421,7 +382,7 @@ function RefinePlan({ plan }: { plan: InterviewPlan }) {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder={`Ask ${brand.product_name} to refine the plan…`}
+          placeholder="Ask Nexus to refine the plan…"
           className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint"
         />
         <button

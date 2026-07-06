@@ -8,7 +8,6 @@ import {
   ArrowRight,
   Lock,
   Zap,
-  Loader2,
   Lightbulb,
   UserPlus,
   Star,
@@ -29,7 +28,6 @@ export function ReportView({
   report: Report;
 }) {
   const [openStep, setOpenStep] = useState<WorkflowStep | null>(null);
-  const [showAllFollowUps, setShowAllFollowUps] = useState(false);
 
   return (
     <AppShell workspace={workspace} active="plans">
@@ -70,30 +68,22 @@ export function ReportView({
           <div className="min-w-0">
             <section className="rounded-card border border-line bg-surface-raised p-5">
               <h2 className="mb-4 font-display text-xl text-ink">{report.workflow_name}</h2>
-              {report.steps.length === 0 ? (
-                <div className="flex items-center gap-3 rounded-card border border-dashed border-line-strong bg-surface p-6 text-sm text-ink-soft">
-                  <Loader2 className="h-5 w-5 shrink-0 animate-spin text-accent" strokeWidth={1.75} />
-                  Mapping the workflow from the conversation — this lands a moment after
-                  the findings.
-                </div>
-              ) : (
-                <div className="flex items-stretch gap-1 overflow-x-auto pb-2">
-                  {report.steps.map((step, i) => (
-                    <div key={step.index} className="flex items-start gap-1">
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                      >
-                        <WorkflowStepCard step={step} onClick={() => setOpenStep(step)} />
-                      </motion.div>
-                      {i < report.steps.length - 1 && (
-                        <ArrowRight className="mt-16 h-4 w-4 shrink-0 text-ink-faint" strokeWidth={2} />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="flex items-stretch gap-1 overflow-x-auto pb-2">
+                {report.steps.map((step, i) => (
+                  <div key={step.index} className="flex items-start gap-1">
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <WorkflowStepCard step={step} onClick={() => setOpenStep(step)} />
+                    </motion.div>
+                    {i < report.steps.length - 1 && (
+                      <ArrowRight className="mt-16 h-4 w-4 shrink-0 text-ink-faint" strokeWidth={2} />
+                    )}
+                  </div>
+                ))}
+              </div>
             </section>
 
             {report.perception_gap ? (
@@ -146,27 +136,15 @@ export function ReportView({
 
             <Panel icon={UserPlus} title="Follow Up On">
               <ul className="space-y-3">
-                {(showAllFollowUps ? report.follow_ups : report.follow_ups.slice(0, 6)).map(
-                  (f, i) => (
-                    <li key={i} className="flex items-start justify-between gap-3">
-                      <span className="text-sm text-ink-soft">{f.text}</span>
-                      <button className="shrink-0 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:bg-surface-raised hover:text-ink">
-                        Add to plan
-                      </button>
-                    </li>
-                  ),
-                )}
+                {report.follow_ups.map((f, i) => (
+                  <li key={i} className="flex items-start justify-between gap-3">
+                    <span className="text-sm text-ink-soft">{f.text}</span>
+                    <button className="shrink-0 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:bg-surface-raised hover:text-ink">
+                      Add to plan
+                    </button>
+                  </li>
+                ))}
               </ul>
-              {report.follow_ups.length > 6 && (
-                <button
-                  onClick={() => setShowAllFollowUps((v) => !v)}
-                  className="mt-3 text-xs font-medium text-accent hover:underline"
-                >
-                  {showAllFollowUps
-                    ? "Show fewer"
-                    : `Show ${report.follow_ups.length - 6} more`}
-                </button>
-              )}
             </Panel>
 
             <Panel icon={Star} title="Interview Quality">

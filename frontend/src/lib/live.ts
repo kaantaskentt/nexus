@@ -143,6 +143,36 @@ export async function get_plan(
   return rows.find((p) => p.id === plan_id);
 }
 
+// Plan lifecycle transition (server validates legality; the UI only requests it).
+export async function transition_plan(
+  plan_id: string,
+  to_state: string,
+): Promise<{ to: string }> {
+  return api(
+    `/api/plans/${plan_id}/transition?to_state=${encodeURIComponent(to_state)}&actor=admin`,
+    { method: "POST" },
+  );
+}
+
+// Send Interview (A4) — mints the token-keyed respondent session from an APPROVED plan
+// and moves the plan to SENT. Returns the invite link the respondent opens.
+export interface SendResult {
+  session_id: string;
+  token: string;
+  invite_path: string; // "/i/{token}"
+  invite_url: string;
+  state: string;
+}
+export async function send_interview(
+  plan_id: string,
+  details: { interviewee_name?: string; email?: string; job_title?: string; language?: string },
+): Promise<SendResult> {
+  return api<SendResult>(`/api/plans/${plan_id}/send`, {
+    method: "POST",
+    body: JSON.stringify(details),
+  });
+}
+
 // ── Sessions (GET /api/workspaces/{id}/sessions) — find the compiled one ──────
 export interface SessionSummary {
   id: string;

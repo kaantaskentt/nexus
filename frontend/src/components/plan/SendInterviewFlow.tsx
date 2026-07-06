@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { UserPlus, Mic, MessageSquare, Check, Lock, CalendarDays, ChevronDown, X } from "lucide-react";
+import {
+  UserPlus, Mic, MessageSquare, Check, Lock, CalendarDays, ChevronDown, X,
+  ExternalLink, WifiOff,
+} from "lucide-react";
 import brand from "@/lib/brand";
 import { BrandMark } from "@/components";
+import { send_interview, type SendResult } from "@/lib/live";
 import type { InterviewPlan, Workspace } from "@/lib/types";
 
 type Step = "details" | "preview" | "sent";
@@ -25,18 +29,45 @@ export function SendInterviewFlow({
   plan: InterviewPlan;
   workspace: Workspace;
   onClose: () => void;
-  onSent: () => void;
+  onSent: (invitePath: string) => void;
 }) {
   const [step, setStep] = useState<Step>("details");
   const [name, setName] = useState(plan.interviewee_name ?? "");
   const [role, setRole] = useState(plan.interviewee_role ?? "");
   const [email, setEmail] = useState("");
   const [modality, setModality] = useState<"voice" | "text">("voice");
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState(false);
+  const [result, setResult] = useState<SendResult | null>(null);
 
   function handleClose() {
     setStep("details");
     setEmail("");
+    setResult(null);
+    setSendError(false);
     onClose();
+  }
+
+  // Real send: mints the respondent session + token and moves the plan to SENT.
+  async function handleSend() {
+    if (sending) return;
+    setSending(true);
+    setSendError(false);
+    try {
+      const r = await send_interview(plan.id, {
+        interviewee_name: name,
+        email,
+        job_title: role,
+        language: "en",
+      });
+      setResult(r);
+      setStep("sent");
+      onSent(r.invite_path);
+    } catch {
+      setSendError(true);
+    } finally {
+      setSending(false);
+    }
   }
 
   const firstName = name.split(/\s+/)[0] || "there";
@@ -217,6 +248,12 @@ export function SendInterviewFlow({
                     </p>
                   </div>
 
+                  {sendError && (
+                    <p className="flex items-center justify-center gap-1.5 text-sm text-danger">
+                      <WifiOff className="h-4 w-4" strokeWidth={1.75} />
+                      Couldn&apos;t send just now — try again in a moment.
+                    </p>
+                  )}
                   <div className="flex items-center justify-between pt-1">
                     <button
                       onClick={() => setStep("details")}
@@ -225,13 +262,11 @@ export function SendInterviewFlow({
                       ← Edit details
                     </button>
                     <button
-                      onClick={() => {
-                        onSent();
-                        setStep("sent");
-                      }}
-                      className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90"
+                      onClick={handleSend}
+                      disabled={sending}
+                      className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
                     >
-                      Send to {firstName}
+                      {sending ? "Sending…" : `Send to ${firstName}`}
                     </button>
                   </div>
                 </div>
@@ -250,12 +285,25 @@ export function SendInterviewFlow({
                       There is no decline; a decline would be a bias signal.
                     </p>
                   </div>
-                  <button
-                    onClick={handleClose}
-                    className="rounded-lg border border-line-strong px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-surface-raised"
-                  >
-                    Done
-                  </button>
+                  {result && (
+                    <a
+                      href={result.invite_path}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mx-auto inline-flex items-center gap-1.5 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-soft"
+                    >
+                      <ExternalLink className="h-4 w-4" strokeWidth={1.75} />
+                      Open {firstName}&apos;s interview link
+                    </a>
+                  )}
+                  <div>
+                    <button
+                      onClick={handleClose}
+                      className="rounded-lg border border-line-strong px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-surface-raised"
+                    >
+                      Done
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
