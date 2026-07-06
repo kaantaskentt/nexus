@@ -42,12 +42,14 @@ EXECUTE (runner built) · F42 halo multi-turn eval (real-but-intermittent 2/3) �
 same-speaker-retraction fix PRE-STAGED as git-apply patch (evals/adjudication/staged/,
 verified 4/4) — one command after Emre ratifies · demo runbook docs/DEMO-RUNBOOK.md.
 
-**IN-FLIGHT (checkpointed at park):**
-- #33 generate-plan button (frontend-1) — WIP checkpoint commit on main; see its commit
-  message for works/left/next.
+**IN-FLIGHT (checkpointed at park; bonus 10-min window used):**
+- #33 generate-plan button (frontend-1) — WIP checkpoint 2 at 4ad23a8 (mid-edit, may not
+  compile); resume notes in the commit message. THE only unfinished code item.
 - #34 screenshot sweep (admin-flow) — prepped, deliberately deferred until after the
   final deploy's screenshots; option (a) approved (relocate, keep gitignored pngs ignored).
-- evals-1's interview_quality first-attempt-reliability prompt fix — WIP checkpointed.
+- ~~interview_quality reliability~~ DONE in the bonus window: root cause was transcript-ECHO
+  (instruction placement), fixed (instruction-after-transcript + anti-echo line + tests,
+  6ec393c) and LIVE-VERIFIED 3/3 first-attempt (e49f1ca). Rides the final deploy.
 
 **RESUME QUEUE (in order):**
 1. frontend-1 finishes #33 → FINAL DEPLOY (team-lead, clean worktree per memory/SPRINT
