@@ -14,12 +14,19 @@ backend live + editor UI built · #22 full deploy · #23 audit · #24 re-mine (Q
 vendored, spine 9-slot fix) · #25 volume (13/16, 1 trap; terse fix partial win) · #26 VAPI
 provisioned + widget deployed (ff9ba48). 52 backend tests, 23 frontend tests, suites green.
 
-**OPEN (2 verification items, owners assigned):**
-1. Editor live-verify + screenshots → frontend-1 (workflow 37d3d70d…, session 99b4e914… on
-   live; routes 200). Closes #21.
-2. Perception-gap verdict → prompts-evals-2: run evals/harness/second_round_e2e.py against
-   LIVE (re-check Burak plan id post-reseed), fetch report, report if a real ceo_vs_floor
-   gap forms. Last packet line.
+**OPEN (1 verification item):**
+1. ~~Editor live-verify~~ CLOSED July 6 morning by qa-prod: PASS on all 4 ontology rules
+   against prod (overlay provenance, MANUAL tagging, reversible soft-hide, audit trail);
+   11 screenshots committed (5162cac). #21 done. Found in the process: Next data-cache
+   staleness in api.ts (SSR renders stale on every surface) — urgent fix in flight (#13).
+2. Perception-gap verdict → qa-prod (in progress): run evals/harness/second_round_e2e.py
+   against LIVE (re-check Burak plan id post-reseed), fetch report, report if a real
+   ceo_vs_floor gap forms. Last packet line.
+
+**MORNING SHIFT (July 6, in flight):** docs/MORNING-ORDERS.md + Kaan's multi-company
+addition (MERGE_PLAN A17). Four lanes: frontend-1 (KB/Insights/nav + premium pass 2),
+admin-flow (auth + new-company + transcript upload), qa-prod (prod verification),
+evals-1 (computed coverage-routing, verdict: feasible).
 
 **MORNING (Kaan):** open the prod URL · FIRST VOICE CALL (send a voice-modality interview
 from Burak's plan, respondent page shows "Start voice conversation") · morning-review
