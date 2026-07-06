@@ -26,6 +26,27 @@ async def _workflow_id_for_session(session_id: str) -> str:
     return str(wid)
 
 
+@router.get("/{workspace_id}")
+async def list_workflows(workspace_id: str):
+    """Workflows in a workspace — mirrors the /api/claims/{workspace_id} and
+    /api/plans/{workspace_id} convention so a workspace-scoped caller can discover a
+    workflow_id. Each row carries its step count; the editable view is
+    /{workflow_id}/effective. (Different path depth from /{workflow_id}/effective, so
+    the two never collide.)"""
+    pool = await get_pool()
+    rows = await pool.fetch(
+        """select w.id, w.name, w.session_id, w.created_at,
+                  (select count(*) from workflow_steps s where s.workflow_id = w.id) as step_count
+           from workflows w where w.workspace_id = $1 order by w.created_at desc""",
+        workspace_id,
+    )
+    return [{
+        "workflow_id": str(r["id"]), "name": r["name"],
+        "session_id": str(r["session_id"]) if r["session_id"] else None,
+        "step_count": r["step_count"], "created_at": r["created_at"].isoformat(),
+    } for r in rows]
+
+
 @router.get("/by-session/{session_id}/effective")
 async def effective_by_session(session_id: str):
     pool = await get_pool()
