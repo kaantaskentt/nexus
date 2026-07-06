@@ -6,8 +6,10 @@ from . import (  # noqa: F401  (importing registers each @handles job)
     conflicts,
     entities,
     handoff,
+    heuristics,
     interview,
     pain,
     quality,
+    recon,
     workflow,
 )

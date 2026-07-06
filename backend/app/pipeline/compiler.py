@@ -301,6 +301,8 @@ async def compile_session(payload: dict) -> None:
     await enqueue("detect_conflicts", {"workspace_id": workspace_id, "session_id": session_id})
     await enqueue("build_workflow_schema", {"session_id": session_id})
     await enqueue("score_interview_quality", {"session_id": session_id})
+    # Stage 2: score pre-call heuristics against what the call actually surfaced (F13).
+    await enqueue("score_heuristics", {"workspace_id": workspace_id, "session_id": session_id})
 
 
 @handles("compile_session")
