@@ -145,10 +145,11 @@ async def seed(compile_transcript: bool = True) -> str:
         "handling_notes": ["Founder read him as slow with systems — keep it light, never rate him"],
         "time_budget_minutes": 30,
     }
+    # AWAITING_APPROVAL so the demo walkthrough can drive the live approve → send gate.
     plan_id = await pool.fetchval(
         """insert into interview_plans (workspace_id, round_id, interviewee_id, state, mission,
              suggested_questions, never_list)
-           values ($1,$2,$3,'APPROVED',$4,$5,$6) returning id""",
+           values ($1,$2,$3,'AWAITING_APPROVAL',$4,$5,$6) returning id""",
         ws, round_id, people["Burak"], json.dumps(mission),
         json.dumps([{"text": "Walk me through the last morning you did the repricing.", "topic": "process_step"}]),
         json.dumps(["Do not mention the Harrods renegotiation"]),
