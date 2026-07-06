@@ -38,6 +38,27 @@ async def test_send_mints_session_and_moves_to_sent(db):
     assert await db.fetchval("select state from interview_plans where id = $1", plan_id) == "SENT"
 
 
+async def test_send_then_by_token_has_consent_parity(db):
+    """A REAL send must land the same consent context the demo landing renders:
+    neutral plan-sourced topic + respondent + company + estimate — not just the token."""
+    from app.routers.sessions import get_by_token
+
+    ws = await make_workspace(db, industry="jewelry")
+    burak = await db.fetchval(
+        "insert into entities (workspace_id,entity_type,canonical_name,role) "
+        "values ($1,'person','Burak','Operations') returning id", ws)
+    plan_id = await _approved_plan(db, ws, burak)
+
+    sent = await send_interview(str(plan_id), SendIn(interviewee_name="Burak"))
+    ctx = (await get_by_token(sent["token"]))["context"]
+
+    assert ctx["topic"] == "how returns work"          # neutral, plan-sourced (non-negotiable #2)
+    assert ctx["respondent_first_name"] == "Burak"
+    assert ctx["company_name"] == "Test Co"
+    assert ctx["est_minutes"]                            # populated, not None
+    assert ctx["modality"] == "text"
+
+
 async def test_send_refuses_unapproved_plan(db):
     ws = await make_workspace(db, industry="jewelry")
     plan_id = await db.fetchval(

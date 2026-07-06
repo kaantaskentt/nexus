@@ -21,7 +21,8 @@ _SCHEMA = (
     'Return ONE json object: {"name":"short workflow name",'
     '"steps":[{"action":"what happens","tool":"tool or null","input":"or null",'
     '"output":"or null","verified":"verified|partial|unverified",'
-    '"spine_slots":{"task":"","trigger":"","rules":"","exceptions":"","success":"","examples":""},'
+    '"spine_slots":{"task":"","trigger":"","steps":"","rules":"","exceptions":"",'
+    '"tools":"","output":"","success":"","examples":""},'
     '"slot_scores":{"task":0,"trigger":0,"steps":0,"rules":0,"exceptions":0,"tools":0,"output":0,"success":0,"examples":0},'
     '"claim_ids":["id",...]}]}. '
     "Steps in real execution order. verified=corroborated across sources; partial=single-source "
