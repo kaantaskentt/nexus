@@ -1,0 +1,7 @@
+{
+  "product_name": "Nexus",
+  "sender_name": "Nexus Interviews",
+  "email_from": "interviews@example.com",
+  "logo_path": null,
+  "_note": "A13.2 — brand is config. Rename the product here; nothing else hardcodes the name."
+}

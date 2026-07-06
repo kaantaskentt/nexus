@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "sync-brand": "node scripts/sync-brand.mjs",
+    "predev": "node scripts/sync-brand.mjs",
+    "prebuild": "node scripts/sync-brand.mjs",
+    "pretest": "node scripts/sync-brand.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
