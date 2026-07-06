@@ -1,15 +1,31 @@
-# Sources: golden-jewelry-transcript.md + stage4-compiler.md (record schema, Steps 1-5) + A12 (fictional).
+# Sources: golden-jewelry-transcript.md + stage4-compiler.md (record schema, Steps 1-5)
+#   + backend/app/pipeline/compiler.py OUTPUT_CONTRACT (the machine wire shape) + A12 (fictional).
 # Target: prompts/agents/stage4-compiler.md. The compiler's output is diffed against this fixture.
-# NOTE: a real 30-min call yields 60+ records; this condensed golden covers the LOAD-BEARING records the
-# compiler must get right. Judge on the assertions block + presence/absence + tag correctness, not exact count.
+#
+# ALIGNED TO THE REAL COMPILER (verified 2026-07-06 against the live Bee-Goddess demo run):
+#   - topic persists in UNDERSCORE form: time_or_cost, process_step, company_fact, success_criteria.
+#   - tag: the model emits lowercase (guess/claimed/confirmed); the pipeline normalises to UPPERCASE
+#     in the DB (GUESS/CLAIMED/CONFIRMED). Judge tags CASE-INSENSITIVELY. tag is NULL for kind
+#     directive AND admission (they are not points on the trust ladder — migration 0002).
+#   - directive/admission still carry a topic (topic is NOT NULL; it defaults to company_fact when
+#     not otherwise inferable). So a directive's topic is company_fact, never null.
+#   - evidence.timestamp may be "MM:SS" (from a timestamped transcript) OR "#<turn>" (turn index, which
+#     is what the live pipeline feeds). Judge the timestamp loosely — presence + right utterance, not format.
+#   - hedges: array of the exact tokens that forced a GUESS (e.g. ["sanırım","maybe"]). Assert membership,
+#     not the whole set.
+#   - repeats go in a top-level `mentions: [{of, quote, timestamp}]` array (NOT a mention_of field), each
+#     bumping the referenced record's mention_count. supersedes references a local id (this batch) or a UUID.
+#   - NEW-PERSON fires from a record's subject_name (the person the claim is ABOUT), not the speaker.
+# NOTE: a real 30-min call yields 60+ records; this condensed golden covers the LOAD-BEARING records.
+# Judge on the assertions block + presence/absence + tag correctness, not exact count.
 
 meta:
   company: "Auria Jewellery (fictional)"
-  speaker_under_extraction: "Derya (founder)"
+  speaker_under_extraction: "Derya (founder)"    # every record's evidence.speaker / speaker_name = Derya
   scraped_context_present:
     - id: scraped-boutiques
       claim: "Auria Jewellery operates 12 boutiques"
-      tag: scraped
+      tag: SCRAPED
       note: "must be superseded by the call correction to 9"
 
 # ---- records the compiler MUST NOT emit ----
@@ -18,34 +34,38 @@ must_not_extract:
     quotes: ["Can you hear me alright?", "Okay.", "I'm ready to begin."]
 
 # ---- expected records (load-bearing subset) ----
+# tag values shown lowercase = the model's raw output; DB stores the uppercase form.
 expected_records:
 
   - ref: company-type
     kind: statement
-    topic: company-fact
+    topic: company_fact
     tag: claimed
     claim: "Auria is a fine jewellery brand making handmade gold pieces with coloured stones"
     evidence_quote: "We're a fine jewellery brand, handmade pieces, mostly gold with coloured stones"
-    timestamp: "00:35"
+    speaker_name: Derya
+    subject_name: null
 
   - ref: boutique-correction
     kind: correction
-    topic: company-fact
+    topic: company_fact
     tag: confirmed
     claim: "Auria operates nine boutiques (closed two in Izmir and one in Bursa last year)"
     evidence_quote: "We've got nine boutiques now ... We closed the two in Izmir and one in Bursa last year. So nine."
-    timestamp: "00:35"
-    supersedes: scraped-boutiques
-    assert: "supersedes the SCRAPED 12-boutiques record; the scraped record is not deleted"
+    speaker_name: Derya
+    subject_name: null
+    supersedes: scraped-boutiques         # local ref here; a real UUID from the prior-context block at runtime
+    assert: "supersedes the SCRAPED 12-boutiques record; the scraped record is not deleted (both survive)"
 
   - ref: craftspeople-count
     kind: statement
-    topic: company-fact
+    topic: company_fact
     tag: guess
     claim: "The atelier has roughly twelve craftspeople"
     evidence_quote: "Twelve craftspeople, I'd say — roughly twelve, I'd have to check"
-    timestamp: "01:08"
-    assert: "hedges ('I'd say', 'roughly', 'I'd have to check') → GUESS despite a specific number"
+    hedges: ["I'd say", "roughly", "I'd have to check"]
+    speaker_name: Derya
+    assert: "hedges → GUESS despite a specific number"
 
   - ref: selin-role
     kind: statement
@@ -53,17 +73,19 @@ expected_records:
     tag: claimed
     claim: "Selin is the master jeweller, leading the atelier since the beginning"
     evidence_quote: "Led by Selin, she's been our master jeweller since the beginning"
-    timestamp: "01:08"
+    speaker_name: Derya
+    subject_name: Selin
     flags: { sentiment_quarantine: false, approach_note: false }
-    triggers: ["NEW-PERSON: Selin"]
+    triggers: ["NEW-PERSON: Selin — ..."]
+    assert: "NEW-PERSON fires from subject_name=Selin"
 
   - ref: order-flow
     kind: statement
-    topic: process-step
+    topic: process_step
     tag: claimed
     claim: "Standard pieces ship from stock; custom orders go to the atelier queue"
     evidence_quote: "If it's a standard piece we usually have stock. If it's custom, it goes to the atelier queue."
-    timestamp: "01:36"
+    speaker_name: Derya
     assert: "'usually' → habitual generalization, CLAIMED not CONFIRMED"
 
   - ref: vocab-yildirim
@@ -72,7 +94,7 @@ expected_records:
     tag: claimed
     claim: "Rush orders are called 'yıldırım sipariş' and jump the queue"
     evidence_quote: "we have what we call \"yıldırım sipariş\" — the rush orders"
-    timestamp: "01:36"
+    speaker_name: Derya
     assert: "vocabulary captured VERBATIM, untranslated"
 
   - ref: kerem-repricing-owner
@@ -81,9 +103,10 @@ expected_records:
     tag: claimed
     claim: "Kerem owns the daily morning repricing and flags the rush orders"
     evidence_quote: "Kerem handles that. Every morning he goes through the overnight orders and reprices anything where the gold price moved, then flags the rush ones."
-    timestamp: "02:12"
-    triggers: ["NEW-PERSON: Kerem"]
-    assert: "someone else's work + habitual → CLAIMED ceiling"
+    speaker_name: Derya
+    subject_name: Kerem
+    triggers: ["NEW-PERSON: Kerem — ..."]
+    assert: "someone else's work + habitual → CLAIMED ceiling; NEW-PERSON from subject_name=Kerem"
 
   - ref: kerem-spreadsheet
     kind: statement
@@ -91,35 +114,37 @@ expected_records:
     tag: claimed
     claim: "Repricing runs on Kerem's personal spreadsheet, maintained for years"
     evidence_quote: "He's got his own spreadsheet for it, had it for years."
-    timestamp: "02:12"
+    speaker_name: Derya
     assert: "shadow tool — counts double as a tool signal"
 
   - ref: repricing-time
     kind: statement
-    topic: time-or-cost
+    topic: time_or_cost
     tag: guess
     claim: "Repricing takes roughly two hours each morning"
     evidence_quote: "It takes him, I don't know, maybe two hours? Every morning I think."
-    timestamp: "02:12"
+    hedges: ["I don't know", "maybe", "I think"]
+    speaker_name: Derya
+    subject_name: Kerem
     triggers: ["INTERVIEW-OBJECTIVE: measure actual repricing time (owner: Kerem)"]
     assert: "hedges + uptalk + describing another's work → GUESS; reinforced at 02:52 ('that's a guess honestly')"
 
   - ref: returns-time-superseded
     kind: statement
-    topic: time-or-cost
+    topic: time_or_cost
     tag: claimed
     claim: "Returns take about forty minutes each"
     evidence_quote: "Returns take about forty minutes each, start to finish."
-    timestamp: "03:12"
+    speaker_name: Derya
     assert: "number + habitual → CLAIMED; THIS record is superseded by returns-time-correction"
 
   - ref: returns-time-correction
     kind: correction
-    topic: time-or-cost
+    topic: time_or_cost
     tag: confirmed
     claim: "Returns now take about ten minutes each since the new label printer"
     evidence_quote: "Actually — no. Since we moved to the new label printer it's more like ten minutes now. Ten."
-    timestamp: "03:12"
+    speaker_name: Derya
     supersedes: returns-time-superseded
     assert: "the canonical retraction — correction supersedes the earlier 40-min record; both survive; NOT averaged to 25"
 
@@ -129,9 +154,10 @@ expected_records:
     tag: claimed
     claim: "Pınar runs the returns desk and set up the new label-printer process"
     evidence_quote: "She runs the returns desk. ... Pınar set that up."
-    timestamp: "03:12"
+    speaker_name: Derya
+    subject_name: Pınar
     flags: { sentiment_quarantine: false, approach_note: false }
-    triggers: ["NEW-PERSON: Pınar"]
+    triggers: ["NEW-PERSON: Pınar — ..."]
 
   - ref: pinar-tenure
     kind: statement
@@ -139,7 +165,9 @@ expected_records:
     tag: guess
     claim: "Pınar joined roughly eight months ago"
     evidence_quote: "joined maybe eight months ago"
-    timestamp: "03:12"
+    hedges: ["maybe"]
+    speaker_name: Derya
+    subject_name: Pınar
     assert: "'maybe' → GUESS"
 
   - ref: metin-fact
@@ -148,9 +176,10 @@ expected_records:
     tag: claimed
     claim: "Metin previously owned the returns desk and now works on the packing side"
     evidence_quote: "Metin, who used to own returns ... Metin's on the packing side now."
-    timestamp: "03:44"
+    speaker_name: Derya
+    subject_name: Metin
     flags: { sentiment_quarantine: false, approach_note: false }
-    triggers: ["NEW-PERSON: Metin"]
+    triggers: ["NEW-PERSON: Metin — ..."]
     assert: "the FACT half of the sentence — no sentiment flag"
 
   - ref: metin-judgment-quarantined
@@ -159,18 +188,19 @@ expected_records:
     tag: claimed
     claim: "Derya considers Metin disorganized about returns (her characterization)"
     evidence_quote: "he's a good man but he was pretty disorganized about it, honestly"
-    timestamp: "03:44"
+    speaker_name: Derya
+    subject_name: Metin
     flags: { sentiment_quarantine: true, approach_note: false }
-    assert: "the JUDGMENT half — split into its own record, quarantined; NEVER client-visible, never feeds pain scoring"
+    assert: "the JUDGMENT half — split into its own record; sentiment_flag=true forces quarantined=true at the DB trigger; NEVER client-visible, never feeds pain scoring"
 
   - ref: success-criteria
     kind: statement
-    topic: success-criteria
+    topic: success_criteria
     tag: claimed
     claim: "Success = one screen showing where every custom order is and who is holding it up"
     evidence_quote: "If I could see, on one screen, exactly where every custom order is and who's holding it up"
-    timestamp: "04:30"
-    assert: "success-criteria captured verbatim — becomes the demo script"
+    speaker_name: Derya
+    assert: "success_criteria captured verbatim — becomes the demo script"
 
   - ref: shadow-tool-whatsapp
     kind: statement
@@ -178,17 +208,18 @@ expected_records:
     tag: claimed
     claim: "Custom-order chasing happens in a WhatsApp group called 'Müşteri Takip'"
     evidence_quote: "We even have a group we call \"Müşteri Takip\" for it."
-    timestamp: "04:30"
+    speaker_name: Derya
     assert: "shadow tool (WhatsApp) + vocabulary 'Müşteri Takip' captured verbatim"
 
   - ref: directive-acquisition
     kind: directive
-    topic: null
-    tag: null
+    topic: company_fact          # directives are NOT null-topic; topic defaults to company_fact (migration 0002)
+    tag: null                    # directive → null tag (not on the trust ladder)
     claim: "Do not raise the acquisition talks with floor staff"
     evidence_quote: "don't bring up the acquisition talks with anyone on the floor"
-    timestamp: "05:08"
-    assert: "DIRECTIVE — stored verbatim, NO trust tag, feeds the NEVER list; never becomes a respondent-facing objective"
+    speaker_name: Derya
+    triggers: ["SEQUENCING: NEVER list — do not raise the acquisition with floor staff"]
+    assert: "DIRECTIVE — stored verbatim, NULL tag, topic present (company_fact), feeds the NEVER list via a SEQUENCING trigger; never a respondent-facing objective"
 
   - ref: pain-handoff-episode
     kind: statement
@@ -196,17 +227,19 @@ expected_records:
     tag: confirmed
     claim: "A finished bridal set sat unshipped for two days because the completion was not communicated, surfacing only when the customer emailed the founder"
     evidence_quote: "Last week. A bridal set ... the piece had been sitting finished in the atelier for two days because nobody told Kerem it was done. I only found out when the customer emailed me directly."
-    timestamp: "05:40"
+    speaker_name: Derya
+    subject_name: Kerem
     assert: "episodic (last week, named piece, concrete detail, unhedged) → CONFIRMED even in a founder call; the pain evidence for the chasing problem"
 
 # ---- top-level assertions the judge checks across the whole extraction ----
 assertions:
   - "The 00:20 filler produced ZERO records."
-  - "boutique-correction supersedes scraped-boutiques; scraped record still exists."
+  - "boutique-correction supersedes scraped-boutiques; scraped record still exists (both survive)."
   - "returns-time-correction supersedes returns-time-superseded; neither deleted; not averaged."
-  - "metin-fact and metin-judgment-quarantined are TWO separate records; only the judgment is quarantined."
-  - "All hedged items (craftspeople-count, repricing-time, pinar-tenure) are GUESS regardless of specificity."
+  - "metin-fact and metin-judgment-quarantined are TWO separate records; only the judgment carries sentiment_quarantine (→ quarantined=true at the DB, excluded from client-visible queries)."
+  - "All hedged items (craftspeople-count, repricing-time, pinar-tenure) are GUESS regardless of specificity; each lists the triggering hedge tokens in `hedges`."
   - "yıldırım sipariş and Müşteri Takip appear verbatim, untranslated."
-  - "directive-acquisition has no trust tag and feeds the NEVER list."
+  - "directive-acquisition has a NULL tag and a company_fact topic, and feeds the NEVER list (SEQUENCING trigger)."
   - "pain-handoff-episode is the only CONFIRMED-episodic statement (plus the two corrections); everything habitual is CLAIMED at most."
-  - "NEW-PERSON triggers fired for Selin, Kerem, Pınar, Metin."
+  - "NEW-PERSON triggers fired (via subject_name) for Selin, Kerem, Pınar, Metin."
+  - "topic values persist in underscore form; tags persist uppercase; tags judged case-insensitively."

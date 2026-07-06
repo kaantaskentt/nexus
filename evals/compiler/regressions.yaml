@@ -86,7 +86,7 @@
     turn: |
       Derya (06:40): "It's nine boutiques now — we closed the two in Izmir and one in Bursa last year."
   pass_if:
-    - Emits a CORRECTION (company-fact) superseding the scraped 12-boutiques record
+    - Emits a CORRECTION (topic company_fact) superseding the scraped 12-boutiques record
     - The spoken '9 boutiques' wins over the scrape
   fail_if:
     - Keeps 12 as authoritative
