@@ -16,6 +16,7 @@ This is the shared vocabulary and the hard policies. Every agent prompt, every U
 | **perception gap** | discrepancy, error | Divergence between leadership belief and floor reality. Report-only (F27). |
 | **respondent / interviewee** | subject, user, candidate | The person being interviewed. |
 | **pain band** | pain score, severity number | Coarse LLM-judged band: low / moderate / high / severe. Never a decimal. |
+| **confidence badge** | trust score | Snapshot-card confidence, distinct from the record trust tag. Four labels: **verified** (independent agreement, F35) · **high** (single confirmed source) · **reported** (claimed, one voice) · **scraped** (~20% reference weight, A2). |
 
 ### The "candidate" split (EK 4.1 — the killed conflation, A7)
 The old system fused three different things into "candidate." They are now three distinct terms; never reintroduce "candidate":
