@@ -9,9 +9,9 @@ spec and wins every conflict.)
 ```
 config/       brand.json — the ONLY home of the product name/sender identity (A13.2)
 backend/      FastAPI + asyncpg service
-  db/migrations/   numbered SQL, applied to Supabase (0001 foundation … 0004 quality config)
+  db/migrations/   numbered SQL, applied to Supabase (0001 foundation … 0005 context-chat)
   app/
-    main.py        API entry — mounts routers: workspaces, claims, plans, sessions, voice
+    main.py        API entry — mounts routers: workspaces, claims, plans, sessions, voice, reports, chat
     worker.py      queue worker entry (python -m app.worker)
     queue.py       jobs table, SKIP LOCKED claim loop (vendored pattern, see reference/SOURCES.md)
     llm.py         every model call: agent_configs row → prompt file → agent_runs audit;
