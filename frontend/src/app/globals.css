@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens (A15.1) ─────────────────────────────────────────
+   Extracted from the Stage 5/6/8 mockups: cream canvas, orange accent,
+   serif display over sans body, soft card radii, badge-driven trust UI.
+   Every screen and component reads these variables — no ad-hoc colors. */
+
+:root {
+  /* Canvas + surfaces */
+  --canvas: #faf6ef;          /* cream page background */
+  --surface: #ffffff;         /* cards */
+  --surface-raised: #fffdf9;
+  --border: #e8e0d2;
+  --border-strong: #d6cbb8;
+
+  /* Ink */
+  --ink: #1f1a13;             /* primary text */
+  --ink-soft: #5c5347;        /* secondary text */
+  --ink-faint: #94897a;       /* metadata */
+
+  /* Accent */
+  --accent: #e8641b;          /* orange — actions, active states */
+  --accent-soft: #fdeadd;     /* orange wash — chips, hovers */
+  --accent-ink: #9c3d08;      /* orange text on soft wash */
+
+  /* Trust ladder — one hue per tier, used by ConfidenceBadge only */
+  --tag-scraped: #94897a;
+  --tag-guess: #b08d2f;
+  --tag-claimed: #2f6fb0;
+  --tag-confirmed: #2e7d4f;
+  --tag-verified: #1b5e20;
+
+  /* Pain bands — coarse, never decimals (F28/A2) */
+  --pain-low: #dce8dc;
+  --pain-moderate: #f5e6c4;
+  --pain-high: #f8d5b8;
+  --pain-severe: #f3c2b2;
+
+  /* Semantic */
+  --danger: #b3452c;
+  --success: #2e7d4f;
+
+  /* Shape */
+  --radius-card: 14px;
+  --radius-chip: 999px;
+  --shadow-card: 0 1px 3px rgb(31 26 19 / 0.06), 0 4px 16px rgb(31 26 19 / 0.05);
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+}
