@@ -24,6 +24,34 @@ import { TOPIC_META, NEUTRAL_TOPIC } from "@/lib/topics";
 import { rise, staggerParent, drawerSpring, scrimFade, drawerSection } from "@/lib/variants";
 import brand from "@/lib/brand";
 
+// The quote a claim shows in the evidence rail (same fallback EvidenceQuoteCard uses).
+function railQuote(c: ClaimRecord): string {
+  return (c.evidence_quote ?? c.claim_text).replace(/^\[paraphrased\]\s*/i, "");
+}
+
+function normalizeQuote(s: string): string {
+  return s.toLowerCase().replace(/\s+/g, " ").replace(/["'.,;:!?—-]+$/g, "").trim();
+}
+
+// Two claim records can legitimately cite overlapping transcript spans (a short
+// admission and the fuller sentence that contains it). Rendering both leaves the rail
+// showing a fragment and its own containing quote as separate cards. Dedup at the RENDER
+// layer only — keep the fuller quote, drop the contained fragment (and exact repeats).
+// The records are never touched (tags never upgrade, records never edited).
+function dedupeEvidenceByContainment(claims: ClaimRecord[]): ClaimRecord[] {
+  const withQuote = claims.map((c) => ({ c, q: normalizeQuote(railQuote(c)) }));
+  return withQuote
+    .filter(({ q }, i) =>
+      !withQuote.some(
+        (other, j) =>
+          j !== i &&
+          other.q.includes(q) &&
+          (other.q.length > q.length || (other.q === q && j < i)),
+      ),
+    )
+    .map(({ c }) => c);
+}
+
 export function SnapshotView({
   workspace,
   cards,
@@ -42,7 +70,11 @@ export function SnapshotView({
   const conflicts = cards.filter((c) => c.card_type === "conflict_point");
 
   // Evidence rail: verbatim CEO-call quotes are the trust anchor (his own words — A3).
-  const railEvidence = claims.filter((c) => c.evidence_ts && !c.is_paraphrased).slice(0, 3);
+  // Dedup overlapping spans before taking the top 3 so a fragment and the fuller quote
+  // that contains it never appear as two cards.
+  const railEvidence = dedupeEvidenceByContainment(
+    claims.filter((c) => c.evidence_ts && !c.is_paraphrased),
+  ).slice(0, 3);
 
   const cfg = workspace.config ?? {};
   const topTwo = (areas.slice(0, 2) as { content: AreaContent }[]).map((a) => a.content.title);
