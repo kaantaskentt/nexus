@@ -1,0 +1,91 @@
+# PROPOSED — night-shift clinical-audit cases for the F38+ registry additions (Kaan's upgrade license, V2-PLAN).
+# STATUS: PROPOSAL for Emre. These stage the TARGET behavior for candidate flags F38-F43; they are NOT promoted into
+#   the Emre-owned failure-taxonomy.yaml until he ratifies each flag. Emre's F1-F37 are untouched. Baseline results
+#   (current post-terse-fix persona, direct adapter) are recorded in evals/adjudication/f38-clinical-audit-proposal.md.
+# Target prompt: prompts/agents/stage7-interviewer.md (F41 targets prompts/agents/perception-gap.md — different harness).
+# Each case isolates ONE cognitive bias; the judge scores the interviewer's NEXT turn.
+
+# ── F38 · Acquiescence bias — a "yes" to a leading recap is not confirmation ─────────────────────────────
+- id: f38-acquiescence-leading-recap
+  category: freeze
+  intent: A bare agreement to the interviewer's own (leading) recap must not be banked as confirmation; the
+          interviewer must re-elicit in the respondent's own words or anchor to an independent instance.
+  input:
+    context: You have just summarized their process back to them in your own words — a slightly leading recap.
+             Objective is to confirm the REAL steps, not to get a polite yes.
+    turn: "Yeah, exactly. That's pretty much it, you've got it right."
+  pass_if:
+    - Does not treat the bare agreement as a confirmed/independent account; re-opens it in the respondent's own words
+    - Anchors to a specific recent instance to get an account they generate, not one they merely ratified
+  fail_if:
+    - Banks "yeah exactly" to a leading recap as confirmation or corroboration and moves on
+    - Treats the respondent agreeing with the interviewer's own summary as independent evidence
+
+# ── F39 · Telescoping — recency/frequency estimates are memory-compressed, not measured ──────────────────
+- id: f39-telescoping-recency
+  category: freeze
+  intent: A felt recency/frequency estimate for a timeline baseline must be pinned to a datable anchor, not
+          recorded as fact — memory compresses elapsed time and misplaces how recently/often things happened.
+  input:
+    context: Objective — establish the frequency/recency of a disruption, which becomes a timeline baseline.
+    turn: "The big reconciliation blow-up? That was pretty recent, maybe a couple months back. And it happens, I'd say, once a quarter or so."
+  pass_if:
+    - Pins the estimate to a datable anchor (asks what fixed it in time, or to recall the last two occurrences to test 'once a quarter')
+    - Distinguishes the felt recency/frequency from a countable one before it becomes a baseline
+  fail_if:
+    - Records "a couple months back / once a quarter" as the timeline fact without testing it against a real anchor
+    - Accepts the felt estimate as measured frequency
+
+# ── F40 · Memory conflation — a smoothed "always" is likely several episodes fused into one ───────────────
+- id: f40-conflation-composite-episode
+  category: freeze
+  intent: A composite "what usually happens / it always goes like that" account presented as if it were one
+          remembered event must be cracked by getting a single most-recent DATABLE instance (ideally two, to
+          surface where the merged pattern diverges).
+  input:
+    context: Objective — get ONE specific episode of the escalation process; distinguish a real memory from a merged pattern.
+    turn: "So what usually happens is the client emails, I check the file, loop my manager in if it's over the limit, and we sort it. That's just how it always goes."
+  pass_if:
+    - Treats the 'usually/always' as a composite and asks for the single most recent actual instance, the specific one
+    - Works to separate one real episode from the fused typical-case (e.g. the last time vs the time before)
+  fail_if:
+    - Accepts the "usually/always" composite as a concrete remembered episode
+    - Treats a merged typical-case as satisfying the specific-episode requirement
+
+# ── F42 · Halo effect — a proud glow inflates the credibility of an adjacent unverified claim ─────────────
+- id: f42-halo-adjacent-claim
+  category: freeze
+  intent: When a proud/positive account of one step carries an adjacent, unverified claim on its glow, the
+          interviewer must probe the adjacent claim independently rather than let the halo verify it.
+  input:
+    context: Objective — verify the QA step. A proud founder glowingly describes their design process, then asserts QA is fine in passing.
+    turn: "...and honestly the design process is the thing I'm proudest of, it's genuinely world-class. QA's airtight too, never an issue there."
+  pass_if:
+    - Does not let the design-process glow carry the 'QA airtight' claim; probes QA independently
+    - Anchors QA to a specific instance (a time something slipped through, the last QA miss)
+  fail_if:
+    - Accepts 'QA airtight' on the halo of the design praise and moves on
+    - Treats the proud account of one step as verifying the adjacent claim
+
+# ── F43 · Cognitive load as data — hesitation at a step is tacit-knowledge density, not confusion ─────────
+- id: f43-cognitive-load-tacit
+  category: freeze
+  intent: Marked hesitation / 'hard to explain' at a judgment step signals dense tacit knowledge to slow down and
+          mine, NOT confusion to rescue or a cue to move on.
+  input:
+    context: Objective — map the pricing-decision step. The respondent slows and hedges exactly at the step where they apply judgment.
+    turn: "So after I pull the numbers I just... hmm... it kind of depends. I sort of eyeball whether it feels right and then, yeah, I adjust it. Hard to explain, really."
+  pass_if:
+    - Treats the hesitation / 'hard to explain' as a signal of dense tacit knowledge and slows down to mine it
+    - Asks them to narrate the last specific judgment call step by step — what they actually looked at, what tipped it
+  fail_if:
+    - Moves past the hard-to-articulate step, or rescues/excuses it ('no worries, we can skip that')
+    - Accepts 'I just eyeball it' as a complete account of the judgment step
+
+# ── F41 · Fundamental attribution error (CEO person-reads) — DIFFERENT HARNESS (perception-gap comparator) ─
+# Not an interviewer-turn case: the interviewer never hears the CEO. This targets prompts/agents/perception-gap.md
+# and runs on the comparator's output, not this turn harness. Staged here for the registry; wiring + case in the
+# proposal doc. Behavior: when a leadership CLAIMED/GUESS record attributes an individual's behavior to disposition
+# ('she's disorganized') and floor CONFIRMED evidence shows a situational/process cause (no handoff time), flag the
+# pair as an attribution-type perception gap — surfaced DE-PERSONALIZED / role-level, report-only (F27), sentiment
+# quarantine (F34/Non-neg 4) intact: the person-characterization itself never renders; the structural gap does.

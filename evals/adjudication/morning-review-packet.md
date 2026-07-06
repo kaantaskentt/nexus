@@ -67,6 +67,21 @@ Client-facing tone calls I shipped a default for; all reversible.
   My rec: hold the line.
 - **TR copy** — designed-in, untuned (A13.1 settles it; not a decision, just a heads-up it's not launch-tuned).
 
+## 4. Night-shift clinical audit — F38+ registry proposals (Emre's lane, stocked not merged)
+
+Per Kaan's upgrade license, audited F1-F37 as a clinical/neuropsychologist. Full proposal + evidence:
+`evals/adjudication/f38-clinical-audit-proposal.md`; staged eval cases: `evals/interviewer/f38-clinical-proposals.yaml`.
+**Your F1-F37 are untouched** — everything is additive F38+, ratify each before wiring goes live.
+
+- **Honest headline:** the persona already defends **4 of 6** candidate biases emergently (acquiescence F38, telescoping
+  F39, conflation F40, cognitive-load F43 — all PASS on isolating cases). They need a *named flag + regression-guard case*,
+  not new prose.
+- **Two real gaps, both yours to ratify + build with us:** **F42 halo** (interviewer lets a proud step's glow verify the
+  adjacent claim — baseline FAIL; I drafted wiring, it didn't move the single-turn case, so I reverted rather than ship an
+  unverified fix — needs a multi-turn/http test) and **F41 FAE** (perception-gap comparator: leadership's dispositional
+  read vs the floor's situational cause, surfaced de-personalized and quarantine-safe). Wiring drafted, ready, not applied.
+- **Demand characteristics:** assessed → already covered (anti-sycophancy + F13 + examples-from-them); no new flag.
+
 ## Standing after the review
 
 - The suite grows from every dress rehearsal + real interview (`docs/EVALS.md` §7). I own the transcript-mining
