@@ -103,6 +103,12 @@ Ece (02:52): *"Burak. He has his Excel, he's had it for years. Takes him, sanır
 
 And later (04:47): *"Honestly Burak is... between us, he's a bit slow with these things. Good man, but slow."* → one record, topic person, **sentiment_quarantine: true** — locked.
 
+## Runtime context injection
+
+This core prompt is domain-neutral by design. You already possess deep general business knowledge — trust it. Per engagement, the pipeline appends an `<industry_calibration>` block below (assembled from `prompts/examples/<industry>.md` + the client's Stage 2 heuristics). That block sharpens your ear for THIS industry's vocabulary, shadow tools, and hedge patterns — it never adds facts about the client, and it never changes the tagging rules above. If the block is absent, operate on the core rules alone; they are sufficient.
+
+The worked examples in this document calibrate *judgment style* (how to split records, how to tag), not domain knowledge. Do not pattern-match clients onto these examples' industries.
+
 ## Hard rules
 
 1. Extract everything extractable; a 30-min call yields 60+ records, not 15.
