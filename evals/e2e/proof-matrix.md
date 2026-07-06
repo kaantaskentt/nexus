@@ -25,6 +25,14 @@ respondent's brevity end the topic. Corroborates the earlier read — over a ful
 strong (episode-anchoring works, no traps), but coverage-routing with terse respondents needs firming. Per the
 standing loop (EVALS.md §7) this becomes a regression case; per the no-reflexive-hotfix rule it goes to review first.
 
+**Status update (July 6, terse fix 31f6f13):** the coverage-routing gap is now ADDRESSED. The class-level terse fix
+("brevity never satisfies a completion condition; a terse answer owes an exceptions probe + a last-actual-episode anchor
+before a must-hit closes"; timelines/targets get the felt-vs-measured probe) landed in stage7-interviewer.md. Verified on
+the direct adapter: the two motivating bookkeeper traps (terse-close, target-as-timeline) flip fail→pass, 27/27 tuning
+set, no regression (arc: `evals/adjudication/persona-fix-log.md`). Still pending: an **http re-run of the full 5-persona
+matrix** to confirm h-bk-3 now surfaces on the real multi-turn engine (needs backend EVAL_MODE). Applied-pending-review
+with Emre (morning-packet Q3). Foreman run (`runs/foreman-1783326554`) mined clean — 3/3 hidden, 0/3 traps, no new case.
+
 ## Note for the FULL E2E (#15)
 The agent-vs-agent driver exercises the synchronous turn engine only. The full
 journey (compile → Phase-6 fan-out → report) also needs the QUEUE WORKER running (`python -m app.worker`) — per
