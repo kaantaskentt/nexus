@@ -327,7 +327,7 @@ const PLANS: Record<string, InterviewPlan[]> = {
       interviewee_id: "ent-burak",
       interviewee_name: "Burak Yılmaz",
       interviewee_role: "Production Lead",
-      state: "AWAITING_APPROVAL",
+      state: "APPROVED",
       is_custom_path: false,
       mission: {
         goal: "Understand how wholesale orders move through production at peak season, and where commitments slip.",
@@ -340,7 +340,7 @@ const PLANS: Record<string, InterviewPlan[]> = {
           {
             label: "The order-to-production handoff",
             must_hit: true,
-            detail: "How an confirmed wholesale order becomes a production commitment, step by step.",
+            detail: "How a confirmed wholesale order becomes a production commitment, step by step.",
           },
           {
             label: "Casting capacity and how far ahead it's visible",
@@ -396,9 +396,11 @@ const PLANS: Record<string, InterviewPlan[]> = {
       change_log: [
         { at: "2026-07-05T16:40:00Z", actor: "system", change: "Plan drafted from the compiled CEO session." },
         { at: "2026-07-05T16:52:00Z", actor: "nexus_team", change: "Reformulated a leading question on missed orders into an open form." },
+        { at: "2026-07-05T17:05:00Z", actor: "nexus_team", change: "Nexus check passed — no credential requests, no leading questions remaining." },
+        { at: "2026-07-05T17:20:00Z", actor: "admin", change: "Approved in the initial batch." },
       ],
       created_at: "2026-07-05T16:40:00Z",
-      updated_at: "2026-07-05T16:52:00Z",
+      updated_at: "2026-07-05T17:20:00Z",
     },
     {
       id: "plan-selin",

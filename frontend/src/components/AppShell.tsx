@@ -8,7 +8,7 @@ type NavKey = "snapshot" | "plans" | "report" | "knowledge";
 
 const NAV: { key: NavKey; label: string; href: (slug: string) => string; ready: boolean }[] = [
   { key: "snapshot", label: "Company Snapshot", href: (s) => `/w/${s}/snapshot`, ready: true },
-  { key: "plans", label: "Interview Plans", href: (s) => `/w/${s}/snapshot`, ready: true },
+  { key: "plans", label: "Interview Plans", href: (s) => `/w/${s}/plans`, ready: true },
   { key: "report", label: "Report", href: () => "#", ready: false },
   { key: "knowledge", label: "Knowledge Base", href: () => "#", ready: false },
 ];
