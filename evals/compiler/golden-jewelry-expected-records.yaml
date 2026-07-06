@@ -1,3 +1,10 @@
+# ⚠️ STATUS: PROVISIONAL — NOT a frozen golden (Kaan eval-integrity directive, task #12).
+# These expected records were calibrated by aligning to the LIVE compiler's own output shape/behavior,
+# so they partly encode "what the model did," not only "what a human judges correct." They FREEZE only
+# after independent blind human adjudication (Kaan/Emre) — see evals/adjudication/golden-jewelry-labeling-sheet.md.
+# Until a record is human-confirmed there, treat its expected tag/kind as a hypothesis, not ground truth.
+# Realism over green checkmarks: a passing diff against a provisional golden proves consistency, not correctness.
+#
 # Sources: golden-jewelry-transcript.md + stage4-compiler.md (record schema, Steps 1-5)
 #   + backend/app/pipeline/compiler.py OUTPUT_CONTRACT (the machine wire shape) + A12 (fictional).
 # Target: prompts/agents/stage4-compiler.md. The compiler's output is diffed against this fixture.
