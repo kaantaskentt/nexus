@@ -3,21 +3,26 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Phone,
   User,
-  MessageCircle,
-  Globe,
   Rocket,
   Lock,
   ArrowRight,
   X,
+  Flame,
+  GitBranch,
+  Wrench,
+  BookOpen,
+  Clock,
+  Building2,
+  Target,
+  Sparkles,
 } from "lucide-react";
 import type {
   AreaContent,
   ClaimRecord,
+  ClaimTopic,
   ConflictContent,
   LearnedContent,
-  LearnedSource,
   SnapshotCard,
   SuggestedPersonContent,
   Workspace,
@@ -32,13 +37,21 @@ import {
 import { rise, staggerParent, drawerSpring, scrimFade, drawerSection } from "@/lib/variants";
 import brand from "@/lib/brand";
 
-const SOURCE_ICON: Record<LearnedSource, typeof Phone> = {
-  call: Phone,
-  person: User,
-  message: MessageCircle,
-  web: Globe,
-  linkedin: Globe,
+// A learned card's glyph + label come from what KIND of thing it captured (the linked
+// claim's topic), not where it arrived from — so cards read as distinct at a glance
+// instead of six identical source icons. Falls back to a neutral "Insight" when a
+// card has no resolvable topic.
+const TOPIC_META: Record<ClaimTopic, { icon: typeof Flame; label: string }> = {
+  pain: { icon: Flame, label: "Pain point" },
+  process_step: { icon: GitBranch, label: "Process" },
+  person: { icon: User, label: "People" },
+  tool: { icon: Wrench, label: "Tool" },
+  vocabulary: { icon: BookOpen, label: "Vocabulary" },
+  time_or_cost: { icon: Clock, label: "Time & cost" },
+  company_fact: { icon: Building2, label: "Company" },
+  success_criteria: { icon: Target, label: "Goal" },
 };
+const NEUTRAL_TOPIC = { icon: Sparkles, label: "Insight" };
 
 export function SnapshotView({
   workspace,
@@ -96,31 +109,35 @@ export function SnapshotView({
             </motion.div>
 
             {/* What {brand} Learned */}
-            <Section title={`What ${brand.product_name} Learned`}>
+            <Section title={`What ${brand.product_name} Learned`} count={learned.length}>
               <motion.div
                 variants={staggerParent}
                 initial="hidden"
                 animate="show"
-                className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
               >
                 {learned.map((card) => {
                   const c = card.content as LearnedContent;
-                  const Icon = SOURCE_ICON[c.source];
+                  const topic = c.evidence_claim_ids
+                    .map((id) => claimsById.get(id)?.topic)
+                    .find((t): t is ClaimTopic => Boolean(t));
+                  const meta = topic ? TOPIC_META[topic] : NEUTRAL_TOPIC;
+                  const TopicIcon = meta.icon;
                   return (
                     <motion.article
                       key={card.id}
                       variants={rise}
-                      className="lift flex flex-col rounded-card border border-line bg-surface p-4 hover:border-line-strong"
+                      className="lift flex flex-col gap-3 rounded-card border border-line bg-surface p-4 hover:border-line-strong"
                     >
-                      <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent-ink shadow-[inset_0_1px_2px_rgb(31_26_19/0.06)] ring-1 ring-inset ring-accent/10">
-                        <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
-                      </div>
-                      <h3 className="flex-1 text-sm font-semibold leading-snug text-ink">
+                      <h3 className="text-[0.95rem] font-semibold leading-snug text-ink">
                         {c.title}
                       </h3>
-                      <div className="mt-4 flex items-center justify-between">
+                      <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.06em] text-ink-faint">
+                          <TopicIcon className="h-3.5 w-3.5 text-accent/70" strokeWidth={1.75} />
+                          {meta.label}
+                        </span>
                         <ConfidenceBadge confidence={card.confidence} />
-                        <SignalBars confidence={card.confidence} />
                       </div>
                     </motion.article>
                   );
@@ -129,12 +146,12 @@ export function SnapshotView({
             </Section>
 
             {/* Areas to Investigate */}
-            <Section title="Areas to Investigate">
+            <Section title="Areas to Investigate" count={areas.length}>
               <motion.div
                 variants={staggerParent}
                 initial="hidden"
                 animate="show"
-                className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2"
               >
                 {areas.map((card) => {
                   const a = card.content as AreaContent;
@@ -168,7 +185,7 @@ export function SnapshotView({
 
             {/* Conflict Points — first-class (A3), shown once contradictions exist */}
             {conflicts.length > 0 && (
-              <Section title="Conflict Points" accent>
+              <Section title="Conflict Points" count={conflicts.length} accent>
                 <div className="space-y-3">
                   {conflicts.map((card) => {
                     const cf = card.content as ConflictContent;
@@ -190,7 +207,7 @@ export function SnapshotView({
             )}
 
             {/* Suggested People to Interview */}
-            <Section title="Suggested People to Interview">
+            <Section title="Suggested People to Interview" count={people.length}>
               <div className="card-hairline divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
                 {people.map((card) => {
                   const p = card.content as SuggestedPersonContent;
@@ -260,43 +277,34 @@ export function SnapshotView({
 
 function Section({
   title,
+  count,
   accent,
   children,
 }: {
   title: string;
+  count?: number;
   accent?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-10">
-      <h2 className={"mb-4 font-display text-2xl " + (accent ? "text-accent-ink" : "text-ink")}>
-        {title}
-      </h2>
+    <section className="mt-12">
+      <div className="mb-5 flex items-baseline gap-3">
+        <h2
+          className={
+            "font-display text-[1.75rem] leading-tight " +
+            (accent ? "text-accent-ink" : "text-ink")
+          }
+        >
+          {title}
+        </h2>
+        {count != null && count > 0 && (
+          <span className="tabular rounded-chip bg-surface-sunken px-2 py-0.5 text-xs font-semibold text-ink-soft ring-1 ring-inset ring-ink/[0.04]">
+            {count}
+          </span>
+        )}
+      </div>
       {children}
     </section>
-  );
-}
-
-// Signal-strength glyph echoing the mockup's ascending bars — taller/greener at
-// higher confidence, muted at lower. Comprehension cue, not decoration.
-function SignalBars({ confidence }: { confidence: string }) {
-  const level =
-    ({ verified: 3, high: 3, reported: 2, guess: 1, scraped: 1 } as Record<string, number>)[
-      confidence
-    ] ?? 1;
-  return (
-    <span className="flex items-end gap-0.5" aria-hidden>
-      {[1, 2, 3].map((b) => (
-        <span
-          key={b}
-          className={
-            "w-1 rounded-sm " +
-            (b <= level ? "bg-success" : "bg-line-strong") +
-            (b === 1 ? " h-1.5" : b === 2 ? " h-2.5" : " h-3.5")
-          }
-        />
-      ))}
-    </span>
   );
 }
 
