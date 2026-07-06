@@ -12,24 +12,9 @@ import type {
 } from "@/lib/types";
 import { AppShell, ConfidenceBadge, PainBandChip } from "@/components";
 import { confidenceForTag } from "@/lib/trust";
+import { conflictKindMeta } from "@/lib/conflicts";
 import { rise, staggerParent } from "@/lib/variants";
 import brand from "@/lib/brand";
-
-// Known conflict kinds get a plain-language label + tone; the pipeline can emit others
-// (it already does — now_vs_prior), so anything unmapped is humanized, never dropped.
-const KIND_META: Record<string, { label: string; accent: boolean }> = {
-  ceo_vs_floor: { label: "CEO vs floor", accent: true },
-  worker_vs_worker: { label: "Worker vs worker", accent: true },
-  perception_gap: { label: "Perception gap", accent: true },
-  now_vs_prior: { label: "Correction over time", accent: false },
-};
-
-function kindMeta(kind: string) {
-  return KIND_META[kind] ?? {
-    label: kind.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase()),
-    accent: false,
-  };
-}
 
 function capitalize(s: string) {
   return s.replace(/^\w/, (c) => c.toUpperCase());
@@ -143,7 +128,7 @@ function Stat({ label, value, accent }: { label: string; value: number; accent?:
 // A conflict as two accounts placed side by side — who said each, its trust tag, and the
 // claim. The point is legibility of the disagreement, so neither side is styled as "right".
 function ConflictCard({ conflict: c }: { conflict: InsightConflict }) {
-  const meta = kindMeta(c.kind);
+  const meta = conflictKindMeta(c.kind);
   return (
     <motion.article
       variants={rise}

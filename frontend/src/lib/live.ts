@@ -11,6 +11,7 @@ import type {
   KnowledgeRecord,
   InsightsData,
   InterviewPlan,
+  TrustTag,
   PlanMission,
   PlanTopic,
   Report,
@@ -311,6 +312,13 @@ interface RawReport {
     claim_a: { text: string };
     claim_b: { text: string };
   }>;
+  // All conflicts this session is party to (perception_gaps is a frequently-empty subset).
+  conflict_points?: Array<{
+    kind: string;
+    resolution?: { gap?: string } | null;
+    claim_a: { text: string; tag: string | null };
+    claim_b: { text: string; tag: string | null };
+  }>;
   key_findings: Array<{ text: string; pain_band?: string | null }>;
   follow_up_on: Array<{ text: string }>;
   interview_quality: {
@@ -330,7 +338,6 @@ export async function get_report(
 
   const steps: WorkflowStep[] = r.workflow?.steps ?? [];
 
-  const gap = r.perception_gaps[0];
   // Prefer the real objective counts when present; fall back to the qualitative
   // headline when the compiler set no plan objectives.
   const c = r.interview_quality?.counts;
@@ -344,13 +351,12 @@ export async function get_report(
     duration_min: 0,
     workflow_name: r.workflow?.name ?? "Workflow",
     steps,
-    perception_gap: gap
-      ? {
-          estimate: gap.claim_a?.text ?? "",
-          actual: gap.claim_b?.text ?? "",
-          driver: gap.resolution?.gap ? `Gap: ${gap.resolution.gap}` : "",
-        }
-      : undefined,
+    conflicts: (r.conflict_points ?? []).map((k) => ({
+      kind: k.kind,
+      note: k.resolution?.gap ?? null,
+      a: { text: k.claim_a.text, tag: (k.claim_a.tag as TrustTag | null) ?? null },
+      b: { text: k.claim_b.text, tag: (k.claim_b.tag as TrustTag | null) ?? null },
+    })),
     key_findings: r.key_findings.map((f) => ({ text: f.text })),
     follow_ups: r.follow_up_on.map((f) => ({ text: f.text })),
     quality: {

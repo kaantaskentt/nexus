@@ -7,7 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Lock,
-  Zap,
+  GitCompareArrows,
   Loader2,
   Lightbulb,
   UserPlus,
@@ -17,9 +17,11 @@ import {
   PenLine,
   X,
 } from "lucide-react";
-import type { Report, Workspace, WorkflowStep } from "@/lib/types";
+import type { Report, TrustTag, Workspace, WorkflowStep } from "@/lib/types";
 import { get_workflow_by_session } from "@/lib/live";
 import { AppShell, ConfidenceBadge } from "@/components";
+import { confidenceForTag } from "@/lib/trust";
+import { conflictKindMeta } from "@/lib/conflicts";
 import { scrimFade, drawerSpring } from "@/lib/variants";
 import { WorkflowStepCard, toolLabel } from "./WorkflowStepCard";
 
@@ -128,28 +130,47 @@ export function ReportView({
               )}
             </section>
 
-            {report.perception_gap ? (
-              <div className="mt-5 flex gap-4 rounded-card border border-accent bg-accent-soft p-5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent">
-                  <Zap className="h-5 w-5" strokeWidth={1.75} />
-                </div>
-                <div>
-                  <p className="text-sm">
-                    <span className="font-semibold uppercase tracking-wide text-accent-ink">
-                      Perception gap found:
-                    </span>{" "}
-                    <span className="text-ink">{report.perception_gap.estimate}</span>
-                  </p>
-                  <p className="mt-1 text-sm text-ink">
-                    {report.perception_gap.actual} {report.perception_gap.driver}
-                  </p>
-                </div>
+            {report.conflicts.length > 0 ? (
+              <div className="mt-5 space-y-3">
+                <h2 className="font-display text-lg text-ink">Cross-Interview Conflicts</h2>
+                {report.conflicts.map((c, i) => {
+                  const meta = conflictKindMeta(c.kind);
+                  return (
+                    <div
+                      key={i}
+                      className="card-hairline rounded-card border border-accent/25 bg-accent-soft/60 p-4"
+                    >
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <span className="inline-flex items-center gap-1.5 rounded-chip bg-accent-soft px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.05em] text-accent-ink ring-1 ring-inset ring-accent/20">
+                          <GitCompareArrows className="h-3.5 w-3.5" strokeWidth={2} />
+                          {meta.label}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 items-stretch gap-2 sm:grid-cols-[1fr_auto_1fr]">
+                        <ConflictSide side={c.a} />
+                        <div className="flex items-center justify-center">
+                          <span className="rounded-chip bg-surface px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-faint shadow-elev-1">
+                            vs
+                          </span>
+                        </div>
+                        <ConflictSide side={c.b} />
+                      </div>
+                      {c.note && (
+                        <p className="mt-3 border-t border-accent/15 pt-2.5 text-sm leading-relaxed text-ink-soft">
+                          <span className="font-medium text-accent-ink">What differs: </span>
+                          {c.note}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              // A single interview legitimately has no gaps (they need a second voice).
+              // Genuinely no conflicts for this interview — honest only when the
+              // conflict_points list (not the frequently-empty perception_gaps) is empty.
               <div className="card-hairline mt-5 rounded-card border border-line bg-surface p-4 text-sm text-ink-soft">
-                No perception gaps yet. These surface once a second interview
-                contradicts the founder&apos;s account.
+                No cross-interview conflicts from this interview yet. They surface when a
+                record here disagrees with another interview.
               </div>
             )}
           </div>
@@ -262,6 +283,22 @@ export function ReportView({
         onClose={() => setOpenStep(null)}
       />
     </AppShell>
+  );
+}
+
+// One side of a report conflict: the record text plus its trust badge. No speaker line
+// here (the report conflict feed carries text + tag, not who) — the kind label above
+// names the axis; neither side is styled as the "right" one.
+function ConflictSide({ side }: { side: { text: string; tag: TrustTag | null } }) {
+  return (
+    <div className="card-hairline flex flex-col rounded-md border border-line bg-surface p-3">
+      {side.tag && (
+        <div className="mb-1.5 flex justify-end">
+          <ConfidenceBadge confidence={confidenceForTag(side.tag)} />
+        </div>
+      )}
+      <p className="text-sm leading-relaxed text-ink-soft">{side.text}</p>
+    </div>
   );
 }
 

@@ -311,7 +311,16 @@ export interface Report {
   duration_min: number;
   workflow_name: string;
   steps: WorkflowStep[];
-  perception_gap?: { estimate: string; actual: string; driver: string };
+  // Cross-interview conflicts this interview is party to (F27 lives here, report-only).
+  // Sourced from conflict_points, not the frequently-empty perception_gaps array — a
+  // second interview that disagrees with the founder shows up as a ceo_vs_floor conflict,
+  // and the report must reflect that instead of claiming there are none.
+  conflicts: {
+    kind: ConflictKind;
+    note: string | null;
+    a: { text: string; tag: TrustTag | null };
+    b: { text: string; tag: TrustTag | null };
+  }[];
   key_findings: { text: string; emphasis?: string }[];
   follow_ups: { text: string }[];
   quality: {
