@@ -38,12 +38,17 @@ and `evals/adjudication/scenario-gen-first-run.md`.
   exception") and fail a reply that took a different good move (a concrete-episode anchor that would surface the
   exception anyway). Loosen them, or hold the line? Generated cases are provisional judges too — realism can cut
   *toward* the persona here.
-- **Q3 — Coverage-routing with terse respondents (from the 5-persona agent-vs-agent matrix, `evals/e2e/proof-matrix.md`).**
+- **Q3 — Coverage-routing with terse respondents — FIX APPLIED, pending your confirm (arc: `evals/adjudication/persona-fix-log.md`).**
   The interviewer is strong over full conversations — 14/16 hidden items surfaced, 0 traps taken across all five
   personas. The single miss: with the *terse* bookkeeper it never routed to one must-hit objective (deadline
-  tracking), which a quiet respondent won't volunteer, so that objective stayed untouched. The persona needs a
-  firmer "drive to the untouched must-hit; a terse respondent's brevity does not end a topic." Confirm the fix
-  direction (this one is anti-under-probing, a locked discipline — likely engineering, not taste).
+  tracking), which a quiet respondent won't volunteer, so that objective stayed untouched. **Applied overnight
+  (class-level, anti-under-probing — locked discipline, engineering not taste):** brevity never satisfies a completion
+  condition; a terse answer owes an exceptions probe (Question Bank Slot 5) + a last-actual-episode anchor before a
+  must-hit closes; timelines and targets-stated-as-fact now get the felt-vs-measured probe. Verified: 27/27 direct
+  tuning set (no regression), and the two motivating traps (terse-close, target-as-timeline) flip fail→pass. The
+  residual that remains is the **number-source reflex on a bare percentage** and the **episode-anchor-vs-explicit-move**
+  substitution — which is exactly Q1 and Q2 below, so those two carry the decision. Confirm the applied direction; the
+  http adapter (genuine multi-turn state) should re-run these once EVAL_MODE is live.
 
 *What was already fixed tonight (deliberate, class-level, no over-fit):* the flatter/person-praise gap — the
 interviewer no longer affirms quantified achievements or reassures self-deprecation with a compliment. That fix
