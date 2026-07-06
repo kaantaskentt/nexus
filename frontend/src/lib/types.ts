@@ -241,3 +241,86 @@ export interface Report {
     note: string;
   };
 }
+
+// ── Workflow editor (V2 #21) ─────────────────────────────────────────────────
+// The claim-derived workflow_steps are never mutated; admin edits are append-only
+// overlays and the API returns the folded "effective" workflow. A claim_derived step
+// and a manual (admin-invented) one are structurally distinct; a remove is a reversible
+// soft_hide; every edit carries provenance. Note: here `tool` is a plain string (the
+// editable workflow_steps column), distinct from the report's {kind,name} tool object.
+export type WorkflowEditOp =
+  | "reorder"
+  | "rename"
+  | "annotate"
+  | "add_manual"
+  | "soft_hide"
+  | "unhide";
+
+export interface WorkflowEditStamp {
+  op: string;
+  actor: string;
+  at: string;
+  prior_value: unknown;
+}
+
+export interface WorkflowEditStep {
+  step_id: string;
+  index: number;
+  source: "claim_derived" | "manual";
+  hidden: boolean;
+  title: string;
+  action: string | null;
+  tool: string | null;
+  input: string | null;
+  output: string | null;
+  status: StepStatus;
+  annotations: { note: string; actor: string; at: string }[];
+  edited: boolean;
+  provenance: { edits: WorkflowEditStamp[] };
+  spine_slots: Record<string, unknown>;
+  claim_ids: string[];
+}
+
+export interface EffectiveWorkflow {
+  workflow_id: string;
+  name: string;
+  steps: WorkflowEditStep[];
+}
+
+export interface WorkflowHistoryEntry {
+  overlay_id: string;
+  step_id: string | null;
+  op: WorkflowEditOp;
+  payload: Record<string, unknown>;
+  prior_value: unknown;
+  actor: string;
+  at: string;
+}
+
+export interface SopDocument {
+  title: string;
+  overview: string;
+  steps: { n: number; name: string; instructions: string; tool: string | null; note: string | null }[];
+  follow_ups: string[];
+}
+
+export interface WorkflowSop {
+  status: "pending" | "ready";
+  document?: SopDocument;
+  generated_at?: string;
+}
+
+export interface SkillBlueprint {
+  workflow_id: string;
+  name: string;
+  executable: false;
+  steps: {
+    index: number;
+    title: string;
+    source: string;
+    slots: Record<string, string | null>;
+    slots_filled: number;
+    slots_total: number;
+    unfilled: string[];
+  }[];
+}

@@ -15,6 +15,11 @@ import type {
   SnapshotCard,
   Workspace,
   WorkflowStep,
+  EffectiveWorkflow,
+  WorkflowEditOp,
+  WorkflowHistoryEntry,
+  WorkflowSop,
+  SkillBlueprint,
 } from "./types";
 
 function parseJson<T>(v: unknown, fallback: T): T {
@@ -270,4 +275,46 @@ export async function get_report(
 // screen to show a "compiling…" state and poll instead of rendering an empty shell.
 export function reportIsCompiling(report: Report): boolean {
   return report.steps.length === 0 && report.key_findings.length === 0;
+}
+
+// ── Workflow editor (V2 #21) — ontology-safe overlay API ─────────────────────
+// The base workflow is immutable; every edit is an append-only overlay and the API
+// returns the folded "effective" workflow, which the editor reconciles into its store.
+
+export async function get_workflow_by_session(session_id: string): Promise<EffectiveWorkflow> {
+  return api<EffectiveWorkflow>(`/api/workflows/by-session/${session_id}/effective`);
+}
+
+export async function get_effective_workflow(workflow_id: string): Promise<EffectiveWorkflow> {
+  return api<EffectiveWorkflow>(`/api/workflows/${workflow_id}/effective`);
+}
+
+// Apply one edit; the server records the overlay (with prior_value provenance) and
+// returns the fresh effective workflow to reconcile the optimistic store against.
+export async function apply_workflow_edit(
+  workflow_id: string,
+  op: WorkflowEditOp,
+  step_id: string | null,
+  payload: Record<string, unknown>,
+): Promise<{ overlay_id: string; effective: EffectiveWorkflow }> {
+  return api(`/api/workflows/${workflow_id}/edit`, {
+    method: "POST",
+    body: JSON.stringify({ op, step_id, payload, actor: "admin" }),
+  });
+}
+
+export async function get_workflow_history(workflow_id: string): Promise<WorkflowHistoryEntry[]> {
+  return api<WorkflowHistoryEntry[]>(`/api/workflows/${workflow_id}/history`);
+}
+
+export async function request_sop(workflow_id: string): Promise<{ job_id: string; status: string }> {
+  return api(`/api/workflows/${workflow_id}/sop`, { method: "POST" });
+}
+
+export async function get_sop(workflow_id: string): Promise<WorkflowSop> {
+  return api<WorkflowSop>(`/api/workflows/${workflow_id}/sop`);
+}
+
+export async function get_blueprint(workflow_id: string): Promise<SkillBlueprint> {
+  return api<SkillBlueprint>(`/api/workflows/${workflow_id}/blueprint`);
 }
