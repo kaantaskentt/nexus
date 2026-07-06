@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     # sessions, and the route refuses entirely unless this is on).
     eval_mode: bool = False
 
+    # Shared secret VAPI sends on custom-LLM + webhook requests; when set, the voice
+    # routes reject calls without it. Empty in dev.
+    voice_shared_secret: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

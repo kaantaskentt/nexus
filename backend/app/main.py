@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_brand
 from .db import close_pool, get_pool
-from .routers import claims, plans, sessions, workspaces
+from .routers import claims, plans, sessions, voice, workspaces
 
 
 @asynccontextmanager
@@ -31,6 +31,7 @@ app.include_router(workspaces.router, prefix="/api/workspaces", tags=["workspace
 app.include_router(claims.router, prefix="/api/claims", tags=["claims"])
 app.include_router(plans.router, prefix="/api/plans", tags=["plans"])
 app.include_router(sessions.router, prefix="/api/sessions", tags=["sessions"])
+app.include_router(voice.router, prefix="/api/voice", tags=["voice"])
 
 
 @app.get("/health")
