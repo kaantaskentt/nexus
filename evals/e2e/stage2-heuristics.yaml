@@ -1,0 +1,88 @@
+# Stage 2 tie-in (task #16) — pre-interview heuristics per synthetic company, scored confirmed/busted/partial
+# after the agent-vs-agent interview compiles. This validates the learning loop OFFLINE exactly as it runs with a
+# real client: Stage 2 generates falsifiable priors -> the interview happens -> Stage 4 compiles -> heuristics are
+# scored against what actually surfaced (credited 'confirmed' only when the respondent raised it unprompted, F13).
+# Keyed by persona stem (prompts/personas/respondents/<stem>.md). A12: all fictional. Heuristics are priors we
+# EXPECT to be wrong sometimes (A1) — a busted heuristic is a good outcome, not a failure.
+#
+# Each `handoff` is the neutral interview plan the real engine receives (objectives shape questions, never
+# statements — nothing here names the hidden knowledge to the interviewer). The heuristics are the pre-call bets.
+
+jewelry-ops-manager:
+  vocabulary: ["the bench", "yıldırım sipariş", "the stone book", "GIA cert"]
+  handoff:
+    goal: "Understand how a custom jewellery order moves from enquiry to delivery, and where it stalls."
+    topics:
+      - { label: "The order-to-delivery workflow, walked through a specific recent piece", must_hit: true }
+      - { label: "How stones are tracked and sourced", must_hit: true }
+      - { label: "What happens at QA when something isn't right", must_hit: true }
+      - { label: "The real lead time vs what's quoted", must_hit: false }
+    never_list: ["Never propose solutions or tools.", "Never reveal anything anyone else said.", "Never ask her to rate a colleague."]
+    time_budget_min: 30
+  heuristics:
+    - { id: h-jw-1, heuristic: "Stone inventory is tracked in a personal spreadsheet outside the main system.", predicts: ["shadow tool", "single owner"], confirms_if: "the stone book (H2) surfaces" }
+    - { id: h-jw-2, heuristic: "Custom pieces have a rework/re-set loop that adds days when a stone sits wrong.", predicts: ["QA bounce-back", "hidden delay"], confirms_if: "H1 surfaces" }
+    - { id: h-jw-3, heuristic: "The quoted lead time is optimistic vs the real time on jobs that hit rework.", predicts: ["quote-vs-actual gap"], confirms_if: "H3 surfaces" }
+    - { id: h-jw-4, heuristic: "The business likely uses a modern ERP that tracks stones well.", predicts: ["no shadow tool"], confirms_if: "NEVER — this is a prior we expect BUSTED (the stone book is a personal Excel)" }
+
+hotel-frontdesk-lead:
+  vocabulary: ["the PMS", "the OTAs", "the recon sheet", "the housekeeping group", "the night audit"]
+  handoff:
+    goal: "Understand how a guest check-in works and how bookings stay in sync across channels."
+    topics:
+      - { label: "Check-in, walked through a specific recent arrival", must_hit: true }
+      - { label: "How OTA bookings reconcile against the PMS", must_hit: true }
+      - { label: "What happens when a room isn't ready or is double-booked", must_hit: true }
+    never_list: ["Never propose a system or tool.", "Never reveal anything anyone else said."]
+    time_budget_min: 30
+  heuristics:
+    - { id: h-ho-1, heuristic: "OTA-to-PMS sync lag causes occasional double-bookings.", predicts: ["channel conflict"], confirms_if: "H1 surfaces" }
+    - { id: h-ho-2, heuristic: "Nightly reconciliation is a manual spreadsheet owned by one or two people.", predicts: ["shadow tool", "single point"], confirms_if: "H2 surfaces" }
+    - { id: h-ho-3, heuristic: "Housekeeping room-ready status flows over an informal channel, causing not-ready check-ins.", predicts: ["shadow tool", "handoff gap"], confirms_if: "H3 surfaces" }
+
+agency-account-manager:
+  vocabulary: ["the brief", "sign-off", "the status sheet", "a placement", "WIP"]
+  handoff:
+    goal: "Understand how a client deliverable moves from brief to sign-off to delivery."
+    topics:
+      - { label: "A specific recent deliverable, walked end to end", must_hit: true }
+      - { label: "How sign-off/approval is chased and tracked", must_hit: true }
+      - { label: "How mid-project scope changes are handled", must_hit: false }
+    never_list: ["Never propose a tool or process fix.", "Never reveal anything anyone else said."]
+    time_budget_min: 30
+  heuristics:
+    - { id: h-ag-1, heuristic: "Sign-off is scattered across multiple channels, delaying delivery.", predicts: ["bottleneck", "no single source"], confirms_if: "H1 surfaces" }
+    - { id: h-ag-2, heuristic: "Scope creep happens with no record against the original brief.", predicts: ["invisible overdelivery"], confirms_if: "H2 surfaces" }
+    - { id: h-ag-3, heuristic: "Client-specific approval knowledge is siloed in the account manager.", predicts: ["single point"], confirms_if: "H3 surfaces" }
+
+bookkeeper:
+  vocabulary: ["the close", "reconciliation", "the export", "workpapers", "variances"]
+  handoff:
+    goal: "Understand how the month-end close actually happens and where it slows."
+    topics:
+      - { label: "The last month-end close, walked step by step", must_hit: true }
+      - { label: "Where data is reshaped or re-keyed by hand", must_hit: true }
+      - { label: "What happens when the numbers don't tie / a close runs long", must_hit: true }
+    never_list: ["Never propose a tool or fix.", "Never reveal anything anyone else said."]
+    time_budget_min: 30
+  heuristics:
+    - { id: h-bk-1, heuristic: "A client export is reshaped manually in Excel each month.", predicts: ["shadow tool"], confirms_if: "the export step (workflow) surfaces" }
+    - { id: h-bk-2, heuristic: "The manual reshape silently drops data when the export format shifts.", predicts: ["silent failure"], confirms_if: "H1 surfaces" }
+    - { id: h-bk-3, heuristic: "Filing deadlines are tracked in a personal sheet, not the practice software.", predicts: ["shadow tool", "single point"], confirms_if: "H2 surfaces" }
+    - { id: h-bk-4, heuristic: "The 'day five' close time is measured and reliable.", predicts: ["stable metric"], confirms_if: "NEVER — expect BUSTED (it's a feel; some closes run to day eight, H3)" }
+
+warehouse-foreman:
+  vocabulary: ["receiving", "putaway", "the WMS", "bin", "short-pick", "mal kabul", "the paper sheet"]
+  handoff:
+    goal: "Understand how goods move from receiving through putaway to dispatch, and where stock goes wrong."
+    topics:
+      - { label: "Putaway, walked through a specific recent receipt", must_hit: true }
+      - { label: "What happens when the WMS bin location is wrong or full", must_hit: true }
+      - { label: "The last time a pick failed and why", must_hit: true }
+    handling_notes: ["Skeptical, time-pressed respondent — be concrete and respectful; earn trust before pushing."]
+    never_list: ["Never propose a new system.", "Never reveal anything anyone else said."]
+    time_budget_min: 30
+  heuristics:
+    - { id: h-wh-1, heuristic: "A paper-sheet workaround handles WMS bin errors and isn't always reconciled back.", predicts: ["shadow tool", "workaround"], confirms_if: "H1 surfaces" }
+    - { id: h-wh-2, heuristic: "System stock drifts from physical stock, causing failed picks.", predicts: ["discrepancy"], confirms_if: "H1 surfaces (pick failure)" }
+    - { id: h-wh-3, heuristic: "The paper-to-WMS reconciliation is done by one person with no backup.", predicts: ["single point"], confirms_if: "H2 surfaces" }
