@@ -13,10 +13,13 @@ import {
   CheckCircle2,
   Paperclip,
   SendHorizontal,
-  Save,
   PencilLine,
   ArrowLeft,
   FileText,
+  Ban,
+  BellRing,
+  AlertTriangle,
+  PauseCircle,
 } from "lucide-react";
 import type { InterviewPlan, PlanState, Workspace } from "@/lib/types";
 import brand from "@/lib/brand";
@@ -49,20 +52,39 @@ export function PlanView({
 }) {
   const [state, setState] = useState<PlanState>(plan.state);
   const [flowOpen, setFlowOpen] = useState(false);
-  const [approving, setApproving] = useState(false);
-  const isLive = TRACK.includes(state);
-  const preApproval = (["DRAFT", "NEXUS_CHECK", "AWAITING_APPROVAL"] as PlanState[]).includes(state);
+  const [pending, setPending] = useState<PlanState | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function approve() {
-    if (approving) return;
-    setApproving(true);
+  const isLive = TRACK.includes(state);
+  const showTracker = isLive || state === "PAUSED";
+  const preApproval = (["DRAFT", "NEXUS_CHECK", "AWAITING_APPROVAL"] as PlanState[]).includes(state);
+  // Revoke is the admin-side counterpart to Send; legal only where the server allows it
+  // (APPROVED / SENT / OPENED — see routers/plans.py TRANSITIONS).
+  const canRevoke = (["APPROVED", "SENT", "OPENED"] as PlanState[]).includes(state);
+  const isRevoked = state === "REVOKED";
+  const isNoResponse = state === "NO_RESPONSE";
+
+  // Every transition is server-validated; the UI only requests legal ones and surfaces
+  // failures inline instead of swallowing them (audit: no silent 409s).
+  async function requestTransition(to: PlanState) {
+    if (pending) return;
+    setPending(to);
+    setError(null);
     try {
-      await transition_plan(plan.id, "APPROVED");
-      setState("APPROVED");
-    } catch {
-      /* server rejects illegal transitions; leave state unchanged */
+      await transition_plan(plan.id, to);
+      setState(to);
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : `Could not move the plan to ${to.toLowerCase()}.`,
+      );
     } finally {
-      setApproving(false);
+      setPending(null);
+    }
+  }
+
+  function revoke() {
+    if (window.confirm("Revoke this interview plan? The invite link stops working. This cannot be undone.")) {
+      requestTransition("REVOKED");
     }
   }
 
@@ -81,7 +103,7 @@ export function PlanView({
         </Link>
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-display text-4xl text-ink">Interview Plan</h1>
+          <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Interview Plan</h1>
           <div className="flex items-center gap-3">
             {reportSessionId && (
               <Link
@@ -96,13 +118,49 @@ export function PlanView({
           </div>
         </div>
 
-        {isLive && (
-          <div className="mt-5 rounded-card border border-line bg-surface p-4">
+        {showTracker && (
+          <div className="card-hairline mt-5 rounded-card border border-line bg-surface p-4">
             <StatusTracker current={state} />
+            {state === "PAUSED" && (
+              <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-tag-guess">
+                <PauseCircle className="h-3.5 w-3.5" strokeWidth={1.75} />
+                Paused by the respondent. It can resume or complete from here.
+              </p>
+            )}
             <p className="mt-3 text-xs text-ink-faint">
-              Non-response ages here — one gentle reminder, no decline. Declines happen
+              Non-response ages here with one gentle reminder, no decline. Declines happen
               offline and are visible to the {brand.product_name} team only.
             </p>
+          </div>
+        )}
+
+        {isNoResponse && (
+          <div className="card-hairline mt-5 flex flex-wrap items-center justify-between gap-3 rounded-card border border-line-strong bg-surface-sunken p-4">
+            <div className="flex items-start gap-2.5">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-ink-faint" strokeWidth={1.75} />
+              <div className="text-sm text-ink-soft">
+                <span className="font-medium text-ink">No response yet.</span> You can send one
+                gentle reminder. There is no decline, and no second nudge.
+              </div>
+            </div>
+            <button
+              onClick={() => requestTransition("SENT")}
+              disabled={pending != null}
+              className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:opacity-50"
+            >
+              <BellRing className="h-4 w-4" strokeWidth={1.75} />
+              {pending === "SENT" ? "Sending…" : "Send gentle reminder"}
+            </button>
+          </div>
+        )}
+
+        {isRevoked && (
+          <div className="card-hairline mt-5 flex items-start gap-2.5 rounded-card border border-danger/30 bg-danger-soft p-4">
+            <Ban className="mt-0.5 h-4 w-4 shrink-0 text-danger" strokeWidth={1.75} />
+            <div className="text-sm text-ink-soft">
+              <span className="font-medium text-danger">Plan revoked.</span> The invite link no
+              longer works and this plan is closed. Start a new plan to interview this person.
+            </div>
           </div>
         )}
 
@@ -138,7 +196,10 @@ export function PlanView({
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium text-ink">
-                    {plan.interviewee_name} — {plan.interviewee_role}
+                    {plan.interviewee_name}
+                    {plan.interviewee_role && (
+                      <span className="text-ink-soft">, {plan.interviewee_role}</span>
+                    )}
                   </span>
                   {plan.interviewee_tag && (
                     <DiscoveryTag label={plan.interviewee_tag.label} tone={plan.interviewee_tag.tone} />
@@ -168,7 +229,7 @@ export function PlanView({
                 </ul>
                 <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-ink-faint">
                   <Paperclip className="h-3 w-3" strokeWidth={1.75} />
-                  visible to you only — never shared with the interviewee
+                  visible to you only, never shared with the interviewee
                 </p>
               </MissionItem>
 
@@ -217,7 +278,7 @@ export function PlanView({
                     ))}
                   </ul>
                   <p className="mt-2 text-xs text-ink-faint">
-                    from the discovery call — unverified
+                    from the discovery call, unverified
                   </p>
                 </MissionItem>
               )}
@@ -312,37 +373,71 @@ export function PlanView({
           </div>
         </div>
 
-        {/* Bottom action bar. The primary action follows the lifecycle: approve a
-            pending plan, then send it; once sent it's read-only here. */}
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {preApproval ? (
+        {/* Inline failure surface (audit: approve/send/revoke never fail silently) */}
+        {error && (
+          <div
+            role="alert"
+            className="mt-6 flex items-start gap-2 rounded-md border border-danger/30 bg-danger-soft px-4 py-2.5 text-sm text-danger"
+          >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Bottom action bar. Actions follow the server's lifecycle: approve a pending
+            plan, then send it; revoke where legal (APPROVED/SENT/OPENED); once live it's
+            read-only here. NO_RESPONSE and REVOKED carry their own banners above. */}
+        {!isRevoked && !isNoResponse && (
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            {preApproval && (
+              <button
+                onClick={() => requestTransition("APPROVED")}
+                disabled={pending != null}
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:opacity-50"
+              >
+                <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
+                {pending === "APPROVED" ? "Approving…" : "Approve plan"}
+              </button>
+            )}
+
+            {state === "APPROVED" && (
+              <button
+                onClick={() => setFlowOpen(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
+              >
+                <SendHorizontal className="h-4 w-4" strokeWidth={2} />
+                Send Interview
+              </button>
+            )}
+
+            {isLive && (
+              <span className="inline-flex items-center gap-1.5 text-sm text-ink-soft">
+                <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={2} />
+                Interview sent. Tracking progress above.
+              </span>
+            )}
+
+            {canRevoke && (
+              <button
+                onClick={revoke}
+                disabled={pending != null}
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-danger/40 px-5 py-3 text-sm font-medium text-danger transition-colors hover:bg-danger-soft disabled:opacity-50"
+              >
+                <Ban className="h-4 w-4" strokeWidth={1.75} />
+                {pending === "REVOKED" ? "Revoking…" : "Revoke"}
+              </button>
+            )}
+
             <button
-              onClick={approve}
-              disabled={approving}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
+              disabled
+              title="Follow-up templates arrive with the report and SOP tools in this build"
+              className="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-md border border-line px-5 py-3 text-sm font-medium text-ink-faint opacity-60"
             >
-              <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
-              {approving ? "Approving…" : "Approve plan"}
+              <PencilLine className="h-4 w-4" strokeWidth={1.75} />
+              Generate Follow-Up Template
             </button>
-          ) : (
-            <button
-              onClick={() => setFlowOpen(true)}
-              disabled={isLive}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <SendHorizontal className="h-4 w-4" strokeWidth={2} />
-              {isLive ? "Interview sent" : "Send Interview"}
-            </button>
-          )}
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-line-strong px-5 py-3 text-sm font-medium text-ink transition-colors hover:bg-surface-raised">
-            <Save className="h-4 w-4" strokeWidth={1.75} />
-            Save Plan
-          </button>
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-line-strong px-5 py-3 text-sm font-medium text-ink transition-colors hover:bg-surface-raised">
-            <PencilLine className="h-4 w-4" strokeWidth={1.75} />
-            Generate Follow-Up Template
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       <SendInterviewFlow
@@ -383,28 +478,28 @@ function MissionItem({
   );
 }
 
-// Refine Plan chat (A9 #6): plain language → machine rules with an audited change log.
-// The transcript is seeded from the plan; the input appends locally (a live demo of
-// the loop — the real endpoint compiles each turn into rule changes).
+// Refine Plan chat (A9 #6): plain language into machine rules with an audited change
+// log. The composer is honestly disabled until the backend refine endpoint lands (it is
+// being scoped) — no fabricated replies (no-mock-in-conversation). Any seeded transcript
+// is real plan data and still renders.
 function RefinePlan({ plan }: { plan: InterviewPlan }) {
-  const [messages, setMessages] = useState(plan.refine_chat ?? []);
-  const [draft, setDraft] = useState("");
-
-  function send() {
-    const text = draft.trim();
-    if (!text) return;
-    setMessages((m) => [
-      ...m,
-      { role: "you", at: "now", text, author: "ES" },
-      { role: "nexus", at: "now", text: "Noted — folding that into the plan and the change log." },
-    ]);
-    setDraft("");
-  }
+  const messages = plan.refine_chat ?? [];
 
   return (
-    <section className="flex min-h-[22rem] flex-col rounded-card border border-line bg-surface p-5 shadow-card">
-      <h3 className="mb-3 font-display text-lg text-ink">Refine Plan</h3>
+    <section className="card-hairline flex min-h-[22rem] flex-col rounded-card border border-line bg-surface p-5">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h3 className="font-display text-lg text-ink">Refine Plan</h3>
+        <span className="rounded-chip bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-ink-faint ring-1 ring-inset ring-ink/[0.04]">
+          Coming in this build
+        </span>
+      </div>
       <div className="flex-1 space-y-3 overflow-y-auto">
+        {messages.length === 0 && (
+          <p className="text-sm leading-relaxed text-ink-faint">
+            Ask {brand.product_name} to adjust an objective, add a topic, or reword a question
+            in plain language. Every change compiles into the plan with an audited change log.
+          </p>
+        )}
         {messages.map((m, i) =>
           m.role === "you" ? (
             <div key={i} className="flex justify-end">
@@ -429,19 +524,19 @@ function RefinePlan({ plan }: { plan: InterviewPlan }) {
           ),
         )}
       </div>
-      <div className="mt-3 flex items-center gap-2 rounded-lg border border-line bg-surface-raised px-3 py-2">
+      <div className="mt-3 flex items-center gap-2 rounded-md border border-line bg-surface-sunken px-3 py-2 opacity-70">
         <Paperclip className="h-4 w-4 shrink-0 text-ink-faint" strokeWidth={1.75} />
         <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder={`Ask ${brand.product_name} to refine the plan…`}
-          className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint"
+          disabled
+          placeholder={`Refine-with-${brand.product_name} lands with the chat agent`}
+          title="The refine endpoint is being wired in this build"
+          className="min-w-0 flex-1 cursor-not-allowed bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint"
         />
         <button
-          onClick={send}
-          className="flex h-7 w-7 items-center justify-center rounded-md bg-accent-soft text-accent-ink transition-colors hover:bg-accent hover:text-on-accent"
-          aria-label="Send"
+          disabled
+          className="flex h-7 w-7 cursor-not-allowed items-center justify-center rounded-md bg-surface text-ink-faint"
+          aria-label="Send (coming in this build)"
+          title="The refine endpoint is being wired in this build"
         >
           <SendHorizontal className="h-4 w-4" strokeWidth={2} />
         </button>
@@ -451,7 +546,9 @@ function RefinePlan({ plan }: { plan: InterviewPlan }) {
 }
 
 function StatusTracker({ current }: { current: PlanState }) {
-  const currentIdx = TRACK.indexOf(current);
+  // PAUSED sits on the IN_PROGRESS node (it's a hold within an in-progress interview).
+  const positional = current === "PAUSED" ? "IN_PROGRESS" : current;
+  const currentIdx = TRACK.indexOf(positional);
   return (
     <div className="flex items-center">
       {TRACK.map((s, i) => {

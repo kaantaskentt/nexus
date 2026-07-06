@@ -84,14 +84,14 @@ export function SendInterviewFlow({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="fixed inset-0 z-40 bg-scrim"
+            className="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.97, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: 8 }}
-            transition={{ duration: 0.2 }}
-            className="fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-card border border-line bg-canvas shadow-card"
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-card border border-line bg-canvas shadow-elev-3"
           >
             <div className="flex items-center justify-between border-b border-line px-6 py-4">
               <div className="flex items-center gap-2">
@@ -153,7 +153,7 @@ export function SendInterviewFlow({
                       />
                     </div>
                     <p className="mt-2 text-xs text-ink-faint">
-                      Voice is recommended — it tends to surface more examples and detail.
+                      Voice is recommended. It tends to surface more examples and detail.
                     </p>
                   </div>
 
@@ -176,7 +176,7 @@ export function SendInterviewFlow({
                     <button
                       disabled={!email.trim()}
                       onClick={() => setStep("preview")}
-                      className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                     >
                       Preview message →
                     </button>
@@ -188,7 +188,7 @@ export function SendInterviewFlow({
                 <div className="space-y-4">
                   <p className="text-sm text-ink-soft">
                     This is exactly what {firstName} receives. The purpose block and consent
-                    line are locked — they are compliance surface, not copy to tune.
+                    line are locked. They are compliance surface, not copy to tune.
                   </p>
 
                   <div className="rounded-card border border-line bg-surface p-5 text-sm leading-relaxed text-ink">
@@ -202,19 +202,19 @@ export function SendInterviewFlow({
                     <div className="mb-3 border-b border-line pb-3">
                       <div className="text-xs text-ink-faint">Subject</div>
                       <div className="font-medium">
-                        Your take on {topic} — {minutes} min, whenever suits you
+                        Your take on {topic}, {minutes} min, whenever suits you
                       </div>
                     </div>
 
                     <p>Hi {firstName},</p>
                     <p className="mt-2">
                       {admin} at {workspace.name} has asked {brand.product_name} to understand
-                      how things really work day to day — and your view on {topic} is one they
+                      how things really work day to day, and your view on {topic} is one they
                       specifically wanted to hear.
                     </p>
                     <p className="mt-2 text-ink-soft">
                       It&apos;s a relaxed conversation, about {minutes} minutes, and you can do it
-                      whenever it&apos;s convenient — start now or come back to the same link
+                      whenever it&apos;s convenient. Start now or come back to the same link
                       later. There are no right answers and nothing to prepare.
                     </p>
 
@@ -226,7 +226,7 @@ export function SendInterviewFlow({
                         {workspace.name} is working with {brand.product_name} to document how work
                         actually happens, so the people who run it are understood accurately. This
                         is not a performance review, and it is not scored. Your words help build a
-                        clear picture of the process — not a judgment of you.
+                        clear picture of the process, not a judgment of you.
                       </p>
                     </div>
 
@@ -238,7 +238,7 @@ export function SendInterviewFlow({
                       <Lock className="mr-1 inline h-3 w-3" strokeWidth={2} />
                       By starting, you agree to have this conversation recorded and summarized so
                       your account of the work can be captured accurately. Before anything is
-                      attributed to you by name, you&apos;ll get to review it — and you can change
+                      attributed to you by name, you&apos;ll get to review it, and you can change
                       it, remove your name, or leave anything out.
                     </p>
 
@@ -251,7 +251,7 @@ export function SendInterviewFlow({
                   {sendError && (
                     <p className="flex items-center justify-center gap-1.5 text-sm text-danger">
                       <WifiOff className="h-4 w-4" strokeWidth={1.75} />
-                      Couldn&apos;t send just now — try again in a moment.
+                      Couldn&apos;t send just now. Try again in a moment.
                     </p>
                   )}
                   <div className="flex items-center justify-between pt-1">
@@ -264,7 +264,7 @@ export function SendInterviewFlow({
                     <button
                       onClick={handleSend}
                       disabled={sending}
-                      className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
+                      className="rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:opacity-50 disabled:shadow-none"
                     >
                       {sending ? "Sending…" : `Send to ${firstName}`}
                     </button>
@@ -280,7 +280,7 @@ export function SendInterviewFlow({
                   <div>
                     <h3 className="font-display text-xl text-ink">Invite sent to {firstName}</h3>
                     <p className="mx-auto mt-1 max-w-sm text-sm text-ink-soft">
-                      The plan now tracks progress — Sent → Opened → In progress → Completed. If
+                      The plan now tracks progress: Sent, Opened, In progress, Completed. If
                       there&apos;s no response, it ages on the board with one gentle reminder.
                       There is no decline; a decline would be a bias signal.
                     </p>
