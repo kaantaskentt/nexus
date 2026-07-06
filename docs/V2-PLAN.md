@@ -70,3 +70,21 @@ Pace rule (name regressions, never silently fall back) · fast inline hallucinat
 sweeps at seams · no mock in any conversation path · evals run after every prompt/
 persona change · deviations from spec logged · taste batched to Kaan with
 recommendations.
+
+## Overnight orders (Kaan, via watchtower — binding for the 3:04 sprint)
+
+1. **Quality bar:** build as if a VC sees it tomorrow morning and decides to invest.
+   Depth and polish beat new surface area — perfect the existing thing before adding.
+2. **Cleanliness:** delete dead code as you go; no orphan files, no TODO graveyards;
+   ARCHITECTURE.md + directory READMEs stay true after every task; verification
+   ritual (hallucination sweep · better-solution check · structure audit) every 45–60 min.
+3. **Re-read source docs each pass** (reference/drive-stage-docs/, MERGE_PLAN, this file):
+   Kaan suspects underestimated gems. If a better version than the spec exists, BUILD IT
+   and log the named deviation for morning review — improving beats obeying; silent
+   drift is forbidden.
+4. **Limits protocol:** cap expected ~2h after 3:04. BEFORE parking: commit + push
+   everything, write docs/SPRINT-STATE.md (one paragraph: done / in-flight / next),
+   and arm the next resume trigger exactly like the 3:04 one. Never park uncommitted.
+5. **Never idle, never make-work.** Standing backlog when the board empties:
+   interview volume, eval expansion, polish passes, doc truth. Perfect little pieces,
+   all night.
