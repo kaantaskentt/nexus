@@ -123,6 +123,15 @@ async def test_golden_jewelry_extraction(db):
     # Directive stored with no trust tag (feeds the NEVER list, never client-facing).
     hard("directive-null-tag", any(r["kind"] == "directive" and r["tag"] is None for r in rows))
 
+    # Client-facing style (task #19): the compiler's AUTHORED claim_text renders straight
+    # to Snapshot/Insights/Knowledge Base and must carry NO em-dash (an AI tell). The
+    # verbatim evidence_quote is exempt — the speaker's own dashes are data (rule 3). We
+    # exclude the seeded SCRAPED row (not model output) to test only what the compiler wrote.
+    em_dash_claims = [
+        r["claim_text"] for r in rows if r["tag"] != "SCRAPED" and "—" in (r["claim_text"] or "")
+    ]
+    hard("no-em-dash-in-claim_text", not em_dash_claims)
+
     # NEW-PERSON entities minted (client-side).
     for name in ["selin", "kerem", "metin"]:
         hard(f"entity-{name}", any(name in e for e in ents))

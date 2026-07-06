@@ -16,8 +16,11 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 
-# The client-facing copy files the glossary convention governs (renderer OUTPUT is generated, not static,
-# so it is guarded by the prompt's output rule instead). Extend this list as new copy files land.
+# The client-facing copy files the glossary convention governs. Renderer/compiler OUTPUT is generated,
+# not static, so it is guarded at its source instead: the compiler's authored `claim` carries the
+# no-em-dash rule (stage4-compiler.md hard rule 7) and the golden-compiler test asserts it on real
+# model output (tests/test_golden_compiler.py "no-em-dash-in-claim_text"). Verbatim evidence quotes are
+# data and keep the speaker's dashes. Extend this list as new STATIC copy files land.
 TARGETS = [
     "prompts/personas/invite-email.md",
     "prompts/personas/consent-landing.md",
