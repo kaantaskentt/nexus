@@ -1,0 +1,73 @@
+# Sources: docs/MERGE_PLAN.md Phase 3 (open-form enforcement: leading questions auto-reformulated, rewrite shown)
+#   + prompts/agents/plan-generator.md + prompts/agents/nexus-check-reviewer.md + task #12 pt3 (coverage gap). A12 fictional.
+# Targets: plan-generator (must reformulate leading -> open, show the rewrite) AND nexus-check-reviewer (must FLAG a leading
+#   question that slipped through). Runner note: needs a single-prompt adapter (feed the prompt a candidate question +
+#   context, judge the output) — not the interviewer turn adapter. Case schema is judge-compatible.
+
+- id: lead-01-closed-yesno
+  category: leading-question
+  target: plan-generator
+  intent: A closed yes/no question must be reformulated to open form, with the rewrite shown.
+  input:
+    context: "Objective — understand the returns workflow at a fictional jewellery brand."
+    turn: "Candidate suggested question: 'Do you use a spreadsheet for returns?'"
+  pass_if:
+    - Reformulates to an open question (e.g. "What tools do you touch when you handle a return?")
+    - Shows the rewrite / marks it was reformulated
+  fail_if:
+    - Emits the closed yes/no question unchanged
+    - Produces a question answerable with just yes/no
+
+- id: lead-02-embeds-the-answer
+  category: leading-question
+  target: plan-generator
+  intent: A question that smuggles its own conclusion must be neutralized.
+  input:
+    context: "Fictional hotel; objective — the nightly reconciliation process."
+    turn: "Candidate suggested question: 'Isn't the nightly reconciliation really slow and frustrating?'"
+  pass_if:
+    - Removes the pre-loaded judgment (slow/frustrating)
+    - Asks for a specific walk-through instead ("Walk me through the last nightly reconciliation, step by step")
+  fail_if:
+    - Keeps the leading framing or any embedded verdict
+    - Asks the respondent to confirm it's "slow" or "frustrating"
+
+- id: lead-03-person-judgment-question
+  category: leading-question
+  target: plan-generator
+  intent: A question fishing for a verdict on a named person must be refused/reframed to the process.
+  input:
+    context: "Fictional agency; objective — the sign-off workflow."
+    turn: "Candidate suggested question: 'Is Deniz the bottleneck on approvals?'"
+  pass_if:
+    - Refuses the person-judgment framing
+    - Reframes to the process ("Walk me through who touches an approval before it's final, and where it tends to slow")
+  fail_if:
+    - Keeps a question that asks the respondent to rate/judge the named person
+
+- id: lead-04-nexus-check-must-flag
+  category: leading-question
+  target: nexus-check-reviewer
+  intent: A leading question that survived into a DRAFT plan must be FLAGGED by the nexus-check reviewer.
+  input:
+    context: "DRAFT plan under review contains a suggested question: 'Wouldn't it be easier if everything was in one system?'"
+    turn: "(review the draft plan)"
+  pass_if:
+    - Flags the question as leading (severity fix)
+    - Proposes the open-form rewrite
+  fail_if:
+    - Passes the plan with the leading question intact
+    - Treats it as acceptable
+
+- id: lead-05-good-open-question-untouched
+  category: leading-question
+  target: plan-generator
+  intent: Control — a genuinely open, non-leading question must NOT be needlessly rewritten.
+  input:
+    context: "Fictional accounting firm; objective — the month-end close."
+    turn: "Candidate suggested question: 'Walk me through the last month-end close, from the first thing you did to the last.'"
+  pass_if:
+    - Keeps the question essentially as-is (already open, episodic, non-leading)
+  fail_if:
+    - Rewrites it into something closed or leading
+    - Flags a clean open question as a problem

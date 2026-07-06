@@ -1,0 +1,81 @@
+# Sources: docs/MERGE_PLAN.md Phase 6 (perception-gap engine: CEO baseline vs operator lived; DISPUTED links; report-only F27)
+#   + prompts/agents/perception-gap.md + F21 precedence + task #12 pt3. A12 fictional.
+# Target: the perception-gap comparator (backend task #11 engine). Three outcome classes: MATCH / CONTRADICTION / PARTIAL.
+# COORDINATE with backend #11 on the exact I/O shape — these are the behavior specs their engine's eval runs against.
+# Runner note: needs a comparator adapter (feed two record sets, read the emitted gap/agreement). Judge-compatible schema.
+
+# ── MATCH: baseline and lived agree → NO gap; corroboration is VERIFIED-eligible, not a conflict. ──
+- id: pgap-match-time
+  category: perception-gap
+  outcome: match
+  intent: When the exec baseline and the operator's lived account agree, emit agreement (VERIFIED-eligible), never a gap.
+  input:
+    baseline: "CEO (CLAIMED, time_or_cost): a wholesale order ships in about ten days."
+    lived: "Operator (CONFIRMED, episodic): the last wholesale order shipped on day nine."
+  pass_if:
+    - Recognizes agreement (no perception gap emitted)
+    - Marks the corroborated fact VERIFIED-eligible (two independent sources agree)
+  fail_if:
+    - Emits a DISPUTED perception gap where the accounts actually agree
+    - Treats a ~1-day difference within the same claim as a contradiction
+
+# ── CONTRADICTION: incompatible → DISPUTED gap, both records survive, report-only. ──
+- id: pgap-contradiction-time
+  category: perception-gap
+  outcome: contradiction
+  intent: Incompatible baseline vs lived → a DISPUTED perception gap; both survive; held for the report (F27).
+  input:
+    baseline: "CEO (CLAIMED, time_or_cost): returns take about ten minutes each."
+    lived: "Operator (CONFIRMED, episodic): the last several returns each took the better part of an hour."
+  pass_if:
+    - Emits a PERCEPTION_GAP linking both records as DISPUTED
+    - Both records survive unedited; neither is deleted
+    - Marked render=report-only (never surfaced on the live snapshot)
+    - Provisional lean favors the episodic/firsthand operator account (F21), without hard-resolving
+  fail_if:
+    - Deletes/edits either record, or averages them
+    - Surfaces the gap on the snapshot before the report
+    - Hard-resolves a winner as if settled
+
+- id: pgap-contradiction-ownership
+  category: perception-gap
+  outcome: contradiction
+  intent: A who-does-what mismatch is a gap too, not just numbers.
+  input:
+    baseline: "CEO (CLAIMED, person): Selin owns the online returns end to end."
+    lived: "Operator (CONFIRMED): in practice the warehouse team handles the physical return; Selin only issues the refund."
+  pass_if:
+    - Emits a DISPUTED ownership perception gap linking both
+    - Both survive; report-only
+  fail_if:
+    - Misses the ownership divergence
+    - Collapses the two into one 'resolved' record
+
+# ── PARTIAL: overlap with divergence → partial gap, scoped to the divergent axis. ──
+- id: pgap-partial-process
+  category: perception-gap
+  outcome: partial
+  intent: When accounts agree on the shape but diverge on one step, emit a PARTIAL gap scoped to that step.
+  input:
+    baseline: "CEO (CLAIMED, process_step): orders go design -> casting -> QA -> ship."
+    lived: "Operator (CONFIRMED): same flow, but there's an unofficial rework loop between QA and casting that adds days."
+  pass_if:
+    - Recognizes agreement on the overall flow AND flags the divergence (the unofficial rework loop) as a partial gap
+    - Scopes the gap to the divergent step, not the whole process
+  fail_if:
+    - Reports a total contradiction (overstates), or
+    - Reports full agreement and drops the rework-loop divergence (understates)
+
+# ── Guardrail: quarantined sentiment never enters a comparison. ──
+- id: pgap-never-uses-quarantined
+  category: perception-gap
+  outcome: guardrail
+  intent: A quarantined person-sentiment record must never be a baseline or lived side of a gap.
+  input:
+    baseline: "CEO (CLAIMED, time_or_cost): the close wraps by day five."
+    lived: "Operator record exists, but the only divergent 'record' is a quarantined judgment ('the manager is careless')."
+  pass_if:
+    - Does NOT construct a perception gap from the quarantined sentiment record
+    - Leaves the sentiment quarantined; emits no gap if the only divergence is quarantined
+  fail_if:
+    - Surfaces or references the quarantined judgment in a gap

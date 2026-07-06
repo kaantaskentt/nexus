@@ -1,0 +1,54 @@
+# Sources: docs/MERGE_PLAN.md Phase 3 (confidence badges F35 High vs Verified) + prompts/glossary-and-policies.md
+#   (confidence-badge label set) + Non-negotiable 4 (quarantine deny-by-default) + A2 (trust ladder) + task #12 pt3.
+# Owner to IMPLEMENT: frontend (these are unit-test expectations for the badge/render layer — NOT run by the eval
+# harness; they're a deterministic spec frontend asserts against ConfidenceBadge / PainBandChip / the claims view).
+# prompts-evals owns the SPEC (tag/state -> expected rendering); frontend owns the tests.
+
+# ── Trust tag -> confidence badge (snapshot cards) ──────────────────────────────
+# The record's trust tag is distinct from a card's confidence badge. Mapping the snapshot renderer applies:
+tag_to_confidence:
+  - { record_tag: "VERIFIED",  sources: "2+ independent agree", expect_badge: "verified" }
+  - { record_tag: "CONFIRMED", sources: "single confirmed",     expect_badge: "high" }
+  - { record_tag: "CLAIMED",   sources: "single, one voice",    expect_badge: "reported" }
+  - { record_tag: "GUESS",     sources: "single, hedged",       expect_badge: "reported", note: "a guess is not 'high' — never upgrade visually" }
+  - { record_tag: "SCRAPED",   sources: "public web only",      expect_badge: "scraped" }
+
+# ── The invariant that matters most: quarantine NEVER renders ────────────────────
+quarantine_never_renders:
+  - id: badge-quar-1
+    given: "a claim record with sentiment_flag=true / quarantined=true (e.g. 'Metin is disorganized')"
+    expect: "renders NOWHERE client-visible — no card, no badge, no evidence rail, no why-line, no person row. Absent from the client_visible_claims query entirely."
+    fail_if: "any badge or text derived from a quarantined record appears in any client view"
+  - id: badge-quar-2
+    given: "an approach_note field on any record"
+    expect: "never rendered client-visible (it's exec's read, unverified)"
+    fail_if: "approach_note text surfaces in a card, drawer, or rail"
+
+# ── Pain band chip (coarse only) ────────────────────────────────────────────────
+pain_band_chip:
+  - { band: "low",      expect_chip: "Low" }
+  - { band: "moderate", expect_chip: "Moderate" }
+  - { band: "high",     expect_chip: "High" }
+  - { band: "severe",   expect_chip: "Severe" }
+  - id: badge-pain-nodecimal
+    given: "any pain score"
+    expect: "renders as one of the four coarse bands only"
+    fail_if: "a decimal, percentage, or 0-100 number is shown anywhere for pain"
+
+# ── Evidence rendering (A3 / F33) ───────────────────────────────────────────────
+evidence_rendering:
+  - id: badge-ev-ceo-verbatim
+    given: "a founder/CEO-sourced claim with a timestamp (is_paraphrased=false)"
+    expect: "verbatim quote shown with the timestamp deep-link"
+    fail_if: "a CEO quote is paraphrased away or loses its timestamp"
+  - id: badge-ev-employee-paraphrased
+    given: "an employee-interview-sourced claim (is_paraphrased=true)"
+    expect: "shown as a paraphrase, labeled 'Paraphrased', with NO speaker name attributed"
+    fail_if: "a verbatim employee quote is shown, or an employee is named next to their quote"
+
+# ── Plan-state chip (lifecycle) ─────────────────────────────────────────────────
+plan_state_chip:
+  - "each of the 12 states (DRAFT/NEXUS_CHECK/AWAITING_APPROVAL/APPROVED/SENT/OPENED/IN_PROGRESS/PAUSED/COMPLETED/COMPILED/NO_RESPONSE/REVOKED) renders a distinct, spec-labeled chip"
+  - "there is NO decline affordance anywhere in the plan/send UI (A4)"
+
+# Brand: every visible product-name string reads from brand.product_name, never a hardcoded 'Nexus' (A13.2).
