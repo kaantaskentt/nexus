@@ -25,10 +25,17 @@ provisioned + widget deployed (ff9ba48). 52 backend tests, 23 frontend tests, su
    self-retracted claim); yıldırım gap = real. Same-speaker-retraction exclusion rule
    proposed to Emre in morning packet §6 — nothing patched pending his F21/F41 call.
 
-**MORNING SHIFT (July 6, in flight):** docs/MORNING-ORDERS.md + Kaan's multi-company
-addition (MERGE_PLAN A17). Four lanes: frontend-1 (KB/Insights/nav + premium pass 2),
-admin-flow (auth + new-company + transcript upload), qa-prod (prod verification),
-evals-1 (computed coverage-routing, verdict: feasible).
+**MORNING SHIFT (July 6): PROD REDEPLOYED at 84db7fe (~09:55 PT).** Vercel (clean-worktree
+build) + both Railway services SUCCESS. Live now: admin login (Supabase Auth, /w/* gated,
+/i/* public) · Knowledge Base + Insights + Interviews nav (all 6 items live, Overview
+removed) · New Company flow + CEO transcript upload → progressive snapshot (A17, E2E-proven
+with real LLMs) · optional website scan · cache-staleness fix · silent parse-swallow fix
+(AgentParseError + raw output persisted) · migration 0008 applied to live (coverage_routing
+built, OFF pending Kaan). MORNING-ORDERS all 4 priorities closed or in final pass.
+In flight: qa-prod re-verify sweep + #18 fresh-journey acceptance; #14/#15 report fixes +
+#23 JSON-format constraints ride a second backend deploy; then #24/#25 leg re-runs +
+em-dash re-compile on the demo tenant; frontend-1 on premium pass round 2.
+Comparator same-speaker-retraction rule + coverage-routing feel change: packet §5/§6, Emre/Kaan.
 
 **MORNING (Kaan):** open the prod URL · FIRST VOICE CALL (send a voice-modality interview
 from Burak's plan, respondent page shows "Start voice conversation") · morning-review
