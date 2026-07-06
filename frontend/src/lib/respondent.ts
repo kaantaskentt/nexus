@@ -1,27 +1,24 @@
-// Respondent-side mock (A15.6) — shaped EXACTLY like the by-token session endpoints
-// (backend/app/routers/sessions.py) so the interview screen flips to the live API by
-// swapping these three functions for api() calls:
+// Respondent-side API client — the interview conversation path. Per Kaan's P0
+// directive: the CHAT NEVER uses a mock. Every turn hits the real engine; a failure
+// surfaces an honest error, never a scripted reply. These call the by-token session
+// endpoints (backend/app/routers/sessions.py, mounted at /api/sessions):
 //   getSession  → GET  /api/sessions/by-token/{token}
 //   takeTurn    → POST /api/sessions/by-token/{token}/turn   (message:null on opening)
 //   pauseSession→ POST /api/sessions/by-token/{token}/pause
-//
-// A12: FICTION. The demo token resolves to Burak's (fictional) interview. Real invite
-// tokens are unauthenticated by design (A11.5) and never appear in the workspace app.
-//
-// NOTE for backend wiring: the consent page needs respondent name / company / admin /
-// topic / est-minutes / modality to render its copy. GET /by-token currently returns
-// only {id, workspace_id, status, modality, language, resumable_state}; it will need a
-// consent_context blob (or those fields) added. The mock carries them under `context`.
 
+import { api } from "./api";
 import brand from "./brand";
 
+// Consent-landing display context (invite/consent merge fields). Optional: the live
+// GET /by-token does not return it yet, so the consent page renders generic-but-honest
+// copy when it's absent. It NEVER drives a conversation reply.
 export interface SessionContext {
-  respondent_name: string;
-  company_name: string;
-  admin_name: string;
-  interview_topic: string; // neutral area — never a claim (invite/consent merge field)
-  est_minutes: number;
-  modality: "voice" | "text";
+  respondent_name?: string;
+  company_name?: string;
+  admin_name?: string;
+  interview_topic?: string; // neutral area — never a claim
+  est_minutes?: number;
+  modality?: "voice" | "text";
 }
 
 export interface RespondentSession {
@@ -29,7 +26,7 @@ export interface RespondentSession {
   status: "pending" | "active" | "paused" | "completed" | "expired";
   modality: "voice" | "text";
   language: string;
-  context: SessionContext;
+  context?: SessionContext; // present only if the backend supplies consent_context
 }
 
 export interface TurnResult {
@@ -39,72 +36,83 @@ export interface TurnResult {
   should_offer_pause: boolean;
 }
 
-const DEMO_CONTEXT: SessionContext = {
-  respondent_name: "Burak",
-  company_name: "Bee Goddess",
-  admin_name: "Ece Şirin",
-  interview_topic: "how daily repricing works",
-  est_minutes: 20,
-  modality: "text",
-};
-
-// Scripted interviewer turns — persona-shaped (states sharing rules at open, warm,
-// episodic prompts, offers a pause ~20 min). A stub for the demo; the real turn engine
-// (run_interview_turn) replaces it wholesale.
-const SCRIPT: string[] = [
-  `Hi ${DEMO_CONTEXT.respondent_name} — thanks for making the time. Before we start: this is just about how your work really goes, it isn't a review and nothing is scored. Anything you mention about someone else stays out of what's shared unless you tell me otherwise, and you'll get to see anything attributed to you before it goes anywhere. You can pause whenever you like. To ease in — how would you describe what you do here to someone brand new?`,
-  `That's really helpful, thank you. Let's make it concrete — walk me through yesterday morning, from the moment you sat down. What was the very first thing you did?`,
-  `Got it. And when the gold rate moved, what happened next — what did you actually do, step by step?`,
-  `That paints a clear picture. Tell me about the Excel itself — what lives in it, and how did it come to be the way it is?`,
-  `We've covered a lot of good ground, and we're about ${DEMO_CONTEXT.est_minutes} minutes in. We can keep going, or pick this up later on the very same link — whatever's easier for you. Would you like to continue or pause here?`,
-  `Thank you — this is exactly the kind of detail that helps. When you're ready, tell me what happens once the new prices are set: how do they reach the website, the boutiques, and the wholesale lists?`,
-];
-
-const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
-
-export async function getSession(token: string): Promise<RespondentSession> {
-  void token; // real impl: GET /api/sessions/by-token/{token}
-  return clone({
-    id: "sess-demo-burak",
-    status: "pending",
-    modality: DEMO_CONTEXT.modality,
-    language: "en",
-    context: DEMO_CONTEXT,
-  });
+// Raw GET /by-token shape. The backend now returns a `context` blob for the consent
+// page; its field names differ slightly from ours, so we map them here.
+interface RawSession {
+  id: string;
+  status: RespondentSession["status"];
+  modality: "voice" | "text";
+  language: string;
+  context?: {
+    respondent_first_name?: string | null;
+    company_name?: string | null;
+    admin_name?: string | null;
+    topic?: string | null;
+    est_minutes?: number | null;
+    modality?: "voice" | "text" | null;
+  };
 }
 
-// message === null on the opening call — the interviewer speaks first.
-export async function takeTurn(
-  token: string,
-  message: string | null,
-  turnIndex: number,
-): Promise<TurnResult> {
-  void token; void message; // real impl: POST /by-token/{token}/turn {message}
-  const idx = Math.min(turnIndex, SCRIPT.length - 1);
-  // ~4 min of elapsed conversation per exchange, for the pause-offer threshold.
-  const elapsed = Math.min(idx * 4.5, 24);
+const clean = (v?: string | null) => (v == null ? undefined : v);
+
+export async function getSession(token: string): Promise<RespondentSession> {
+  const raw = await api<RawSession>(`/api/sessions/by-token/${encodeURIComponent(token)}`);
+  const c = raw.context;
   return {
-    reply: SCRIPT[idx],
-    turn_index: idx,
-    elapsed_minutes: Math.round(elapsed * 10) / 10,
-    should_offer_pause: idx >= 4,
+    id: raw.id,
+    status: raw.status,
+    modality: raw.modality,
+    language: raw.language,
+    context: c
+      ? {
+          respondent_name: clean(c.respondent_first_name),
+          company_name: clean(c.company_name),
+          admin_name: clean(c.admin_name),
+          interview_topic: clean(c.topic),
+          est_minutes: c.est_minutes ?? undefined,
+          modality: c.modality ?? undefined,
+        }
+      : undefined,
   };
+}
+
+// message === null on the opening call — the interviewer speaks first. The reply is
+// whatever the live turn engine returns; there is no fallback.
+export async function takeTurn(token: string, message: string | null): Promise<TurnResult> {
+  return api<TurnResult>(`/api/sessions/by-token/${encodeURIComponent(token)}/turn`, {
+    method: "POST",
+    body: JSON.stringify({ message }),
+  });
 }
 
 export async function pauseSession(
   token: string,
-): Promise<{ status: "paused"; resumes_on: string }> {
-  void token; // real impl: POST /by-token/{token}/pause
-  return { status: "paused", resumes_on: "same link" };
+): Promise<{ status: string; resumes_on: string }> {
+  return api(`/api/sessions/by-token/${encodeURIComponent(token)}/pause`, { method: "POST" });
 }
 
-// Consent copy assembled from prompts/personas/consent-landing.md with merge fields
-// filled. The locked promises here are kept by the interviewer at open/close.
-export function consentCopy(ctx: SessionContext) {
-  const modality = ctx.modality === "voice" ? "voice call" : "chat";
+// Consent copy assembled from prompts/personas/consent-landing.md with whatever merge
+// fields the session provides; missing fields degrade to neutral, honest phrasing
+// (no fabricated names). The locked promises are kept by the interviewer at open/close.
+export function consentCopy(session: RespondentSession) {
+  const ctx = session.context ?? {};
+  const name = ctx.respondent_name?.trim() || "there";
+  const company = ctx.company_name?.trim();
+  const admin = ctx.admin_name?.trim();
+  const topic = ctx.interview_topic?.trim() || "your work";
+  const minutes = ctx.est_minutes ?? 20;
+  const modality = (ctx.modality ?? session.modality) === "voice" ? "voice call" : "chat";
+
+  const askedBy =
+    admin && company
+      ? `${admin} at ${company} asked ${brand.product_name}`
+      : company
+        ? `${company} asked ${brand.product_name}`
+        : `${brand.product_name} was asked`;
+
   return {
-    heading: `A quick, honest conversation about ${ctx.interview_topic}`,
-    intro: `Hi ${ctx.respondent_name} — thanks for being here. ${ctx.admin_name} at ${ctx.company_name} asked ${brand.product_name} to understand how the work really happens, and your view matters because you're the one who does it. This takes about ${ctx.est_minutes} minutes, and you're in control the whole way.`,
+    heading: `A quick, honest conversation about ${topic}`,
+    intro: `Hi ${name} — thanks for being here. ${askedBy} to understand how the work really happens, and your view matters because you're the one who does it. This takes about ${minutes} minutes, and you're in control the whole way.`,
     whatItIs: [
       `It's a ${modality} about how your work actually flows — the real version, not the tidy one.`,
       "There are no right answers, and nothing to prepare.",
@@ -119,6 +127,8 @@ export function consentCopy(ctx: SessionContext) {
     startAction: "I'm ready — start the conversation",
     consentFinePrint:
       "By starting, you consent to the recording and summary described above. You can stop at any time.",
-    modality,
+    name,
+    minutes,
+    hasContext: Boolean(session.context),
   };
 }

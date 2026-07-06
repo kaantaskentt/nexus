@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, Pause, SendHorizontal, Check, RefreshCw } from "lucide-react";
+import { Lock, Pause, SendHorizontal, Check, RefreshCw, WifiOff } from "lucide-react";
 import brand from "@/lib/brand";
 import { BrandMark } from "@/components";
 import {
@@ -11,12 +11,14 @@ import {
   pauseSession,
   consentCopy,
   type RespondentSession,
-  type SessionContext,
 } from "@/lib/respondent";
 
-type Phase = "loading" | "consent" | "chat" | "paused";
+type Phase = "loading" | "load_error" | "consent" | "chat" | "paused";
 type Msg = { role: "interviewer" | "respondent"; text: string };
 
+// The interviewee's live conversation. Per Kaan's P0 directive: every reply comes from
+// the real turn engine — there is no scripted fallback. A backend failure shows an
+// honest "connection lost, progress saved" state and a retry, never a fake reply.
 export function InterviewClient({ token }: { token: string }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [session, setSession] = useState<RespondentSession | null>(null);
@@ -24,35 +26,46 @@ export function InterviewClient({ token }: { token: string }) {
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const [offerPause, setOfferPause] = useState(false);
-  const turns = useRef(0); // interviewer replies received so far
+  const [turnError, setTurnError] = useState(false);
+  const lastMessage = useRef<string | null>(null); // for honest retry, not a fallback
   const scroller = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    getSession(token).then((s) => {
-      setSession(s);
-      setPhase("consent");
-    });
-  }, [token]);
+  function loadSession() {
+    setPhase("loading");
+    getSession(token)
+      .then((s) => {
+        setSession(s);
+        setPhase("consent");
+      })
+      .catch(() => setPhase("load_error"));
+  }
+
+  useEffect(loadSession, [token]);
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
-  }, [messages, typing]);
+  }, [messages, typing, turnError]);
 
+  // One turn against the real engine. On failure: surface the error, keep the message
+  // for retry, and NEVER synthesize a reply.
   async function interviewerTurn(message: string | null) {
+    lastMessage.current = message;
+    setTurnError(false);
     setTyping(true);
-    const [result] = await Promise.all([
-      takeTurn(token, message, turns.current),
-      new Promise((r) => setTimeout(r, 650)), // brief "typing" beat
-    ]);
-    turns.current += 1;
-    setTyping(false);
-    setMessages((m) => [...m, { role: "interviewer", text: result.reply }]);
-    setOfferPause(result.should_offer_pause);
+    try {
+      const result = await takeTurn(token, message);
+      setMessages((m) => [...m, { role: "interviewer", text: result.reply }]);
+      setOfferPause(result.should_offer_pause);
+    } catch {
+      setTurnError(true);
+    } finally {
+      setTyping(false);
+    }
   }
 
   async function start() {
     setPhase("chat");
-    await interviewerTurn(null); // interviewer speaks first
+    await interviewerTurn(null); // interviewer speaks first (opening call)
   }
 
   async function send() {
@@ -65,11 +78,17 @@ export function InterviewClient({ token }: { token: string }) {
   }
 
   async function pause() {
-    await pauseSession(token);
+    try {
+      await pauseSession(token);
+    } catch {
+      /* pausing is best-effort; the same link resumes regardless */
+    }
     setPhase("paused");
   }
 
-  if (phase === "loading" || !session) {
+  const ctx = session?.context;
+
+  if (phase === "loading") {
     return (
       <Shell>
         <div className="flex h-64 items-center justify-center text-ink-faint">Loading…</div>
@@ -77,25 +96,47 @@ export function InterviewClient({ token }: { token: string }) {
     );
   }
 
+  if (phase === "load_error" || !session) {
+    return (
+      <Shell>
+        <div className="mx-auto max-w-md py-16 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-surface-raised text-ink-faint">
+            <WifiOff className="h-5 w-5" strokeWidth={1.75} />
+          </div>
+          <h1 className="font-display text-2xl text-ink">We couldn&apos;t open your conversation</h1>
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            The link may have expired, or the connection dropped. Nothing you&apos;ve shared is
+            lost — try again in a moment, and you&apos;ll pick up where you left off.
+          </p>
+          <button
+            onClick={loadSession}
+            className="mt-6 inline-flex items-center gap-2 rounded-lg border border-line-strong px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-surface-raised"
+          >
+            <RefreshCw className="h-4 w-4" strokeWidth={1.75} /> Try again
+          </button>
+        </div>
+      </Shell>
+    );
+  }
+
   if (phase === "paused") {
-    const ctx = session.context;
     return (
       <Shell>
         <div className="mx-auto max-w-md py-16 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
-            <Pause className="h-5 w-5" strokeWidth={1.75} />
+            <Check className="h-5 w-5" strokeWidth={2} />
           </div>
-          <h1 className="font-display text-2xl text-ink">Paused — no rush</h1>
+          <h1 className="font-display text-2xl text-ink">Welcome back whenever you&apos;re ready</h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-            Your conversation is saved. Come back to this same link whenever it suits you,
-            {ctx.respondent_name ? ` ${ctx.respondent_name}` : ""} — you&apos;ll pick up right
+            Your conversation is saved. Come back to this same link anytime
+            {ctx?.respondent_name ? `, ${ctx.respondent_name}` : ""} — you&apos;ll pick up right
             where you left off.
           </p>
           <button
             onClick={() => setPhase("chat")}
-            className="mt-6 inline-flex items-center gap-2 rounded-lg border border-line-strong px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-surface-raised"
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90"
           >
-            <RefreshCw className="h-4 w-4" strokeWidth={1.75} /> Resume now
+            <RefreshCw className="h-4 w-4" strokeWidth={1.75} /> Pick up where I left off
           </button>
         </div>
       </Shell>
@@ -105,20 +146,21 @@ export function InterviewClient({ token }: { token: string }) {
   if (phase === "consent") {
     return (
       <Shell>
-        <ConsentLanding ctx={session.context} onStart={start} />
+        <ConsentLanding session={session} onStart={start} />
       </Shell>
     );
   }
 
   // chat
+  const topic = ctx?.interview_topic ?? "your work";
+  const minutes = ctx?.est_minutes ?? 20;
+
   return (
     <Shell>
       <div className="flex h-[calc(100vh-4rem)] flex-col">
         <div className="flex items-center justify-between border-b border-line pb-3">
           <div>
-            <div className="font-display text-lg text-ink">
-              About {session.context.interview_topic}
-            </div>
+            <div className="font-display text-lg text-ink">About {topic}</div>
             <div className="text-xs text-ink-faint">
               A relaxed chat · you&apos;re in control · pause anytime
             </div>
@@ -168,10 +210,24 @@ export function InterviewClient({ token }: { token: string }) {
               </div>
             </div>
           )}
-          {offerPause && !typing && (
+          {turnError && !typing && (
+            <div className="flex gap-2.5">
+              <WifiOff className="mt-1 h-5 w-5 shrink-0 text-ink-faint" strokeWidth={1.75} />
+              <div className="rounded-2xl rounded-tl-sm border border-line bg-surface-raised px-4 py-3 text-sm text-ink-soft">
+                Connection lost — your progress is saved. Nothing you typed is gone.
+                <button
+                  onClick={() => interviewerTurn(lastMessage.current)}
+                  className="mt-2 flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" strokeWidth={1.75} /> Try again
+                </button>
+              </div>
+            </div>
+          )}
+          {offerPause && !typing && !turnError && (
             <p className="pl-8 text-xs text-ink-faint">
-              We&apos;re about {session.context.est_minutes} minutes in — keep going, or pause
-              and resume later on this same link.
+              We&apos;re about {minutes} minutes in — keep going, or pause and resume later on
+              this same link.
             </p>
           )}
         </div>
@@ -228,13 +284,13 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 function ConsentLanding({
-  ctx,
+  session,
   onStart,
 }: {
-  ctx: SessionContext;
+  session: RespondentSession;
   onStart: () => void;
 }) {
-  const c = consentCopy(ctx);
+  const c = consentCopy(session);
   return (
     <div className="py-10">
       <h1 className="font-display text-3xl leading-tight text-ink">{c.heading}</h1>
