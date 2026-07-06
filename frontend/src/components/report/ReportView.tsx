@@ -19,7 +19,7 @@ import {
 import type { Report, Workspace, WorkflowStep } from "@/lib/types";
 import { AppShell, ConfidenceBadge } from "@/components";
 import { scrimFade, drawerSpring } from "@/lib/variants";
-import { WorkflowStepCard } from "./WorkflowStepCard";
+import { WorkflowStepCard, toolLabel } from "./WorkflowStepCard";
 
 export function ReportView({
   workspace,
@@ -344,7 +344,7 @@ function StepDetailDrawer({
             )}
 
             <div className="space-y-3">
-              <DetailBox label="Tool">{step.tool.name}</DetailBox>
+              <DetailBox label="Tool">{toolLabel(step.tool.name)}</DetailBox>
               {step.action && <DetailBox label="Action">{step.action}</DetailBox>}
               {step.input && <DetailBox label="Input">{step.input}</DetailBox>}
               {step.output && <DetailBox label="Output">{step.output}</DetailBox>}

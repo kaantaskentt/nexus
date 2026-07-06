@@ -65,7 +65,9 @@ export function WorkflowStepCard({
         <Field label="Tool">
           <span className="flex items-center gap-2">
             <ToolIcon className="h-4 w-4 shrink-0 text-ink-soft" strokeWidth={1.75} />
-            <span>{step.tool.name}</span>
+            <span className={step.tool.name === "—" ? "text-ink-faint" : ""}>
+              {toolLabel(step.tool.name)}
+            </span>
           </span>
         </Field>
         {step.input && <Field label="Input">{step.input}</Field>}
@@ -86,6 +88,12 @@ export function WorkflowStepCard({
       )}
     </div>
   );
+}
+
+// The compiler emits "—" for a step whose tool it couldn't name. Render that as honest
+// microcopy ("Not captured") rather than a bare dash — truthful and more readable.
+export function toolLabel(name: string): string {
+  return name === "—" ? "Not captured" : name;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
