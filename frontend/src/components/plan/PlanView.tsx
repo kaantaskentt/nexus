@@ -23,6 +23,11 @@ import { AppShell, PlanStateChip, MustHitDot, DiscoveryTag, BrandMark } from "@/
 import { SendInterviewFlow } from "./SendInterviewFlow";
 
 const TRACK: PlanState[] = ["SENT", "OPENED", "IN_PROGRESS", "COMPLETED", "COMPILED"];
+// States that imply the plan cleared approval (footer reads "Approved" even when the
+// live plan carries no approved_by stamp).
+const APPROVED_STATES = new Set<PlanState>([
+  "APPROVED", "SENT", "OPENED", "IN_PROGRESS", "PAUSED", "COMPLETED", "COMPILED",
+]);
 const TRACK_LABEL: Record<string, string> = {
   SENT: "Sent",
   OPENED: "Opened",
@@ -195,6 +200,11 @@ export function PlanView({
                   <span className="inline-flex items-center gap-1.5 text-sm font-medium text-success">
                     <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
                     Approved by {plan.approved_by.name} · {plan.approved_by.at}
+                  </span>
+                ) : APPROVED_STATES.has(state) ? (
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-success">
+                    <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
+                    Approved
                   </span>
                 ) : (
                   <span className="text-sm text-ink-faint">Not yet approved</span>

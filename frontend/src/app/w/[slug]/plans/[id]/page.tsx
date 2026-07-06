@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { get_workspace, get_plan } from "@/lib/mocks";
+import { get_workspace, get_plan } from "@/lib/live";
 import { PlanView } from "@/components/plan/PlanView";
 
 // Interview Plan detail (Phase 3 / A4). Server-fetches the workspace + plan, hands
@@ -11,11 +11,10 @@ export default async function PlanDetailPage({
 }: {
   params: { slug: string; id: string };
 }) {
-  const [workspace, plan] = await Promise.all([
-    get_workspace(params.slug),
-    get_plan(params.id),
-  ]);
-  if (!workspace || !plan) notFound();
+  const workspace = await get_workspace(params.slug);
+  if (!workspace) notFound();
+  const plan = await get_plan(workspace.id, params.id);
+  if (!plan) notFound();
 
   return <PlanView workspace={workspace} plan={plan} />;
 }

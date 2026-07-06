@@ -13,7 +13,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import brand from "@/lib/brand";
-import { list_workspaces, list_plans, list_snapshot_cards } from "@/lib/mocks";
+import { list_workspaces, list_plans, list_snapshot_cards } from "@/lib/live";
 import { BrandMark } from "@/components/BrandMark";
 
 // Workspace picker (A11.5 — no auth v1). Matches the right panel of

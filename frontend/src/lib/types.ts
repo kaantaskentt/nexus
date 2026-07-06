@@ -69,7 +69,8 @@ export interface ClaimRecord {
   subject_id: string | null;
   kind: ClaimKind;
   topic: ClaimTopic;
-  tag: TrustTag;
+  // DIRECTIVE / ADMISSION records carry no trust tag (FOR-TUNC #11) — nullable.
+  tag: TrustTag | null;
   claim_text: string;
   evidence_quote: string | null;
   evidence_ts: string | null;

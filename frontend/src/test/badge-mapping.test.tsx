@@ -6,7 +6,6 @@ import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { PainBandChip } from "@/components/PainBandChip";
 import { EvidenceQuoteCard } from "@/components/EvidenceQuoteCard";
 import { PlanStateChip } from "@/components/PlanStateChip";
-import { list_claims } from "@/lib/mocks";
 import brand from "@/lib/brand";
 import type { PainBand, PlanState, TrustTag } from "@/lib/types";
 
@@ -134,14 +133,27 @@ describe("EvidenceQuoteCard", () => {
 });
 
 // ── Quarantine deny-by-default (non-negotiable #4) ──────────────────────────
-describe("client-visible claims fixture", () => {
-  it("contains no quarantined or sentiment-flagged records", async () => {
-    const claims = await list_claims("ws-bee-goddess");
-    expect(claims.length).toBeGreaterThan(0);
-    for (const c of claims) {
-      expect(c.sentiment_flag).toBe(false);
-      expect((c as { quarantined?: boolean }).quarantined ?? false).toBe(false);
-    }
+// The DB view excludes quarantined rows; the frontend guard is that even if a
+// sentiment/approach_note-bearing record reached a component, none of that text renders.
+describe("quarantine never renders", () => {
+  it("EvidenceQuoteCard renders neither approach_note nor sentiment text", () => {
+    const secret = "SENSITIVE-APPROACH-NOTE";
+    const { container } = render(
+      <EvidenceQuoteCard
+        claim={
+          {
+            claim_text: "a quote",
+            evidence_quote: "a quote",
+            evidence_ts: "1",
+            is_paraphrased: false,
+            tag: "CLAIMED",
+            approach_note: secret,
+            sentiment_flag: true,
+          } as never
+        }
+      />,
+    );
+    expect(container.textContent).not.toContain(secret);
   });
 });
 

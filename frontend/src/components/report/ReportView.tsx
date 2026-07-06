@@ -47,11 +47,19 @@ export function ReportView({
         <h1 className="mt-4 font-display text-4xl text-ink">Post-Interview Report</h1>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-ink-soft">
           <span>{workspace.name}</span>
-          <span className="text-line-strong">·</span>
-          <span>{report.interviewee_name} — {report.interviewee_role}</span>
+          {report.interviewee_name && (
+            <>
+              <span className="text-line-strong">·</span>
+              <span>
+                {report.interviewee_name}
+                {report.interviewee_role ? ` — ${report.interviewee_role}` : ""}
+              </span>
+            </>
+          )}
           <span className="inline-flex items-center gap-1.5 rounded-chip bg-success-soft px-2.5 py-1 text-xs font-medium text-tag-verified">
             <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            {report.status_label} · {report.duration_min} min
+            {report.status_label}
+            {report.duration_min > 0 ? ` · ${report.duration_min} min` : ""}
           </span>
         </div>
 
@@ -134,24 +142,32 @@ export function ReportView({
             </Panel>
 
             <Panel icon={Star} title="Interview Quality">
-              <div className="flex items-baseline justify-between">
-                <span className="font-semibold text-ink">
-                  {report.quality.objectives_captured} / {report.quality.objectives_total} objectives captured
-                </span>
-                <span className="text-sm font-semibold text-ink-soft">{report.quality.percent}%</span>
-              </div>
-              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface-raised">
-                <div className="h-2 rounded-full bg-success" style={{ width: `${report.quality.percent}%` }} />
-              </div>
+              {/* Show the objective count + bar only when objectives were scored;
+                  otherwise the assessment is qualitative (a headline). */}
+              {report.quality.objectives_total > 0 && (
+                <>
+                  <div className="flex items-baseline justify-between">
+                    <span className="font-semibold text-ink">
+                      {report.quality.objectives_captured} / {report.quality.objectives_total} objectives captured
+                    </span>
+                    <span className="text-sm font-semibold text-ink-soft">{report.quality.percent}%</span>
+                  </div>
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface-raised">
+                    <div className="h-2 rounded-full bg-success" style={{ width: `${report.quality.percent}%` }} />
+                  </div>
+                </>
+              )}
               {report.quality.partial_dodged > 0 && (
                 <p className="mt-3 flex items-center gap-1.5 text-sm text-ink-soft">
                   <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                   {report.quality.partial_dodged} marked partial-dodged
                 </p>
               )}
-              <p className="mt-3 rounded-card border border-line bg-surface p-3 text-sm italic text-ink-soft">
-                “{report.quality.note}”
-              </p>
+              {report.quality.note && (
+                <p className="mt-3 rounded-card border border-line bg-surface p-3 text-sm leading-relaxed text-ink-soft">
+                  {report.quality.note}
+                </p>
+              )}
             </Panel>
           </aside>
         </div>

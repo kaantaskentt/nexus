@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { get_workspace, list_snapshot_cards, list_claims } from "@/lib/mocks";
+import { get_workspace, list_snapshot_cards, list_claims } from "@/lib/live";
 import { SnapshotView } from "@/components/snapshot/SnapshotView";
 
 // Company Snapshot (Phase 3 / A3). Server-fetches the workspace, the renderer's

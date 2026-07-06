@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { get_workspace, list_plans } from "@/lib/mocks";
+import { get_workspace, list_plans } from "@/lib/live";
 import { AppShell, PlanStateChip } from "@/components";
 
 // Interview Plans index — one row per plan, state rendered from the lifecycle
