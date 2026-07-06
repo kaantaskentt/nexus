@@ -36,3 +36,4 @@ The CEO-private snapshot may carry synthesized sensitive observations. But worke
 5. **Perception gaps never render here** — report-only.
 6. **Coarse pain bands only**, never decimals.
 7. **Append-only, post-round.** Render the store; never mutate it.
+8. **No em-dashes in rendered copy.** Client-facing card, why-line, and sidebar text uses commas/colons/periods, never the em-dash (glossary: client-facing copy style). Paraphrased evidence is ours to phrase; only a verbatim CEO quote keeps its original punctuation.

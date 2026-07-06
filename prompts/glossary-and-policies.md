@@ -46,6 +46,9 @@ No verbatim attributed quotes from employee interviews on any client-visible sur
 ### Nothing reaches employees without the gate (Non-negotiables 2 & 3)
 Objectives shape questions, never statements. Nothing the CEO said ever reaches an interviewee. Nothing is sent to any employee without explicit human approval.
 
+### Client-facing copy style
+Copy a human reads (invite/consent, interviewer lines, snapshot cards, report + SOP prose) uses **no em-dashes** — the em-dash is the AI tell (Kaan). Recast with a comma, colon, semicolon, or two sentences; never the tidy em-dash. Exempt: verbatim quotes and transcripts (that's data — hedges and dashes are the respondent's, not ours), and this file's own prompt scaffolding (comments, section headers). Applies to every renderer and every human-experience copy file.
+
 ### Conflict resolution (F21 — Emre owns the final policy)
 Contradictions are linked as DISPUTED; both records survive; nothing is resolved automatically. Provisional precedence until Emre's policy lands: episodic beats habitual, firsthand beats secondhand. Replace on arrival — diff, don't silently overwrite.
 
