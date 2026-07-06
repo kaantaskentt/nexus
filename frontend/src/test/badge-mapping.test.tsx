@@ -49,9 +49,9 @@ describe("ConfidenceBadge", () => {
     expect(container.textContent).toBe("Reported");
     expect(container.textContent).not.toContain("Low");
   });
-  it("scraped reads 'From web' (not verified)", () => {
+  it("scraped reads 'Scraped' (letter-exact to glossary, not verified)", () => {
     const { container } = render(<ConfidenceBadge confidence="scraped" />);
-    expect(container.textContent).toBe("From web");
+    expect(container.textContent).toBe("Scraped");
   });
 });
 

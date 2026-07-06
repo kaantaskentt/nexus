@@ -4,37 +4,37 @@ import { motion } from "framer-motion";
 import type { Confidence } from "@/lib/types";
 import { cn } from "@/lib/cn";
 
-// Confidence as a soft-tinted pill. Four glossary labels only (glossary line 19 /
-// badge-mapping-spec): verified (independent agreement, F35), high (single confirmed
-// source), reported (claimed, one voice), scraped (~20% reference weight, A2). The
-// graded "Medium/Low confidence" scale is dropped. A GUESS never upgrades and never
-// renders as a distinct lower tier: it maps to "reported" on every path (non-negotiable
-// #1), so a raw `guess` confidence renders identically to `reported`.
+// Confidence as a soft-tinted pill. Four glossary labels only, letter-exact to the
+// glossary (line 19) / badge-mapping-spec: Verified, High, Reported, Scraped. The graded
+// "Medium/Low confidence" scale is dropped. Each carries a plain-language tooltip (the
+// ruled strings). A GUESS never upgrades and never renders as a distinct lower tier: it
+// maps to "reported" on every path (non-negotiable #1), so a raw `guess` confidence
+// renders identically to `reported`, tooltip included.
 const MAP: Record<Confidence, { label: string; pill: string; title: string }> = {
   verified: {
     label: "Verified",
     pill: "bg-success-soft text-tag-verified",
-    title: "Independent agreement across sources",
+    title: "Confirmed by independent sources",
   },
   high: {
     label: "High",
     pill: "bg-success-soft text-tag-confirmed",
-    title: "Confirmed by a single firsthand source",
+    title: "Confirmed by a single source",
   },
   reported: {
     label: "Reported",
     pill: "bg-pain-moderate text-tag-guess",
-    title: "Claimed by one voice, not yet corroborated",
+    title: "Stated in an interview, not yet confirmed",
   },
   guess: {
     label: "Reported",
     pill: "bg-pain-moderate text-tag-guess",
-    title: "A hedged estimate, surfaced no stronger than a claim and never upgraded",
+    title: "Stated in an interview, not yet confirmed",
   },
   scraped: {
-    label: "From web",
+    label: "Scraped",
     pill: "bg-surface-raised text-ink-faint",
-    title: "Scraped reference, about 20% weight, not verified",
+    title: "From the website scan, not yet verified",
   },
 };
 
