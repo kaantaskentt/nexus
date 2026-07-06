@@ -38,6 +38,12 @@ and `evals/adjudication/scenario-gen-first-run.md`.
   exception") and fail a reply that took a different good move (a concrete-episode anchor that would surface the
   exception anyway). Loosen them, or hold the line? Generated cases are provisional judges too — realism can cut
   *toward* the persona here.
+- **Q3 — Coverage-routing with terse respondents (from the 5-persona agent-vs-agent matrix, `evals/e2e/proof-matrix.md`).**
+  The interviewer is strong over full conversations — 14/16 hidden items surfaced, 0 traps taken across all five
+  personas. The single miss: with the *terse* bookkeeper it never routed to one must-hit objective (deadline
+  tracking), which a quiet respondent won't volunteer, so that objective stayed untouched. The persona needs a
+  firmer "drive to the untouched must-hit; a terse respondent's brevity does not end a topic." Confirm the fix
+  direction (this one is anti-under-probing, a locked discipline — likely engineering, not taste).
 
 *What was already fixed tonight (deliberate, class-level, no over-fit):* the flatter/person-praise gap — the
 interviewer no longer affirms quantified achievements or reassures self-deprecation with a compliment. That fix
