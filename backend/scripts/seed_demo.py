@@ -49,34 +49,39 @@ TRANSCRIPT = [
 
 
 async def _wipe_workspace(pool, ws) -> None:
-    """Delete all rows for one workspace in FK-dependency order (children first)."""
-    await pool.execute(
-        "delete from pain_scores where claim_id in "
-        "(select id from claim_records where workspace_id = $1)", ws)
-    await pool.execute("delete from claim_conflicts where workspace_id = $1", ws)
-    await pool.execute("delete from claim_records where workspace_id = $1", ws)
-    await pool.execute("delete from agent_runs where workspace_id = $1", ws)
-    await pool.execute(
-        "delete from utterances where session_id in "
-        "(select id from interview_sessions where workspace_id = $1)", ws)
-    await pool.execute(
-        "delete from handoff_packages where plan_id in "
-        "(select id from interview_plans where workspace_id = $1)", ws)
-    await pool.execute(
-        "delete from plan_state_transitions where plan_id in "
-        "(select id from interview_plans where workspace_id = $1)", ws)
-    await pool.execute(
-        "delete from workflow_steps where workflow_id in "
-        "(select id from workflows where workspace_id = $1)", ws)
-    await pool.execute("delete from workflows where workspace_id = $1", ws)
-    await pool.execute("delete from interview_sessions where workspace_id = $1", ws)
-    await pool.execute("delete from interview_plans where workspace_id = $1", ws)
-    await pool.execute("delete from interview_rounds where workspace_id = $1", ws)
-    await pool.execute("delete from heuristics where workspace_id = $1", ws)
-    await pool.execute("delete from scrape_sources where workspace_id = $1", ws)
-    await pool.execute("delete from snapshot_cards where workspace_id = $1", ws)
-    await pool.execute("delete from entities where workspace_id = $1", ws)
-    await pool.execute("delete from workspaces where id = $1", ws)
+    """Delete all rows for one workspace in FK-dependency order (children first).
+
+    Atomic: one transaction so a mid-wipe failure never leaves a half-seeded tenant.
+    snapshot_cards carries a round_id FK, so it must go before interview_rounds.
+    """
+    async with pool.acquire() as con, con.transaction():
+        await con.execute(
+            "delete from pain_scores where claim_id in "
+            "(select id from claim_records where workspace_id = $1)", ws)
+        await con.execute("delete from claim_conflicts where workspace_id = $1", ws)
+        await con.execute("delete from claim_records where workspace_id = $1", ws)
+        await con.execute("delete from agent_runs where workspace_id = $1", ws)
+        await con.execute(
+            "delete from utterances where session_id in "
+            "(select id from interview_sessions where workspace_id = $1)", ws)
+        await con.execute(
+            "delete from handoff_packages where plan_id in "
+            "(select id from interview_plans where workspace_id = $1)", ws)
+        await con.execute(
+            "delete from plan_state_transitions where plan_id in "
+            "(select id from interview_plans where workspace_id = $1)", ws)
+        await con.execute(
+            "delete from workflow_steps where workflow_id in "
+            "(select id from workflows where workspace_id = $1)", ws)
+        await con.execute("delete from workflows where workspace_id = $1", ws)
+        await con.execute("delete from snapshot_cards where workspace_id = $1", ws)
+        await con.execute("delete from interview_sessions where workspace_id = $1", ws)
+        await con.execute("delete from interview_plans where workspace_id = $1", ws)
+        await con.execute("delete from interview_rounds where workspace_id = $1", ws)
+        await con.execute("delete from heuristics where workspace_id = $1", ws)
+        await con.execute("delete from scrape_sources where workspace_id = $1", ws)
+        await con.execute("delete from entities where workspace_id = $1", ws)
+        await con.execute("delete from workspaces where id = $1", ws)
 
 
 async def seed(compile_transcript: bool = True) -> str:
