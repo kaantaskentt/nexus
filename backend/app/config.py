@@ -39,6 +39,15 @@ class Settings(BaseSettings):
     # sessions, and the route refuses entirely unless this is on).
     eval_mode: bool = False
 
+    # Computed coverage-routing (task #12 / morning-packet §5). When on, the turn engine
+    # audits objective coverage server-side each turn and hard-gates the close on any
+    # untouched must-hit. Default OFF: the A/B (evals/e2e/proof-matrix.md) showed the
+    # interviewer already covers explicit must-hit objectives at baseline (3/3), so the
+    # per-turn classifier earns no measured gain on the motivating cases yet. The real
+    # lever is plan-objective granularity, not turn-engine coverage. Flip on when an eval
+    # shows a genuine untouched-must-hit-OBJECTIVE gap, or to drive a coverage UI.
+    coverage_routing: bool = False
+
     # Shared secret VAPI sends on custom-LLM + webhook requests; when set, the voice
     # routes reject calls without it. Empty in dev.
     voice_shared_secret: str = ""

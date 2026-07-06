@@ -104,6 +104,21 @@ the highest-value UNSATISFIED must-hit before close." **Proposal:** compute cove
 (drive one direct probe first). Engineering, not persona prose (Emre's Q1/Q2 are the separate technique calls). Staged
 with the two data points; nobody builds it at 4am.
 
+**UPDATE (July 6, task #12, evals-1 — BUILT + A/B'd on the real engine; shipping DORMANT, and the proposal was
+misdiagnosed).** The mechanism is built end to end (`coverage_tracker` seat + `backend/app/pipeline/coverage.py`,
+migration 0008, wired behind `config.coverage_routing`, gate logic unit-tested 6/6, fires live at ~3.4s/turn) — so
+feasibility is settled: it works. But the A/B (full matrix + numbers in `evals/e2e/proof-matrix.md`) shows it does
+**not** close the motivating misses, because h-bk-3 and ag-2 are **hidden knowledge, not stated objectives.** A gate
+that computes coverage of the *objectives* cannot force a non-objective to surface. And when the missed item is made
+an **explicit must-hit objective**, the **baseline interviewer already routes to it and covers it (3/3, both runs)** —
+the coverage-on version added a per-turn model call for no gain and was noisier (one run took 2 traps). So: shipped OFF
+by default (built, tested, dormant), not wired into the live product on an unproven benefit. **The real lever is
+plan-objective granularity** — have the plan generator emit the shadow-tool / deadline / scope-creep dimensions as
+explicit sub-objectives (the baseline already covers explicit objectives). That is the smallest feasible next step, and
+it is plan-generator work, not turn-engine work. **Decisions for you:** (a) accept dormant-ship + retarget to plan
+granularity, and (b) a taste heads-up — when `coverage_routing` is on, the gate makes the interviewer more insistent
+about must-hits before it will close; that is a client-facing feel change, Kaan's call whether to ever activate it.
+
 ## 4b. Live demo material — the interviewer produces meeting-worthy findings from a sim
 
 The second-round Burak interview (bee-goddess-demo, driven this session) compiled into **20 real findings** via

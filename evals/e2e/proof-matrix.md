@@ -51,6 +51,49 @@ a direct probe before close" mechanism (model-side coverage tracking, ARCHITECTU
 computed). Correcting my earlier optimism: the fix is a real *partial* win (traps, timeline probe), NOT a close of h-bk-3.
 Routed to the morning review as the standing coverage-routing item. Foreman mined clean (3/3, 0 traps, no new case).
 
+## Computed coverage-routing (task #12 / morning-packet §5) — BUILT, A/B'd, shipped OFF by default
+
+The §5 proposal: compute objective coverage server-side each turn (satisfied/partial/untouched) and
+hard-gate the close on any untouched must-hit, driving one direct probe first. Built it in full:
+`backend/app/pipeline/coverage.py` (a `coverage_tracker` classifier seat, migration 0008), wired into the
+turn engine behind `config.coverage_routing`, deterministic gate logic unit-tested (`tests/test_coverage.py`,
+6/6). It computes and fires live (agent_runs: `coverage_tracker` ok, ~3.4s/turn).
+
+**But the A/B says it does not fix the motivating misses — and the proposal misdiagnosed them.** Same
+container DB, two servers (old code 8002 = baseline, new code 8001 = coverage on), all judged by the same
+harness this session:
+
+*General runs (stage2 handoffs — where the miss is HIDDEN knowledge, not a stated objective):*
+
+| Persona | H2 / target | baseline | coverage-on |
+|---|---|---|---|
+| bookkeeper (terse) | h-bk-3 deadline-tracking (hidden) | untouched, untouched (0/2 surfaced) | untouched, partial, untouched (1/3 surfaced) |
+| agency (polished) | ag-2 scope-creep (hidden) | untouched | untouched |
+
+*Targeted A/B (deadline-tracking made an EXPLICIT must-hit OBJECTIVE — what the gate is actually built for):*
+
+| Run | probed the objective | H2 surfaced | h-bk-3 | hidden | traps |
+|---|---|---|---|---|---|
+| baseline #1 | yes | yes | confirmed | 3/3 | 0 |
+| baseline #2 | yes | yes | confirmed | 3/3 | 0 |
+| coverage-on #1 | yes | no | untouched | 2/3 | 0 |
+| coverage-on #2 | yes | yes | confirmed | 1/3 | **2** |
+
+**Root cause (evidence, not vibes):** h-bk-3 and ag-2 are *hidden-knowledge* items the plan never names as
+objectives (by design — objectives shape questions, hidden knowledge is what good probing surfaces). A gate
+that computes coverage of the *stated objectives* cannot force a non-objective to surface. And the moment you
+DO make the item an explicit must-hit objective, the **baseline interviewer already routes to it and covers it
+(3/3, both runs)** — the persona's in-head "track coverage silently / route to the highest-value unsatisfied
+objective" (stage7-interviewer.md) already works for explicit objectives. So the computed classifier earns no
+gain here, costs a model call per turn, and in this small sample was noisier (one coverage run took 2 traps).
+
+**Disposition:** ship the mechanism dormant (built, tested, `coverage_routing=0`), not wired into the live
+product on an unproven benefit (same discipline the packet's F38 wiring used). **The real lever for the
+observed gap is plan-objective granularity** — have the plan generator emit the shadow-tool / deadline /
+scope-creep dimensions as explicit sub-objectives; the baseline already covers explicit objectives, so richer
+objectives close the gap without a turn-engine classifier. That is the smallest feasible next step, and it is
+plan-generator work (with Emre's Q1/Q2 as the parallel technique calls), not turn-engine work.
+
 ## Note for the FULL E2E (#15)
 The agent-vs-agent driver exercises the synchronous turn engine only. The full
 journey (compile → Phase-6 fan-out → report) also needs the QUEUE WORKER running (`python -m app.worker`) — per

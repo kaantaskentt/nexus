@@ -12,11 +12,11 @@ Either way the same rules hold:
 import json
 from datetime import datetime, timezone
 
-from ..config import REPO_ROOT
+from ..config import REPO_ROOT, get_settings
 from ..db import get_pool
 from ..llm import client, get_agent_config, load_prompt, run_chat
 from ..queue import handles
-from . import handoff
+from . import coverage, handoff
 
 PAUSE_OFFER_MINUTES = 20
 _START_NUDGE = "(The respondent has joined and is ready to begin.)"
@@ -39,6 +39,12 @@ async def _load_package(plan_id) -> dict:
     if row is None:
         return await handoff.build_handoff_package(str(plan_id))
     return json.loads(row["package"]) if isinstance(row["package"], str) else row["package"]
+
+
+def _package_objectives(package: dict) -> list:
+    """Objectives live under `objectives` in a real handoff (handoff.py) but under `topics`
+    in the eval-bootstrap handoff shape — accept either so coverage runs on both paths."""
+    return package.get("objectives") or package.get("topics") or []
 
 
 def _messages_from(utterances: list[dict]) -> list[dict]:
@@ -95,6 +101,26 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
         f"Runtime status: about {int(elapsed_min)} minute(s) elapsed. Time budget "
         f"{package.get('time_budget_minutes', 30)} minutes."
     )
+
+    # Computed coverage (V3): audit the objectives against the transcript server-side and
+    # hand the interviewer an authoritative satisfied/partial/untouched map, so a must-hit
+    # the respondent never volunteers can't quietly go untouched to close. Fail-open — a
+    # None map just leaves the persona's own (model-side) coverage in charge. Default OFF
+    # (config.coverage_routing): the A/B showed the persona already covers explicit
+    # must-hit objectives at baseline, so this per-turn classifier is dormant until an
+    # eval justifies its latency (see config comment + proof-matrix.md).
+    cov = None
+    if get_settings().coverage_routing:
+        cov = await coverage.compute_coverage(
+            _package_objectives(package),
+            utterances,
+            workspace_id=str(session["workspace_id"]),
+            session_id=session_id,
+        )
+        cov_block = coverage.build_coverage_block(cov)
+        if cov_block:
+            extra_system = f"{extra_system}\n\n{cov_block}"
+
     return {
         "session": session,
         "messages": _messages_from(utterances),
@@ -102,6 +128,7 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
         "started_at": started_at,
         "elapsed_min": elapsed_min,
         "package": package,
+        "coverage": cov,
     }
 
 
@@ -124,11 +151,12 @@ async def _finalize_turn(ctx: dict, reply: str) -> dict:
         **prior,
         "turn_count": prior.get("turn_count", 0) + 1,
         "elapsed_minutes": round(elapsed_min, 1),
-        # Placeholder: a static echo of the package objectives, NOT computed
-        # satisfied/partial/untouched coverage. The model re-derives coverage from the
-        # replayed transcript each turn (correct v1). Engine-side coverage computation
-        # for routing/UI/enforcement would land here later.
-        "objectives": ctx["package"].get("objectives", []),
+        "objectives": _package_objectives(ctx["package"]),
+        # Computed coverage map (satisfied/partial/untouched per objective) as of this
+        # turn — the engine-side replacement for the old static objectives echo. None when
+        # the auditor failed (fail-open) or there were no objectives; consumed by the next
+        # turn's routing gate and available to the report/UI.
+        "coverage": ctx.get("coverage"),
         "pause_offered": prior.get("pause_offered", False) or should_offer_pause,
         "last_turn_at": datetime.now(timezone.utc).isoformat(),
     }

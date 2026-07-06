@@ -66,7 +66,10 @@ docs/         MERGE_PLAN (spec), ENVIRONMENT, FOR-TUNC (deviation log), EVALS,
 ## Design notes / known v1 shapes
 
 - `resumable_state` on sessions holds runtime state AND the post-compile quality score;
-  coverage tracking is model-side (re-derived from replayed transcript) — the
-  `objectives` field is a static echo, marked as placeholder for future computed coverage.
+  coverage tracking is model-side (re-derived from replayed transcript) by default. A
+  computed server-side coverage map (`pipeline/coverage.py`, `coverage_tracker` seat) is
+  built and unit-tested but ships dormant behind `config.coverage_routing` — the A/B found
+  the persona already covers explicit must-hit objectives, so it earns no per-turn model
+  call yet (evals/e2e/proof-matrix.md). `resumable_state.coverage` holds the map when on.
 - Model tiering lives in `agent_configs` (strong model in every demanding seat — EK #1).
 - F21 conflict precedence is provisional in `precedence_lean()` pending Emre's policy.
