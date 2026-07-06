@@ -31,3 +31,24 @@ remain by design). Nothing else moved.
 
 **Follow-up:** the "annotations can't be retracted" gap is logged as a V3 product proposal in
 `evals/adjudication/morning-review-packet.md` §5.
+
+## 2026-07-06 — hide the #18 acceptance-test tenant from the picker (qa-acceptance-test)
+
+**Why:** #18 drove the real admin New-Company journey on prod, which creates an
+`is_demo=false, is_internal=false` tenant that renders in the workspace picker next to
+Bee Goddess. There is no workspace-delete endpoint. Authorized by team-lead (hide via the
+product's own `is_internal` scaffolding flag, migration 0007 — not deletion; data preserved
+for inspection).
+
+**Target:** `workspaces.slug = 'qa-acceptance-test'` (id `9a792bdc-72aa-42be-863d-5ca2f33843cb`,
+`is_demo=false`).
+
+**Exact statement:**
+```sql
+update workspaces set is_internal = true
+where slug = 'qa-acceptance-test' and is_demo = false and is_internal = false;
+```
+Result: `UPDATE 1`. Post-check: picker query (`is_internal = false`) now returns only
+`bee-goddess-demo` (+ a pre-existing `aurora-atelier`, not created by this task). The test
+tenant's data (29 claims, 14 snapshot cards) is intact for inspection, just hidden from the
+picker. One-off, non-demo test tenant only; never a real client tenant.
