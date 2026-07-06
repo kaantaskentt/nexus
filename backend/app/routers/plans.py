@@ -4,6 +4,7 @@ Transitions are validated server-side; the UI only renders state."""
 from fastapi import APIRouter, HTTPException
 
 from ..db import get_pool
+from ..queue import enqueue
 
 router = APIRouter()
 
@@ -58,4 +59,8 @@ async def transition(plan_id: str, to_state: str, actor: str = "admin", note: st
             actor,
             note,
         )
+    # On approval, build the interviewer's handoff package (deny-by-default: no claim
+    # text, no quarantined records — enforced in handoff.build_handoff_package).
+    if to_state == "APPROVED":
+        await enqueue("build_handoff", {"plan_id": plan_id})
     return {"plan_id": plan_id, "from": from_state, "to": to_state}

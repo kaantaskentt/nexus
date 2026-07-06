@@ -92,3 +92,59 @@ async def run_agent(
             status,
             error,
         )
+
+
+async def run_chat(
+    agent_name: str,
+    messages: list[dict],
+    *,
+    extra_system: str = "",
+    workspace_id: str | None = None,
+    session_id: str | None = None,
+    industry_block: str | None = None,
+    max_tokens: int = 2048,
+) -> str:
+    """Multi-turn variant for the interview turn engine: the prompt file is the
+    system persona, `extra_system` carries the per-interview handoff package, and
+    `messages` is the running conversation. Same audit trail as run_agent."""
+    cfg = await get_agent_config(agent_name)
+    system = load_prompt(cfg["prompt_path"], industry_block)
+    if extra_system:
+        system = f"{system}\n\n{extra_system}"
+    started = time.monotonic()
+    status, error, text = "ok", None, ""
+    usage_in = usage_out = None
+    try:
+        resp = await client().messages.create(
+            model=cfg["model"],
+            max_tokens=max_tokens,
+            system=system,
+            messages=messages,
+        )
+        text = "".join(b.text for b in resp.content if b.type == "text")
+        usage_in, usage_out = resp.usage.input_tokens, resp.usage.output_tokens
+        return text
+    except Exception as e:
+        status, error = "error", str(e)
+        raise
+    finally:
+        pool = await get_pool()
+        await pool.execute(
+            """insert into agent_runs (agent_name, model, prompt_version, workspace_id,
+                   session_id, input_ref, output_ref, retrieval_queries,
+                   input_tokens, output_tokens, latency_ms, status, error)
+               values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)""",
+            agent_name,
+            cfg["model"],
+            cfg["prompt_version"],
+            workspace_id,
+            session_id,
+            json.dumps({"turns": len(messages)}),
+            json.dumps({"chars": len(text)}),
+            json.dumps([]),
+            usage_in,
+            usage_out,
+            int((time.monotonic() - started) * 1000),
+            status,
+            error,
+        )

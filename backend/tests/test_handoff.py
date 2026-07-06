@@ -1,0 +1,76 @@
+"""Handoff builder — the deny-by-default guarantee. A quarantined record or raw
+claim text leaking into the package would breach non-negotiables #2 and #4, so these
+assert the package is built ONLY from permitted fields."""
+
+import json
+
+from app.pipeline.handoff import build_handoff_package
+from tests.conftest import make_workspace
+
+
+async def _make_plan(pool, workspace_id):
+    mission = {
+        "goal": "Understand the returns workflow end to end",
+        "topics": [{"objective": "How returns are processed", "tier": "must_hit"}],
+        "definition_of_done": "One specific returns episode with steps in order",
+        "handling_notes": ["Keep it light — newer employee"],
+        "time_budget_minutes": 25,
+    }
+    return await pool.fetchval(
+        """insert into interview_plans (workspace_id, state, mission, suggested_questions, never_list)
+           values ($1, 'APPROVED', $2, $3, $4) returning id""",
+        workspace_id,
+        json.dumps(mission),
+        json.dumps(["Walk me through the last return you handled."]),
+        json.dumps(["Don't discuss salaries"]),
+    )
+
+
+async def _claim(pool, ws, **over):
+    cols = dict(kind="statement", topic="company_fact", tag="CLAIMED", claim_text="x",
+                evidence_quote=None, approach_note=None, sentiment_flag=False, quarantined=False)
+    cols.update(over)
+    await pool.execute(
+        """insert into claim_records (workspace_id, kind, topic, tag, claim_text,
+             evidence_quote, approach_note, sentiment_flag, quarantined)
+           values ($1,$2,$3,$4,$5,$6,$7,$8,$9)""",
+        ws, cols["kind"], cols["topic"], cols["tag"], cols["claim_text"],
+        cols["evidence_quote"], cols["approach_note"], cols["sentiment_flag"], cols["quarantined"],
+    )
+
+
+async def test_handoff_denies_quarantine_and_claim_text(db):
+    ws = await make_workspace(db, industry="jewelry")
+    plan_id = await _make_plan(db, ws)
+
+    await _claim(db, ws, topic="vocabulary", tag="CLAIMED",
+                claim_text="The team calls rush orders yıldırım", evidence_quote="yıldırım sipariş")
+    await _claim(db, ws, topic="person", approach_note="Gets nervous about systems people")
+    await _claim(db, ws, kind="directive", tag=None,
+                claim_text="Do not mention the acquisition talks")
+    # MUST NOT leak: a quarantined sentiment record + an ordinary pain claim's text.
+    await _claim(db, ws, topic="person", sentiment_flag=True, quarantined=True,
+                claim_text="SECRET_JUDGMENT Metin is disorganized")
+    await _claim(db, ws, topic="pain", tag="CONFIRMED",
+                claim_text="SECRET_PAIN returns pile up every morning")
+
+    package = await build_handoff_package(str(plan_id))
+    blob = json.dumps(package, ensure_ascii=False)
+
+    # Permitted fields present.
+    assert "yıldırım sipariş" in package["vocabulary"]
+    assert any("nervous about systems" in h for h in package["handling_notes"])
+    assert any("Keep it light" in h for h in package["handling_notes"])
+    assert any("acquisition" in n for n in package["never_list"])
+    assert any("salaries" in n for n in package["never_list"])
+    assert package["time_budget_minutes"] == 25
+    assert package["goal"].startswith("Understand the returns")
+
+    # Deny-by-default: no quarantined content, no ordinary claim text.
+    assert "SECRET_JUDGMENT" not in blob
+    assert "SECRET_PAIN" not in blob
+    assert "disorganized" not in blob
+
+    # Persisted to handoff_packages.
+    stored = await db.fetchval("select package from handoff_packages where plan_id = $1", plan_id)
+    assert stored is not None
