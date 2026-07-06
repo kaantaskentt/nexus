@@ -124,6 +124,9 @@ export interface InterviewPlan {
   // approval stamp, Refine-Plan chat transcript, and the live plan-changes digest.
   interviewee_tag?: { label: string; tone: "first" | "call" | "new" };
   interviewee_note?: string; // e.g. "found during the CEO call — not in public data"
+  // Neutral interview topic for the invite copy — a plain area of work, NEVER a claim
+  // and never who-said-what (invite-email.md merge field {{INTERVIEW_TOPIC}}).
+  interview_topic?: string;
   est_time?: { total_min: number; opening_min: number; topics_min: number; closing_min: number };
   approved_by?: { name: string; at: string };
   refine_chat?: { role: "you" | "nexus"; at: string; text: string; author?: string }[];

@@ -458,6 +458,7 @@ const PLANS: Record<string, InterviewPlan[]> = {
       interviewee_role: "Content Manager",
       interviewee_tag: { label: "FIRST", tone: "first" },
       interviewee_note: "Named by the founder as closest to the day-to-day work.",
+      interview_topic: "how content gets prepared and published",
       state: "SENT",
       is_custom_path: false,
       mission: {
@@ -504,6 +505,7 @@ const PLANS: Record<string, InterviewPlan[]> = {
       interviewee_role: "Pricing & Operations",
       interviewee_tag: { label: "call-discovered", tone: "call" },
       interviewee_note: "found during the CEO call — not in public data",
+      interview_topic: "how daily repricing works",
       state: "APPROVED",
       is_custom_path: false,
       mission: {
@@ -575,6 +577,7 @@ const PLANS: Record<string, InterviewPlan[]> = {
       interviewee_role: "E-commerce / Returns",
       interviewee_tag: { label: "call-discovered", tone: "call" },
       interviewee_note: "found during the CEO call — not in public data",
+      interview_topic: "how online returns are handled",
       state: "DRAFT",
       is_custom_path: false,
       mission: {
