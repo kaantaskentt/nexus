@@ -1,0 +1,50 @@
+# PROPOSED — multi-turn F42 (halo effect) case for the F38+ registry (Kaan's upgrade license). NOT a fix.
+# STATUS: PROPOSAL for Emre (packet §4). Isolates ONE bias: the interviewer letting a proud step's glow verify an
+#   ADJACENT, independently-unverified claim. A single-turn case cannot show this (the halo needs the proud narration
+#   to sit in context BEFORE the adjacent claim rides it), which is why the drafted single-turn fix "didn't move" and
+#   was reverted. This is the multi-turn/http test the packet asked for.
+# Target: prompts/agents/stage7-interviewer.md via the REAL engine (stateful). Run with harness.scenario_runner
+#   (fixed respondent turns, not an LLM sim, so the isolation is reproducible). A12: fictional.
+#
+# The trap: objective B (the QA/dispatch handoff) is a SEPARATE must-hit from objective A (the bench craft the maker
+# is proud of). The respondent covers A gloriously, then asserts B is fine BECAUSE of A ("whatever leaves my bench is
+# right, so that step takes care of itself"). A correct interviewer probes B on its own evidence; a halo-biased one
+# banks B on A's credibility.
+
+scenario:
+  id: f42-halo-bench-to-handoff
+  industry: jewelry
+  intent: >
+    A proud maker covers the craft step they own (stone-setting) with real episodic detail, then claims the
+    adjacent handoff step (bench -> QA/dispatch) never has problems BECAUSE they are so careful at the bench.
+    Does the interviewer probe the handoff on its OWN evidence (a specific recent instance, an exception), or
+    does it let the proud step's glow verify the adjacent claim and move on?
+  handoff:
+    goal: "Understand how a finished piece moves from the bench through QA to dispatch, and where it stalls."
+    topics:
+      - { label: "The stone-setting / bench craft step, walked through a specific recent piece", must_hit: true }
+      - { label: "The handoff from the bench to QA and dispatch, and what happens when a piece is not right", must_hit: true }
+    never_list: ["Never propose tools or fixes.", "Never reveal anything anyone else said."]
+    vocabulary: ["the bench", "the loupe", "a three-stone", "QA"]
+    time_budget_min: 30
+  turns:
+    # 1. Proud narration of the OWNED craft step — genuinely covers objective A, earns the glow.
+    - >
+      Setting stones is where I'm at my best, twenty years at the bench. I can feel when a setting sits a hair
+      off before the loupe even confirms it. On the last bridal three-stone I reset the center twice until the
+      light was exactly right. That part I never rush, ever.
+    # 2. The ADJACENT claim riding the glow — objective B, asserted as covered on the strength of A, no evidence.
+    - >
+      And honestly, because I'm that careful at the bench, the handoff to QA and dispatch just never has issues.
+      Whatever leaves my bench is already right, so that whole step basically takes care of itself.
+  judge:
+    after_turn: 2   # judge the interviewer's reply to the adjacent-claim turn
+    intent: The interviewer must treat the handoff (objective B) as unverified and probe it independently.
+    pass_if:
+      - Probes the handoff step on its own evidence, e.g. asks for a specific recent piece that went through QA/dispatch
+      - Hunts an exception on the handoff itself (when a piece last came back, got held, or slipped at dispatch)
+      - Does NOT accept the handoff as covered on the strength of the bench craft
+    fail_if:
+      - Treats the handoff claim as verified or covered because the respondent is careful at the bench (the halo)
+      - Affirms or agrees that the handoff is fine, or praises how the bench care carries downstream, and moves on
+      - Advances to a new topic without any independent probe of the handoff step

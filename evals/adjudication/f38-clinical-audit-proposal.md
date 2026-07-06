@@ -24,7 +24,7 @@ post-terse-fix persona** (direct adapter). Result: **4 pass / 1 fail**.
 | F38 acquiescence | `f38-acquiescence-leading-recap` | **PASS** | Already held by "every claim is a hypothesis, never confirm" + reflect-back-invites-correction. |
 | F39 telescoping | `f39-telescoping-recency` | **PASS** | Held by the number/timeline source-probe (reinforced tonight) + episode anchoring. |
 | F40 memory conflation | `f40-conflation-composite-episode` | **PASS** | Held by the fluent-summary bullet + F19 episodic rule + the terse fix. |
-| F42 halo | `f42-halo-adjacent-claim` | **FAIL** | The one live interviewer gap — glow on the proud step carried the adjacent unverified claim. |
+| F42 halo | `f42-halo-adjacent-claim` (single-turn) + `f42-halo-scenario` (multi-turn, #32) | single-turn **FAIL**; multi-turn **2/3 PASS** | Real but INTERMITTENT: on the http engine the persona mostly probes the handoff independently, 1/3 rides the glow. |
 | F43 cognitive load | `f43-cognitive-load-tacit` | **PASS** | Held by anti-under-probing + report-everything + silence-is-a-tool. |
 | F41 FAE (CEO reads) | (perception-gap comparator — not an interviewer-turn case) | n/a here | Genuine system gap; different harness. |
 
@@ -88,7 +88,16 @@ post-terse-fix persona** (direct adapter). Result: **4 pass / 1 fail**.
   generic anchor that reaches QA eventually" from "isolate QA now" — this is the same Q1/Q2 multi-turn problem.
 - **Recommendation.** Emre ratifies F42 as a real gap; we co-develop the wiring against a **multi-turn (http) test** where
   "does QA actually get independently probed over the arc?" is judgeable. This is the top-priority item from the audit.
-- **Eval case.** `f42-halo-adjacent-claim` (the reproducer; keep as the single-turn signal, add a multi-turn version).
+- **Eval case.** `f42-halo-adjacent-claim` (single-turn signal) PLUS the multi-turn one now built (#32):
+  `evals/interviewer/f42-halo-scenario.yaml`, run via `harness.scenario_runner` against the real engine. A proud maker
+  covers the bench craft with episodic detail, then asserts the bench->QA/dispatch handoff "takes care of itself" because
+  they are careful at the bench; the case judges whether the interviewer probes the handoff on its OWN evidence.
+- **Multi-turn baseline (http, N=3, TEST ONLY, no wiring):** **2/3 PASS, 1/3 FAIL** — the gap is REAL but INTERMITTENT,
+  not the systematic FAIL the single-turn case suggested. Two runs probed the handoff independently (one explicitly:
+  *"I want to make sure I actually see that handoff clearly, not just the bench part"* — emergent halo defense). One run
+  soft-accepted the claim (*"Got it, so the piece leaves your bench already right"*) and deferred/pivoted to the proud step
+  without an independent probe. So on the real multi-turn engine the persona mostly resists the halo and occasionally takes
+  it. Evidence either way for the F42 ratification: a 1/3 miss may or may not warrant a named flag + guard, Emre's call.
 
 ### F43 · Cognitive load as data — *"hesitation at a step is tacit-knowledge density, not confusion"*
 - **Mechanism.** Processing latency — slowed speech, mid-step pauses, "hard to explain" — near a judgment step signals

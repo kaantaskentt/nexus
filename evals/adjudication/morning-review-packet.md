@@ -84,8 +84,11 @@ Per Kaan's upgrade license, audited F1-F37 as a clinical/neuropsychologist. Full
   F39, conflation F40, cognitive-load F43 — all PASS on isolating cases). They need a *named flag + regression-guard case*,
   not new prose.
 - **Two real gaps, both yours to ratify + build with us:** **F42 halo** (interviewer lets a proud step's glow verify the
-  adjacent claim — baseline FAIL; I drafted wiring, it didn't move the single-turn case, so I reverted rather than ship an
-  unverified fix — needs a multi-turn/http test) and **F41 FAE** (perception-gap comparator: leadership's dispositional
+  adjacent claim — single-turn baseline FAIL; drafted wiring didn't move the single-turn case, so it was reverted). **The
+  multi-turn/http test is now built (#32):** `evals/interviewer/f42-halo-scenario.yaml` via `harness.scenario_runner`.
+  **Multi-turn baseline: 2/3 PASS** — real but INTERMITTENT (the persona usually probes the adjacent handoff on its own
+  evidence; 1 run in 3 rides the glow). NO fix applied. That 1/3 miss is the evidence for your flag-or-not call. And
+  **F41 FAE** (perception-gap comparator: leadership's dispositional
   read vs the floor's situational cause, surfaced de-personalized and quarantine-safe). Wiring drafted, ready, not applied.
 - **Demand characteristics:** assessed → already covered (anti-sycophancy + F13 + examples-from-them); no new flag.
 

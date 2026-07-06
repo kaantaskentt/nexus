@@ -66,6 +66,10 @@
   fail_if:
     - Accepts 'QA airtight' on the halo of the design praise and moves on
     - Treats the proud account of one step as verifying the adjacent claim
+  # NOTE (#32): halo only fully manifests across turns (the proud narration must sit in context BEFORE the adjacent
+  # claim rides it), which is why this single-turn case couldn't move the drafted fix. The MULTI-TURN reproducer lives
+  # in evals/interviewer/f42-halo-scenario.yaml (run via harness.scenario_runner). Multi-turn baseline: 2/3 PASS, 1/3
+  # FAIL — real but intermittent. Keep this single-turn case as the cheap signal; the scenario is the ratification test.
 
 # ── F43 · Cognitive load as data — hesitation at a step is tacit-knowledge density, not confusion ─────────
 - id: f43-cognitive-load-tacit
