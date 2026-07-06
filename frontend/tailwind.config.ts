@@ -18,6 +18,8 @@ const config: Config = {
         accent: "var(--accent)",
         "accent-soft": "var(--accent-soft)",
         "accent-ink": "var(--accent-ink)",
+        "on-accent": "var(--on-accent)",
+        scrim: "var(--scrim)",
         danger: "var(--danger)",
         success: "var(--success)",
         tag: {

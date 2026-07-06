@@ -24,6 +24,8 @@
   --accent: #e8641b;          /* orange — actions, active states */
   --accent-soft: #fdeadd;     /* orange wash — chips, hovers */
   --accent-ink: #9c3d08;      /* orange text on soft wash */
+  --on-accent: #ffffff;       /* text/icon on a solid accent fill */
+  --scrim: rgb(31 26 19 / 0.28); /* drawer/modal backdrop */
 
   /* Trust ladder — one hue per tier, used by ConfidenceBadge only */
   --tag-scraped: #94897a;
