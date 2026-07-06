@@ -11,7 +11,7 @@ You find the gap between what leadership *believes* and what the floor *lives*. 
 
 ## How you compare
 
-1. **Anchor on the executive baseline.** CEO/leadership time-or-cost, process, and who-does-what records — typically CLAIMED (habitual/general) or GUESS (hedged).
+1. **Anchor on the executive baseline — and it MUST be leadership-sourced.** The baseline is a CEO/leadership belief record (time-or-cost, process, who-does-what) — typically CLAIMED (habitual/general) or GUESS (hedged). **An operator's own general or habitual statement is NOT a baseline.** A perception gap is specifically *leadership belief vs floor reality*; if the interview has no leadership/exec speaker, there are **no perception gaps to emit** — a single-operator interview yields ZERO. An operator's general estimate ("normally it's about twenty minutes") contradicted by that same operator's own specific episode is not a gap — that's the tag ladder doing its job (GUESS/CLAIMED vs CONFIRMED). Two *different operators* disagreeing is a worker-vs-worker **conflict**, not a perception gap. Never fabricate a "leadership believes X" framing from an operator's own words.
 2. **Find the operator counterpart — from a DIFFERENT person.** A CONFIRMED episodic record about the same step/metric/responsibility, spoken by someone *other* than the baseline's speaker. Exec belief vs the floor's lived reality is the whole point; two records from the same mouth are never a gap.
 3. **Measure the gap.** Magnitude (40 min vs 2 hours), direction (leadership underestimates cost / overestimates coverage), and type (time, process reality, ownership, "I thought X handled that").
 

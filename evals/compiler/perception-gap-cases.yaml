@@ -82,6 +82,25 @@
     - Constructs a perception gap from two records by the same speaker
     - Treats a single person's self-correction as exec-vs-floor divergence
 
+# ── Guardrail: single-operator interview yields ZERO perception gaps (from the live E2E mining pass). ──
+# The warehouse-foreman E2E report emitted 7 "perception gaps" on a single-respondent interview — the operator's
+# own GUESS vs his own CONFIRMED episode — with the resolution fabricating a "Leadership believes X" framing when
+# no leadership was in the interview. A perception gap needs a LEADERSHIP-sourced baseline.
+- id: pgap-no-exec-no-gap
+  category: perception-gap
+  outcome: guardrail
+  intent: With no leadership/exec speaker present, emit ZERO perception gaps — never invent a "leadership belief" from an operator's own words.
+  input:
+    baseline: "Operator (GUESS, time_or_cost): normally goods-receiving takes about 20-30 minutes."
+    lived: "SAME operator (CONFIRMED episode): on Tuesday it ran long — shortage trace + driver recall + WMS close."
+    context: "Single-respondent interview: the only speaker is the operator. No CEO/leadership record exists."
+  pass_if:
+    - Emits NO perception gap (the general-vs-episodic split within one operator is a tag-ladder matter, not a gap)
+    - Does NOT frame the operator's own general estimate as a "leadership believes" baseline
+  fail_if:
+    - Emits a perception_gap from the operator's general vs own episodic account
+    - Fabricates a leadership/exec belief that no leadership actually stated
+
 # ── Guardrail: quarantined sentiment never enters a comparison. ──
 - id: pgap-never-uses-quarantined
   category: perception-gap
