@@ -182,3 +182,12 @@ Psychology corpus transfer rule: everything about interview conduct (episodic el
 
 ## A8 — Task absorption (from the calls' action items → build objectives)
 Owned by the build now: Stage 7 interviewer system prompt (md, voice-ready) · per-stage agent system prompts (JSON-context style, industry examples) · send-interview flow implementation · no-decline/no-response handling · pause/resume · Stage 5 sidebar + CEO context chat · conflict points UI · README objective statement · Stage 8 sidebar UI prompt outputs. Pending from Emre (integrate on arrival): Stage 3/6/7 doc finals, persona draft, hedge audit, pain rubric, conflict-resolution policy.
+
+## A11 — v1 build decisions (Kaan's answers, July 6)
+
+1. **Audience & bar:** Emre first, Tunç second, real client call in ~3 days. Build to client-grade: mockup-quality UI/UX on the happy path AND presentation-clean architecture (both audiences matter).
+2. **Language:** English first; Turkish designed-in (hedge lexicon, persona lines, invite copy structured for easy TR addition), not tuned v1.
+3. **Bee Goddess is fictional.** Stage 1 runs against fixtures for the demo storyline; live-scrape mode still built (needed for the real client in 3 days). Emre's stage 3/6/7 docs land tomorrow — integrate on arrival, v1 placeholders ours.
+4. **Voice:** sensible default chosen by build (one male + one female variant, warm-professional); dedicated voice-selection session with Kaan later. Hume = phase 2 analytics, not v1.
+5. **Auth: none.** Workspace-picker page with seeded companies (matches the mockup's "click your admin portal" cards) — internal use only. Interview links stay token-based (unauthenticated by design). Real auth is a later layer; nothing in the schema assumes its absence.
+6. **Repo:** Tunç gets access and may work in it. Vendored pieces attributed in reference/SOURCES.md + brief "why we kept/killed" notes; history kept clean.
