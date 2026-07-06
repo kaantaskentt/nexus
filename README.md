@@ -2,7 +2,9 @@
 
 **Nexus is a world-class interviewer and context extractor. It finds context, not solutions.**
 
-It learns how a company actually works — through recon, one human-led CEO call, and AI-conducted employee interviews — and compiles every conversation into trust-tagged claim records. Those records render a living Company Snapshot: what we learned, where the pain is, who to talk to next, what's disputed, and where the CEO's beliefs diverge from the floor's reality.
+Nexus learns how a company actually works — through light web recon, one human-led CEO call, and AI-conducted employee interviews — and compiles every conversation into **trust-tagged claim records**, each traceable to a verbatim quote. Those records render a living **Company Snapshot**: what we've learned, where the pain is (as coarse bands, never scores), who to talk to next, what's disputed, and where leadership's beliefs diverge from the floor's reality. The interview is the product; finding the real, on-the-ground version of the work is the whole game.
+
+Its discipline is what makes the output trustworthy. Every claim sits on one **trust ladder** — scraped < guess < claimed < confirmed < verified — and **tags never upgrade**: truth emerges from *comparing* records, never from editing them, so a contradiction between the CEO and an operator is preserved as golden data rather than smoothed away. Sentiment about named people is **quarantined at the data layer** (not a per-screen filter), an interviewer's objectives shape its questions but nothing anyone else said ever reaches a respondent, scraped web data is worth only ~20% reference weight, and nothing is sent to an employee without explicit human approval. *("Nexus" is a working name — brand lives in one config file, `config/brand.json`; a rename is a one-line change, not a refactor.)*
 
 ## What Nexus outputs (v1)
 
