@@ -13,6 +13,7 @@ exact output schema, then persists the result under the ontology's invariants:
 """
 
 import json
+import logging
 import re
 
 from ..config import REPO_ROOT
@@ -21,6 +22,20 @@ from ..embeddings import embed, to_pgvector
 from ..llm import run_agent
 from ..queue import handles
 from . import entities
+
+log = logging.getLogger("nexus.compiler")
+
+
+def _should_render_snapshot(session, payload: dict) -> bool:
+    """Whether this compile should auto-render the snapshot (A17 discovery / #6).
+
+    Guardrail (A3, team-lead directive): the auto-render is for the CEO/discovery call
+    ONLY — never a general per-session trigger. Employee interviews must not re-render a
+    snapshot mid-round (attribution risk), and they ALWAYS originate from an approved plan,
+    so a null plan_id is the structural signal that this is the founder's own discovery
+    call. Both conditions must hold: the caller asked, AND the session is plan-less.
+    """
+    return bool(payload.get("render_snapshot")) and session["plan_id"] is None
 
 _TOPIC = {
     "pain": "pain",
@@ -324,9 +339,16 @@ async def compile_session(payload: dict) -> None:
 
     # Opt-in snapshot render (A17 discovery upload / #6): a single-call founder round
     # auto-completes and renders once its records land. Runs LAST (priority 200, after
-    # conflicts) so the snapshot reflects the full record set. Normal interview compiles
-    # don't pass this flag, so their A3 round-batching behavior is unchanged.
-    if payload.get("render_snapshot"):
+    # conflicts) so the snapshot reflects the full record set. The gate is structural
+    # (plan-less discovery call only) — an employee interview never auto-renders here even
+    # if the flag were set, preserving A3 round-batching.
+    if payload.get("render_snapshot") and not _should_render_snapshot(session, payload):
+        log.warning(
+            "compile_session: render_snapshot requested for plan-backed session %s "
+            "(plan_id=%s) — refusing per A3 (employee interviews never auto-render)",
+            session_id, session["plan_id"],
+        )
+    if _should_render_snapshot(session, payload):
         round_id = session["round_id"]
         if round_id:
             await pool.execute(

@@ -7,11 +7,25 @@ import json
 from httpx import ASGITransport, AsyncClient
 
 from app.main import app
+from app.pipeline.compiler import _should_render_snapshot
 from app.pipeline.transcript import parse_transcript
 
 
 def _client():
     return AsyncClient(transport=ASGITransport(app=app), base_url="http://t")
+
+
+# ── render-snapshot guardrail (A3): CEO/discovery call only ───────────────────
+
+def test_render_gate_requires_flag_and_plan_less_session():
+    discovery = {"plan_id": None}
+    employee = {"plan_id": "a-plan-uuid"}
+    # discovery call with the flag -> render
+    assert _should_render_snapshot(discovery, {"render_snapshot": True}) is True
+    # employee interview NEVER auto-renders, even if the flag leaks in
+    assert _should_render_snapshot(employee, {"render_snapshot": True}) is False
+    # no flag -> never renders (normal interview compile path)
+    assert _should_render_snapshot(discovery, {}) is False
 
 
 async def _make_company(name="Bee Goddess", industry="jewelry", contact="Ece"):
