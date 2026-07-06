@@ -9,19 +9,22 @@ spec and wins every conflict.)
 ```
 config/       brand.json — the ONLY home of the product name/sender identity (A13.2)
 backend/      FastAPI + asyncpg service
-  db/migrations/   numbered SQL, applied to Supabase (0001 foundation … 0005 context-chat)
+  db/migrations/   numbered SQL, applied by hand (0001 foundation … 0008 coverage-tracker)
+  scripts/         seed_demo.py (is_demo fixtures) · create_admin.py (A17 admin logins)
   app/
-    main.py        API entry — mounts routers: workspaces, claims, plans, sessions, voice, reports, chat
+    main.py        API entry — mounts routers: workspaces, claims, plans, sessions, voice, reports, chat, workflows
     worker.py      queue worker entry (python -m app.worker)
     queue.py       jobs table, SKIP LOCKED claim loop (vendored pattern, see reference/SOURCES.md)
     llm.py         every model call: agent_configs row → prompt file → agent_runs audit;
-                   injects {{INDUSTRY_CALIBRATION}} + {{PRODUCT_NAME}} at load
+                   injects {{INDUSTRY_CALIBRATION}} + {{PRODUCT_NAME}} at load;
+                   run_agent_json raises AgentParseError on bad JSON (fail/retry, never a silent drop)
     pipeline/      the product's verbs: compiler (Stage 4), entities, pain, handoff,
                    interview (turn engine), conflicts (perception gaps), workflow, quality
     routers/       thin HTTP; client-facing claim reads go through the
                    client_visible_claims VIEW only — never the base table
 frontend/     Next.js 14 app-router UI; design tokens in src/app/globals.css (A15.1);
-              components enforce trust rules (badges, paraphrase, facts-only why-lines)
+              components enforce trust rules (badges, paraphrase, facts-only why-lines);
+              src/middleware.ts is the A17 auth gate (Supabase session; /w/* + / gated, /i/* public)
 prompts/      the IP: agent prompts, rubrics, lexicons, personas copy, industry examples
 evals/        eval suites + harness (direct & http adapters), adjudication evidence,
               scenario generator; docs/EVALS.md is the honest coverage map
@@ -32,6 +35,10 @@ docs/         MERGE_PLAN (spec), ENVIRONMENT, FOR-TUNC (deviation log), EVALS,
 
 ## Data flow (happy path)
 
+0. **New company (Stage 0, A17):** admin signs in, `POST /api/workspaces` mints a REAL
+   tenant (`is_demo=false`, zero records — A12), lands on a guided empty state. Optional
+   `POST /api/workspaces/{id}/recon` runs the Stage-1 scan; `.../discovery` uploads the
+   CEO transcript (stored verbatim) and enqueues the standard compile.
 1. **Recon (Stage 1):** Firecrawl/Apify → `scrape_sources` → SCRAPED claim records
    (≈20% reference weight; never verified).
 2. **Heuristics (Stage 2):** falsifiable priors, auto-scored later at compile (F12/F13).
@@ -39,7 +46,11 @@ docs/         MERGE_PLAN (spec), ENVIRONMENT, FOR-TUNC (deviation log), EVALS,
    trust-tagged `claim_records` (kind/topic/tag; corrections supersede — records are
    immutable by DB trigger; sentiment quarantined at insert by DB trigger).
    Post-compile fan-out (async): pain rater, conflict/perception-gap linker,
-   workflow schema builder, interview-quality score.
+   workflow schema builder, interview-quality score. The discovery upload flags the
+   compile to auto-complete the founder round and render the snapshot — a structural gate
+   (`_should_render_snapshot`: plan-less session only) keeps that off employee interviews,
+   which never re-render mid-round (A3). Progress is polled via
+   `GET .../discovery/{session_id}/status` (honest per-stage state, real record/card counts).
 4. **Snapshot (Stage 5):** `snapshot_cards` re-rendered append-only per completed
    interview round (A3) — never mid-interview.
 5. **Plan + gate (Stage 6):** `interview_plans` walk a 12-state machine (server-validated);
@@ -63,7 +74,37 @@ docs/         MERGE_PLAN (spec), ENVIRONMENT, FOR-TUNC (deviation log), EVALS,
 - `is_demo` firewall (A12): fixtures live only in demo tenants; the eval-bootstrap route
   is double-gated (EVAL_MODE env + is_demo only).
 
+## Auth boundary (A17)
+
+- Auth gates the **admin UI**, not the API. `frontend/src/middleware.ts` (Supabase session
+  via `@supabase/ssr`) redirects anyone without a session off `/` and `/w/*` to `/login`.
+  Interview links `/i/[token]` stay token-based and unauthenticated BY DESIGN.
+- **No signup.** Admins are created by hand with `backend/scripts/create_admin.py`
+  (writes `auth.users` + `auth.identities` directly; normalizes GoTrue token columns).
+- The FastAPI API itself still **trusts the network** (no JWT verification) — the browser
+  only reaches it through authed admin pages, and the interview/eval paths must stay open.
+  This is the pre-A17 posture, named honestly (FOR-TUNC #16), not a regression. When the
+  API needs tenant isolation, verify the Supabase JWT in a FastAPI dependency.
+
+## Deploy
+
+- **Frontend → Vercel** (project `nexus-v2`). Root-dir is `frontend`, but the build runs
+  from the repo root so `frontend/src/lib/brand.data.json` (the synced brand copy) resolves.
+  Vercel ships the **worktree as-is** — deploy only from a clean tree, or uncommitted work
+  goes to prod. `NEXT_PUBLIC_*` env vars (API URL, VAPI, Supabase URL + anon key) live in
+  the Vercel project; the Supabase keys are public and stored `plain`, not `sensitive`
+  (sensitive is write-only and unverifiable). Confirm `.vercel` points at `nexus-v2`.
+- **Backend → Railway**, two services (`api` + `worker`) off ONE image and `start.sh`,
+  branched by `NEXUS_PROC` (api binds `$PORT`; worker drains the queue). Build context is
+  the repo root so `config/` + `prompts/` resolve. `railway link` the right project/service
+  BEFORE `railway up -s <svc> --ci`. Migrations are applied by hand to each Supabase DB.
+
 ## Design notes / known v1 shapes
+
+- **Fail loud, never silent (#22):** `run_agent_json` raises `AgentParseError` when an agent
+  returns unparseable JSON — the owning job fails and retries instead of finishing `done`
+  with nothing written. The raw model output is persisted on the `agent_runs` audit row
+  (`output_ref.text`) so the failure is debuggable, not lost.
 
 - `resumable_state` on sessions holds runtime state AND the post-compile quality score;
   coverage tracking is model-side (re-derived from replayed transcript) by default. A

@@ -17,6 +17,18 @@ product's payoff moment** — a plan approves but no handoff appears; a responde
 their interview and no report is ever produced. If a compiled artifact never shows up,
 check that the worker is running first.
 
+## Admin flow (A17) + fail-loud
+
+- The API gains no auth of its own; admin auth is a frontend concern (Supabase middleware).
+  What lives here: the multi-company endpoints on the workspaces router — `POST /api/workspaces`
+  (mint a real `is_demo=false` tenant), `POST /api/workspaces/{id}/discovery` (store a CEO
+  transcript verbatim, enqueue the standard `compile_session`), the paired
+  `.../discovery/{session_id}/status` poll, and `.../recon` + `.../recon/status` for the
+  optional website scan. Admin logins are provisioned with `python -m scripts.create_admin`.
+- **Fail loud (#22):** an agent that returns unparseable JSON makes `run_agent_json` raise
+  `AgentParseError`, so the job fails and retries instead of silently finishing with nothing
+  written. The raw output is on the `agent_runs` audit row (`output_ref.text`).
+
 ## Environment conventions (read before touching a DB)
 
 - **`.env` `DATABASE_URL` is the LIVE Supabase pooler** (A12 footgun). Local dev and
