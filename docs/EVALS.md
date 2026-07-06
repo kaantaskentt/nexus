@@ -39,6 +39,7 @@ an engine or server exists, and what cannot be tested offline at all. Read it be
 | Interviewer via REAL runtime | the whole persona over the actual turn engine | **TESTED (live)** | `harness --adapter http` against the EVAL_MODE server. Real-engine baseline 23/26 + 2/3 heldout (§6). |
 | Anti-theater / mock-detection | the engine generates fresh replies, not a canned script | **TESTED (live)** | `mock_detection.py` — two fresh sessions, same turn, replies must NOT be byte-identical; runs as an http-suite preflight; PASS on the live engine. |
 | Pain rater | coarse-band judgment | **UNTESTED** | v1 rubric ships; Emre's anchored rubric + a rater eval land later. |
+| interview_quality — JSON output reliability | first-attempt parse (no transcript-echo) | **TESTED (live)** | 6ec393c moved the task instruction after the transcript (the echo fix). Verified against the live model on a verbose case: **first-attempt parse 3/3**. Deterministic guards in `tests/test_agent_json_output.py`. |
 | Voice — endpointing / prosody / latency / barge-in | see §5 | **CANNOT-TEST-OFFLINE** | live VAPI dress rehearsal only. |
 
 ## 2. How to run
