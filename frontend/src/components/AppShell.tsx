@@ -7,9 +7,6 @@ import {
   Users,
   BarChart3,
   BookOpen,
-  Bell,
-  HelpCircle,
-  ChevronDown,
 } from "lucide-react";
 import brand from "@/lib/brand";
 import type { Workspace } from "@/lib/types";
@@ -119,7 +116,6 @@ export function AppShell({
               <div className="truncate text-sm font-medium text-ink">{user}</div>
               <div className="truncate text-xs text-ink-faint">{userRole}</div>
             </div>
-            <ChevronDown className="h-4 w-4 shrink-0 text-ink-faint" />
           </div>
         </div>
       </aside>
@@ -131,22 +127,8 @@ export function AppShell({
             <span className="text-ink-faint">/</span>
             <span className="capitalize text-ink-soft">{active}</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <button
-              className="rounded-md p-2 text-ink-faint transition-colors hover:bg-surface-raised hover:text-ink"
-              aria-label="Notifications"
-            >
-              <Bell className="h-[18px] w-[18px]" strokeWidth={1.75} />
-            </button>
-            <button
-              className="rounded-md p-2 text-ink-faint transition-colors hover:bg-surface-raised hover:text-ink"
-              aria-label="Help"
-            >
-              <HelpCircle className="h-[18px] w-[18px]" strokeWidth={1.75} />
-            </button>
-            <div className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-ink ring-1 ring-inset ring-accent/20">
-              {initials(user)}
-            </div>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-ink ring-1 ring-inset ring-accent/20">
+            {initials(user)}
           </div>
         </header>
         <main className="min-w-0 flex-1">{children}</main>
