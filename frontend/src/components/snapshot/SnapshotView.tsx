@@ -2,11 +2,22 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  Phone,
+  User,
+  MessageCircle,
+  Globe,
+  Rocket,
+  Lock,
+  ArrowRight,
+  X,
+} from "lucide-react";
 import type {
   AreaContent,
   ClaimRecord,
   ConflictContent,
   LearnedContent,
+  LearnedSource,
   SnapshotCard,
   SuggestedPersonContent,
   Workspace,
@@ -19,11 +30,14 @@ import {
   PersonRow,
 } from "@/components";
 
-// Entry motion for cards — comprehension only (A15.4): a gentle stagger so the eye
-// lands section by section, never decoration.
-const rise = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
+const rise = { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 } };
+
+const SOURCE_ICON: Record<LearnedSource, typeof Phone> = {
+  call: Phone,
+  person: User,
+  message: MessageCircle,
+  web: Globe,
+  linkedin: Globe,
 };
 
 export function SnapshotView({
@@ -35,10 +49,7 @@ export function SnapshotView({
   cards: SnapshotCard[];
   claims: ClaimRecord[];
 }) {
-  const claimsById = useMemo(
-    () => new Map(claims.map((c) => [c.id, c])),
-    [claims],
-  );
+  const claimsById = useMemo(() => new Map(claims.map((c) => [c.id, c])), [claims]);
   const [openArea, setOpenArea] = useState<AreaContent | null>(null);
 
   const learned = cards.filter((c) => c.card_type === "learned");
@@ -46,45 +57,63 @@ export function SnapshotView({
   const people = cards.filter((c) => c.card_type === "suggested_person");
   const conflicts = cards.filter((c) => c.card_type === "conflict_point");
 
-  // Evidence rail: verbatim CEO-call quotes with timestamps are the trust anchor
-  // (his own words — A3). Paraphrased interview evidence lives inside each area.
-  const railEvidence = claims
-    .filter((c) => c.evidence_ts && !c.is_paraphrased)
-    .slice(0, 4);
+  // Evidence rail: verbatim CEO-call quotes are the trust anchor (his own words — A3).
+  const railEvidence = claims.filter((c) => c.evidence_ts && !c.is_paraphrased).slice(0, 3);
+
+  const cfg = workspace.config ?? {};
+  const topTwo = (areas.slice(0, 2) as { content: AreaContent }[]).map((a) => a.content.title);
+  const firstPerson = (people[0]?.content as SuggestedPersonContent | undefined)?.name;
 
   return (
     <AppShell workspace={workspace} active="snapshot">
-      <div className="mx-auto max-w-6xl px-8 py-10">
-        <header className="mb-8">
-          <h1 className="font-display text-3xl text-ink">Company Snapshot</h1>
-          <p className="mt-1 text-sm text-ink-soft">
-            What we&apos;ve learned so far, and where to look next. Updated after each
-            completed interview round — never mid-interview.
-          </p>
-        </header>
-
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_20rem]">
+      <div className="mx-auto max-w-6xl px-8 py-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_19rem]">
           {/* ── Main column ─────────────────────────────────────────── */}
-          <div className="min-w-0 space-y-10">
-            {/* Learned */}
-            <Section title="Learned" count={learned.length}>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="min-w-0">
+            <h1 className="font-display text-4xl text-ink">Company Snapshot</h1>
+
+            {/* Company identity */}
+            <div className="mt-5 flex items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-line font-display text-lg leading-none text-ink">
+                {workspace.name.split(/\s+/).slice(0, 2).map((p) => p[0]).join("")}
+              </div>
+              <div>
+                <div className="font-display text-2xl text-ink">{workspace.name}</div>
+                {cfg.founder && (
+                  <div className="text-sm text-ink-soft">
+                    Meeting Owner: {cfg.founder}
+                    {cfg.founder_role && ` (${cfg.founder_role})`}
+                  </div>
+                )}
+                {cfg.source && (
+                  <div className="text-sm text-ink-faint">Source: {cfg.source}</div>
+                )}
+              </div>
+            </div>
+
+            {/* What Nexus Learned */}
+            <Section title="What Nexus Learned">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {learned.map((card, i) => {
                   const c = card.content as LearnedContent;
+                  const Icon = SOURCE_ICON[c.source];
                   return (
                     <motion.article
                       key={card.id}
                       {...rise}
                       transition={{ delay: i * 0.04 }}
-                      className="rounded-card border border-line bg-surface p-5 shadow-card"
+                      className="flex flex-col rounded-card border border-line bg-surface p-4 shadow-card"
                     >
-                      <div className="mb-2 flex items-start justify-between gap-3">
-                        <h3 className="font-display text-lg leading-snug text-ink">
-                          {c.title}
-                        </h3>
-                        <ConfidenceBadge confidence={card.confidence} />
+                      <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
+                        <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
                       </div>
-                      <p className="text-sm leading-relaxed text-ink-soft">{c.body}</p>
+                      <h3 className="flex-1 text-sm font-semibold leading-snug text-ink">
+                        {c.title}
+                      </h3>
+                      <div className="mt-4 flex items-center justify-between">
+                        <ConfidenceBadge confidence={card.confidence} />
+                        <SignalBars confidence={card.confidence} />
+                      </div>
                     </motion.article>
                   );
                 })}
@@ -92,8 +121,8 @@ export function SnapshotView({
             </Section>
 
             {/* Areas to Investigate */}
-            <Section title="Areas to Investigate" count={areas.length}>
-              <div className="space-y-3">
+            <Section title="Areas to Investigate">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {areas.map((card, i) => {
                   const a = card.content as AreaContent;
                   return (
@@ -102,22 +131,22 @@ export function SnapshotView({
                       {...rise}
                       transition={{ delay: i * 0.04 }}
                       onClick={() => setOpenArea(a)}
-                      className="flex w-full items-start justify-between gap-4 rounded-card border border-line bg-surface p-5 text-left shadow-card transition-colors hover:border-line-strong hover:bg-surface-raised"
+                      className="flex flex-col rounded-card border border-line bg-surface p-4 text-left shadow-card transition-colors hover:border-line-strong hover:bg-surface-raised"
                     >
-                      <div className="min-w-0">
-                        <div className="mb-2 flex flex-wrap items-center gap-2">
-                          <PainBandChip band={a.pain_band} />
-                          <ConfidenceBadge confidence={card.confidence} />
-                        </div>
-                        <h3 className="font-display text-lg leading-snug text-ink">
-                          {a.title}
-                        </h3>
-                        <p className="mt-1 line-clamp-1 text-sm text-ink-soft">
-                          {a.what_we_believe}
-                        </p>
+                      <div className="flex items-start gap-2">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-on-accent">
+                          {a.rank}
+                        </span>
+                        <h3 className="font-semibold leading-snug text-ink">{a.title}</h3>
                       </div>
-                      <span className="mt-1 shrink-0 text-sm text-ink-faint">
-                        Open →
+                      <div className="mt-3">
+                        <PainBandChip band={a.pain_band} />
+                      </div>
+                      <p className="mt-3 flex-1 text-sm leading-relaxed text-ink-soft">
+                        {a.summary}
+                      </p>
+                      <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent">
+                        Open <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
                       </span>
                     </motion.button>
                   );
@@ -125,141 +154,139 @@ export function SnapshotView({
               </div>
             </Section>
 
-            {/* Conflict Points — first-class (A3) */}
+            {/* Conflict Points — first-class (A3), shown once contradictions exist */}
             {conflicts.length > 0 && (
-              <Section title="Conflict Points" count={conflicts.length} accent>
-                <p className="-mt-2 mb-3 text-sm text-ink-soft">
-                  Contradictions across sources — the meeting-worthy findings. Resolved
-                  in the report; surfaced here as golden data for the next round.
-                </p>
+              <Section title="Conflict Points" accent>
                 <div className="space-y-3">
-                  {conflicts.map((card, i) => {
+                  {conflicts.map((card) => {
                     const cf = card.content as ConflictContent;
                     return (
-                      <motion.article
+                      <article
                         key={card.id}
-                        {...rise}
-                        transition={{ delay: i * 0.04 }}
                         className="rounded-card border border-line-strong bg-accent-soft p-5"
                       >
                         <div className="mb-3 flex items-center justify-between gap-3">
                           <h3 className="font-display text-lg text-ink">{cf.title}</h3>
                           <ConfidenceBadge confidence={card.confidence} />
                         </div>
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          <ConflictSide label={cf.claim_a.label} claim={claimsById.get(cf.claim_a.claim_id)} />
-                          <ConflictSide label={cf.claim_b.label} claim={claimsById.get(cf.claim_b.claim_id)} />
-                        </div>
-                        <p className="mt-3 text-sm text-ink-soft">{cf.note}</p>
-                      </motion.article>
+                        <p className="text-sm text-ink-soft">{cf.note}</p>
+                      </article>
                     );
                   })}
                 </div>
               </Section>
             )}
 
-            {/* Suggested People */}
-            <Section title="Suggested People" count={people.length}>
-              <div className="space-y-3">
-                {people.map((card, i) => {
+            {/* Suggested People to Interview */}
+            <Section title="Suggested People to Interview">
+              <div className="divide-y divide-line rounded-card border border-line bg-surface">
+                {people.map((card) => {
                   const p = card.content as SuggestedPersonContent;
                   return (
-                    <motion.div key={card.id} {...rise} transition={{ delay: i * 0.04 }}>
-                      <PersonRow
-                        name={p.name}
-                        role={p.role}
-                        whyLine={p.why_line}
-                        confidence={card.confidence}
-                        action={
-                          <button className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-accent-ink transition-colors hover:bg-accent-soft">
-                            Add to plan
-                          </button>
-                        }
-                      />
-                    </motion.div>
+                    <PersonRow
+                      key={card.id}
+                      person={p}
+                      action={
+                        <button className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:bg-surface-raised hover:text-ink">
+                          <User className="h-4 w-4" strokeWidth={1.75} />
+                          Interview
+                        </button>
+                      }
+                    />
                   );
                 })}
               </div>
             </Section>
+
+            {/* Next Recommended Action */}
+            {topTwo.length > 0 && (
+              <div className="mt-8 flex flex-wrap items-center gap-4 rounded-card border border-line bg-accent-soft p-5">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent">
+                  <Rocket className="h-5 w-5" strokeWidth={1.75} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-accent-ink">
+                    Next Recommended Action
+                  </div>
+                  <p className="text-sm text-ink">
+                    Start Active Run: investigate {topTwo.join(" and ")}.
+                    {firstPerson && ` First interview: ${firstPerson}.`}
+                  </p>
+                </div>
+                <a
+                  href={`/w/${workspace.slug}/plans`}
+                  className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90"
+                >
+                  Start Active Run <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                </a>
+              </div>
+            )}
           </div>
 
           {/* ── Evidence rail ───────────────────────────────────────── */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-10">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-faint">
-                Evidence rail
-              </div>
+          <aside className="lg:pt-2">
+            <div className="sticky top-8">
+              <h2 className="mb-4 font-display text-xl text-ink">Evidence</h2>
               <div className="space-y-3">
                 {railEvidence.map((claim) => (
-                  <EvidenceQuoteCard key={claim.id} claim={claim} />
+                  <EvidenceQuoteCard key={claim.id} claim={claim} sourceLabel="CEO Call" />
                 ))}
               </div>
-              <p className="mt-3 text-[11px] leading-relaxed text-ink-faint">
-                Founder-call quotes are verbatim with transcript timestamps. Employee
-                evidence is paraphrased and shown inside each area.
-              </p>
             </div>
           </aside>
         </div>
       </div>
 
-      <AreaDrawer
-        area={openArea}
-        claimsById={claimsById}
-        onClose={() => setOpenArea(null)}
-      />
+      <AreaDrawer area={openArea} claimsById={claimsById} onClose={() => setOpenArea(null)} />
     </AppShell>
   );
 }
 
 function Section({
   title,
-  count,
   accent,
   children,
 }: {
   title: string;
-  count: number;
   accent?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <section>
-      <div className="mb-4 flex items-center gap-2">
-        <h2 className={"font-display text-xl " + (accent ? "text-accent-ink" : "text-ink")}>
-          {title}
-        </h2>
-        <span className="rounded-chip bg-surface-raised px-2 py-0.5 text-xs text-ink-faint">
-          {count}
-        </span>
-      </div>
+    <section className="mt-10">
+      <h2 className={"mb-4 font-display text-2xl " + (accent ? "text-accent-ink" : "text-ink")}>
+        {title}
+      </h2>
       {children}
     </section>
   );
 }
 
-function ConflictSide({
-  label,
-  claim,
-}: {
-  label: string;
-  claim?: ClaimRecord;
-}) {
+// Signal-strength glyph echoing the mockup's ascending bars — taller/greener at
+// higher confidence, muted at lower. Comprehension cue, not decoration.
+function SignalBars({ confidence }: { confidence: string }) {
+  const level =
+    ({ verified: 3, high: 3, reported: 2, guess: 1, scraped: 1 } as Record<string, number>)[
+      confidence
+    ] ?? 1;
   return (
-    <div className="rounded-card border border-line bg-surface p-3">
-      <p className="text-sm font-medium text-ink">{label}</p>
-      {claim?.evidence_ts && (
-        <p className="mt-1 text-xs text-ink-faint">
-          {claim.is_paraphrased ? "Paraphrased · " : "Verbatim · "}
-          {claim.evidence_ts}
-        </p>
-      )}
-    </div>
+    <span className="flex items-end gap-0.5" aria-hidden>
+      {[1, 2, 3].map((b) => (
+        <span
+          key={b}
+          className={
+            "w-1 rounded-sm " +
+            (b <= level ? "bg-success" : "bg-line-strong") +
+            (b === 1 ? " h-1.5" : b === 2 ? " h-2.5" : " h-3.5")
+          }
+        />
+      ))}
+    </span>
   );
 }
 
-// Areas-to-Investigate sidebar (A3): why ranked here · what we believe · evidence ·
-// what we don't know yet · actions (Add to Interview Plan / Add context).
+// Areas-to-Investigate sidebar (A3 + stage5-snapshot-small): admin-only marker +
+// status, pain band (never a decimal), qualitative pain signals, beliefs with
+// confidence, evidence, unknowns, who holds the knowledge, and Add-to-Plan.
 function AreaDrawer({
   area,
   claimsById,
@@ -287,20 +314,39 @@ function AreaDrawer({
             transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
             className="fixed right-0 top-0 z-50 flex h-screen w-full max-w-md flex-col overflow-y-auto border-l border-line bg-canvas p-6 shadow-card"
           >
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <PainBandChip band={area.pain_band} className="mb-2" />
-                <h2 className="font-display text-2xl leading-snug text-ink">
-                  {area.title}
-                </h2>
-              </div>
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <h2 className="font-display text-2xl leading-snug text-ink">{area.title}</h2>
               <button
                 onClick={onClose}
-                className="shrink-0 rounded-lg px-2 py-1 text-ink-faint hover:bg-surface-raised hover:text-ink"
+                className="shrink-0 rounded-lg p-1 text-ink-faint hover:bg-surface-raised hover:text-ink"
                 aria-label="Close"
               >
-                ✕
+                <X className="h-5 w-5" strokeWidth={1.75} />
               </button>
+            </div>
+
+            <div className="mb-4 flex items-center justify-between text-xs">
+              {area.admin_only && (
+                <span className="inline-flex items-center gap-1 text-ink-faint">
+                  <Lock className="h-3.5 w-3.5" strokeWidth={1.75} /> visible to admins only
+                </span>
+              )}
+              <span className="rounded-chip bg-surface-raised px-2 py-0.5 font-medium text-ink-soft">
+                {area.status}
+              </span>
+            </div>
+
+            {/* Pain band (coarse — never a decimal, F28/A2) */}
+            <div className="mb-4 flex items-center gap-2">
+              <span className="text-sm text-ink-soft">Pain level</span>
+              <PainBandChip band={area.pain_band} />
+            </div>
+
+            {/* Pain signals — qualitative, no decimals */}
+            <div className="mb-5 grid grid-cols-3 gap-2">
+              <SignalStat label="Frequency" value={area.signals.frequency} />
+              <SignalStat label="Emotional weight" value={area.signals.emotional_weight} />
+              <SignalStat label="Mentions" value={area.signals.mentions} />
             </div>
 
             <DrawerBlock title="Why ranked here">
@@ -308,40 +354,59 @@ function AreaDrawer({
             </DrawerBlock>
 
             <DrawerBlock title="What we believe so far">
-              <p className="text-sm leading-relaxed text-ink-soft">
-                {area.what_we_believe}
-              </p>
+              <ul className="space-y-2">
+                {area.beliefs.map((b, i) => (
+                  <li key={i} className="flex items-start justify-between gap-3 text-sm text-ink-soft">
+                    <span>{b.text}</span>
+                    <ConfidenceBadge confidence={b.confidence} className="shrink-0" />
+                  </li>
+                ))}
+              </ul>
             </DrawerBlock>
 
-            <DrawerBlock title="Evidence">
-              <div className="space-y-3">
-                {area.evidence_claim_ids
-                  .map((id) => claimsById.get(id))
-                  .filter((c): c is ClaimRecord => Boolean(c))
-                  .map((c) => (
-                    <EvidenceQuoteCard key={c.id} claim={c} />
-                  ))}
-              </div>
-            </DrawerBlock>
+            {area.evidence_claim_ids.length > 0 && (
+              <DrawerBlock title="Evidence">
+                <div className="space-y-3">
+                  {area.evidence_claim_ids
+                    .map((id) => claimsById.get(id))
+                    .filter((c): c is ClaimRecord => Boolean(c))
+                    .map((c) => (
+                      <EvidenceQuoteCard key={c.id} claim={c} sourceLabel="CEO Call" showLink={false} />
+                    ))}
+                </div>
+              </DrawerBlock>
+            )}
 
             <DrawerBlock title="What we don't know yet">
               <ul className="space-y-2">
                 {area.what_we_dont_know.map((q, i) => (
                   <li key={i} className="flex gap-2 text-sm text-ink-soft">
-                    <span className="text-accent">?</span>
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full border border-accent" />
                     <span>{q}</span>
                   </li>
                 ))}
               </ul>
             </DrawerBlock>
 
+            {area.who_holds && (
+              <DrawerBlock title="Who holds this knowledge">
+                <div className="rounded-card border border-line bg-surface">
+                  <PersonRow person={area.who_holds} />
+                </div>
+              </DrawerBlock>
+            )}
+
             <div className="mt-auto flex flex-col gap-2 pt-4">
-              <button className="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90">
-                Add to Interview Plan
+              <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90">
+                Add to Interview Plan <ArrowRight className="h-4 w-4" strokeWidth={2} />
               </button>
-              <button className="rounded-lg border border-line-strong px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-surface-raised">
-                Add context (chat with Nexus)
-              </button>
+              <p className="text-center text-xs text-ink-faint">
+                creates objectives from the unknowns above
+              </p>
+              <div className="flex items-center justify-center gap-4 pt-1 text-xs font-medium text-accent">
+                <button className="hover:underline">View full transcript</button>
+                <button className="hover:underline">Add context (chat with Nexus)</button>
+              </div>
             </div>
           </motion.aside>
         </>
@@ -350,13 +415,21 @@ function AreaDrawer({
   );
 }
 
-function DrawerBlock({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function SignalStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-line bg-surface p-2.5">
+      <div className="text-[10px] font-medium uppercase tracking-wide text-ink-faint">
+        {label}
+      </div>
+      <div className="mt-0.5 text-sm font-semibold leading-tight text-ink">{value}</div>
+      <div className="mt-1.5 h-1 w-full rounded-full bg-accent-soft">
+        <div className="h-1 w-2/3 rounded-full bg-accent" />
+      </div>
+    </div>
+  );
+}
+
+function DrawerBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-5">
       <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-faint">

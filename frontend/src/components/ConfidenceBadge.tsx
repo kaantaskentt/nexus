@@ -4,36 +4,35 @@ import { motion } from "framer-motion";
 import type { Confidence } from "@/lib/types";
 import { cn } from "@/lib/cn";
 
-// F35 split surfaced honestly: Verified (independent agreement) reads stronger than
-// High (single confirmed source). Reported = one claimed voice; Scraped = ~20%
-// reference weight (A2), never presented as verified. Colored dot + text on a
-// neutral chip — the hue is the trust-ladder token, never an ad-hoc value.
-const MAP: Record<
-  Confidence,
-  { label: string; dot: string; text: string; title: string }
-> = {
+// Confidence as a soft-tinted pill (stage5 mockup). F35 semantics preserved:
+// Verified (independent agreement) reads stronger than High (single firsthand);
+// Reported = one claimed voice; Guess = unverified estimate; From web = scraped
+// reference (~20% weight, A2). Wording note: the mockup labels the middle tiers
+// "Medium/Low confidence" — kept here — while the top tier stays "Verified" (F35).
+const MAP: Record<Confidence, { label: string; pill: string; title: string }> = {
   verified: {
     label: "Verified",
-    dot: "bg-tag-verified",
-    text: "text-tag-verified",
+    pill: "bg-success-soft text-tag-verified",
     title: "Independent agreement across sources",
   },
   high: {
-    label: "High",
-    dot: "bg-tag-confirmed",
-    text: "text-tag-confirmed",
+    label: "High confidence",
+    pill: "bg-success-soft text-tag-confirmed",
     title: "Confirmed by a single firsthand source",
   },
   reported: {
-    label: "Reported",
-    dot: "bg-tag-claimed",
-    text: "text-tag-claimed",
+    label: "Medium confidence",
+    pill: "bg-pain-moderate text-tag-guess",
     title: "Claimed by one voice, not yet corroborated",
+  },
+  guess: {
+    label: "Low confidence",
+    pill: "bg-danger-soft text-danger",
+    title: "Unverified estimate — a guess until confirmed on a call",
   },
   scraped: {
     label: "From web",
-    dot: "bg-tag-scraped",
-    text: "text-tag-scraped",
+    pill: "bg-surface-raised text-ink-faint",
     title: "Scraped reference — about 20% weight, not verified",
   },
 };
@@ -55,12 +54,11 @@ export function ConfidenceBadge({
       transition={{ duration: 0.18 }}
       title={c.title}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-chip border border-line bg-surface-raised px-2.5 py-1 text-xs font-medium",
-        c.text,
+        "inline-flex items-center rounded-chip px-2.5 py-1 text-xs font-semibold",
+        c.pill,
         className,
       )}
     >
-      <span className={cn("h-1.5 w-1.5 rounded-full", c.dot)} />
       {c.label}
     </motion.span>
   );

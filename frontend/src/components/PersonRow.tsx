@@ -1,54 +1,44 @@
 import type { ReactNode } from "react";
-import type { Confidence } from "@/lib/types";
-import { ConfidenceBadge } from "./ConfidenceBadge";
+import type { PersonRef } from "@/lib/types";
+import { DiscoveryTag } from "./DiscoveryTag";
 import { cn } from "@/lib/cn";
 
 function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? "")
-    .join("");
+  return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
 }
 
-// Name, role, and a why-line that carries RESPONSIBILITY FACTS ONLY (F34) — no
-// sentiment, no characterization. The caller passes an already-filtered why-line;
-// this component never synthesizes one.
+// A person as a table-style row (stage5 "Suggested People to Interview"). The
+// why-line carries RESPONSIBILITY FACTS ONLY (F34) — the caller passes an
+// already-filtered line; this component never synthesizes one. Avatars are initials,
+// not photos: these people are fiction (A12) and we render no invented faces.
 export function PersonRow({
-  name,
-  role,
-  whyLine,
-  confidence,
+  person,
   action,
   className,
 }: {
-  name: string;
-  role: string;
-  whyLine: string;
-  confidence?: Confidence;
+  person: PersonRef;
   action?: ReactNode;
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "flex items-start gap-3 rounded-card border border-line bg-surface p-4",
+        "flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3.5",
         className,
       )}
     >
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-ink">
-        {initials(name)}
+        {initials(person.name)}
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="font-display text-base text-ink">{name}</span>
-          {confidence && <ConfidenceBadge confidence={confidence} />}
-        </div>
-        <div className="text-xs font-medium uppercase tracking-wide text-ink-faint">
-          {role}
-        </div>
-        <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{whyLine}</p>
+      <div className="w-28 shrink-0">
+        <div className="font-medium text-ink">{person.name}</div>
+        <div className="text-xs text-ink-faint">{person.role}</div>
       </div>
+      <p className="min-w-[12rem] flex-1 text-sm text-ink-soft">
+        <span className="font-medium text-accent-ink">Why: </span>
+        {person.why_line}
+      </p>
+      {person.tag && <DiscoveryTag label={person.tag.label} tone={person.tag.tone} />}
       {action && <div className="shrink-0">{action}</div>}
     </div>
   );

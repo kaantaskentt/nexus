@@ -7,8 +7,11 @@ export type TrustTag = "SCRAPED" | "GUESS" | "CLAIMED" | "CONFIRMED" | "VERIFIED
 
 // ── Snapshot card confidence — the F35 split surfaced to clients ──────────────
 // verified = independent agreement · high = single confirmed source ·
-// reported = claimed, one voice · scraped = ~20% reference weight (A2).
-export type Confidence = "verified" | "high" | "reported" | "scraped";
+// reported = claimed, one voice · guess = unverified estimate (trust-ladder GUESS) ·
+// scraped = ~20% reference weight (A2). The snapshot_cards.confidence enum column is
+// (high|verified|reported|scraped); "guess" is used only inside content jsonb
+// (per-belief), where the richer trust ladder applies.
+export type Confidence = "verified" | "high" | "reported" | "guess" | "scraped";
 
 export type ClaimKind = "statement" | "directive" | "admission" | "correction";
 export type ClaimTopic =
@@ -117,33 +120,64 @@ export interface InterviewPlan {
   never_list: string[];
   suppressed_flags: { rule: string; kind: string }[];
   change_log: { at: string; actor: string; change: string }[];
+  // Plan-page extras (stage6 mockup): interviewee discovery tag, est-time breakdown,
+  // approval stamp, Refine-Plan chat transcript, and the live plan-changes digest.
+  interviewee_tag?: { label: string; tone: "first" | "call" | "new" };
+  interviewee_note?: string; // e.g. "found during the CEO call — not in public data"
+  est_time?: { total_min: number; opening_min: number; topics_min: number; closing_min: number };
+  approved_by?: { name: string; at: string };
+  refine_chat?: { role: "you" | "nexus"; at: string; text: string; author?: string }[];
+  plan_changes?: string[];
   created_at: string;
   updated_at: string;
 }
 
 // ── Snapshot card payloads (snapshot_cards.content, typed per card_type) ──────
+// Source glyph for a Learned card — where the learning came from (renders as an icon).
+export type LearnedSource = "call" | "person" | "message" | "web" | "linkedin";
+
 export interface LearnedContent {
   title: string;
   body: string;
+  source: LearnedSource;
   evidence_claim_ids: string[];
+}
+
+// A responsibility-only person reference (F34) used both as a suggested person and
+// as the "who holds this knowledge" row inside an area.
+export interface PersonRef {
+  name: string;
+  role: string;
+  why_line: string;
+  // discovery tag: FIRST (interview first) / call-discovered / new-person.
+  tag?: { label: string; tone: "first" | "call" | "new" };
+  entity_id?: string;
+}
+
+// A single belief line inside an area, each carrying its own confidence.
+export interface BeliefLine {
+  text: string;
+  confidence: Confidence;
 }
 
 export interface AreaContent {
+  rank: number; // display order / priority index (integer, not a pain score)
   title: string;
   pain_band: PainBand;
+  owner?: string;
+  status: string; // e.g. "Not yet investigated"
+  admin_only: boolean; // CEO-private detail (A3 direction asymmetry)
   why_ranked: string;
-  what_we_believe: string;
+  summary: string; // one-line shown on the card face
+  // Pain signals shown qualitatively — never decimals (F28/A2).
+  signals: { frequency: string; emotional_weight: string; mentions: string };
+  beliefs: BeliefLine[];
   evidence_claim_ids: string[];
   what_we_dont_know: string[];
+  who_holds?: PersonRef;
 }
 
-export interface SuggestedPersonContent {
-  name: string;
-  role: string;
-  // why-line carries responsibility facts ONLY — no sentiment, no characterization (F34).
-  why_line: string;
-  entity_id?: string;
-}
+export type SuggestedPersonContent = PersonRef;
 
 export interface ConflictContent {
   title: string;

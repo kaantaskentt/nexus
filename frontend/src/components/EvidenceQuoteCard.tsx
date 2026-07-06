@@ -1,60 +1,59 @@
+import { ArrowRight, Quote } from "lucide-react";
 import type { ClaimRecord } from "@/lib/types";
 import { cn } from "@/lib/cn";
 
-// Evidence rendering with the F33 rule baked in: interview-sourced evidence is
-// PARAPHRASED in client views (never a verbatim attributed employee quote — A3).
-// CEO-call quotes are his own words and stay verbatim with a timestamp deep-link.
+// Evidence card (stage5 Evidence rail): a source pill + timestamp header, the quote,
+// and a "View transcript evidence" link. F33 rule baked in: interview-sourced
+// evidence is PARAPHRASED in client views (never a verbatim attributed employee
+// quote — A3); CEO-call quotes are the founder's own words and stay verbatim.
 export function EvidenceQuoteCard({
   claim,
+  sourceLabel = "CEO Call",
+  showLink = true,
   className,
 }: {
   claim: Pick<
     ClaimRecord,
     "claim_text" | "evidence_quote" | "evidence_ts" | "is_paraphrased" | "tag"
   >;
+  sourceLabel?: string;
+  showLink?: boolean;
   className?: string;
 }) {
   const paraphrased = claim.is_paraphrased ?? false;
-  const quote = claim.evidence_quote ?? claim.claim_text;
+  const quote = (claim.evidence_quote ?? claim.claim_text).replace(/^\[paraphrased\]\s*/i, "");
 
   return (
-    <figure
-      className={cn(
-        "rounded-card border border-line bg-surface-raised p-4",
-        className,
-      )}
-    >
+    <figure className={cn("rounded-card border border-line bg-surface p-4", className)}>
+      <div className="mb-2 flex items-center justify-between">
+        <span className="rounded-md bg-surface-raised px-2 py-0.5 text-[11px] font-medium text-ink-soft">
+          {paraphrased ? "Paraphrased" : sourceLabel}
+        </span>
+        {claim.evidence_ts && (
+          <span className="text-xs tabular-nums text-ink-faint">{claim.evidence_ts}</span>
+        )}
+      </div>
+
       <blockquote
         className={cn(
-          "border-l-2 pl-3 text-sm leading-relaxed",
-          paraphrased
-            ? "border-line-strong text-ink-soft not-italic"
-            : "border-accent font-display italic text-ink",
+          "flex gap-2 text-sm leading-relaxed",
+          paraphrased ? "text-ink-soft" : "text-ink",
         )}
       >
-        {paraphrased ? quote.replace(/^\[paraphrased\]\s*/i, "") : `“${quote}”`}
+        <Quote className="mt-0.5 h-4 w-4 shrink-0 text-accent" fill="currentColor" strokeWidth={0} />
+        <span className={paraphrased ? "" : "font-display italic"}>{quote}</span>
       </blockquote>
 
-      <figcaption className="mt-3 flex items-center gap-2 text-xs text-ink-faint">
-        {paraphrased && (
-          <span className="rounded-chip border border-line px-2 py-0.5 font-medium text-ink-faint">
-            Paraphrased
-          </span>
-        )}
-        {claim.evidence_ts ? (
-          <button
-            type="button"
-            // Deep-link affordance to the transcript locator (wired to the player later).
-            className="inline-flex items-center gap-1 font-medium text-accent hover:underline"
-            title="Jump to this moment in the transcript"
-          >
-            <span aria-hidden>↳</span>
-            {claim.evidence_ts}
-          </button>
-        ) : (
-          <span>No timestamp</span>
-        )}
-      </figcaption>
+      {showLink && (
+        <button
+          type="button"
+          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+          title="Jump to this moment in the transcript"
+        >
+          View transcript evidence
+          <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+        </button>
+      )}
     </figure>
   );
 }
