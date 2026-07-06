@@ -216,7 +216,11 @@ export function SnapshotView({
                       key={card.id}
                       person={p}
                       action={
-                        <button className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:bg-surface-sunken hover:text-ink">
+                        <button
+                          disabled
+                          title="Starting an interview for a suggested person is being wired in this build"
+                          className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-ink-faint opacity-60"
+                        >
                           <User className="h-4 w-4" strokeWidth={1.75} />
                           Interview
                         </button>
@@ -455,11 +459,15 @@ function AreaDrawer({
               </motion.div>
 
               <div className="mt-6 flex flex-col gap-2 pt-2">
-                <button className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2">
+                <button
+                  disabled
+                  title="Creating an interview plan from an area is being wired in this build"
+                  className="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-md border border-line px-4 py-2.5 text-sm font-medium text-ink-faint opacity-60"
+                >
                   Add to Interview Plan <ArrowRight className="h-4 w-4" strokeWidth={2} />
                 </button>
                 <p className="text-center text-xs text-ink-faint">
-                  creates objectives from the unknowns above
+                  will create objectives from the unknowns above
                 </p>
                 <div className="flex items-center justify-center gap-4 pt-1 text-xs font-medium text-accent">
                   <button className="hover:underline">View full transcript</button>
