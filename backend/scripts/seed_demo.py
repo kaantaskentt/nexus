@@ -16,9 +16,11 @@ import argparse
 import asyncio
 
 from app.db import close_pool, get_pool
-from app.pipeline import compiler
+from app.pipeline import compiler, pain
 
 SLUG = "bee-goddess-demo"
+# Pinned so the demo tenant keeps a stable id across reseeds (frontend can rely on it).
+DEMO_WS_ID = "fae710e1-f0f1-47ff-a7cd-1572efa3e5ff"
 
 # Fictional Stage-1 people pool (source='fixture'). Burak is pre-known so the
 # compiler MATCHES him; Selin is absent so the compiler DISCOVERS her (NEW-PERSON).
@@ -38,6 +40,7 @@ TRANSCRIPT = [
     ("respondent", "One thing: don't mention anything to the Harrods people, we're renegotiating."),
     ("agent", "Understood. What does a good day look like for online orders?"),
     ("respondent", "When we ship every yıldırım order same-day, that's a win. We follow up within 24 hours."),
+    ("respondent", "Honestly the returns side is a constant headache — orders slip through, customers chase us, and it eats the whole team's morning. It's the thing that keeps me up at night."),
     ("respondent", "Selin handles all the online returns — she'd know that side better than me."),
 ]
 
@@ -85,8 +88,9 @@ async def seed(compile_transcript: bool = True) -> str:
         await _wipe_workspace(pool, ws)
 
     ws = await pool.fetchval(
-        "insert into workspaces (name, slug, industry, is_demo) "
-        "values ('Bee Goddess', $1, 'jewelry', true) returning id",
+        "insert into workspaces (id, name, slug, industry, is_demo) "
+        "values ($1, 'Bee Goddess', $2, 'jewelry', true) returning id",
+        DEMO_WS_ID,
         SLUG,
     )
 
@@ -117,6 +121,8 @@ async def seed(compile_transcript: bool = True) -> str:
 
     if compile_transcript:
         await compiler.compile_session({"session_id": str(session_id)})
+        # Run the pain rater inline (the seed has no worker draining the queue).
+        await pain.rate_pain({"workspace_id": str(ws)})
 
     n_claims = await pool.fetchval("select count(*) from claim_records where workspace_id=$1", ws)
     n_ent = await pool.fetchval("select count(*) from entities where workspace_id=$1", ws)

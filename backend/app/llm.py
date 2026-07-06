@@ -4,7 +4,6 @@ or this module raises (Phase 0 #2 — fail loudly, never silently ungrounded).""
 
 import json
 import time
-from pathlib import Path
 
 import anthropic
 
