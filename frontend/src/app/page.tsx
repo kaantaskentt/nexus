@@ -9,8 +9,6 @@ import {
   ArrowRight,
   Lock,
   Check,
-  HelpCircle,
-  ChevronDown,
 } from "lucide-react";
 import brand from "@/lib/brand";
 import { list_workspaces, list_plans, list_snapshot_cards } from "@/lib/live";
@@ -45,15 +43,13 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-canvas">
       <header className="flex h-16 items-center justify-end gap-4 px-8">
-        <HelpCircle className="h-5 w-5 text-ink-faint" strokeWidth={1.75} />
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-ink">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-ink ring-1 ring-inset ring-accent/10">
             {(hero.ws.config?.founder ?? "N X").split(/\s+/).slice(0, 2).map((p) => p[0]).join("")}
           </div>
           {hero.ws.config?.founder && (
             <span className="text-sm font-medium text-ink">{hero.ws.config.founder}</span>
           )}
-          <ChevronDown className="h-4 w-4 text-ink-faint" />
         </div>
       </header>
 
@@ -81,7 +77,7 @@ export default async function Home() {
               {others.map(({ ws }) => (
                 <li
                   key={ws.id}
-                  className="flex items-center justify-between rounded-card border border-line bg-surface px-4 py-3 opacity-80"
+                  className="card-hairline flex items-center justify-between rounded-card border border-line bg-surface px-4 py-3 opacity-80"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised font-display text-sm text-ink-soft">
@@ -121,7 +117,7 @@ function HeroCard({
   return (
     <Link
       href={`/w/${ws.slug}/snapshot`}
-      className="group block rounded-card border border-line bg-surface p-6 shadow-card transition-colors hover:border-line-strong"
+      className="lift group block rounded-card border border-line bg-surface p-6 hover:border-line-strong"
     >
       <div className="flex items-start gap-5">
         <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-surface-raised font-display text-2xl leading-none text-ink">
@@ -175,7 +171,7 @@ function HeroCard({
         <Meta icon={Users} label={`${interviews} suggested interviews`} />
         <Meta icon={Sparkles} label={`${areas} areas to investigate`} />
         <Meta icon={Database} label="Context seeded from discovery call" />
-        <span className="ml-auto inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity group-hover:opacity-90">
+        <span className="ml-auto inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard group-hover:-translate-y-px group-hover:bg-accent-hover group-hover:shadow-elev-2">
           Enter workspace
           <ArrowRight className="h-4 w-4" strokeWidth={2} />
         </span>
