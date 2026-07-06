@@ -24,4 +24,6 @@ This document is the running log of where we bent the design and why, so you can
 
 | 14 | Snapshot drawer's pain-signal stat boxes dropped the mini progress bar the V2 design spec called for | The bar rendered a fixed two-thirds fill for every signal — an invented proportion, since the values are qualitative ("Daily, every morning", "Raised as a primary pain point"), not scores. A meter that implies a measurement we don't have violates the honesty rule (F28/A2), so the elevated stat box now lets the value carry the signal | Design-V2 §4.4 note; if a real 0–N signal ever exists, a token-driven bar can return honestly |
 
+| 15 | Admin auth added (Supabase Auth email+password, login page, workspace scoping); the v1 "no auth, workspace picker only" decision (A11.5) is superseded | Kaan's call on 2026-07-06 morning: he wants real admin logins before client demos, and multi-company tenancy makes an open picker untenable. Kept minimal — no signup flow, admins created manually; interview links stay token-based by design | Supabase Auth rides the existing project; the picker becomes the post-login workspace switcher |
+
 New entries get added below as the build proceeds — same format, short on purpose. If you disagree with any call here, say so; changed minds are cheaper than wrong architecture.
