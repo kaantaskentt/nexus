@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from ..config import get_settings
 from ..db import get_pool
 from ..llm import extract_json, run_agent
+from ..pipeline import entities
 from ..pipeline.compiler import _load_industry_block
 from ..pipeline.handoff import _has_attribution, build_handoff_package
 from ..queue import enqueue
@@ -76,6 +77,51 @@ async def list_plans(workspace_id: str):
         workspace_id,
     )
     return [dict(r) for r in rows]
+
+
+class GenerateIn(BaseModel):
+    workspace_id: str
+    entity_id: str | None = None       # a known suggested-person entity (preferred)
+    person_name: str | None = None     # or resolve/create by name + role
+    person_role: str | None = None
+
+
+@router.post("/generate")
+async def generate(body: GenerateIn):
+    """Generate an interview plan for a suggested person (A17 journey: snapshot → PLAN).
+
+    Creates a DRAFT plan and enqueues the STANDARD generate_plan job — the API only
+    enqueues; the worker runs the strong plan_generator seat. The plan then enters the
+    review lifecycle at NEXUS_CHECK (A4: Nexus checks before the admin sees it), and a
+    human approves before anything sends (the gate). Poll GET /api/plans/{workspace_id}
+    (state flips DRAFT → NEXUS_CHECK when generation lands)."""
+    pool = await get_pool()
+    ws = await pool.fetchrow("select id from workspaces where id = $1", body.workspace_id)
+    if ws is None:
+        raise HTTPException(404, "workspace not found")
+
+    entity_id = body.entity_id
+    if entity_id is None:
+        if not (body.person_name and body.person_name.strip()):
+            raise HTTPException(422, "entity_id or person_name is required")
+        entity_id, _ = await entities.resolve_or_create(
+            body.workspace_id, body.person_name, role=body.person_role
+        )
+
+    # Attach to the workspace's most recent round if one exists (nullable otherwise).
+    round_id = await pool.fetchval(
+        "select id from interview_rounds where workspace_id = $1 order by created_at desc limit 1",
+        body.workspace_id,
+    )
+    plan_id = await pool.fetchval(
+        "insert into interview_plans (workspace_id, round_id, interviewee_id, state) "
+        "values ($1, $2, $3, 'DRAFT') returning id",
+        body.workspace_id, round_id, entity_id,
+    )
+    job_id = await enqueue(
+        "generate_plan", {"plan_id": str(plan_id), "workspace_id": body.workspace_id}
+    )
+    return {"plan_id": str(plan_id), "state": "DRAFT", "job_id": job_id}
 
 
 @router.post("/{plan_id}/transition")

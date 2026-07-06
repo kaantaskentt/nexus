@@ -229,6 +229,19 @@ export async function list_plans(workspace_id: string): Promise<InterviewPlan[]>
   return rows.map(mapPlan);
 }
 
+// Generate an interview plan for a suggested person (A17 journey: snapshot -> PLAN).
+// Creates a DRAFT plan and runs the standard generate_plan job; the plan lands at
+// NEXUS_CHECK. Poll list_plans until the new plan's state flips from DRAFT.
+export async function generate_plan(
+  workspace_id: string,
+  person: { entity_id?: string; person_name?: string; person_role?: string },
+): Promise<{ plan_id: string; state: string; job_id: number }> {
+  return api<{ plan_id: string; state: string; job_id: number }>(`/api/plans/generate`, {
+    method: "POST",
+    body: JSON.stringify({ workspace_id, ...person }),
+  });
+}
+
 export async function get_plan(
   workspace_id: string,
   plan_id: string,

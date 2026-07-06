@@ -9,6 +9,7 @@ from . import (  # noqa: F401  (importing registers each @handles job)
     heuristics,
     interview,
     pain,
+    plan,
     quality,
     recon,
     snapshot,
