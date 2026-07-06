@@ -25,21 +25,49 @@ provisioned + widget deployed (ff9ba48). 52 backend tests, 23 frontend tests, su
    self-retracted claim); yıldırım gap = real. Same-speaker-retraction exclusion rule
    proposed to Emre in morning packet §6 — nothing patched pending his F21/F41 call.
 
-**MORNING SHIFT (July 6): PROD REDEPLOYED at 84db7fe (~09:55 PT).** Vercel (clean-worktree
-build) + both Railway services SUCCESS. Live now: admin login (Supabase Auth, /w/* gated,
-/i/* public) · Knowledge Base + Insights + Interviews nav (all 6 items live, Overview
-removed) · New Company flow + CEO transcript upload → progressive snapshot (A17, E2E-proven
-with real LLMs) · optional website scan · cache-staleness fix · silent parse-swallow fix
-(AgentParseError + raw output persisted) · migration 0008 applied to live (coverage_routing
-built, OFF pending Kaan). MORNING-ORDERS all 4 priorities closed or in final pass.
-In flight: qa-prod re-verify sweep + #18 fresh-journey acceptance; #14/#15 report fixes +
-#23 JSON-format constraints ride a second backend deploy; then #24/#25 leg re-runs +
-em-dash re-compile on the demo tenant; frontend-1 on premium pass round 2.
-Comparator same-speaker-retraction rule + coverage-routing feel change: packet §5/§6, Emre/Kaan.
+**PARKED ~10:30 PT July 6 (Kaan moving location; resume SAME session, same orders).
+Prod (Vercel + Railway + Supabase) STAYS LIVE while parked — only local work pauses.**
 
-**MORNING (Kaan):** open the prod URL · FIRST VOICE CALL (send a voice-modality interview
-from Burak's plan, respondent page shows "Start voice conversation") · morning-review
-packet evals/adjudication/morning-review-packet.md (blind golden labeling, Q1-Q3, F38+
-proposals, TOP V3 item: computed coverage-routing) · taste veto batch (V2-PLAN + earlier
-7-item list; badge labels + em-dash-exemption ruling logged as named deviations) · Artifact
-(same URL, V2 section; editor frames pending item 1).
+**MORNING SHIFT DONE (32 of 34 board tasks):** all 4 MORNING-ORDERS priorities + Kaan's
+multi-company addition (A17) shipped and verified. Prod at e2991d4 (two coordinated
+deploys, ~09:55 + ~09:56): admin login (Supabase Auth; /w/* gated, /i/* public) · all 6
+nav items live (KB, Insights, Interviews built; Overview removed) · New Company + CEO
+upload → progressive snapshot (acceptance-PASSED on prod via real UI: 29 claims/14 cards,
+~3.5 min compile — honest timing now in DEMO-RUNBOOK) · cache fix · silent parse-swallow
+killed (AgentParseError + raw output persisted; proven self-healing on prod: quality leg
+failed loud → retried → populated) · Burak report COMPLETE + honest (new real duration gap
+found) · plan-generation API wired (#30, quarantine enforced at data layer, NEXUS_CHECK
+first) · plan-gen prompt: hidden-lever objectives + clean-question guard, plan evals now
+EXECUTE (runner built) · F42 halo multi-turn eval (real-but-intermittent 2/3) · comparator
+same-speaker-retraction fix PRE-STAGED as git-apply patch (evals/adjudication/staged/,
+verified 4/4) — one command after Emre ratifies · demo runbook docs/DEMO-RUNBOOK.md.
+
+**IN-FLIGHT (checkpointed at park):**
+- #33 generate-plan button (frontend-1) — WIP checkpoint commit on main; see its commit
+  message for works/left/next.
+- #34 screenshot sweep (admin-flow) — prepped, deliberately deferred until after the
+  final deploy's screenshots; option (a) approved (relocate, keep gitignored pngs ignored).
+- evals-1's interview_quality first-attempt-reliability prompt fix — WIP checkpointed.
+
+**RESUME QUEUE (in order):**
+1. frontend-1 finishes #33 → FINAL DEPLOY (team-lead, clean worktree per memory/SPRINT
+   deploy mechanics) → smoke → qa-prod drives the FULL chain on the hidden qa tenant:
+   generate plan → approve → send → synthetic respondent → report (#18 finale).
+2. Rotate demo password admin@nexus.app (admin-flow, create_admin --reset; old one was
+   briefly committed then scrubbed at 312080a — rotation mandatory) → relay to Kaan.
+3. #34 screenshot sweep = last commit. Update this file at shift end.
+4. evals-1: finish quality-prompt fix; mine the #18 transcripts for eval cases.
+
+**OPEN QUESTIONS / KAAN DECISIONS:**
+- aurora-atelier tenant visible in prod picker — unclaimed by any lane at park time; if
+  not Kaan's own Act-1 test, hide via is_internal like the QA tenant. DO NOT delete.
+- Emre ratifications (evidence pre-loaded): F21 same-speaker-retraction (staged patch);
+  F42 halo (2/3 multi-turn baseline); F38+ batch. Packet §4-§6.
+- Kaan taste batch: coverage_routing feel change (OFF until nod) · 4 em-dash records on
+  bee-goddess-demo (ruled documented+deferred-to-reseed; Kaan may override for a cosmetic
+  one-time edit) · demo account address (admin@nexus.app) · voice-selection session.
+- Kaan+Emre personal admin logins created and verified (creds relayed in chat ~10:05 PT).
+
+**MORNING (Kaan, unchanged):** open prod · FIRST VOICE CALL (voice-modality interview from
+Burak's plan) · morning-review packet (blind golden labeling, Q1-Q3, F38+ proposals) ·
+taste veto batch · Artifact (V2 section).
