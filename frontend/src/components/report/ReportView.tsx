@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -14,9 +14,11 @@ import {
   Star,
   FileText,
   MessageSquare,
+  PenLine,
   X,
 } from "lucide-react";
 import type { Report, Workspace, WorkflowStep } from "@/lib/types";
+import { get_workflow_by_session } from "@/lib/live";
 import { AppShell, ConfidenceBadge } from "@/components";
 import { scrimFade, drawerSpring } from "@/lib/variants";
 import { WorkflowStepCard, toolLabel } from "./WorkflowStepCard";
@@ -24,12 +26,32 @@ import { WorkflowStepCard, toolLabel } from "./WorkflowStepCard";
 export function ReportView({
   workspace,
   report,
+  sessionId,
 }: {
   workspace: Workspace;
   report: Report;
+  sessionId: string;
 }) {
   const [openStep, setOpenStep] = useState<WorkflowStep | null>(null);
   const [showAllFollowUps, setShowAllFollowUps] = useState(false);
+  // Resolve this report's workflow by its session so the header can link into the
+  // editor. The base workflow only exists once the canvas has fanned out, so we resolve
+  // lazily off the steps landing and leave the link out until there's a target.
+  const [workflowId, setWorkflowId] = useState<string | null>(null);
+  useEffect(() => {
+    if (report.steps.length === 0) return;
+    let live = true;
+    get_workflow_by_session(sessionId)
+      .then((w) => {
+        if (live) setWorkflowId(w.workflow_id);
+      })
+      .catch(() => {
+        /* editor link stays hidden if the workflow can't be resolved */
+      });
+    return () => {
+      live = false;
+    };
+  }, [sessionId, report.steps.length]);
 
   return (
     <AppShell workspace={workspace} active="plans">
@@ -69,7 +91,17 @@ export function ReportView({
           {/* ── Left: workflow canvas + perception gap ─────────────── */}
           <div className="min-w-0">
             <section className="card-hairline rounded-card border border-line bg-surface-raised p-5">
-              <h2 className="mb-4 font-display text-xl text-ink">{report.workflow_name}</h2>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="font-display text-xl text-ink">{report.workflow_name}</h2>
+                {workflowId && (
+                  <Link
+                    href={`/w/${workspace.slug}/workflow/${workflowId}`}
+                    className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+                  >
+                    <PenLine className="h-4 w-4" strokeWidth={1.75} /> Open workflow editor
+                  </Link>
+                )}
+              </div>
               {report.steps.length === 0 ? (
                 <div className="flex items-center gap-3 rounded-card border border-dashed border-line-strong bg-surface p-6 text-sm text-ink-soft">
                   <Loader2 className="h-5 w-5 shrink-0 animate-spin text-accent" strokeWidth={1.75} />

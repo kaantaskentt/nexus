@@ -281,6 +281,19 @@ export function reportIsCompiling(report: Report): boolean {
 // The base workflow is immutable; every edit is an append-only overlay and the API
 // returns the folded "effective" workflow, which the editor reconciles into its store.
 
+// Workspace-scoped discovery — mirrors list_claims/list_plans so a caller with only a
+// workspace_id can find its workflows (id + step count) and open the editor.
+export interface WorkflowSummary {
+  workflow_id: string;
+  name: string;
+  session_id: string | null;
+  step_count: number;
+}
+
+export async function get_workflows(workspace_id: string): Promise<WorkflowSummary[]> {
+  return api<WorkflowSummary[]>(`/api/workflows/${workspace_id}`);
+}
+
 export async function get_workflow_by_session(session_id: string): Promise<EffectiveWorkflow> {
   return api<EffectiveWorkflow>(`/api/workflows/by-session/${session_id}/effective`);
 }

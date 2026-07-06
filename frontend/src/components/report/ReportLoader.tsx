@@ -71,5 +71,5 @@ export function ReportLoader({
     );
   }
 
-  return <ReportView workspace={workspace} report={report} />;
+  return <ReportView workspace={workspace} report={report} sessionId={sessionId} />;
 }
