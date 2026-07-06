@@ -33,7 +33,12 @@ router = APIRouter()
 
 def _check_secret(supplied: str | None) -> None:
     secret = get_settings().voice_shared_secret
-    if secret and supplied != secret:
+    if not secret:
+        return
+    # Accept the raw secret or a standard "Bearer <secret>" — VAPI attaches it as a
+    # custom Authorization header and may or may not prefix it.
+    token = supplied[7:] if supplied and supplied.startswith("Bearer ") else supplied
+    if token != secret:
         raise HTTPException(401, "bad or missing voice secret")
 
 
