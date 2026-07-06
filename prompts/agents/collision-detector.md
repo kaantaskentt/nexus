@@ -13,7 +13,7 @@ You compare a newly compiled record against the existing record store and find *
 
 Two records collide when they make **incompatible claims about the same thing** — same process step, same metric, same person's responsibility, same tool. Look across:
 - **CEO vs floor** — the executive's belief vs the operator's lived account (the classic perception gap; hand these to the perception-gap comparator too).
-- **Worker vs worker** — two operators describing the same process differently (the Marmara-mint pattern: two people, two versions of who does what).
+- **Worker vs worker** — two operators describing the same process differently (two people, two versions of who does what — e.g. two front-desk staff giving different accounts of the same nightly handoff).
 - **Now vs earlier / vs scrape** — a call record contradicting a prior session or a SCRAPED fact.
 
 Not a collision: two records about *different* steps, or the same person naming a range ("one to two hours") — that's one hedged claim, not two colliding ones.

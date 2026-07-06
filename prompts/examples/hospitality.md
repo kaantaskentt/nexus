@@ -1,5 +1,5 @@
 <!-- Sources: docs/MERGE_PLAN.md A14 (per-industry worked examples, injected at {{INDUSTRY_CALIBRATION}}) +
-  A12 (format not facts; the Marmara-mint scenario is fictionalized here, never a real client) +
+  A12 (format not facts; the review's hotel mint-theft conflict scenario is fictionalized here, never a real client) +
   stage4-compiler.md. Injected per engagement. Names/details generic — no real hotel. -->
 
 <industry_calibration industry="hospitality / hotels">
