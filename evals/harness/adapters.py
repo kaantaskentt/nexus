@@ -102,14 +102,30 @@ class DirectPromptAdapter:
 
         s = self._sessions[token]
         client = anthropic.AsyncAnthropic()
+        # Seed a MID-INTERVIEW state so a single cold case-turn doesn't make the model
+        # re-run its opening moves (greeting + sharing rules). The real runtime carries
+        # conversation history; here we stand in a prior exchange + an explicit note.
         resp = await client.messages.create(
             model=self.model,
             max_tokens=1024,
             system=s["system"],
             messages=[
                 {"role": "user", "content": s["handoff"]},
-                {"role": "assistant", "content": "Understood — I'm ready to begin the interview."},
-                {"role": "user", "content": message},
+                {
+                    "role": "assistant",
+                    "content": "Understood — objectives and rules noted. I'll open, then work through them.",
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        "[HARNESS RUNTIME STATE — the interview is already underway. You have "
+                        "ALREADY greeted the respondent and stated the sharing rules; do NOT "
+                        "re-introduce yourself or repeat the opening. Any elapsed-time or "
+                        "situational detail is in the handoff's scenario note. Respond to the "
+                        "respondent's latest turn below as the ongoing interviewer.]\n\n"
+                        f"Respondent: {message}"
+                    ),
+                },
             ],
         )
         return "".join(b.text for b in resp.content if b.type == "text")
