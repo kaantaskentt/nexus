@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import get_brand
+from .config import get_brand, get_settings
 from .db import close_pool, get_pool
 from .routers import claims, plans, reports, sessions, voice, workspaces
 
@@ -20,9 +20,10 @@ async def lifespan(app: FastAPI):
 brand = get_brand()
 app = FastAPI(title=f"{brand['product_name']} API", lifespan=lifespan)
 
+_origins = [o.strip() for o in get_settings().cors_origins.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

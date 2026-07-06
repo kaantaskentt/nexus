@@ -1,0 +1,55 @@
+# Sources: backend/app/routers/plans.py TRANSITIONS (the 12-state machine) + frontend PlanView.tsx (action bar +
+#   StatusTracker) + docs/MERGE_PLAN.md Phase 3 (lifecycle) + A4 (no decline; one gentle reminder; revoke).
+# Owner to IMPLEMENT: frontend (deterministic unit-test expectations for PlanView given plan.state — NOT run by the
+#   eval harness). prompts-evals owns the SPEC; frontend owns the tests.
+# Banked from the #23 logic-consistency audit: the action bar only modelled the happy path, so PAUSED / NO_RESPONSE /
+#   REVOKED fell through to an enabled "Send Interview" that the server rejects with 409 (plan must be APPROVED).
+
+# ── Every legal state must render a coherent primary action (no state falls through to a wrong/broken affordance) ──
+# TRACK (server) = SENT -> OPENED -> IN_PROGRESS -> COMPLETED -> COMPILED. PAUSED branches off IN_PROGRESS.
+# NO_RESPONSE ages from SENT/OPENED (one reminder -> SENT). REVOKED is terminal from APPROVED/SENT/OPENED.
+plan_state_affordance:
+  - { state: "DRAFT",             primary_action: "Approve plan",       status_tracker: false }
+  - { state: "NEXUS_CHECK",       primary_action: "Approve plan",       status_tracker: false }
+  - { state: "AWAITING_APPROVAL", primary_action: "Approve plan",       status_tracker: false }
+  - { state: "APPROVED",          primary_action: "Send Interview",     status_tracker: false }
+  - { state: "SENT",              primary_action: "Interview sent (disabled)", status_tracker: true }
+  - { state: "OPENED",            primary_action: "Interview sent (disabled)", status_tracker: true }
+  - { state: "IN_PROGRESS",       primary_action: "Interview sent (disabled)", status_tracker: true }
+  # Off-happy-path states — the bug this spec exists to prevent:
+  - { state: "PAUSED",            primary_action: "in-progress/paused treatment, NOT an enabled Send", status_tracker: true,
+      fail_if: "an enabled 'Send Interview' button renders (it 409s: plan is not APPROVED)" }
+  - { state: "NO_RESPONSE",       primary_action: "aged treatment; at most a 'Send reminder' (A4), NOT a plain Send", status_tracker: "aged",
+      fail_if: "an enabled 'Send Interview' button renders and calls POST /send (409)" }
+  - { state: "REVOKED",           primary_action: "terminal; no Send, no Approve", status_tracker: false,
+      fail_if: "any enabled Send/Approve action renders on a revoked plan" }
+  - { state: "COMPLETED",         primary_action: "Interview sent (disabled)", status_tracker: true }
+  - { state: "COMPILED",          primary_action: "Interview sent (disabled) + View report", status_tracker: true }
+
+# ── Lifecycle capabilities the copy promises must be reachable from some human control ──
+# plans/page.tsx copy: "a single gentle reminder" + "There is no decline" (revoke happens admin-side).
+lifecycle_capability_reachable:
+  - id: plan-revoke-reachable
+    given: "an APPROVED/SENT/OPENED plan"
+    expect: "a human control exists that can drive the server-legal transition to REVOKED"
+    fail_if: "REVOKED is a rendered chip + a legal server transition but no UI can ever trigger it"
+  - id: plan-reminder-reachable
+    given: "a NO_RESPONSE plan"
+    expect: "a single 'send reminder' control exists (NO_RESPONSE -> SENT, one time, per A4)"
+    fail_if: "the 'single gentle reminder' promised in copy has no control"
+
+# ── Confidence badge DISPLAY labels (drift caught in the audit) ─────────────────
+# badge-mapping-spec.yaml pins the semantic key (reported/scraped/...). It does NOT pin the human string, which is
+# where the drift lives: the frozen glossary label set is verified/high/reported/scraped and bans number-scale framing
+# ("Never a number"), but ConfidenceBadge renders a High/Medium/Low graded scale. This section pins the string so a
+# glossary decision (glossary vs A15 mockup) is enforced once made. Left as OPEN pending that decision.
+confidence_badge_display_label_OPEN:
+  - { confidence: "verified", glossary_label: "verified", current_ui: "Verified" }
+  - { confidence: "high",     glossary_label: "high",     current_ui: "High confidence" }
+  - { confidence: "reported", glossary_label: "reported", current_ui: "Medium confidence", drift: true }
+  - { confidence: "guess",    glossary_label: "(not in frozen 4)", current_ui: "Low confidence", drift: true }
+  - { confidence: "scraped",  glossary_label: "scraped",  current_ui: "From web", drift: true }
+  - id: badge-guess-two-paths
+    note: "trust.ts maps GUESS -> 'reported' (=> 'Medium confidence'), but a per-belief confidence:'guess' renders
+           'Low confidence'. The same underlying GUESS shows as two different tiers depending on path."
+    decision_needed: "does the frozen glossary win (reported/scraped, no graded scale) or the A15 mockup (High/Med/Low)?"

@@ -1,0 +1,9 @@
+# Keep the backend image lean: only backend/ + config/ + prompts/ are needed at runtime.
+# The frontend deploys to Vercel; reference/ and evals/ are dev-only and never read by
+# the running service.
+frontend/
+reference/
+evals/
+docs/
+*.png
+.DS_Store
