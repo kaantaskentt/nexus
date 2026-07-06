@@ -57,13 +57,22 @@ DEFAULT_HANDOFF = {
 
 def load_cases(suite: str) -> list[dict]:
     files = [SUITES[k] for k in TUNING_SUITES] if suite == "all" else [SUITES[suite]]
+    return _cases_from_files(files)
+
+
+def _cases_from_files(files) -> list[dict]:
     cases: list[dict] = []
     for f in files:
-        doc = yaml.safe_load(f.read_text())
-        for item in doc:
+        doc = yaml.safe_load(Path(f).read_text())
+        for item in doc or []:
             if isinstance(item, dict) and item.get("id") and item.get("input"):
                 cases.append(item)
     return cases
+
+
+def load_file(path: str) -> list[dict]:
+    """Load an arbitrary case file (e.g. a generated scenario_gen batch)."""
+    return _cases_from_files([path])
 
 
 def _handoff_for(case: dict) -> dict:
@@ -87,7 +96,7 @@ async def run_case(case: dict, adapter, sem: asyncio.Semaphore, judge_model: str
 
 
 async def main_async(args) -> int:
-    cases = load_cases(args.suite)
+    cases = load_file(args.file) if args.file else load_cases(args.suite)
     if args.limit:
         cases = cases[: args.limit]
     adapter = get_adapter(args.adapter)
@@ -98,7 +107,8 @@ async def main_async(args) -> int:
     failed = [r for r in results if r["verdict"] == "fail"]
     errored = [r for r in results if r["verdict"] == "error"]
 
-    print(f"\n{'='*68}\nInterviewer eval — {args.suite} via '{args.adapter}' adapter")
+    label = args.file if args.file else args.suite
+    print(f"\n{'='*68}\nInterviewer eval — {label} via '{args.adapter}' adapter")
     print(f"{len(passed)} pass · {len(failed)} fail · {len(errored)} error · {len(results)} total\n")
     for r in failed:
         print(f"  FAIL {r['id']}")
@@ -123,6 +133,7 @@ def main() -> None:
     p = argparse.ArgumentParser(description="Run the interviewer eval suite.")
     p.add_argument("--adapter", choices=["direct", "http"], default="direct")
     p.add_argument("--suite", choices=["taxonomy", "whatif", "all", "heldout"], default="all")
+    p.add_argument("--file", default=None, help="run an arbitrary case file (e.g. a scenario_gen batch)")
     p.add_argument("--base-url", dest="base_url", default=None, help="http adapter base URL")
     p.add_argument("--limit", type=int, default=0)
     p.add_argument("--concurrency", type=int, default=4)

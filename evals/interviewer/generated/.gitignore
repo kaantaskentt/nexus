@@ -1,0 +1,4 @@
+# Generated adversarial cases are ephemeral run artifacts (task #12 pt2) — rotated each run,
+# not committed. Promote a case into the fixed suite by hand only if it caught a real failure.
+*.yaml
+!.gitignore
