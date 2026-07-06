@@ -88,3 +88,23 @@ recommendations.
 5. **Never idle, never make-work.** Standing backlog when the board empties:
    interview volume, eval expansion, polish passes, doc truth. Perfect little pieces,
    all night.
+
+## Side orders (Kaan, decoded — judgment calls, logged decisions)
+
+- **Nav/IA review:** current IA = overview / snapshot / interview plan / interviews /
+  insights / knowledge base. During #23/#24 doc passes, re-mine the Ontora references
+  + dashboard ideas in reference/drive-stage-docs/; if a better IA emerges, EVOLVE
+  (never upend) and log renames as named deviations.
+- **Every button works (hard rule, #19 acceptance):** no dead buttons, no decorative
+  click targets — every element tied to a real action or removed. Anti-theater
+  applies to the UI itself.
+- **No em-dashes in client-facing copy** (UI strings, reports, invites, chat replies,
+  SOPs): Kaan reads them as AI tells. Sweep existing copy, add to copy conventions
+  (prompts/glossary-and-policies.md), lint check if cheap. Internal docs exempt.
+- **Skill Blueprint (lead decision, logged):** skills generation stays OUT of v1
+  promises, but a per-workflow "Skill Blueprint" export ships as a stretch item inside
+  #21 — renders the spine slots + sufficiency the record store already carries as a
+  premium artifact ("what an automation would need to know"), explicitly labeled
+  non-executable. Cheap (reuses SOP export path), high wow, shows the moat without
+  claiming deployment. If #21 core doesn't land tonight, this becomes a 3-line
+  proposal in the morning packet instead.
