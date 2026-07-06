@@ -8,9 +8,8 @@ import type {
   ClaimTopic,
   Confidence,
   KnowledgeRecord,
-  Workspace,
 } from "@/lib/types";
-import { AppShell, ConfidenceBadge, EvidenceQuoteCard } from "@/components";
+import { ConfidenceBadge, EvidenceQuoteCard } from "@/components";
 import { topicMeta } from "@/lib/topics";
 import { confidenceForTag } from "@/lib/trust";
 import { rise } from "@/lib/variants";
@@ -67,13 +66,7 @@ function keep(r: KnowledgeRecord, f: Filters, skip?: keyof Filters): boolean {
   return true;
 }
 
-export function KnowledgeBaseView({
-  workspace,
-  records,
-}: {
-  workspace: Workspace;
-  records: KnowledgeRecord[];
-}) {
+export function KnowledgeBaseView({ records }: { records: KnowledgeRecord[] }) {
   const [f, setF] = useState<Filters>(EMPTY);
   const set = <K extends keyof Filters>(k: K, v: Filters[K]) => setF((p) => ({ ...p, [k]: v }));
 
@@ -120,7 +113,7 @@ export function KnowledgeBaseView({
   const sourceCount = new Set(records.map((r) => r.source_id)).size;
 
   return (
-    <AppShell workspace={workspace} active="knowledge">
+    <>
       <div className="mx-auto max-w-6xl px-8 py-10">
         <motion.div variants={rise} initial="hidden" animate="show">
           <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Knowledge Base</h1>
@@ -253,7 +246,7 @@ export function KnowledgeBaseView({
           </div>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }
 

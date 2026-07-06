@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { get_workspace, list_snapshot_cards, list_claims } from "@/lib/live";
-import { AppShell } from "@/components";
 import { SnapshotView } from "@/components/snapshot/SnapshotView";
 import { DiscoveryUpload } from "@/components/snapshot/DiscoveryUpload";
 
@@ -26,13 +25,11 @@ export default async function SnapshotPage({
   if (cards.length === 0 && claims.length === 0) {
     const cfg = workspace.config ?? {};
     return (
-      <AppShell workspace={workspace} active="snapshot">
-        <DiscoveryUpload
-          workspaceId={workspace.id}
-          defaultSpeaker={cfg.contact_person ?? cfg.founder}
-          website={cfg.website}
-        />
-      </AppShell>
+      <DiscoveryUpload
+        workspaceId={workspace.id}
+        defaultSpeaker={cfg.contact_person ?? cfg.founder}
+        website={cfg.website}
+      />
     );
   }
 

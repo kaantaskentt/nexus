@@ -16,5 +16,5 @@ export default async function InsightsPage({
   if (!workspace) notFound();
 
   const data = await get_insights(workspace.id);
-  return <InsightsView workspace={workspace} data={data} />;
+  return <InsightsView data={data} />;
 }

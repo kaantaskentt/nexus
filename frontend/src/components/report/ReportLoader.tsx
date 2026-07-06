@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2, Lock } from "lucide-react";
 import type { Report, Workspace } from "@/lib/types";
 import { get_report, reportIsCompiling } from "@/lib/live";
-import { AppShell } from "@/components";
 import { ReportView } from "./ReportView";
 
 // Reports populate progressively after the interview /complete: compile runs first,
@@ -52,7 +51,7 @@ export function ReportLoader({
 
   if (fullCompiling) {
     return (
-      <AppShell workspace={workspace} active="plans">
+      <>
         <div className="mx-auto max-w-md px-8 py-24 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
             <Loader2 className="h-6 w-6 animate-spin" strokeWidth={1.75} />
@@ -67,7 +66,7 @@ export function ReportLoader({
             <Lock className="h-3.5 w-3.5" strokeWidth={1.75} /> Visible to admins only
           </p>
         </div>
-      </AppShell>
+      </>
     );
   }
 

@@ -8,9 +8,8 @@ import type {
   InsightConflict,
   InsightsData,
   KeyFinding,
-  Workspace,
 } from "@/lib/types";
-import { AppShell, ConfidenceBadge, PainBandChip } from "@/components";
+import { ConfidenceBadge, PainBandChip } from "@/components";
 import { confidenceForTag } from "@/lib/trust";
 import { conflictKindMeta } from "@/lib/conflicts";
 import { rise, staggerParent } from "@/lib/variants";
@@ -20,18 +19,12 @@ function capitalize(s: string) {
   return s.replace(/^\w/, (c) => c.toUpperCase());
 }
 
-export function InsightsView({
-  workspace,
-  data,
-}: {
-  workspace: Workspace;
-  data: InsightsData;
-}) {
+export function InsightsView({ data }: { data: InsightsData }) {
   const { conflicts, key_findings, admissions, stats } = data;
   const nothing = conflicts.length === 0 && key_findings.length === 0 && admissions.length === 0;
 
   return (
-    <AppShell workspace={workspace} active="insights">
+    <>
       <div className="mx-auto max-w-5xl px-8 py-10">
         <motion.div variants={rise} initial="hidden" animate="show">
           <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Insights</h1>
@@ -108,7 +101,7 @@ export function InsightsView({
           </>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }
 

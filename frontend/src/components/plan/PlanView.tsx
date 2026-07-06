@@ -24,7 +24,7 @@ import {
 import type { InterviewPlan, PlanState, Workspace } from "@/lib/types";
 import brand from "@/lib/brand";
 import { transition_plan } from "@/lib/live";
-import { AppShell, PlanStateChip, MustHitDot, DiscoveryTag, BrandMark } from "@/components";
+import { PlanStateChip, MustHitDot, DiscoveryTag, BrandMark } from "@/components";
 import { SendInterviewFlow } from "./SendInterviewFlow";
 
 const TRACK: PlanState[] = ["SENT", "OPENED", "IN_PROGRESS", "COMPLETED", "COMPILED"];
@@ -93,7 +93,7 @@ export function PlanView({
   const cfg = workspace.config ?? {};
 
   return (
-    <AppShell workspace={workspace} active="plans">
+    <>
       <div className="mx-auto max-w-6xl px-8 py-8">
         <Link
           href={`/w/${workspace.slug}/plans`}
@@ -447,7 +447,7 @@ export function PlanView({
         onClose={() => setFlowOpen(false)}
         onSent={() => setState("SENT")}
       />
-    </AppShell>
+    </>
   );
 }
 

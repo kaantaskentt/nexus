@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import type { Report, TrustTag, Workspace, WorkflowStep } from "@/lib/types";
 import { get_workflow_by_session } from "@/lib/live";
-import { AppShell, ConfidenceBadge } from "@/components";
+import { ConfidenceBadge } from "@/components";
 import { confidenceForTag } from "@/lib/trust";
 import { conflictKindMeta } from "@/lib/conflicts";
 import { scrimFade, drawerSpring } from "@/lib/variants";
@@ -56,7 +56,7 @@ export function ReportView({
   }, [sessionId, report.steps.length]);
 
   return (
-    <AppShell workspace={workspace} active="plans">
+    <>
       <div className="mx-auto max-w-6xl px-8 py-8">
         <div className="flex items-center justify-between">
           <Link
@@ -282,7 +282,7 @@ export function ReportView({
         total={report.steps.length}
         onClose={() => setOpenStep(null)}
       />
-    </AppShell>
+    </>
   );
 }
 

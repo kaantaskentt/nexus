@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FileText } from "lucide-react";
 import { get_workspace, list_plans, list_sessions } from "@/lib/live";
-import { AppShell, PlanStateChip } from "@/components";
+import { PlanStateChip } from "@/components";
 
 // Interview Plans index — one row per plan, state rendered from the lifecycle
 // machine (the UI never decides transitions). Click a row for the plan detail; once
@@ -28,9 +28,8 @@ export default async function PlansPage({
   );
 
   return (
-    <AppShell workspace={workspace} active="plans">
-      <div className="mx-auto max-w-4xl px-8 py-10">
-        <header className="mb-8">
+    <div className="mx-auto max-w-4xl px-8 py-10">
+      <header className="mb-8">
           <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Interview Plans</h1>
           <p className="mt-2 text-sm text-ink-soft">
             One mission per person. Non-response is a signal: plans age on the board,
@@ -77,7 +76,6 @@ export default async function PlansPage({
             );
           })}
         </ul>
-      </div>
-    </AppShell>
+    </div>
   );
 }

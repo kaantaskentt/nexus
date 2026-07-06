@@ -18,5 +18,5 @@ export default async function KnowledgePage({
   if (!workspace) notFound();
 
   const records = await list_knowledge(workspace.id);
-  return <KnowledgeBaseView workspace={workspace} records={records} />;
+  return <KnowledgeBaseView records={records} />;
 }

@@ -35,7 +35,6 @@ import {
   get_sop,
   request_sop,
 } from "@/lib/live";
-import { AppShell } from "@/components";
 import { rise, staggerParent, drawerSpring, scrimFade } from "@/lib/variants";
 
 // The workflow editor (V2 #21) — the third glass flagship. Claim-derived steps are the
@@ -111,7 +110,7 @@ export function WorkflowEditor({
   const hiddenCount = steps.filter((s) => s.hidden).length;
 
   return (
-    <AppShell workspace={workspace} active="plans">
+    <>
       <div className="mx-auto max-w-6xl px-8 py-8">
         <Link
           href={`/w/${workspace.slug}/plans`}
@@ -218,7 +217,7 @@ export function WorkflowEditor({
       </div>
 
       <ExportPanel workflowId={workflowId} kind={panel} onClose={() => setPanel(null)} />
-    </AppShell>
+    </>
   );
 }
 

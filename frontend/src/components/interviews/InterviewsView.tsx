@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { Mic, MessageSquare, ArrowRight, Users } from "lucide-react";
 import type { Workspace } from "@/lib/types";
 import type { SessionSummary } from "@/lib/live";
-import { AppShell } from "@/components";
 import { rise, staggerParent } from "@/lib/variants";
 import { cn } from "@/lib/cn";
 
@@ -34,7 +33,7 @@ export function InterviewsView({
   const done = sessions.filter((s) => s.status === "completed").length;
 
   return (
-    <AppShell workspace={workspace} active="interviews">
+    <>
       <div className="mx-auto max-w-4xl px-8 py-10">
         <motion.div variants={rise} initial="hidden" animate="show">
           <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Interviews</h1>
@@ -70,7 +69,7 @@ export function InterviewsView({
           </motion.div>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }
 

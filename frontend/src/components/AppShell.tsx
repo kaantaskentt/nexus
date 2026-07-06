@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   FileText,
   CalendarDays,
@@ -32,22 +35,39 @@ const NAV: {
   { key: "knowledge", label: "Knowledge Base", icon: BookOpen, href: (s) => `/w/${s}/knowledge`, ready: true },
 ];
 
+// Which nav item a URL segment highlights. report/workflow are reached from a plan, so
+// they keep the Interview Plan item lit; everything else maps to its own item.
+const SEG_TO_NAV: Record<string, NavKey> = {
+  snapshot: "snapshot",
+  plans: "plans",
+  interviews: "interviews",
+  insights: "insights",
+  knowledge: "knowledge",
+  report: "plans",
+  workflow: "plans",
+};
+
 function initials(name: string): string {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
 }
 
 // Left-nav shell shared by every workspace screen (stage5/stage6 mockups, V2 bar):
 // brand mark + icon nav with a resting/hover/active tri-state, a signed-in-user block,
-// and a glass top bar that floats over scrolling content. Brand comes from config.
+// and a glass top bar that floats over scrolling content. Rendered once in the
+// workspace layout so it persists across soft navigations (no per-page re-mount, no
+// nav flash); the active item is derived from the pathname rather than a passed prop.
 export function AppShell({
   workspace,
-  active,
   children,
 }: {
   workspace: Workspace;
-  active: NavKey;
   children: ReactNode;
 }) {
+  const pathname = usePathname();
+  const seg = pathname.split("/")[3] ?? "snapshot"; // /w/[slug]/<seg>
+  const active = SEG_TO_NAV[seg] ?? null;
+  const sectionLabel = seg.charAt(0).toUpperCase() + seg.slice(1);
+
   const user = workspace.config?.founder ?? `${brand.product_name} Operator`;
   const userRole = workspace.config?.founder_role ?? "Admin";
 
@@ -128,7 +148,7 @@ export function AppShell({
           <div className="flex items-center gap-2 text-sm">
             <span className="font-medium text-ink">{workspace.name}</span>
             <span className="text-ink-faint">/</span>
-            <span className="capitalize text-ink-soft">{active}</span>
+            <span className="text-ink-soft">{sectionLabel}</span>
           </div>
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-ink ring-1 ring-inset ring-accent/20">
             {initials(user)}

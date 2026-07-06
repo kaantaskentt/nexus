@@ -14,7 +14,6 @@ import type {
   Workspace,
 } from "@/lib/types";
 import {
-  AppShell,
   ConfidenceBadge,
   EvidenceQuoteCard,
   PainBandChip,
@@ -81,7 +80,7 @@ export function SnapshotView({
   const firstPerson = (people[0]?.content as SuggestedPersonContent | undefined)?.name;
 
   return (
-    <AppShell workspace={workspace} active="snapshot">
+    <>
       <div className="mx-auto max-w-6xl px-8 py-10">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_19rem]">
           {/* ── Main column ─────────────────────────────────────────── */}
@@ -278,7 +277,7 @@ export function SnapshotView({
       </div>
 
       <AreaDrawer area={openArea} claimsById={claimsById} onClose={() => setOpenArea(null)} />
-    </AppShell>
+    </>
   );
 }
 
