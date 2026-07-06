@@ -16,6 +16,7 @@ import {
   Save,
   PencilLine,
   ArrowLeft,
+  FileText,
 } from "lucide-react";
 import type { InterviewPlan, PlanState, Workspace } from "@/lib/types";
 import brand from "@/lib/brand";
@@ -40,9 +41,11 @@ const TRACK_LABEL: Record<string, string> = {
 export function PlanView({
   workspace,
   plan,
+  reportSessionId,
 }: {
   workspace: Workspace;
   plan: InterviewPlan;
+  reportSessionId?: string;
 }) {
   const [state, setState] = useState<PlanState>(plan.state);
   const [flowOpen, setFlowOpen] = useState(false);
@@ -79,7 +82,18 @@ export function PlanView({
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-display text-4xl text-ink">Interview Plan</h1>
-          <PlanStateChip state={state} />
+          <div className="flex items-center gap-3">
+            {reportSessionId && (
+              <Link
+                href={`/w/${workspace.slug}/report/${reportSessionId}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-line-strong px-3 py-1.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-soft"
+              >
+                <FileText className="h-4 w-4" strokeWidth={1.75} />
+                View report
+              </Link>
+            )}
+            <PlanStateChip state={state} />
+          </div>
         </div>
 
         {isLive && (

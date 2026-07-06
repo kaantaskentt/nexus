@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
-import { get_workspace, get_plan } from "@/lib/live";
+import { get_workspace, get_plan, list_sessions } from "@/lib/live";
 import { PlanView } from "@/components/plan/PlanView";
 
-// Interview Plan detail (Phase 3 / A4). Server-fetches the workspace + plan, hands
-// off to the client view that owns the Send Interview flow (details → preview →
-// send → status tracking). The lifecycle state is authoritative from the backend;
-// the flow only requests transitions.
+// Interview Plan detail (Phase 3 / A4). Server-fetches the workspace + plan (and, once
+// the interview has completed and compiled, the session whose report this plan links to)
+// then hands off to the client view that owns approve → send → status.
 export default async function PlanDetailPage({
   params,
 }: {
@@ -16,5 +15,17 @@ export default async function PlanDetailPage({
   const plan = await get_plan(workspace.id, params.id);
   if (!plan) notFound();
 
-  return <PlanView workspace={workspace} plan={plan} />;
+  // A completed interview for this interviewee links straight to its report.
+  const sessions = await list_sessions(workspace.id).catch(() => []);
+  const reportSessionId = plan.interviewee_name
+    ? sessions.find(
+        (s) =>
+          s.has_report &&
+          s.interviewee_name?.toLowerCase() === plan.interviewee_name!.toLowerCase(),
+      )?.id
+    : undefined;
+
+  return (
+    <PlanView workspace={workspace} plan={plan} reportSessionId={reportSessionId} />
+  );
 }
