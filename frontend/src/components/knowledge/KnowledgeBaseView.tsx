@@ -13,7 +13,7 @@ import type {
 import { AppShell, ConfidenceBadge, EvidenceQuoteCard } from "@/components";
 import { topicMeta } from "@/lib/topics";
 import { confidenceForTag } from "@/lib/trust";
-import { rise, staggerParent } from "@/lib/variants";
+import { rise } from "@/lib/variants";
 import { cn } from "@/lib/cn";
 
 // Canonical display order — pains first (the product hunts for them), vocabulary last.
@@ -240,12 +240,10 @@ export function KnowledgeBaseView({
               {filtered.length === 0 ? (
                 <NoMatches onClear={() => setF(EMPTY)} />
               ) : (
-                <motion.div
-                  variants={staggerParent}
-                  initial="hidden"
-                  animate="show"
-                  className="space-y-4"
-                >
+                // One fade for the whole list — a per-card stagger over 56 records reads
+                // as a 2.5s cascade and re-fires on every filter keystroke. The list is
+                // the data; it should arrive at once, snappily.
+                <motion.div variants={rise} initial="hidden" animate="show" className="space-y-4">
                   {filtered.map((r) => (
                     <RecordCard key={r.id} record={r} />
                   ))}
@@ -266,10 +264,7 @@ function RecordCard({ record: r }: { record: KnowledgeRecord }) {
     r.subject_is_person && r.subject_name && r.subject_name !== r.speaker_name;
 
   return (
-    <motion.article
-      variants={rise}
-      className="lift rounded-card border border-line bg-surface p-5 hover:border-line-strong"
-    >
+    <article className="lift rounded-card border border-line bg-surface p-5 hover:border-line-strong">
       <div className="flex items-start justify-between gap-3">
         <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-faint">
           <TopicIcon className="h-3.5 w-3.5 text-accent/70" strokeWidth={1.75} />
@@ -314,7 +309,7 @@ function RecordCard({ record: r }: { record: KnowledgeRecord }) {
           </span>
         )}
       </div>
-    </motion.article>
+    </article>
   );
 }
 
