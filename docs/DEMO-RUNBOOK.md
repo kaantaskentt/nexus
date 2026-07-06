@@ -14,7 +14,7 @@ The demo has two acts. Act 1 is the "watch it build itself" moment on a brand-ne
 Act 2 shows the depth on the prepared Bee Goddess workspace, which already holds several
 compiled interviews.
 
-## Act 1: build a company from one call (about 3 to 4 minutes)
+## Act 1: build a company from one call (about 5 minutes, most of it the live compile)
 
 1. **Sign in.** Open the site, enter the login above. You land on the workspace picker.
 2. **Add company.** Click "Add company". Type a name (for example, "Aurora Atelier"),
@@ -27,9 +27,13 @@ compiled interviews.
    stages: reading the transcript and pulling records, mapping the workflow, rating where
    the pain is, looking for contradictions, then composing the snapshot. The counters
    ("records captured", "snapshot cards") tick up from real data, not a fake bar.
-   **Honest timing: expect 60 to 90 seconds** of visible work. That is the real model doing
-   the extraction. If a client asks, that is the point: it is reading the call the way a
-   world-class interviewer would, not pattern-matching.
+   **Honest timing: on prod this takes about 3 to 4 minutes** (a #18 acceptance run measured
+   about 215 seconds on the shared prod worker). It is not a progress bar on a timer, it is
+   the real model reading the call, so let it breathe. Narrate while it runs: name the stage
+   the board is on ("now it is rating where the pain is, now it is looking for
+   contradictions"). If a client asks why it takes a few minutes, that is the answer: it is
+   reading the call the way a world-class interviewer would, not pattern-matching. Do not
+   stand in silence waiting; the narration is the pitch.
 5. **The snapshot appears.** Cards animate in: what Nexus learned, the areas to investigate
    with pain bands, and who to interview next. Open an "area to investigate" card to show
    the drawer: the evidence quotes are the founder's own words, verbatim.
@@ -67,9 +71,10 @@ compiled interviews.
 
 ## If something goes sideways
 
-- **Compile seems stuck past ~2 minutes:** it is almost always the background worker, not
-  the app. The app only queues the job; a separate worker runs it. Ping the team; do not
-  re-upload (that just queues a second compile).
+- **Compile seems stuck past ~6 minutes:** about 3 to 4 minutes is normal on the shared
+  prod worker, so only worry well past that. When it is genuinely stuck it is almost always
+  the background worker, not the app: the app only queues the job, a separate worker runs
+  it. Ping the team; do not re-upload (that just queues a second compile).
 - **A screen looks stale after an edit:** reload once. Reads are no-cache now, so a reload
   always shows current data.
 - **Fallback:** if Act 1 is slow on the day, skip straight to Act 2 on Bee Goddess, which is
