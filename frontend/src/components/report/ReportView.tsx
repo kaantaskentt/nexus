@@ -46,7 +46,7 @@ export function ReportView({
           </span>
         </div>
 
-        <h1 className="mt-4 font-display text-4xl text-ink">Post-Interview Report</h1>
+        <h1 className="mt-4 font-display text-[2.75rem] leading-[1.05] text-ink">Post-Interview Report</h1>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-ink-soft">
           <span>{workspace.name}</span>
           {report.interviewee_name && (
@@ -150,7 +150,11 @@ export function ReportView({
                   (f, i) => (
                     <li key={i} className="flex items-start justify-between gap-3">
                       <span className="text-sm text-ink-soft">{f.text}</span>
-                      <button className="shrink-0 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:bg-surface-raised hover:text-ink">
+                      <button
+                        disabled
+                        title="Add-to-plan from a finding is being wired with the chat agent in this build"
+                        className="shrink-0 cursor-not-allowed rounded-md border border-line px-3 py-1.5 text-xs font-medium text-ink-faint opacity-60"
+                      >
                         Add to plan
                       </button>
                     </li>
@@ -200,19 +204,22 @@ export function ReportView({
           </aside>
         </div>
 
-        {/* Bottom action bar. SOP export is the report's next step (ships with the
-            workflow editor, #21); the transcript view opens the verbatim record. */}
+        {/* Bottom action bar. SOP export ships with the workflow editor (#21); the
+            transcript view opens the verbatim record. Both are disabled until wired
+            (every-button-works: no decorative click targets). */}
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Action
             primary
             icon={FileText}
             label="Generate SOP"
             sub="Creates the standard operating procedure from verified steps, with the respondent's own words as evidence."
+            soon="Generate SOP ships with the workflow editor in this build"
           />
           <Action
             icon={MessageSquare}
             label="View full transcript"
             sub="Read the full conversation, including all answers and context."
+            soon="The verbatim transcript view is being wired in this build"
           />
         </div>
       </div>
@@ -251,25 +258,39 @@ function Action({
   label,
   sub,
   primary,
+  soon,
 }: {
   icon: typeof FileText;
   label: string;
   sub: string;
   primary?: boolean;
+  // When set, the action isn't wired yet: it renders disabled with this tooltip and a
+  // "Coming in this build" tag, instead of being a decorative click target.
+  soon?: string;
 }) {
+  const disabled = Boolean(soon);
   return (
     <div className="text-center">
       <button
+        disabled={disabled}
+        title={soon}
         className={
           "inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-semibold transition-all duration-150 ease-standard " +
-          (primary
-            ? "bg-accent text-on-accent shadow-elev-1 hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
-            : "border border-line-strong text-ink hover:bg-surface-raised")
+          (disabled
+            ? "cursor-not-allowed border border-line text-ink-faint opacity-70"
+            : primary
+              ? "bg-accent text-on-accent shadow-elev-1 hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
+              : "border border-line-strong text-ink hover:bg-surface-raised")
         }
       >
         <Icon className="h-4 w-4" strokeWidth={1.75} />
         {label}
       </button>
+      {disabled && (
+        <div className="mt-2 inline-block rounded-chip bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-ink-faint ring-1 ring-inset ring-ink/[0.04]">
+          Coming in this build
+        </div>
+      )}
       <p className="mx-auto mt-2 max-w-[16rem] text-xs text-ink-faint">{sub}</p>
     </div>
   );
@@ -362,7 +383,11 @@ function StepDetailDrawer({
                     </li>
                   ))}
                 </ul>
-                <button className="mt-4 rounded-lg border border-line-strong px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-raised">
+                <button
+                  disabled
+                  title="Editing the workflow map arrives with the workflow editor in this build"
+                  className="mt-4 cursor-not-allowed rounded-md border border-line px-4 py-2 text-sm font-medium text-ink-faint opacity-60"
+                >
                   Add follow-up question
                 </button>
               </div>
