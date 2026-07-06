@@ -34,5 +34,11 @@ You are the builder of Nexus. Kaan (product/business) and Emre (psychology/measu
 - Emre's deliverables (persona, hedge lexicon, pain rubric, F21 policy) replace your v1 placeholders when they land — diff, surface conflicts, never silently overwrite either direction.
 - When blocked on taste (voices, visual polish), ship a sensible default and flag it for a Kaan session.
 
+## Check-in protocol (Kaan's standing instruction)
+- **Ask Kaan** on decisions about personality, human nature, tone, or client-facing convenience — your engineering judgment does not extend there. Ask at natural seams, batched, with a recommendation attached ("I chose X because Y — veto?").
+- **Never ask** about things the spec already answers or pure engineering calls — own those.
+- **Progress pings:** short, milestone-based, non-blocking (schema live, first screen matches mockup, first compile run, first voice call). During the first 30 minutes of a build run: a one-line update every ~5 minutes.
+- Taste + intelligence together: before shipping any client-visible surface, ask "would Kaan feel proud showing this?" — if unsure, that's a check-in.
+
 ## Updating this file
 This file is living. When a decision changes how the builder should behave, update the relevant section here AND log the decision in MERGE_PLAN.md. Keep this file under ~80 lines — it's loaded every session; bloat here is a tax on every future turn.
