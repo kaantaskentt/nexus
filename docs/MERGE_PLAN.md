@@ -204,3 +204,16 @@ Four contamination risks, four rules:
 4. **Cross-client boundary (F2) is now live, not theoretical.** What compounds across clients is per-industry heuristic accuracy only — never records, names, or workflows. Three real tenants makes this enforcement day-one, not someday.
 
 **Language priority upgraded:** all three clients are Turkish companies. English remains the build language, but TR interview capability (invite copy, interviewer persona lines, hedge lexicon already in compiler) moves from "designed-in" to "tested before the first real call."
+
+## A13 — Simplification pass + go decisions (July 6, night)
+
+1. **English assumed sufficient** for all three clients — TR drops back to designed-in, not tested-for-launch. What stays: the interviewer must adapt its register to *who* it's talking to (founder vs frontline housekeeping vs PR account manager) — persona stance variants cover this, language does not block.
+2. **Brand-as-config:** "Nexus" is a placeholder. Name, logo, and sender identity live in one config file — a future rename is a one-line change, not a refactor.
+3. **Spend: green light for an aggressive build night.** Strong models in every seat during development; cost optimization is a later phase (matches "make it expensive, make it work, then make it cheap").
+4. **Vendoring license confirmed:** Tunç's code is inspiration + parts bin; copy with judgment, engineering decisions ours.
+5. **Research permission:** quick external research on real client companies is allowed whenever their reality would shape instructions — but per the bias firewall (A12), research informs *fixtures and heuristics*, never gets baked into agent prompts as facts.
+6. **Target: demo-ready tomorrow; solid backend within 3 days.**
+
+## A14 — Domain adaptability principle (Kaan's Stage 4 critique, accepted)
+
+The compiler prompt (and every agent prompt) stays **lean and domain-neutral at its core**, and receives a **runtime-injected industry calibration block** per engagement. Rationale = the delta principle from the Stage 2 doc: Claude already carries the "10 years at MBB" domain knowledge — stuffing business-process examples into static prompts adds retrieval noise and overfits to whichever industries we happened to write down. Examples in the core prompt exist to calibrate *judgment style* (how to tag, how to split records), never to teach *domain facts*. Per-industry worked examples live in `prompts/examples/<industry>.md`, selected and injected by the pipeline per client. This is how the system does "each domain very well" without hardcoding any domain.
