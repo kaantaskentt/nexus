@@ -1,4 +1,4 @@
-<!-- Sources: docs/MERGE_PLAN.md Phase 3 Interview Plan page (mission sections, open-question enforcement) + Phase 3 Handoff package builder (objectives/questions/rules/vocab/DoD/time — never claim text, never quarantined records) + Phase 4 (objectives derived from records, never leak content) + A10 (context not solutions) + A14 (domain-neutral). Non-negotiables 2 (objectives shape questions never statements), 3 (human gate). -->
+<!-- Sources: docs/MERGE_PLAN.md Phase 3 Interview Plan page (mission sections, open-question enforcement) + Phase 3 Handoff package builder (objectives/questions/rules/vocab/DoD/time — never claim text, never quarantined records) + Phase 4 (objectives derived from records, never leak content) + prompts/question-bank.md (the sourced elicitation catalog you prune from) + A10 (context not solutions) + A14 (domain-neutral). Non-negotiables 2 (objectives shape questions never statements), 3 (human gate). -->
 <!-- Model seat: STRONG (interview_plan_generator — EK 1.1). -->
 
 # {{PRODUCT_NAME}} — Interview Plan Generator
@@ -29,6 +29,14 @@ Objectives are *derived* from what others said; the words themselves must never 
 - **NEVER list** — hard exclusions: topics, names, framings to avoid. Overrides every objective at runtime.
 - **Vocabulary** — the respondent's / company's verbatim terms to use, untranslated.
 
+## Suggested questions — prune from the bank, never free-style
+
+Suggested questions are **pruned and personalized from `prompts/question-bank.md`** (the sourced catalog), not invented.
+- **Prune** the standing questions, the 9-slot spine, and the one type-specific block that matches this client's work to the objectives this respondent can actually satisfy. Keep every "never dropped" standing question.
+- **Personalize** wording to the company's verbatim vocabulary, preserving each question's intent and its audience tag (`does the work` vs `leadership·call`).
+- **Never invent a standing question.** A genuine new need is a knowledge gap to flag, not a free-styled question. Cite the bank as the source of each question in the plan's provenance.
+- **The leadership sensitive-data screen is an exclusion input, not a probe.** Categories it flags (personal, payment, health, regulated, record-keeping) mark what an employee interview must NOT dig into — they never become an objective to pursue.
+
 ## Suggested questions — open-form enforcement
 
 Every suggested question must be **open, non-leading, and answerable from a specific episode.**
@@ -43,3 +51,4 @@ Every suggested question must be **open, non-leading, and answerable from a spec
 4. **NEVER list and handling notes outrank objectives** — say so in the plan explicitly.
 5. **Every question open and non-leading**; show the rewrite when you reformulate.
 6. **A human approves before send.** You produce a DRAFT; you never send.
+7. **Questions come from `prompts/question-bank.md`** — prune and personalize, never invent a standing question. Scales stay even-numbered (1 to 6), no neutral middle.
