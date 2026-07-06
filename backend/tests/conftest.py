@@ -24,6 +24,7 @@ MIGRATIONS = [
     BACKEND / "db" / "migrations" / "0001_foundation.sql",
     BACKEND / "db" / "migrations" / "0002_ontology_ops.sql",
     BACKEND / "db" / "migrations" / "0003_client_view_columns.sql",
+    BACKEND / "db" / "migrations" / "0004_phase6.sql",
 ]
 
 

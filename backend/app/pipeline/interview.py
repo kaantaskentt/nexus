@@ -124,6 +124,10 @@ async def _finalize_turn(ctx: dict, reply: str) -> dict:
         **prior,
         "turn_count": prior.get("turn_count", 0) + 1,
         "elapsed_minutes": round(elapsed_min, 1),
+        # Placeholder: a static echo of the package objectives, NOT computed
+        # satisfied/partial/untouched coverage. The model re-derives coverage from the
+        # replayed transcript each turn (correct v1). Engine-side coverage computation
+        # for routing/UI/enforcement would land here later.
         "objectives": ctx["package"].get("objectives", []),
         "pause_offered": prior.get("pause_offered", False) or should_offer_pause,
         "last_turn_at": datetime.now(timezone.utc).isoformat(),

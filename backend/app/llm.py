@@ -3,6 +3,7 @@ agent_runs audit record. Grounded generations must pass non-empty retrieval_quer
 or this module raises (Phase 0 #2 — fail loudly, never silently ungrounded)."""
 
 import json
+import re
 import time
 
 import anthropic
@@ -11,6 +12,25 @@ from .config import REPO_ROOT, get_brand, get_settings
 from .db import get_pool
 
 _client: anthropic.AsyncAnthropic | None = None
+
+
+def extract_json(text: str):
+    """Tolerant JSON extraction shared by pipeline agents — the model may wrap the
+    object/array in prose or a ```json fence. Returns the parsed value."""
+    m = re.search(r"```(?:json)?\s*([\[{].*[\]}])\s*```", text, re.DOTALL)
+    if m:
+        return json.loads(m.group(1))
+    # Pick the container by whichever bracket opens first, so a top-level array isn't
+    # mistaken for its inner object.
+    candidates = [(text.find(o), o, c) for o, c in (("{", "}"), ("[", "]")) if text.find(o) != -1]
+    for _, open_c, close_c in sorted(candidates):
+        start, end = text.find(open_c), text.rfind(close_c)
+        if end > start:
+            try:
+                return json.loads(text[start : end + 1])
+            except json.JSONDecodeError:
+                continue
+    raise ValueError("no JSON found in agent output")
 
 
 def client() -> anthropic.AsyncAnthropic:

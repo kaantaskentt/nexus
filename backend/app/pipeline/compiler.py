@@ -293,10 +293,14 @@ async def compile_session(payload: dict) -> None:
                 count,
             )
 
-    # Pain scoring runs on the pain claims we just wrote (A2 — judged, not a formula).
+    # Post-compile fan-out (all async — none of this sits in an interview reply path):
+    # pain bands, conflict/perception-gap linking, workflow schema, interview-quality.
     from ..queue import enqueue
 
     await enqueue("rate_pain", {"workspace_id": workspace_id, "session_id": session_id})
+    await enqueue("detect_conflicts", {"workspace_id": workspace_id, "session_id": session_id})
+    await enqueue("build_workflow_schema", {"session_id": session_id})
+    await enqueue("score_interview_quality", {"session_id": session_id})
 
 
 @handles("compile_session")
