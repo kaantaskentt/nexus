@@ -212,3 +212,12 @@ async def test_directive_stores_with_null_tag(db, monkeypatch):
     row = await db.fetchrow("select * from claim_records where kind = 'directive'")
     assert row is not None
     assert row["tag"] is None
+
+    # The directive surfaces to the plan-generator path as a NEVER-list candidate,
+    # carrying its SEQUENCING trigger — not just stored.
+    from app.routers.claims import never_list_candidates
+
+    candidates = await never_list_candidates(str(ws))
+    assert len(candidates) == 1
+    assert "Harrods" in candidates[0]["instruction"]
+    assert any("SEQUENCING" in t for t in candidates[0]["triggers"])

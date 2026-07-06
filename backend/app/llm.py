@@ -7,7 +7,7 @@ import time
 
 import anthropic
 
-from .config import REPO_ROOT, get_settings
+from .config import REPO_ROOT, get_brand, get_settings
 from .db import get_pool
 
 _client: anthropic.AsyncAnthropic | None = None
@@ -29,12 +29,12 @@ async def get_agent_config(agent_name: str) -> dict:
 
 
 def load_prompt(prompt_path: str, industry_block: str | None = None) -> str:
-    """Prompts stay domain-neutral; industry calibration is runtime-injected (A14)."""
+    """Prompts stay domain-neutral; industry calibration is runtime-injected (A14).
+    Brand is config (A13.2): {{PRODUCT_NAME}} resolves from config/brand.json so a
+    rename is a one-line change, never a prompt edit."""
     prompt = (REPO_ROOT / prompt_path).read_text()
-    if industry_block:
-        prompt = prompt.replace("{{INDUSTRY_CALIBRATION}}", industry_block)
-    else:
-        prompt = prompt.replace("{{INDUSTRY_CALIBRATION}}", "")
+    prompt = prompt.replace("{{INDUSTRY_CALIBRATION}}", industry_block or "")
+    prompt = prompt.replace("{{PRODUCT_NAME}}", get_brand()["product_name"])
     return prompt
 
 

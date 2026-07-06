@@ -71,7 +71,7 @@ OUTPUT_CONTRACT = """
 
 Rules for the machine layer (the judgment rules are in your system prompt):
 - Every record needs a unique local `id` (r1, r2, ...). `supersedes` and `mentions[].of` reference either a local id from THIS output or a prior-record UUID from the context block.
-- A correction sets `supersedes`. Both records survive; you never edit the superseded one.
+- A correction MUST set `supersedes` to the id of the record it corrects — never emit a correction with `supersedes: null`. If the corrected value was stated earlier in THIS call (even earlier in the same sentence — "it takes forty minutes... actually, ten"), emit BOTH the original value as its own record AND the correction pointing `supersedes` at that original's local id. If the corrected value came from a prior session or a SCRAPED record in the context block, point `supersedes` at that record's UUID. Both records always survive; you never edit or drop the superseded one.
 - A repeat of something already recorded goes in `mentions`, never as a duplicate record.
 - Filler is silently dropped — never a record.
 """
