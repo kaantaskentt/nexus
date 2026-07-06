@@ -110,3 +110,21 @@ async def test_handoff_drops_known_context_and_strips_attribution(db):
     # Clean handling note kept; the "According to the founder" one stripped.
     assert any("Keep it light" in h for h in package["handling_notes"])
     assert not any("According to" in h for h in package["handling_notes"])
+
+
+async def test_handoff_strips_attribution_from_never_list(db):
+    """Backstop for the refine-chat guard (non-negotiable #4): an attribution-shaped
+    never_list entry is stripped at construction; a clean topic prohibition survives."""
+    ws = await make_workspace(db, industry="jewelry")
+    plan_id = await db.fetchval(
+        "insert into interview_plans (workspace_id, state, mission, suggested_questions, never_list) "
+        "values ($1, 'APPROVED', '{}'::jsonb, '[]'::jsonb, $2) returning id",
+        ws, json.dumps([
+            "don't mention that the founder said Burak is slow",  # attribution-shaped
+            "Do not mention the Harrods renegotiation",           # clean topic prohibition
+        ]),
+    )
+    package = await build_handoff_package(str(plan_id))
+    assert any("Harrods" in n for n in package["never_list"])
+    assert not any("Burak is slow" in n for n in package["never_list"])
+    assert "founder said" not in json.dumps(package)

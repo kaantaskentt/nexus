@@ -12,7 +12,7 @@ from ..config import get_settings
 from ..db import get_pool
 from ..llm import extract_json, run_agent
 from ..pipeline.compiler import _load_industry_block
-from ..pipeline.handoff import build_handoff_package
+from ..pipeline.handoff import _has_attribution, build_handoff_package
 from ..queue import enqueue
 
 router = APIRouter()
@@ -229,9 +229,17 @@ async def refine_chat(plan_id: str, body: RefineIn):
     )
     result = extract_json(raw)
 
-    applied = []
+    applied, rejected = [], []
     if result.get("accepted"):
         for ch in result.get("changes") or []:
+            # Structural guard (non-negotiable #4, backstopped in handoff): a never_list
+            # add that names who-said-what about a person is refused here, regardless of
+            # what the agent proposed — the prompt-level refusal is not the enforcement.
+            if (ch.get("target") == "never_list" and ch.get("op") == "add"
+                    and _has_attribution(str(ch.get("value") or ""))):
+                rejected.append({**ch, "reason": "attribution/sentiment: carries who-said-what "
+                                 "about a person; rephrase as a neutral topic prohibition"})
+                continue
             if _apply_change(mission, questions, never, ch):
                 applied.append(ch)
 
@@ -242,6 +250,7 @@ async def refine_chat(plan_id: str, body: RefineIn):
         "accepted": bool(result.get("accepted")),
         "refusal_reason": result.get("refusal_reason"),
         "applied": applied,
+        "rejected": rejected,
         "proposed": result.get("changes") or [],
     }
     change_log.append(entry)
@@ -257,5 +266,6 @@ async def refine_chat(plan_id: str, body: RefineIn):
         "reply": result.get("reply", ""),
         "alternative": result.get("alternative"),
         "applied": applied,
+        "rejected": rejected,
         "change_log_entry": entry,
     }

@@ -18,8 +18,11 @@ def _loads(v):
 @router.get("")
 async def list_workspaces():
     pool = await get_pool()
+    # Internal scaffolding (eval/e2e/voice tenants, demo-respondent dup) is hidden by
+    # default — it must never render as a real client workspace in the picker (#22).
     rows = await pool.fetch(
-        "select id, name, slug, industry, is_demo, config from workspaces order by created_at"
+        "select id, name, slug, industry, is_demo, config from workspaces "
+        "where is_internal = false order by created_at"
     )
     return [{**dict(r), "config": _loads(r["config"])} for r in rows]
 
@@ -51,7 +54,7 @@ async def list_sessions(workspace_id: str):
                   exists(select 1 from workflows w where w.session_id = s.id) as has_report
            from interview_sessions s
            left join entities e on e.id = s.interviewee_id
-           where s.workspace_id = $1 order by s.created_at""",
+           where s.workspace_id = $1 and s.session_kind = 'interview' order by s.created_at""",
         workspace_id,
     )
     return [dict(r) | {"id": str(r["id"]), "plan_id": str(r["plan_id"]) if r["plan_id"] else None}

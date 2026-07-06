@@ -67,6 +67,9 @@ async def test_add_context_enqueues_capped_compile(db):
     # A standard-path session + utterance exist and a capped compile job is queued.
     assert await db.fetchval("select text from utterances where session_id=$1", sid) \
         == "We hired a second returns clerk."
+    # Marked internal so it never counts as a real interview in lists/counts (#20 review).
+    assert await db.fetchval("select session_kind from interview_sessions where id=$1", sid) \
+        == "context"
     job = await db.fetchrow("select kind, payload from jobs where id=$1", body["job_id"])
     assert job["kind"] == "compile_session"
     payload = json.loads(job["payload"]) if isinstance(job["payload"], str) else job["payload"]

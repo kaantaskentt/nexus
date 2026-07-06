@@ -97,7 +97,7 @@ async def seed(compile_transcript: bool = True) -> str:
 
     config = {
         "founder": "Ece", "founder_role": "Founder & Creative Director",
-        "tagline": "Fine jewelry — handcrafted in Istanbul",
+        "tagline": "Fine jewelry, handcrafted in Istanbul",
         "starting_focus": "daily repricing → online returns",
         "source": "CEO Discovery Call + Website Scan", "approved_for_pilot": True,
     }
@@ -147,7 +147,7 @@ async def seed(compile_transcript: bool = True) -> str:
             {"label": "Handoffs to the returns desk", "must_hit": False},
         ],
         "definition_of_done": ["One specific recent morning walked through, steps in order, tools named"],
-        "handling_notes": ["Founder read him as slow with systems — keep it light, never rate him"],
+        "handling_notes": ["Founder read him as slow with systems; keep it light, never rate him"],
         "time_budget_minutes": 30,
     }
     # AWAITING_APPROVAL so the demo walkthrough can drive the live approve → send gate.

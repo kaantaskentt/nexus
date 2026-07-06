@@ -27,6 +27,7 @@ MIGRATIONS = [
     BACKEND / "db" / "migrations" / "0004_phase6.sql",
     BACKEND / "db" / "migrations" / "0005_chat_context.sql",
     BACKEND / "db" / "migrations" / "0006_workflow_overlays.sql",
+    BACKEND / "db" / "migrations" / "0007_internal_flags.sql",
 ]
 
 

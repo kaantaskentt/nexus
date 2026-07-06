@@ -152,8 +152,8 @@ async def eval_bootstrap(body: EvalBootstrapIn):
         token = secrets.token_urlsafe(24)
         await conn.execute(
             """insert into interview_sessions
-                 (workspace_id, plan_id, modality, language, invite_token, status)
-               values ($1, $2, $3, $4, $5, 'pending')""",
+                 (workspace_id, plan_id, modality, language, invite_token, status, session_kind)
+               values ($1, $2, $3, $4, $5, 'pending', 'eval')""",
             ws, plan_id, body.modality, body.language, token,
         )
     return {"token": token}

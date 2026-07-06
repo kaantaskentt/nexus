@@ -25,7 +25,10 @@ DEFAULT_TIME_BUDGET_MIN = 30
 # days; production describes ~3 weeks" is exactly the who-said-what that non-negotiable
 # #2 forbids from reaching the interviewer. This matches a source (role/pronoun) next
 # to a speech-act verb, plus "according to". Applied to objectives/questions/notes/goal/
-# DoD; NOT to never_list or vocabulary (those carry intentional rules and verbatim terms).
+# DoD AND never_list (an attribution-shaped prohibition like "don't mention that the
+# founder said Burak is slow" would smuggle who-said-what + person-sentiment into the
+# agent's context — non-negotiable #4; clean topic prohibitions like the Harrods line
+# have no subject+verb and pass untouched). NOT applied to vocabulary (verbatim terms).
 _SUBJECT = (
     r"founder|ceo|owner|exec(?:utive)?|manager|director|colleague|co-?worker|teammate|"
     r"production|operations|ops|the floor|someone|somebody|the team|employee|respondent|"
@@ -128,15 +131,16 @@ async def build_handoff_package(plan_id: str) -> dict:
 
     # QA F1: known_context is deliberately NOT carried — it's the field where plans
     # accumulate who-said-what, and the interviewer's persona never expects it. Every
-    # remaining free-text field is run through the attribution guard so a dirty plan
-    # (leaked quotes in an objective) still can't reach the runtime agent.
+    # remaining free-text field — never_list included (backstop for the refine-chat
+    # guard) — is run through the attribution guard so a dirty plan (leaked quotes in
+    # an objective, or an attribution-shaped prohibition) still can't reach the agent.
     package = {
         "goal": _strip_attribution(mission.get("goal")),
         "objectives": _strip_attribution(mission.get("topics", mission.get("objectives", []))),
         "suggested_questions": _strip_attribution(_as_list(plan["suggested_questions"])),
         "vocabulary": vocabulary,
         "handling_notes": _strip_attribution(handling_notes),
-        "never_list": never_list,
+        "never_list": _strip_attribution(never_list),
         "definition_of_done": _strip_attribution(
             mission.get("definition_of_done", mission.get("DoD"))
         ),

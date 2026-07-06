@@ -17,3 +17,20 @@ product's payoff moment** — a plan approves but no handoff appears; a responde
 their interview and no report is ever produced. If a compiled artifact never shows up,
 check that the worker is running first.
 
+## Environment conventions (read before touching a DB)
+
+- **`.env` `DATABASE_URL` is the LIVE Supabase pooler** (A12 footgun). Local dev and
+  tests must pin the container DSN explicitly (`postgresql://postgres:nexus@localhost:55432/nexus_eval`
+  for dev, `nexus_test` for the suite via `conftest`). Never let a local worker or test
+  run against `.env` — that would compile fixtures into the live tenant.
+- **`EVAL_MODE` stays OFF (unset/false) in every deployed env.** It double-gates the
+  eval-bootstrap route with `is_demo`; on in production would let synthetic sessions in.
+- **Deploy is two Railway services off one image**, branched by `NEXUS_PROC` in `start.sh`
+  (`api` binds `$PORT`; `worker` drains the queue). Redeploy: `railway up -s <svc> --ci`
+  from repo root. `CORS_ORIGINS`, `VOICE_SHARED_SECRET`, `APP_BASE_URL` are set per service.
+- **Migrations are applied by hand** to each Supabase DB (no auto-migrate on boot); apply
+  a new `NNNN_*.sql` to the container AND live, and add it to `conftest.MIGRATIONS`.
+- **Brand is config (A13.2):** the backend reads `config/brand.json` at runtime; the
+  frontend uses a committed synced copy (`frontend/src/lib/brand.data.json`) so Vercel's
+  frontend-root build can resolve it. Rename the product in one file.
+

@@ -81,7 +81,8 @@ async def ask(workspace_id: str, body: AskIn):
         f"# Retrieved records (your only source of truth)\n{_records_block(records)}"
     )
     raw = await run_agent(
-        "chat_context", user_content, workspace_id=workspace_id, industry_block=industry
+        "chat_context", user_content, workspace_id=workspace_id, industry_block=industry,
+        retrieval_queries=[body.question], claims_grounding=True,
     )
     data = extract_json(raw)
 
@@ -121,8 +122,8 @@ async def add_context(workspace_id: str, body: AddContextIn):
         raise HTTPException(404, "no such workspace")
 
     session_id = await pool.fetchval(
-        "insert into interview_sessions (workspace_id, modality, status) "
-        "values ($1, 'text', 'completed') returning id",
+        "insert into interview_sessions (workspace_id, modality, status, session_kind) "
+        "values ($1, 'text', 'completed', 'context') returning id",
         workspace_id,
     )
     await pool.execute(
