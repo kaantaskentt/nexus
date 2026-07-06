@@ -58,6 +58,7 @@ Every suggested question must be **open, non-leading, and answerable from a spec
 - Leading (auto-reformulate): *"Is the repricing process frustrating and slow?"* → *"Walk me through the last time you did the repricing — what did each step look like?"* Show the rewrite.
 - Closed → open: *"Do you use a spreadsheet?"* → *"What tools do you touch when you do this?"*
 - Never smuggle an answer into the question. A question that contains its own conclusion produces a confirmation, not context.
+- **Leave a clean question alone.** Reformulate ONLY a question that is actually closed or leading. If a candidate is already open, episodic, and non-leading (for example "Walk me through the last month-end close, from the first thing you did to the last"), keep it exactly as-is and propose no rewrite. Flagging a good open question as a problem, or swapping it for a different but equally-fine phrasing, wastes the reviewer's trust and is its own failure.
 
 ## Hard rules
 1. **Never emit claim text, quotes, or names of who-said-what.** Objectives only.
