@@ -35,14 +35,19 @@ describe("ConfidenceBadge", () => {
     const { container } = render(<ConfidenceBadge confidence="verified" />);
     expect(container.textContent).toBe("Verified");
   });
-  it("high reads 'High confidence'", () => {
+  it("high reads 'High' (graded 'confidence' scale dropped)", () => {
     const { container } = render(<ConfidenceBadge confidence="high" />);
-    expect(container.textContent).toBe("High confidence");
+    expect(container.textContent).toBe("High");
   });
-  it("reported reads 'Medium confidence' — never High", () => {
+  it("reported reads 'Reported' — never High", () => {
     const { container } = render(<ConfidenceBadge confidence="reported" />);
-    expect(container.textContent).toBe("Medium confidence");
+    expect(container.textContent).toBe("Reported");
     expect(container.textContent).not.toContain("High");
+  });
+  it("guess renders identically to reported — GUESS never a distinct lower tier (#1)", () => {
+    const { container } = render(<ConfidenceBadge confidence="guess" />);
+    expect(container.textContent).toBe("Reported");
+    expect(container.textContent).not.toContain("Low");
   });
   it("scraped reads 'From web' (not verified)", () => {
     const { container } = render(<ConfidenceBadge confidence="scraped" />);
