@@ -112,6 +112,25 @@ pieces under cost, unnoticed for a week."* Exactly the meeting-worthy, product-p
 simulated respondent. (Report/perception-gap surfaces await a backend fan-out fix — routed to backend-2; reproduce with
 `python -m evals.harness.second_round_e2e --plan-id <burak-plan> --persona burak-repricing`.)
 
+## 6. Perception-gap verdict from LIVE (July 6 morning) — comparator eligibility rule to ratify (Emre)
+
+Verdict on SPRINT-STATE item 2, drawn from the live compiled report (Burak round) + prod claim records: **ceo_vs_floor
+gaps DO form — 2 in `conflict_points`** — but adjudication of both changes the picture:
+
+- **Boutique-count gap (19e3023c) is a FALSE POSITIVE.** The Founder's "twelve boutiques" (CLAIMED) was superseded by his
+  own same-session correction "ten now, closed Ankara last month" (CONFIRMED, kind=correction, same speaker). His current
+  position agrees with Burak's ten. The comparator compared the retracted claim.
+- **Yıldırım terminology gap (cc1636cd) is REAL and must survive any fix.** The Founder's claim is also superseded, but by
+  a DIFFERENT speaker (Burak, CONFIRMED, tag-precedence) — the Founder still holds the wrong mental model. Genuine gap.
+
+**Proposed eligibility rule (policy call, your F21/F41 lane):** exclude a claim from cross-person comparison only when its
+superseder has the SAME speaker (authorial self-correction); keep it when supersession is cross-speaker tag-precedence.
+A naive "exclude all superseded claims" would kill the real yıldırım gap. No prompt or comparator was patched — evidence
+and rule staged for your ratification; eval case follows the ruling.
+
+**UI note (acted on, not waiting):** report `perception_gaps[]` renders empty while the real findings live in
+`conflict_points` — the Insights build was pointed at the populated field.
+
 ## Standing after the review
 
 - The suite grows from every dress rehearsal + real interview (`docs/EVALS.md` §7). I own the transcript-mining

@@ -19,9 +19,11 @@ provisioned + widget deployed (ff9ba48). 52 backend tests, 23 frontend tests, su
    against prod (overlay provenance, MANUAL tagging, reversible soft-hide, audit trail);
    11 screenshots committed (5162cac). #21 done. Found in the process: Next data-cache
    staleness in api.ts (SSR renders stale on every surface) — urgent fix in flight (#13).
-2. Perception-gap verdict → qa-prod (in progress): run evals/harness/second_round_e2e.py
-   against LIVE (re-check Burak plan id post-reseed), fetch report, report if a real
-   ceo_vs_floor gap forms. Last packet line.
+2. ~~Perception-gap verdict~~ CLOSED July 6 morning by qa-prod: 2 ceo_vs_floor gaps form
+   in conflict_points on LIVE (perception_gaps[] stays empty — UI wired to the right
+   field). Boutique-count gap = confirmed FALSE POSITIVE (comparator used the CEO's
+   self-retracted claim); yıldırım gap = real. Same-speaker-retraction exclusion rule
+   proposed to Emre in morning packet §6 — nothing patched pending his F21/F41 call.
 
 **MORNING SHIFT (July 6, in flight):** docs/MORNING-ORDERS.md + Kaan's multi-company
 addition (MERGE_PLAN A17). Four lanes: frontend-1 (KB/Insights/nav + premium pass 2),
