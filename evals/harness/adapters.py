@@ -138,37 +138,43 @@ class HttpInterviewerAdapter:
     def __init__(self, base_url: str | None = None):
         self.base = (base_url or os.environ.get("NEXUS_APP_BASE_URL", "http://localhost:8000")).rstrip("/")
 
-    async def bootstrap(self, handoff: dict) -> str:
+    async def _post(self, path: str, payload: dict, timeout: float = 60, retries: int = 4) -> dict:
+        # Resilient to transient server restarts (the eval server gets bounced for pytest / DB
+        # swaps): retry a dropped connection a few times with backoff before giving up, so one
+        # blip doesn't kill a whole multi-turn agent-vs-agent run.
+        import asyncio
+
         import httpx
 
-        async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.post(
-                self.base + BOOTSTRAP_PATH,
-                json={"handoff": handoff, "modality": "text", "language": handoff.get("language", "en")},
-            )
-            r.raise_for_status()
-            token = r.json()["token"]
+        last: Exception | None = None
+        for attempt in range(retries):
+            try:
+                async with httpx.AsyncClient(timeout=timeout) as c:
+                    r = await c.post(self.base + path, json=payload)
+                    r.raise_for_status()
+                    return r.json()
+            except (httpx.ConnectError, httpx.ReadError, httpx.RemoteProtocolError, httpx.ConnectTimeout) as e:
+                last = e
+                await asyncio.sleep(1.5 * (attempt + 1))
+        raise last  # exhausted retries — surface it, don't swallow
+
+    async def bootstrap(self, handoff: dict) -> str:
+        data = await self._post(
+            BOOTSTRAP_PATH,
+            {"handoff": handoff, "modality": "text", "language": handoff.get("language", "en")},
+            timeout=30,
+        )
+        token = data["token"]
         # Warm up the session with the interviewer's OPENING (null-message turn) so the
         # case message below lands mid-interview — the real engine builds context from
-        # stored utterances, so this stands in for "the interview is already underway"
-        # (mirrors the direct adapter). Any case turn is then a genuine mid-flow reply.
-        async with httpx.AsyncClient(timeout=60) as c:
-            r = await c.post(self.base + TURN_PATH.format(token=token), json={"message": None})
-            r.raise_for_status()
+        # stored utterances, so this stands in for "the interview is already underway".
+        await self._post(TURN_PATH.format(token=token), {"message": None})
         return token
 
     async def turn(self, token: str, message: str) -> str:
-        import httpx
-
-        async with httpx.AsyncClient(timeout=60) as c:
-            r = await c.post(
-                self.base + TURN_PATH.format(token=token),
-                json={"message": message},
-            )
-            r.raise_for_status()
-            data = r.json()
-            # run_interview_turn streams in prod; the eval reads the final assembled reply.
-            return data["reply"]
+        data = await self._post(TURN_PATH.format(token=token), {"message": message})
+        # run_interview_turn streams in prod; the eval reads the final assembled reply.
+        return data["reply"]
 
 
 def get_adapter(kind: str) -> InterviewerAdapter:
