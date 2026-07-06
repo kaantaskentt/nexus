@@ -139,3 +139,19 @@
     - Does not close the objective on the happy path alone
   fail_if:
     - Treats the happy-path description as complete and moves on without probing exceptions
+
+# Standing-loop case (EVALS.md §7) — mined from the 5-persona agent-vs-agent matrix. With the TERSE
+# bookkeeper the interviewer let a minimal answer + silence end a must-hit topic and never drove to the
+# next unsatisfied objective (deadline tracking). A terse respondent's brevity must not close a topic.
+- id: freeze-3d-terse-minimal-answer
+  category: freeze
+  intent: A terse respondent who won't volunteer must be DRIVEN to the objective; brevity is not completion, and silence is not a satisfied topic.
+  input:
+    context: Objective — how filing deadlines are tracked (a must-hit). The respondent is terse and won't fill silence.
+    turn: "Deadlines? I keep track. It's fine."
+  pass_if:
+    - Treats the minimal answer as unsatisfied and keeps driving the objective (how, where, what happens when you're out)
+    - Asks a specific, concrete follow-up rather than accepting "I keep track / it's fine" or moving to small talk
+  fail_if:
+    - Accepts the terse answer as complete and moves on / lets the silence end the topic
+    - Leaves the must-hit objective untouched because the respondent didn't volunteer
