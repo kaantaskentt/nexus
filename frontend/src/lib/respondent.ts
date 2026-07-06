@@ -121,7 +121,7 @@ export function consentCopy(session: RespondentSession) {
     heading: `A quick, honest conversation about ${topic}`,
     intro: `Hi ${name}, thanks for being here. ${askedBy} to understand how the work really happens, and your view matters because you're the one who does it. This takes about ${minutes} minutes, and you're in control the whole way.`,
     whatItIs: [
-      `It's a ${modality} about how your work actually flows, the real version rather than the tidy one.`,
+      `It's a ${modality} about how your work actually flows: the real version, not the tidy one.`,
       "There are no right answers, and nothing to prepare.",
       "It is not a performance review. It is not scored. It's about the work, not a judgment of you.",
     ],
@@ -131,7 +131,7 @@ export function consentCopy(session: RespondentSession) {
       "You won't be asked to rate anyone. If an opinion about a person comes up, it's kept out of what's shared unless you explicitly say otherwise.",
       "You can pause anytime and pick up later on the same link.",
     ],
-    startAction: "I'm ready to start the conversation",
+    startAction: "I'm ready, start the conversation",
     consentFinePrint:
       "By starting, you consent to the recording and summary described above. You can stop at any time.",
     name,

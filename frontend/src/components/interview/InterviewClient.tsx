@@ -375,7 +375,7 @@ function ConsentLanding({
         </button>
         <p className="mt-3 text-xs text-ink-faint">{c.consentFinePrint}</p>
         <p className="mt-1 text-xs text-ink-faint">
-          If now isn&apos;t the time, just close this page. You can return whenever suits you.
+          If now isn&apos;t the time, simply close this page; you can return whenever suits you.
         </p>
       </div>
     </div>
