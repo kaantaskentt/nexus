@@ -1,0 +1,38 @@
+"""Nexus API — FastAPI skeleton. Routers own their domains; teammates extend."""
+
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from .config import get_brand
+from .db import close_pool, get_pool
+from .routers import claims, plans, sessions, workspaces
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await get_pool()
+    yield
+    await close_pool()
+
+
+brand = get_brand()
+app = FastAPI(title=f"{brand['product_name']} API", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(workspaces.router, prefix="/api/workspaces", tags=["workspaces"])
+app.include_router(claims.router, prefix="/api/claims", tags=["claims"])
+app.include_router(plans.router, prefix="/api/plans", tags=["plans"])
+app.include_router(sessions.router, prefix="/api/sessions", tags=["sessions"])
+
+
+@app.get("/health")
+async def health():
+    return {"ok": True, "product": brand["product_name"]}
