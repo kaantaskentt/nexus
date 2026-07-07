@@ -29,10 +29,11 @@ async def test_default_config_is_shared_female_assistant(db):
         r = await c.get(f"/api/voice-config/{ws}")
     assert r.status_code == 200
     body = r.json()
-    # No row yet => shared asteria default, model-generated opener, not custom, not synced.
-    assert body["gender"] == "F"
-    assert body["voice_id"] == "asteria"
-    assert body["assistant_id"] == DEFAULT_ASSISTANT_IDS["F"]
+    # No row yet => global default = ElevenLabs 'ryan' (Kaan's July 7 casting pick, A20),
+    # canned fast opener, not custom, not synced.
+    assert body["gender"] == "M"
+    assert body["voice_id"] == "ryan"
+    assert body["assistant_id"] == DEFAULT_ASSISTANT_IDS["M"]
     assert body["is_custom"] is False
     assert body["vapi_synced"] is False
     assert body["first_message"] is None
@@ -106,7 +107,7 @@ async def test_by_token_public_resolves_default(db):
         r = await c.get("/api/voice-config/by-token/vctok1")
     assert r.status_code == 200
     body = r.json()
-    assert body["assistant_id"] == DEFAULT_ASSISTANT_IDS["F"]
+    assert body["assistant_id"] == DEFAULT_ASSISTANT_IDS["M"]
     assert body["first_message"] is None
 
 

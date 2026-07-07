@@ -261,3 +261,16 @@ Reference images (GPT-generated) are taste-approved as the pixel target for the 
 Everything else in the reference set is taste-approved. Binds Lanes B (#39) and C (#40).
 
 **SEQUENCING (team-lead, same evening):** A19 is the NEXT build pass, not tonight's deploy. Tonight ships the built + green foundation — de-Burak, picker reorder, the voice-config backend + call wiring, Voice Settings (with the speed slider HIDDEN, see below), and the v1 interview room. A19 is a substantial new direction (dark particle orb replacing the warm v1, a brand-new Observer view, tabbed-settings restructure); starting that ground-up at this hour risks parking mid-broken, and the current work is a clean shippable baseline A19 refines — nothing built tonight is wasted, A19 is v2 of the same surfaces. **Correction #1 has no surface tonight:** the v1 room is A18-neutral (orb + transcript + neutral progress, NO live-insight badges), so no all-Verified violation ships — that guardrail binds the future Observer, which doesn't exist yet. Before the Observer ships, its live-badge mapping gets an audit-eng review and MUST reuse `trust.ts` + `ConfidenceBadge`. **Speed slider:** the mock shows a 0.9x speed control, but the Deepgram Aura voice provider has no speed param — the mock wants a knob the provider can't power. Tonight lane-b HIDES it (every-button-works); the A19 pass decides speed-capable-provider vs. drop-from-mock (team-lead flagged to Kaan).
+
+## A20 — Global default voice = ElevenLabs "ryan" (July 7, Kaan casting verdict)
+
+From the July 6-7 voice casting call (4 recipes, docs/VOICE-RESEARCH.md), Kaan called all
+four and picked CASTING-B: ElevenLabs "ryan" (turbo v2.5, stability 0.45 / similarityBoost
+0.75 / speakerBoost / optimizeStreamingLatency 3) + the humanizing block (firstMessageMode
+"assistant-speaks-first" + canned fast opener, startSpeakingPlan waitSeconds 0.4 livekit,
+stopSpeakingPlan numWords 0). Applied as the GLOBAL DEFAULT for all workspaces: both shared
+default VAPI assistants (asteria 44d14d38, orion 0853702b) PATCHed to the ryan recipe, so
+every uncustomized workspace resolves to ryan with the fast opener. Fixes the robotic/slow
+opener Kaan flagged (root cause: model-generated first line). Per-workspace overrides via
+the Voice Settings editor still win. Resolver default metadata updated to report ryan/M
+honestly (voice_config.py).

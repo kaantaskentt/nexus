@@ -59,10 +59,14 @@ def _public_base_url() -> str:
 
 def _resolved_assistant(row) -> dict:
     """The assistant + opener a call for this workspace uses. Dedicated assistant if the
-    workspace provisioned one; otherwise the shared gender-default with a model opener."""
+    workspace provisioned one; otherwise the shared default (ElevenLabs 'ryan' + canned
+    fast opener) — the global default voice Kaan picked from the July 7 casting call (A20).
+    Both shared default assistants are PATCHed to the ryan recipe, so uncustomized
+    workspaces get ryan with the fast opener; first_message None lets the assistant's own
+    canned firstMessage play (no slow model-generated opener)."""
     if row is None:
-        return {"assistant_id": DEFAULT_ASSISTANT_IDS["F"], "first_message": None,
-                "voice_id": "asteria", "gender": "F", "speed": 1.0}
+        return {"assistant_id": DEFAULT_ASSISTANT_IDS["M"], "first_message": None,
+                "voice_id": "ryan", "gender": "M", "speed": 1.0}
     gender = row["gender"]
     assistant_id = row["vapi_assistant_id"] or DEFAULT_ASSISTANT_IDS.get(gender, DEFAULT_ASSISTANT_IDS["F"])
     return {
