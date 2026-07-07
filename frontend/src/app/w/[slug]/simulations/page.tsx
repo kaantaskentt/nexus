@@ -20,7 +20,7 @@ export default async function SimulationsPage({ params }: { params: { slug: stri
     <div className="mx-auto max-w-4xl px-8 py-10">
       <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Simulations</h1>
       <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft">
-        Practice interviews against simulated respondents — realistic personas that test an
+        Practice interviews against simulated respondents: realistic personas that test an
         interview plan before a real person ever gets a link. Simulated runs are firewalled
         from your company&apos;s real record: nothing said here enters the knowledge base.
       </p>
@@ -30,8 +30,7 @@ export default async function SimulationsPage({ params }: { params: { slug: stri
           <FlaskConical className="h-9 w-9 text-ink-faint/60" strokeWidth={1.5} />
           <p className="mt-4 font-display text-xl text-ink">No simulations run yet</p>
           <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">
-            Simulated interviews are run with the {""}
-            Nexus team during onboarding and before big interview rounds — ask us to
+            Simulated interviews are run with the Nexus team during onboarding and before big interview rounds. Ask us to
             pressure-test your plan. Runs and their results appear here.
           </p>
         </div>

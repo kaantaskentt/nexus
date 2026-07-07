@@ -309,7 +309,7 @@ export function VoiceCall({
             </button>
             <button
               onClick={switchToText}
-              title="Continue this same conversation by text — nothing is lost"
+              title="Continue this same conversation by text. Nothing is lost"
               className="inline-flex items-center gap-2 rounded-md border border-line-strong px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-surface-raised"
             >
               <MessageSquare className="h-4 w-4" strokeWidth={1.75} /> Switch to text
@@ -429,8 +429,8 @@ export function VoiceCall({
       </h1>
       <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-soft">
         {resuming
-          ? "Your conversation is saved. Pick it up by voice, or continue by text — same conversation either way."
-          : "Talk it through on a relaxed call, or type if you prefer — same conversation either way, and you can switch at any point without losing anything."}
+          ? "Your conversation is saved. Pick it up by voice, or continue by text. It is the same conversation either way."
+          : "Talk it through on a relaxed call, or type if you prefer. It is the same conversation either way, and you can switch at any point without losing anything."}
       </p>
       <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <button

@@ -67,7 +67,7 @@ export default async function PlansPage({
             <p className="mt-4 font-display text-xl text-ink">No interview plans yet</p>
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">
               Plans are drafted from the Company Snapshot: each suggested person gets one
-              mission, and you approve it before anything reaches them. Start from Home —
+              mission, and you approve it before anything reaches them. Start from Home:
               once the snapshot exists, generate a plan for someone it suggests.
             </p>
             <Link

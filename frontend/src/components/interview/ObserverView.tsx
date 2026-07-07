@@ -125,7 +125,7 @@ export function ObserverView({
           {status.label}
         </span>
         {pollError && (
-          <span className="text-xs text-ink-faint">Connection hiccup — retrying…</span>
+          <span className="text-xs text-ink-faint">Connection hiccup, retrying…</span>
         )}
       </header>
 
@@ -138,7 +138,7 @@ export function ObserverView({
             </div>
             <p className="mt-2 text-center text-xs text-white/40">
               {live
-                ? "Conversation in progress — the orb pulses as turns land"
+                ? "Conversation in progress. The orb pulses as turns land"
                 : s.status === "completed"
                   ? "Conversation ended"
                   : "Waiting for the conversation to start"}
@@ -249,7 +249,7 @@ function TopicsCovered({
         <p className="mt-2 text-xs leading-relaxed text-ink-faint">
           {trackingEnabled
             ? "Coverage appears once the conversation starts."
-            : "Live coverage tracking is off — these are the planned topics."}
+            : "Live coverage tracking is off. These are the planned topics."}
         </p>
       )}
 
@@ -398,7 +398,7 @@ function InsightRail({
             className="input resize-none text-sm"
           />
           {addError && (
-            <p className="mt-1 text-xs text-danger">Couldn&apos;t save — your note is still here, try again.</p>
+            <p className="mt-1 text-xs text-danger">Couldn&apos;t save. Your note is still here, try again.</p>
           )}
           <div className="mt-2 flex justify-end gap-2">
             <button

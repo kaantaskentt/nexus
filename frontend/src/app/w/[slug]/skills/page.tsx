@@ -21,9 +21,8 @@ export default async function AgentSkillsPage({ params }: { params: { slug: stri
     <div className="mx-auto max-w-4xl px-8 py-10">
       <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Agent Skills</h1>
       <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft">
-        A skill starts as a blueprint: a precise write-up of one workflow — inputs, steps,
-        tools, edge cases — in your team&apos;s own words. Today {""}
-        blueprints are documents you can export and hand to any builder; runnable agent
+        A skill starts as a blueprint: a precise write-up of one workflow, its inputs, steps,
+        tools, and edge cases, in your team&apos;s own words. Today blueprints are documents you can export and hand to any builder; runnable agent
         skills are a later phase, and nothing here pretends otherwise.
       </p>
 
