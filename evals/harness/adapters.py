@@ -138,7 +138,9 @@ class HttpInterviewerAdapter:
     def __init__(self, base_url: str | None = None):
         self.base = (base_url or os.environ.get("NEXUS_APP_BASE_URL", "http://localhost:8000")).rstrip("/")
 
-    async def _post(self, path: str, payload: dict, timeout: float = 60, retries: int = 4) -> dict:
+    async def _post(
+        self, path: str, payload: dict, timeout: float = 60, retries: int = 4, admin: bool = False
+    ) -> dict:
         # Resilient to transient server restarts (the eval server gets bounced for pytest / DB
         # swaps): retry a dropped connection a few times with backoff before giving up, so one
         # blip doesn't kill a whole multi-turn agent-vs-agent run.
@@ -146,11 +148,19 @@ class HttpInterviewerAdapter:
 
         import httpx
 
+        # Admin-gated routes (eval-bootstrap) need a real Supabase JWT (P0-1); the public
+        # by-token turn routes do not. We authenticate for real, never allow-list.
+        headers: dict[str, str] = {}
+        if admin:
+            from .auth import admin_headers
+
+            headers = await admin_headers()
+
         last: Exception | None = None
         for attempt in range(retries):
             try:
                 async with httpx.AsyncClient(timeout=timeout) as c:
-                    r = await c.post(self.base + path, json=payload)
+                    r = await c.post(self.base + path, json=payload, headers=headers)
                     r.raise_for_status()
                     return r.json()
             except (httpx.ConnectError, httpx.ReadError, httpx.RemoteProtocolError, httpx.ConnectTimeout) as e:
@@ -163,6 +173,7 @@ class HttpInterviewerAdapter:
             BOOTSTRAP_PATH,
             {"handoff": handoff, "modality": "text", "language": handoff.get("language", "en")},
             timeout=30,
+            admin=True,
         )
         token = data["token"]
         # Warm up the session with the interviewer's OPENING (null-message turn) so the

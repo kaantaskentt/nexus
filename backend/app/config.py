@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     database_url: str = ""
     supabase_url: str = ""
     supabase_service_role_key: str = ""
+    # Anon (publishable) key — sent as the `apikey` header when we verify a caller's
+    # admin JWT against GoTrue (app/auth.py). Same key the browser client uses.
+    supabase_anon_key: str = ""
 
     app_base_url: str = "http://localhost:8000"
     # Comma-separated browser origins allowed to call the API (CORS). Localhost dev by

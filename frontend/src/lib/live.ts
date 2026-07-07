@@ -38,12 +38,15 @@ function parseJson<T>(v: unknown, fallback: T): T {
 }
 
 // ── Workspaces (GET /api/workspaces — now includes config) ───────────────────
-export async function list_workspaces(): Promise<Workspace[]> {
-  return api<Workspace[]>("/api/workspaces");
+// Server-used reads take an optional `token`: Client Components omit it (api() resolves
+// the browser session), Server Components pass the request token (lib/server-token.ts) via
+// the lib/live-server.ts wrappers. See P0-1 in api.ts.
+export async function list_workspaces(token?: string): Promise<Workspace[]> {
+  return api<Workspace[]>("/api/workspaces", undefined, token);
 }
 
-export async function get_workspace(slug: string): Promise<Workspace | undefined> {
-  const all = await list_workspaces();
+export async function get_workspace(slug: string, token?: string): Promise<Workspace | undefined> {
+  const all = await list_workspaces(token);
   return all.find((w) => w.slug === slug);
 }
 
@@ -129,9 +132,10 @@ interface RawClaim extends Omit<ClaimRecord, "hedge_signals" | "is_paraphrased">
 export async function list_claims(
   workspace_id: string,
   topic?: string,
+  token?: string,
 ): Promise<ClaimRecord[]> {
   const q = topic ? `?topic=${encodeURIComponent(topic)}` : "";
-  const rows = await api<RawClaim[]>(`/api/claims/${workspace_id}${q}`);
+  const rows = await api<RawClaim[]>(`/api/claims/${workspace_id}${q}`, undefined, token);
   return rows.map((r) => ({
     ...r,
     hedge_signals: parseJson<string[]>(r.hedge_signals, []),
@@ -143,23 +147,24 @@ export async function list_claims(
 // ── Knowledge Base records (GET /api/claims/{id}/records) ────────────────────
 // The record-store browser. The backend shapes each row (resolved names, F33 flag,
 // no embedding vector), so this is passthrough onto the KnowledgeRecord type.
-export async function list_knowledge(workspace_id: string): Promise<KnowledgeRecord[]> {
-  return api<KnowledgeRecord[]>(`/api/claims/${workspace_id}/records`);
+export async function list_knowledge(workspace_id: string, token?: string): Promise<KnowledgeRecord[]> {
+  return api<KnowledgeRecord[]>(`/api/claims/${workspace_id}/records`, undefined, token);
 }
 
 // ── Insights (GET /api/workspaces/{id}/insights) ─────────────────────────────
 // Cross-interview intelligence — conflicts, banded pains, admissions worth chasing.
 // The backend already shapes each field, so this is passthrough onto InsightsData.
-export async function get_insights(workspace_id: string): Promise<InsightsData> {
-  return api<InsightsData>(`/api/workspaces/${workspace_id}/insights`);
+export async function get_insights(workspace_id: string, token?: string): Promise<InsightsData> {
+  return api<InsightsData>(`/api/workspaces/${workspace_id}/insights`, undefined, token);
 }
 
 // ── Snapshot cards (GET /api/workspaces/{id}/snapshot) ───────────────────────
 // Content shapes match SnapshotCard exactly (backend contract) — passthrough.
 export async function list_snapshot_cards(
   workspace_id: string,
+  token?: string,
 ): Promise<SnapshotCard[]> {
-  return api<SnapshotCard[]>(`/api/workspaces/${workspace_id}/snapshot`);
+  return api<SnapshotCard[]>(`/api/workspaces/${workspace_id}/snapshot`, undefined, token);
 }
 
 // ── Plans (GET /api/plans/{workspace_id}) ────────────────────────────────────
@@ -224,8 +229,8 @@ function mapPlan(r: RawPlan): InterviewPlan {
   };
 }
 
-export async function list_plans(workspace_id: string): Promise<InterviewPlan[]> {
-  const rows = await api<RawPlan[]>(`/api/plans/${workspace_id}`);
+export async function list_plans(workspace_id: string, token?: string): Promise<InterviewPlan[]> {
+  const rows = await api<RawPlan[]>(`/api/plans/${workspace_id}`, undefined, token);
   return rows.map(mapPlan);
 }
 
@@ -245,8 +250,9 @@ export async function generate_plan(
 export async function get_plan(
   workspace_id: string,
   plan_id: string,
+  token?: string,
 ): Promise<InterviewPlan | undefined> {
-  const rows = await list_plans(workspace_id);
+  const rows = await list_plans(workspace_id, token);
   return rows.find((p) => p.id === plan_id);
 }
 
@@ -299,8 +305,8 @@ interface RawSessionSummary {
   interviewee_role?: string | null;
 }
 
-export async function list_sessions(workspace_id: string): Promise<SessionSummary[]> {
-  const rows = await api<RawSessionSummary[]>(`/api/workspaces/${workspace_id}/sessions`);
+export async function list_sessions(workspace_id: string, token?: string): Promise<SessionSummary[]> {
+  const rows = await api<RawSessionSummary[]>(`/api/workspaces/${workspace_id}/sessions`, undefined, token);
   return rows.map((r) => ({
     id: r.id,
     status: r.status,
@@ -345,8 +351,9 @@ interface RawReport {
 export async function get_report(
   session_id: string,
   meta?: { interviewee_name?: string; interviewee_role?: string },
+  token?: string,
 ): Promise<Report | undefined> {
-  const r = await api<RawReport>(`/api/reports/${session_id}`);
+  const r = await api<RawReport>(`/api/reports/${session_id}`, undefined, token);
   if (r.error) return undefined;
 
   const steps: WorkflowStep[] = r.workflow?.steps ?? [];
@@ -410,8 +417,8 @@ export async function get_workflow_by_session(session_id: string): Promise<Effec
   return api<EffectiveWorkflow>(`/api/workflows/by-session/${session_id}/effective`);
 }
 
-export async function get_effective_workflow(workflow_id: string): Promise<EffectiveWorkflow> {
-  return api<EffectiveWorkflow>(`/api/workflows/${workflow_id}/effective`);
+export async function get_effective_workflow(workflow_id: string, token?: string): Promise<EffectiveWorkflow> {
+  return api<EffectiveWorkflow>(`/api/workflows/${workflow_id}/effective`, undefined, token);
 }
 
 // Apply one edit; the server records the overlay (with prior_value provenance) and

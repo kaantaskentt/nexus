@@ -17,6 +17,7 @@ import httpx
 
 from .respondent_sim import RespondentSim, load_persona
 from .adapters import HttpInterviewerAdapter, TURN_PATH
+from .auth import admin_headers
 
 
 async def run(plan_id: str, persona: str, base_url: str, turns: int, wait: int) -> dict:
@@ -24,8 +25,13 @@ async def run(plan_id: str, persona: str, base_url: str, turns: int, wait: int) 
     sim = RespondentSim(sim_prompt)
     interviewer = HttpInterviewerAdapter(base_url)
 
+    # plans/send is admin-gated (P0-1) — authenticate for real; by-token/complete is public.
     async with httpx.AsyncClient(timeout=60) as c:
-        r = await c.post(f"{base_url}/api/plans/{plan_id}/send", json={"modality": "text", "language": "en"})
+        r = await c.post(
+            f"{base_url}/api/plans/{plan_id}/send",
+            json={"modality": "text", "language": "en"},
+            headers=await admin_headers(),
+        )
         r.raise_for_status()
         token = r.json().get("invite_token") or r.json().get("token")
     print(f"sent plan {plan_id[:8]} -> token {token[:8]}…")
@@ -45,7 +51,7 @@ async def run(plan_id: str, persona: str, base_url: str, turns: int, wait: int) 
         last = {}
         while asyncio.get_event_loop().time() < deadline:
             await asyncio.sleep(6)
-            j = (await c.get(f"{base_url}/api/reports/by-plan/{plan_id}")).json()
+            j = (await c.get(f"{base_url}/api/reports/by-plan/{plan_id}", headers=await admin_headers())).json()
             if "error" in j:
                 continue
             last = j

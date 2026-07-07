@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { get_workspace, get_effective_workflow } from "@/lib/live";
+import { get_workspace, get_effective_workflow } from "@/lib/live-server";
 import { WorkflowEditor } from "@/components/workflow/WorkflowEditor";
 
 // Workflow editor route (V2 #21). Loads the folded "effective" workflow (immutable base +

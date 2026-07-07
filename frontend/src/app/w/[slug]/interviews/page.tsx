@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { get_workspace, list_sessions } from "@/lib/live";
+import { get_workspace, list_sessions } from "@/lib/live-server";
 import { InterviewsView } from "@/components/interviews/InterviewsView";
 
 // Interviews (sessions list, nav-integrity fix). Server-fetches the workspace and its

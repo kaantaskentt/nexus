@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { get_workspace, get_insights } from "@/lib/live";
+import { get_workspace, get_insights } from "@/lib/live-server";
 import { InsightsView } from "@/components/insights/InsightsView";
 
 // Insights (cross-interview intelligence, MORNING-ORDERS priority 1). Server-fetches the

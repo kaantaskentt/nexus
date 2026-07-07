@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { get_workspace, get_plan, list_sessions } from "@/lib/live";
+import { get_workspace, get_plan, list_sessions } from "@/lib/live-server";
 import { PlanView } from "@/components/plan/PlanView";
 
 // Interview Plan detail (Phase 3 / A4). Server-fetches the workspace + plan (and, once

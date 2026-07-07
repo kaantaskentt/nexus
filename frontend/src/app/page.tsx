@@ -11,7 +11,7 @@ import {
   Check,
 } from "lucide-react";
 import brand from "@/lib/brand";
-import { list_workspaces, list_plans, list_snapshot_cards } from "@/lib/live";
+import { list_workspaces, list_plans, list_snapshot_cards } from "@/lib/live-server";
 import { BrandMark } from "@/components/BrandMark";
 import { SignOutButton } from "@/components/SignOutButton";
 import { AddCompany } from "@/components/AddCompany";

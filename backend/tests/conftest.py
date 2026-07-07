@@ -32,6 +32,20 @@ MIGRATIONS = [
 ]
 
 
+@pytest.fixture(autouse=True)
+def _admin_auth_bypass():
+    """Admin routes now require a verified Supabase JWT (app/auth.require_admin). Tests
+    drive the ASGI app in-process with no GoTrue, so we override the dependency to a
+    fixed test admin — the FastAPI-blessed way to exercise gated routes without a live
+    auth provider. test_auth.py pops this override to exercise the real gate."""
+    from app.auth import require_admin
+    from app.main import app
+
+    app.dependency_overrides[require_admin] = lambda: "test-admin"
+    yield
+    app.dependency_overrides.pop(require_admin, None)
+
+
 @pytest.fixture
 async def db():
     # pytest-asyncio gives each test its own event loop; the module-global asyncpg

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { get_workspace, list_snapshot_cards, list_claims } from "@/lib/live";
+import { get_workspace, list_snapshot_cards, list_claims } from "@/lib/live-server";
 import { SnapshotView } from "@/components/snapshot/SnapshotView";
 import { DiscoveryUpload } from "@/components/snapshot/DiscoveryUpload";
 

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { get_workspace, list_knowledge } from "@/lib/live";
+import { get_workspace, list_knowledge } from "@/lib/live-server";
 import { KnowledgeBaseView } from "@/components/knowledge/KnowledgeBaseView";
 
 // Knowledge Base (record store, MORNING-ORDERS priority 1). Server-fetches the

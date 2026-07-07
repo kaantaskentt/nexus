@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { get_workspace } from "@/lib/live";
+import { get_workspace } from "@/lib/live-server";
 import { AppShell } from "@/components";
 
 // Workspace layout (#31). The shell (left nav + top bar + user block) lives here, not in

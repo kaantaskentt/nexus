@@ -49,6 +49,14 @@ with no error, just a missing artifact.
 - **A test interviewee**: one real email + phone you control, for end-to-end invite → voice call testing.
 - **Supabase org confirmation**: which org I create the project under, and OK on the ~$10–25/mo tier.
 
+## API auth env (P0-1 — the admin gate; see FOR-TUNC #21)
+
+The backend now verifies every admin request's Supabase JWT, so these must be set in the deploy environment:
+
+- **Backend (Railway):** `SUPABASE_URL` (already set) **+ `SUPABASE_ANON_KEY`** — the anon/publishable key, sent as the `apikey` header when verifying a caller's token against GoTrue. Same value the frontend already uses; it just needs to reach the API process too.
+- **Frontend (Vercel):** `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` (already set for login) — the browser attaches the admin's session token to every API call from these.
+- **Eval harness (local/CI only):** `NEXUS_ADMIN_EMAIL` / `NEXUS_ADMIN_PASSWORD` — a real admin login (provisioned by `backend/scripts/create_admin.py`). The harness does a genuine GoTrue password grant; **never commit these** (export them or add to the gitignored `.env`).
+
 ## Skip for v1 (deliberate)
 
 - **Kimi 2.5** — adds a second reasoning vendor with no unique advantage here; the cheap tier is better served by a small Anthropic model, one SDK fewer. Cut it.

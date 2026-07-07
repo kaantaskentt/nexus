@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { get_workspace, get_report, list_sessions } from "@/lib/live";
+import { get_workspace, get_report, list_sessions } from "@/lib/live-server";
 import { ReportLoader } from "@/components/report/ReportLoader";
 
 // Post-Interview Report (Phase 6 / stage8). The [id] segment is the interview
