@@ -1,4 +1,39 @@
-# Sprint state — V2 FINAL (July 6, ~04:00 PT)
+# Sprint state — V2 FINAL (July 6, ~04:00 PT) + evening workshop (July 6, ~19:15-20:00 PT)
+
+## EVENING WORKSHOP (YC audit) — PARKED CLEAN, PROD REDEPLOYED at 76aab67 (~19:51 PT)
+
+Kaan's 2-hour order executed in ~45 min of build: four-lens YC audit (docs/YC-AUDIT.md,
+ranked top-15) then fix-downward. **Shipped + deployed + smoke-verified tonight:**
+- **#1 P0 API AUTH CLOSED**: Supabase JWT verified on all admin routes (GoTrue
+  introspection, fail-closed, TTL cache); api.ts bearer + live/live-server RSC split;
+  harness authenticates for real (evals/harness/auth.py, needs NEXUS_ADMIN_EMAIL/PASSWORD
+  env). Smoke on prod: unauth 401 / real-token 200 / by-token still public. FOR-TUNC #21.
+- **Trust cluster**: role-level attribution default on pains/open-questions (names behind
+  a release flag), consent + done screen name the audience (EN+TR), future-tense review
+  promise replaced with honest present, "CEO vs floor" → "Leadership and floor view",
+  "Admissions Worth Chasing" → "Open Questions", perception-gap tile counts the real gaps.
+- **Plan lifecycle reconciled**: session complete/compile now advances plan state
+  (forward-only, idempotent); ONE terminal word "Completed"; naming sweep (breadcrumbs
+  derive from nav labels); Plans board reconciles with Interviews (plan-less completions
+  surface; duplicate plans dated).
+- **Visual P0**: step-rail edge fade on Report + Editor (no more mid-word clips);
+  opt-in "Trust:" prefix on Snapshot pills (FOR-TUNC #20, Kaan veto); micro-batch
+  (contiguous numbers, founder dedup, "Not captured" slots, SOP style guard).
+- **#33 generate-plan button** (job-backed honest progress) + global jsonb codec.
+- All suites green at deploy (backend 92, frontend 27, tsc/lint clean).
+  Demo password ROTATED post-workshop (old one had touched git history).
+
+**TOMORROW (ranked remainder, from YC-AUDIT "tomorrow" section):** tenant-scoping by
+claims (auth is identity-only — any admin reads any workspace) · job-poll unification
+(one /api/jobs/{id} + one hook) · router _loads shim sweep (5 min, post-auth) · API URL
+shape consolidation · NO_RESPONSE reminder scheduler · compile-side F21/F34 release flow
+(EMRE) · comparator patch landing (staged, EMRE ratifies) · #18 full-chain finale on prod
+(harness now needs admin creds env) · structural inventory model · aurora-atelier tenant
+still unclaimed (hide after Kaan confirms not his) · plans/page.tsx re-point to
+live-server (flagged in #37 notes). Morning packet §7 has the Kaan/Emre summary.
+
+---
+
 
 **PROD IS LIVE AND PRIMARY:** https://nexus-v2-alpha.vercel.app (V2 frontend, voice-capable)
 + https://nexus-api-production-d644.up.railway.app (api+worker at HEAD c7d8f09: safety
