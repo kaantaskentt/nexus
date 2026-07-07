@@ -294,6 +294,32 @@ BOTH shared assistants — a male voice on the (F) slot. Fixed: (F) = ElevenLabs
 gendered fallback again. Uncustomized workspaces still resolve to the M slot (ryan, THE
 default); the F slot only serves F-tagged configs that never synced.
 
+## A21 — Adopted sidebar IA + Emre-readiness sprint (July 7, Kaan)
+
+Kaan signed in as a stranger (Emre's seat) and hit: founder-or-generic identity in the
+shell, the Aurora bare-headings snapshot, the old nav, and yesterday's silent voice-drop.
+Sprint decisions, all binding:
+1. **Identity**: the shell's user card shows the REAL authenticated person (Supabase
+   session), never the workspace founder, never a generic operator.
+2. **Empty states**: every surface with no data gets a designed empty state that guides
+   the next action. No bare headings anywhere. (Aurora root cause: snapshot page only
+   showed the guided state when cards AND claims were empty; now cards==0 alone routes
+   there, with an honest "records saved, snapshot not compiled" variant.)
+3. **Sidebar IA (adopted from the A19 reference set)**: Home / Interviews / Workflows /
+   Company Context / Insights / Agent Skills / Simulations / Settings + workspace
+   switcher. Routes renamed (snapshot→home, knowledge→context; old URLs redirect).
+   Agent Skills = Skill Blueprints honestly framed (no executable generation in v1);
+   Simulations = eval-kind runs (0007 firewall), no fake run button.
+4. **Respondent modality flexibility**: voice-or-text choice at start; mid-interview
+   switching without losing progress (same session/turn state); a dropped voice call gets
+   honest reconnect UI (Resume voice / Continue by text) — never a silent fallback.
+5. **July 6 drop diagnosed** from VAPI logs: `error-assistant-did-not-receive-customer-audio`
+   at 9:30pm PDT (recurring signature Jul 2 / Jun 25) — the browser mic never fed the call.
+   Fix: getUserMedia preflight before vapi.start + drop-vs-ended distinction + reconnect.
+6. A19 orb room + Observer completion folds into this sprint.
+Gate: EMRE-READY only after a clean prod stranger-walk (fresh company, both modalities,
+mid-interview switch, guided empty states, real identity).
+
 **A20 opener restoration (same day, Kaan voice feedback; EMRE-SEAM):** the first canned
 opener jumped straight to the day-to-day ask — abrupt. A canned message costs the same
 latency whether short or complete, so DEFAULT_FIRST_MESSAGE now carries the persona's FULL
