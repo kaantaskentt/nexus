@@ -8,9 +8,9 @@ import { save_voice_config, type VoiceConfig, type VoiceOption } from "@/lib/liv
 // In-app Voice Settings (Sprint-2 Lane B / #39). An admin tunes the interview voice for
 // this workspace WITHOUT the VAPI dashboard. The private VAPI key never reaches here — the
 // backend does the server-side push; this form only ever sees config + an honest sync
-// status. Preview is a REAL voice sample (Deepgram's public clip per voice), so "listen"
-// plays the actual timbre — not the workspace opener, and honestly labeled as a voice
-// sample rather than a call rehearsal.
+// status. Preview is a REAL voice sample when one exists (Deepgram publishes a public clip
+// per voice); the ElevenLabs voices (A20 — ryan is the global default) have no public clip,
+// so their cards carry no play button rather than a fake one.
 export function VoiceSettings({
   workspaceId,
   initial,
@@ -57,6 +57,7 @@ export function VoiceSettings({
   }
 
   function togglePreview(v: VoiceOption) {
+    if (!v.preview_url) return; // no clip exists — the card renders no play button
     const audio = audioRef.current ?? new Audio();
     audioRef.current = audio;
     if (playing === v.voice_id) {
@@ -146,22 +147,33 @@ export function VoiceSettings({
                   aria-pressed={active}
                   className="absolute inset-0 rounded-card"
                 />
-                <button
-                  onClick={() => togglePreview(v)}
-                  aria-label={isPlaying ? `Stop ${v.label} sample` : `Play ${v.label} sample`}
-                  className={
-                    "relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors " +
-                    (isPlaying
-                      ? "border-accent bg-accent text-on-accent"
-                      : "border-line-strong text-ink-soft hover:border-accent hover:text-accent")
-                  }
-                >
-                  {isPlaying ? (
-                    <Pause className="h-4 w-4" strokeWidth={2} />
-                  ) : (
-                    <Play className="h-4 w-4 translate-x-px" strokeWidth={2} />
-                  )}
-                </button>
+                {v.preview_url ? (
+                  <button
+                    onClick={() => togglePreview(v)}
+                    aria-label={isPlaying ? `Stop ${v.label} sample` : `Play ${v.label} sample`}
+                    className={
+                      "relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors " +
+                      (isPlaying
+                        ? "border-accent bg-accent text-on-accent"
+                        : "border-line-strong text-ink-soft hover:border-accent hover:text-accent")
+                    }
+                  >
+                    {isPlaying ? (
+                      <Pause className="h-4 w-4" strokeWidth={2} />
+                    ) : (
+                      <Play className="h-4 w-4 translate-x-px" strokeWidth={2} />
+                    )}
+                  </button>
+                ) : (
+                  // No public sample clip exists for this voice — an honest static badge,
+                  // never a play button that does nothing. Clicks pass through to select.
+                  <div
+                    className="pointer-events-none relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line text-ink-faint"
+                    title="No sample clip for this voice yet"
+                  >
+                    <Mic className="h-4 w-4" strokeWidth={1.75} />
+                  </div>
+                )}
                 <div className="relative z-10 min-w-0 pointer-events-none">
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-semibold text-ink">{v.label}</span>
@@ -175,26 +187,29 @@ export function VoiceSettings({
         </div>
       </Section>
 
-      {/* Speaking pace — no dead slider: the current voices have no speed knob, so we say
-          so plainly rather than ship a control that no-ops (every-button-works). */}
+      {/* Speaking pace — still no slider: the ElevenLabs voices can vary speed server-side,
+          but a pace control is an A19 taste decision; until it ships we say so plainly
+          rather than render a dead knob (every-button-works). */}
       <Section title="Speaking pace" hint="How quickly the interviewer speaks">
         <p className="rounded-lg border border-line bg-surface-sunken px-3.5 py-2.5 text-sm text-ink-soft">
-          These voices speak at a natural, even pace suited to interviews. Adjustable speed
-          isn&apos;t available for them yet — it arrives with the next set of voices.
+          These voices speak at a natural, even pace suited to interviews. A pace control
+          isn&apos;t part of settings yet.
         </p>
       </Section>
 
-      {/* First message */}
-      <Section title="Opening line" hint="Leave empty to let the interviewer open naturally">
+      {/* First message — the placeholder IS the standard opener (A20 canned line), so what
+          the admin sees greyed out is exactly what plays when they leave this empty. */}
+      <Section title="Opening line" hint="Leave empty to use the standard opener">
         <textarea
           value={firstMessage}
           onChange={(e) => setFirstMessage(e.target.value)}
           rows={2}
-          placeholder="Hi, thanks for making the time. Whenever you are ready, we can start."
+          placeholder="Hi, thanks for taking the time. Whenever you're ready, just tell me a little about what you do day to day."
           className="input resize-none"
         />
         <p className="mt-1.5 text-xs text-ink-faint">
-          When empty, the interviewer writes its own opener for each conversation.
+          When empty, the interviewer opens with the standard line above, spoken the moment
+          the call connects.
         </p>
       </Section>
 

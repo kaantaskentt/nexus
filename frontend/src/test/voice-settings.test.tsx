@@ -12,9 +12,10 @@ import { save_voice_config } from "@/lib/live";
 const saveMock = vi.mocked(save_voice_config);
 
 const VOICES = [
-  { voice_id: "asteria", label: "Asteria", gender: "F" as const, note: "Warm and friendly (default)", preview_url: "https://s/asteria.wav" },
-  { voice_id: "luna", label: "Luna", gender: "F" as const, note: "Soft and calm", preview_url: "https://s/luna.wav" },
-  { voice_id: "orion", label: "Orion", gender: "M" as const, note: "Approachable and warm (default)", preview_url: "https://s/orion.wav" },
+  { voice_id: "asteria", label: "Asteria", gender: "F" as const, note: "Warm and friendly", provider: "deepgram" as const, preview_url: "https://s/asteria.wav" },
+  { voice_id: "luna", label: "Luna", gender: "F" as const, note: "Soft and calm", provider: "deepgram" as const, preview_url: "https://s/luna.wav" },
+  { voice_id: "ryan", label: "Ryan", gender: "M" as const, note: "Warm and conversational (default)", provider: "11labs" as const, preview_url: null },
+  { voice_id: "orion", label: "Orion", gender: "M" as const, note: "Approachable and warm", provider: "deepgram" as const, preview_url: "https://s/orion.wav" },
 ];
 
 function config(over: Partial<VoiceConfig> = {}): VoiceConfig {
@@ -65,7 +66,7 @@ describe("VoiceSettings", () => {
     render(<VoiceSettings workspaceId="ws-1" initial={config()} />);
 
     fireEvent.click(screen.getByRole("button", { name: /use luna/i }));
-    fireEvent.change(screen.getByPlaceholderText(/thanks for making the time/i), {
+    fireEvent.change(screen.getByPlaceholderText(/thanks for taking the time/i), {
       target: { value: "  Welcome in.  " },
     });
     await act(async () => {
@@ -99,5 +100,15 @@ describe("VoiceSettings", () => {
     // The audio got the voice's public sample url and was played.
     expect(playSpy).toHaveBeenCalled();
     expect(lastSrc.value).toBe("https://s/asteria.wav");
+  });
+
+  it("renders no play button for a voice without a sample clip (A20 ElevenLabs roster)", () => {
+    render(<VoiceSettings workspaceId="ws-1" initial={config()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Male" }));
+    // Ryan (11labs, no public clip) is selectable but offers no fake preview…
+    expect(screen.getByText("Ryan")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /play ryan sample/i })).toBeNull();
+    // …while Orion (Deepgram) keeps its real one.
+    expect(screen.getByRole("button", { name: /play orion sample/i })).toBeInTheDocument();
   });
 });

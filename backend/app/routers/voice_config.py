@@ -29,6 +29,7 @@ from ..db import get_pool
 from ..vapi_assistant import (
     BROWSER_UA,
     DEFAULT_ASSISTANT_IDS,
+    DEFAULT_VOICE_ID,
     GENDER_FOR_VOICE,
     VAPI_BASE,
     VOICE_IDS,
@@ -65,8 +66,9 @@ def _resolved_assistant(row) -> dict:
     workspaces get ryan with the fast opener; first_message None lets the assistant's own
     canned firstMessage play (no slow model-generated opener)."""
     if row is None:
-        return {"assistant_id": DEFAULT_ASSISTANT_IDS["M"], "first_message": None,
-                "voice_id": "ryan", "gender": "M", "speed": 1.0}
+        gender = GENDER_FOR_VOICE[DEFAULT_VOICE_ID]
+        return {"assistant_id": DEFAULT_ASSISTANT_IDS[gender], "first_message": None,
+                "voice_id": DEFAULT_VOICE_ID, "gender": gender, "speed": 1.0}
     gender = row["gender"]
     assistant_id = row["vapi_assistant_id"] or DEFAULT_ASSISTANT_IDS.get(gender, DEFAULT_ASSISTANT_IDS["F"])
     return {

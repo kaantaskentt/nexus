@@ -131,7 +131,8 @@ export interface VoiceOption {
   label: string;
   gender: "F" | "M";
   note: string;
-  preview_url: string; // public Deepgram sample clip — for preview-listen in the editor
+  provider: "11labs" | "deepgram"; // A20: ElevenLabs joined the roster (ryan is the default)
+  preview_url: string | null; // public sample clip; null = none exists, render no play button
 }
 export interface VoiceConfig {
   gender: "F" | "M";

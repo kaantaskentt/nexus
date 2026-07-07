@@ -7,7 +7,13 @@ from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 from app.routers import voice_config
-from app.vapi_assistant import DEFAULT_ASSISTANT_IDS
+from app.vapi_assistant import (
+    DEFAULT_ASSISTANT_IDS,
+    DEFAULT_FIRST_MESSAGE,
+    VOICE_LIBRARY,
+    first_message_block,
+    voice_block,
+)
 from tests.conftest import make_workspace
 
 
@@ -23,7 +29,7 @@ async def _voice_session(db, ws, token):
     )
 
 
-async def test_default_config_is_shared_female_assistant(db):
+async def test_default_config_is_global_ryan_default(db):
     ws = await make_workspace(db, industry="jewelry")
     async with _client() as c:
         r = await c.get(f"/api/voice-config/{ws}")
@@ -37,7 +43,9 @@ async def test_default_config_is_shared_female_assistant(db):
     assert body["is_custom"] is False
     assert body["vapi_synced"] is False
     assert body["first_message"] is None
-    assert any(v["voice_id"] == "orion" for v in body["voices"])  # library travels for the picker
+    # The library travels for the picker — both providers present, ryan among them.
+    ids = {v["voice_id"] for v in body["voices"]}
+    assert {"ryan", "sarah", "orion", "asteria"} <= ids
 
 
 async def test_get_unknown_workspace_404(db):
@@ -164,3 +172,48 @@ def _settings(**over):
     base = {"vapi_api_key": "", "voice_shared_secret": ""}
     base.update(over)
     return SimpleNamespace(**base)
+
+
+# ── A20 voice-recipe units (pure, no DB) ─────────────────────────────────────
+
+
+def test_voice_block_elevenlabs_carries_casting_recipe():
+    """A20: roster ElevenLabs voices emit the exact casting-winner settings."""
+    assert voice_block("ryan", 1.0) == {
+        "provider": "11labs",
+        "voiceId": "ryan",
+        "model": "eleven_turbo_v2_5",
+        "stability": 0.45,
+        "similarityBoost": 0.75,
+        "style": 0.0,
+        "useSpeakerBoost": True,
+        "optimizeStreamingLatency": 3,
+        "speed": 1.0,
+    }
+
+
+def test_voice_block_deepgram_unchanged():
+    # Fixed-rate provider: default speed is never sent, non-default only carried honestly.
+    assert voice_block("asteria", 1.0) == {"provider": "deepgram", "voiceId": "asteria"}
+    assert voice_block("asteria", 1.2)["speed"] == 1.2
+
+
+def test_first_message_block_never_model_generated():
+    """A20: empty opener => the canned fast opener (static text, instant TTS) — the
+    model-generated mode (the slow/robotic root cause) is never emitted."""
+    default = first_message_block(None)
+    assert default == {"firstMessageMode": "assistant-speaks-first",
+                       "firstMessage": DEFAULT_FIRST_MESSAGE}
+    custom = first_message_block("  Welcome in.  ")
+    assert custom == {"firstMessageMode": "assistant-speaks-first",
+                      "firstMessage": "Welcome in."}
+
+
+def test_library_preview_urls_are_honest():
+    """ElevenLabs presets have no public sample clip => preview_url None (the editor hides
+    the play button); every listed Deepgram voice keeps its verified sample URL."""
+    for v in VOICE_LIBRARY:
+        if v["provider"] == "11labs":
+            assert v["preview_url"] is None
+        else:
+            assert v["preview_url"].startswith("https://static.deepgram.com/")

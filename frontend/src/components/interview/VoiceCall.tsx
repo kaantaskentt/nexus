@@ -22,9 +22,12 @@ import { getCallVoice } from "@/lib/respondent";
 //   - the transcript shows real `transcript` turns as they land;
 //   - respondent progress is NEUTRAL per A18 — time + process state, never a claims ticker.
 // If VAPI doesn't emit a signal we want, we degrade honestly rather than simulate it.
+// The two shared default assistants. Since A20 (July 7 casting verdict) BOTH speak the
+// global default voice — ElevenLabs "ryan" — so either id is a safe hard fallback; the
+// F/M split survives only for gender-tagged workspace configs that never synced.
 const ASSISTANTS = {
-  asteria: "44d14d38-6de6-4079-aee0-b2bde53eaad3", // F — default (voice-config contract, Lane B, lands later)
-  orion: "0853702b-cb75-4609-8af0-d15653dcbbae", // M
+  sharedF: "44d14d38-6de6-4079-aee0-b2bde53eaad3",
+  sharedM: "0853702b-cb75-4609-8af0-d15653dcbbae", // the global-default slot (ryan, A20)
 };
 
 type CallState = "idle" | "connecting" | "live" | "ended" | "error";
@@ -152,9 +155,9 @@ export function VoiceCall({
       });
       // Resolve THIS workspace's assistant (Sprint2-B / #39): the admin's chosen voice is
       // baked into a dedicated VAPI assistant server-side, so we only need its id. Falls
-      // back to the shared female default if the workspace never customized (or on any
-      // lookup hiccup) — a call must never fail to start over a voice preference.
-      let assistantId = ASSISTANTS.asteria;
+      // back to the shared global default (ryan, A20) if the workspace never customized
+      // (or on any lookup hiccup) — a call must never fail to start over a voice preference.
+      let assistantId = ASSISTANTS.sharedM;
       try {
         assistantId = (await getCallVoice(token)).assistant_id || assistantId;
       } catch { /* keep the shared default */ }

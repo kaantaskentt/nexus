@@ -7,9 +7,11 @@ This script only registers assistants whose brain is our custom-LLM endpoint and
 verbatim record comes from transcript webhooks. It is idempotent — assistants are keyed
 by name, updated in place if they already exist, so re-running never duplicates.
 
-Two assistants are created, identical except voice: one warm female, one warm male
-(A11.4 voice selection is Kaan's; these are sensible warm-professional defaults using
-VAPI's built-in Deepgram Aura voices, no extra provider credential needed).
+Two shared assistants are created. Since A20 (Kaan's July 7 casting verdict) BOTH carry
+the global default voice — ElevenLabs "ryan", turbo v2.5, with the canned fast opener and
+the humanizing turn-taking block — so re-running this script preserves, never reverts,
+the live default. The F/M pair survives as fallback slots for gender-tagged workspace
+configs that never synced.
 
 Auth: VOICE_SHARED_SECRET travels as a raw Authorization header on BOTH the custom-LLM
 model URL (model.headers) and the webhook (server.headers); the router checks equality.
@@ -28,11 +30,28 @@ import urllib.request
 VAPI_BASE = "https://api.vapi.ai"
 DEFAULT_PUBLIC_URL = "https://nexus-api-production-d644.up.railway.app"
 
-# Warm-professional defaults (Deepgram Aura, built into VAPI — no extra key). Kaan owns
-# the final pick (A11.4); these are placeholders chosen for warmth, easy to swap.
+# The global default voice (A20 — Kaan's casting pick): ElevenLabs "ryan", turbo v2.5,
+# with the exact casting-winner settings. Keep in sync with app/vapi_assistant.voice_block.
+RYAN_VOICE = {
+    "provider": "11labs",
+    "voiceId": "ryan",
+    "model": "eleven_turbo_v2_5",
+    "stability": 0.45,
+    "similarityBoost": 0.75,
+    "style": 0.0,
+    "useSpeakerBoost": True,
+    "optimizeStreamingLatency": 3,
+    "speed": 1.0,
+}
+# The canned fast opener (A20) — static text speaks instantly; the model-generated mode
+# was the slow/robotic-opener root cause. Keep in sync with app/vapi_assistant.
+DEFAULT_FIRST_MESSAGE = (
+    "Hi, thanks for taking the time. Whenever you're ready, just tell me a little "
+    "about what you do day to day."
+)
 VOICES = [
-    ("Nexus Interviewer (F)", "asteria"),  # warm, friendly female (Deepgram Aura)
-    ("Nexus Interviewer (M)", "orion"),    # approachable, warm male (Deepgram Aura)
+    ("Nexus Interviewer (F)", RYAN_VOICE),  # F slot — speaks the global default (A20)
+    ("Nexus Interviewer (M)", RYAN_VOICE),  # M slot — speaks the global default (A20)
 ]
 
 
@@ -41,7 +60,7 @@ def _public_url() -> str:
             or DEFAULT_PUBLIC_URL).rstrip("/")
 
 
-def _assistant_config(name: str, voice_id: str, base_url: str, secret: str) -> dict:
+def _assistant_config(name: str, voice: dict, base_url: str, secret: str) -> dict:
     auth = {"Authorization": secret} if secret else {}
     return {
         "name": name,
@@ -53,8 +72,9 @@ def _assistant_config(name: str, voice_id: str, base_url: str, secret: str) -> d
             "temperature": 1.0,
             "headers": auth,
         },
-        # First turn: let our model generate the opener (turn engine owns the script).
-        "firstMessageMode": "assistant-speaks-first-with-model-generated-message",
+        # First turn (A20): canned static opener — speaks instantly, no LLM round-trip.
+        "firstMessageMode": "assistant-speaks-first",
+        "firstMessage": DEFAULT_FIRST_MESSAGE,
         # (1) VERBATIM — hedges are data; smart-formatting destroys the product.
         "transcriber": {
             "provider": "deepgram",
@@ -62,17 +82,18 @@ def _assistant_config(name: str, voice_id: str, base_url: str, secret: str) -> d
             "smartFormat": False,
             "language": "en",
         },
-        # (2) PATIENT ENDPOINTING — episodic recall needs thinking silence.
+        # (2) TURN-TAKING (A20 humanizing block) — snappy 0.4s + livekit smart endpointing;
+        # semantic turn detection covers the thinking-silence case the old 2.5s wait was for.
         "startSpeakingPlan": {
-            "waitSeconds": 2.5,
+            "waitSeconds": 0.4,
             "smartEndpointingPlan": {"provider": "livekit"},
         },
-        # (6) INTERRUPTION — yield immediately; never talk over the respondent.
-        "stopSpeakingPlan": {"numWords": 1, "voiceSeconds": 0.2, "backoffSeconds": 1.0},
+        # (6) INTERRUPTION — yield instantly on any speech; never talk over the respondent.
+        "stopSpeakingPlan": {"numWords": 0, "voiceSeconds": 0.2, "backoffSeconds": 1.0},
         # (7) SILENCE — long; the gentle check-in is the persona's job, not an auto hang-up.
         "silenceTimeoutSeconds": 30,
         "maxDurationSeconds": 3600,
-        "voice": {"provider": "deepgram", "voiceId": voice_id},
+        "voice": voice,
         # (4) RECORDING + WEBHOOKS — raw audio + verbatim transcript are evidence.
         "artifactPlan": {"recordingEnabled": True, "videoRecordingEnabled": False},
         "server": {"url": f"{base_url}/api/voice/webhook", "headers": auth},
@@ -116,14 +137,15 @@ def main() -> None:
     by_name = {a.get("name"): a.get("id") for a in existing if isinstance(a, dict)}
 
     print(f"Provisioning against {base_url}")
-    for name, voice_id in VOICES:
-        cfg = _assistant_config(name, voice_id, base_url, secret)
+    for name, voice in VOICES:
+        cfg = _assistant_config(name, voice, base_url, secret)
+        label = f"{voice['provider']}/{voice['voiceId']}"
         if name in by_name:
             res = _req("PATCH", f"/assistant/{by_name[name]}", key, cfg)
-            print(f"  updated {name}: id={res.get('id')} voice={voice_id}")
+            print(f"  updated {name}: id={res.get('id')} voice={label}")
         else:
             res = _req("POST", "/assistant", key, cfg)
-            print(f"  created {name}: id={res.get('id')} voice={voice_id}")
+            print(f"  created {name}: id={res.get('id')} voice={label}")
 
 
 if __name__ == "__main__":
