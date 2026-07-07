@@ -126,6 +126,30 @@ async def test_by_token_public_resolves_dedicated(db):
     assert body["voice_id"] == "orion"
 
 
+async def test_by_token_session_pin_overrides_workspace(db):
+    """Casting call #41: a per-session assistant pin in resumable_state wins over the
+    workspace default, so N links on ONE tenant can each use a different assistant."""
+    import json as _json
+
+    ws = await make_workspace(db, industry="jewelry")
+    # Workspace default would resolve to 'ws-assistant', but the session pins casting-B.
+    await db.execute(
+        "insert into voice_configs (workspace_id, gender, voice_id, vapi_assistant_id, vapi_synced) "
+        "values ($1, 'F', 'asteria', 'ws-assistant', true)",
+        ws,
+    )
+    await db.execute(
+        "insert into interview_sessions (workspace_id, modality, invite_token, status, resumable_state) "
+        "values ($1, 'voice', 'casttok-b', 'pending', $2)",
+        ws, _json.dumps({"voice_assistant_id": "casting-B", "voice_first_message": "Hey, thanks for calling."}),
+    )
+    async with _client() as c:
+        r = await c.get("/api/voice-config/by-token/casttok-b")
+    body = r.json()
+    assert body["assistant_id"] == "casting-B"          # pin wins, not the workspace default
+    assert body["first_message"] == "Hey, thanks for calling."
+
+
 async def test_by_token_unknown_404(db):
     async with _client() as c:
         r = await c.get("/api/voice-config/by-token/does-not-exist")

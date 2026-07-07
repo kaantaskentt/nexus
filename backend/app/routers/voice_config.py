@@ -17,6 +17,8 @@ honestly — no faked success, no fake preview.
 Router is mounted WITHOUT the blanket admin dependency (main.py); the editor routes carry
 require_admin themselves and the by-token resolver stays public, mirroring sessions.py."""
 
+import json
+
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -191,19 +193,44 @@ async def put_voice_config(workspace_id: str, body: VoiceConfigIn):
     return {**_editor_state(row), "sync_error": sync_error}
 
 
+def _session_pin(resumable_state) -> dict | None:
+    """A session may pin a specific assistant in its resumable_state, overriding the
+    workspace default (casting call #41). This lets N links on ONE tenant each use a
+    DIFFERENT assistant — an A/B/C/D voice bake-off — without N workspaces. No pin => normal
+    per-workspace resolution. resumable_state is a jsonb dict (codec-decoded); guard for str."""
+    state = resumable_state
+    if isinstance(state, str):
+        try:
+            state = json.loads(state)
+        except (ValueError, TypeError):
+            state = None
+    if isinstance(state, dict) and state.get("voice_assistant_id"):
+        return {
+            "assistant_id": state["voice_assistant_id"],
+            "first_message": state.get("voice_first_message"),
+            "voice_id": state.get("voice_voice_id", "custom"),
+            "gender": state.get("voice_gender", "F"),
+            "speed": state.get("voice_speed", 1.0),
+        }
+    return None
+
+
 @router.get("/by-token/{token}")
 async def voice_config_by_token(token: str):
     """PUBLIC call contract (voice-room / VoiceCall): resolve which assistant + opener this
-    session's workspace uses. Token-keyed like the other interviewee routes; an expired or
-    unknown token is a 404. No config yet => the shared default (today's behavior)."""
+    session uses. A per-session pin wins (casting call), else the session's workspace config,
+    else the shared default. Token-keyed like the other interviewee routes; an expired or
+    unknown token is a 404."""
     pool = await get_pool()
-    ws = await pool.fetchval(
-        """select workspace_id from interview_sessions
+    sess = await pool.fetchrow(
+        """select workspace_id, resumable_state from interview_sessions
            where invite_token = $1 and (token_expires_at is null or token_expires_at > now())""",
         token,
     )
-    if ws is None:
+    if sess is None:
         raise HTTPException(404, "invalid or expired invite")
-    row = await pool.fetchrow("select * from voice_configs where workspace_id = $1", ws)
-    resolved = _resolved_assistant(row)
-    return resolved
+    pinned = _session_pin(sess["resumable_state"])
+    if pinned is not None:
+        return pinned
+    row = await pool.fetchrow("select * from voice_configs where workspace_id = $1", sess["workspace_id"])
+    return _resolved_assistant(row)
