@@ -29,14 +29,14 @@ const NAV: {
   ready: boolean;
 }[] = [
   { key: "snapshot", label: "Snapshot", icon: FileText, href: (s) => `/w/${s}/snapshot`, ready: true },
-  { key: "plans", label: "Interview Plan", icon: CalendarDays, href: (s) => `/w/${s}/plans`, ready: true },
+  { key: "plans", label: "Interview Plans", icon: CalendarDays, href: (s) => `/w/${s}/plans`, ready: true },
   { key: "interviews", label: "Interviews", icon: Users, href: (s) => `/w/${s}/interviews`, ready: true },
   { key: "insights", label: "Insights", icon: BarChart3, href: (s) => `/w/${s}/insights`, ready: true },
   { key: "knowledge", label: "Knowledge Base", icon: BookOpen, href: (s) => `/w/${s}/knowledge`, ready: true },
 ];
 
 // Which nav item a URL segment highlights. report/workflow are reached from a plan, so
-// they keep the Interview Plan item lit; everything else maps to its own item.
+// they keep the Interview Plans item lit; everything else maps to its own item.
 const SEG_TO_NAV: Record<string, NavKey> = {
   snapshot: "snapshot",
   plans: "plans",
@@ -46,6 +46,14 @@ const SEG_TO_NAV: Record<string, NavKey> = {
   report: "plans",
   workflow: "plans",
 };
+
+// The breadcrumb reads its section name from the nav label (not a capitalized URL
+// segment), so the crumb can never disagree with the sidebar — "Knowledge Base", never
+// "Knowledge" (YC-AUDIT #13). Detail segments (report/workflow) add a leaf under a linked
+// parent crumb so there's always a way back up.
+const NAV_LABEL = Object.fromEntries(NAV.map((n) => [n.key, n.label])) as Record<NavKey, string>;
+const NAV_HREF = Object.fromEntries(NAV.map((n) => [n.key, n.href])) as Record<NavKey, (s: string) => string>;
+const LEAF_LABEL: Record<string, string> = { report: "Report", workflow: "Workflow" };
 
 function initials(name: string): string {
   return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
@@ -66,7 +74,8 @@ export function AppShell({
   const pathname = usePathname();
   const seg = pathname.split("/")[3] ?? "snapshot"; // /w/[slug]/<seg>
   const active = SEG_TO_NAV[seg] ?? null;
-  const sectionLabel = seg.charAt(0).toUpperCase() + seg.slice(1);
+  const sectionLabel = active ? NAV_LABEL[active] : null;
+  const leafLabel = LEAF_LABEL[seg] ?? null; // set only on report/workflow detail pages
 
   const user = workspace.config?.founder ?? `${brand.product_name} Operator`;
   const userRole = workspace.config?.founder_role ?? "Admin";
@@ -147,8 +156,29 @@ export function AppShell({
         <header className="glass sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-4 border-b px-8">
           <div className="flex items-center gap-2 text-sm">
             <span className="font-medium text-ink">{workspace.name}</span>
-            <span className="text-ink-faint">/</span>
-            <span className="text-ink-soft">{sectionLabel}</span>
+            {sectionLabel && (
+              <>
+                <span className="text-ink-faint">/</span>
+                {/* On a detail page the section becomes a link back up; otherwise it's the
+                    current location and stays plain text. */}
+                {leafLabel && active ? (
+                  <Link
+                    href={NAV_HREF[active](workspace.slug)}
+                    className="text-ink-soft transition-colors hover:text-ink"
+                  >
+                    {sectionLabel}
+                  </Link>
+                ) : (
+                  <span className="text-ink-soft">{sectionLabel}</span>
+                )}
+              </>
+            )}
+            {leafLabel && (
+              <>
+                <span className="text-ink-faint">/</span>
+                <span className="text-ink-soft">{leafLabel}</span>
+              </>
+            )}
           </div>
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-ink ring-1 ring-inset ring-accent/20">
             {initials(user)}

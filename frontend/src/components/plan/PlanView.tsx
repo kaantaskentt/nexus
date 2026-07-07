@@ -27,7 +27,10 @@ import { transition_plan } from "@/lib/live";
 import { PlanStateChip, MustHitDot, DiscoveryTag, BrandMark } from "@/components";
 import { SendInterviewFlow } from "./SendInterviewFlow";
 
-const TRACK: PlanState[] = ["SENT", "OPENED", "IN_PROGRESS", "COMPLETED", "COMPILED"];
+// The tracker ends at a single terminal node "Completed" (YC-AUDIT #13): COMPILED is the
+// same milestone to the user (records compiled behind the scenes), so it sits on the
+// COMPLETED node rather than adding a second near-identical "Compiled" step.
+const TRACK: PlanState[] = ["SENT", "OPENED", "IN_PROGRESS", "COMPLETED"];
 // States that imply the plan cleared approval (footer reads "Approved" even when the
 // live plan carries no approved_by stamp).
 const APPROVED_STATES = new Set<PlanState>([
@@ -38,7 +41,6 @@ const TRACK_LABEL: Record<string, string> = {
   OPENED: "Opened",
   IN_PROGRESS: "In progress",
   COMPLETED: "Completed",
-  COMPILED: "Compiled",
 };
 
 export function PlanView({
@@ -56,7 +58,8 @@ export function PlanView({
   const [error, setError] = useState<string | null>(null);
 
   const isLive = TRACK.includes(state);
-  const showTracker = isLive || state === "PAUSED";
+  // COMPILED is terminal but sits on the COMPLETED node, so the tracker still shows.
+  const showTracker = isLive || state === "PAUSED" || state === "COMPILED";
   const preApproval = (["DRAFT", "NEXUS_CHECK", "AWAITING_APPROVAL"] as PlanState[]).includes(state);
   // Revoke is the admin-side counterpart to Send; legal only where the server allows it
   // (APPROVED / SENT / OPENED — see routers/plans.py TRANSITIONS).
@@ -99,7 +102,7 @@ export function PlanView({
           href={`/w/${workspace.slug}/plans`}
           className="inline-flex items-center gap-1 text-sm text-ink-faint hover:text-ink"
         >
-          <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> All plans
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> All interview plans
         </Link>
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
@@ -546,8 +549,10 @@ function RefinePlan({ plan }: { plan: InterviewPlan }) {
 }
 
 function StatusTracker({ current }: { current: PlanState }) {
-  // PAUSED sits on the IN_PROGRESS node (it's a hold within an in-progress interview).
-  const positional = current === "PAUSED" ? "IN_PROGRESS" : current;
+  // PAUSED sits on the IN_PROGRESS node (a hold within an in-progress interview); COMPILED
+  // sits on the terminal COMPLETED node (same milestone to the user — YC-AUDIT #13).
+  const positional =
+    current === "PAUSED" ? "IN_PROGRESS" : current === "COMPILED" ? "COMPLETED" : current;
   const currentIdx = TRACK.indexOf(positional);
   return (
     <div className="flex items-center">
