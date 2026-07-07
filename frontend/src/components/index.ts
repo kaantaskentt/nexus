@@ -8,3 +8,4 @@ export { PlanStateChip } from "./PlanStateChip";
 export { PersonRow } from "./PersonRow";
 export { MustHitDot } from "./MustHitDot";
 export { DiscoveryTag } from "./DiscoveryTag";
+export { VoiceSettings } from "./VoiceSettings";

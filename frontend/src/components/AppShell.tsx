@@ -9,6 +9,7 @@ import {
   Users,
   BarChart3,
   BookOpen,
+  Settings2,
 } from "lucide-react";
 import brand from "@/lib/brand";
 import type { Workspace } from "@/lib/types";
@@ -16,7 +17,7 @@ import { cn } from "@/lib/cn";
 import { BrandMark } from "./BrandMark";
 import { SignOutButton } from "./SignOutButton";
 
-type NavKey = "snapshot" | "plans" | "interviews" | "insights" | "knowledge";
+type NavKey = "snapshot" | "plans" | "interviews" | "insights" | "knowledge" | "settings";
 
 // Every item routes to a live screen. The former "Overview" item was removed rather than
 // left dead: the Company Snapshot IS the workspace landing (the picker opens straight to
@@ -33,6 +34,7 @@ const NAV: {
   { key: "interviews", label: "Interviews", icon: Users, href: (s) => `/w/${s}/interviews`, ready: true },
   { key: "insights", label: "Insights", icon: BarChart3, href: (s) => `/w/${s}/insights`, ready: true },
   { key: "knowledge", label: "Knowledge Base", icon: BookOpen, href: (s) => `/w/${s}/knowledge`, ready: true },
+  { key: "settings", label: "Settings", icon: Settings2, href: (s) => `/w/${s}/settings`, ready: true },
 ];
 
 // Which nav item a URL segment highlights. report/workflow are reached from a plan, so
@@ -43,6 +45,7 @@ const SEG_TO_NAV: Record<string, NavKey> = {
   interviews: "interviews",
   insights: "insights",
   knowledge: "knowledge",
+  settings: "settings",
   report: "plans",
   workflow: "plans",
 };

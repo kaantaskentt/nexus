@@ -122,6 +122,44 @@ export async function recon_status(
   return api<ReconStatus>(`/api/workspaces/${workspace_id}/recon/status?job_id=${job_id}`);
 }
 
+// ── Voice settings (GET/PUT /api/voice-config/{id}) — Sprint-2 Lane B / #39 ───
+// Per-workspace interview voice. The private VAPI key stays server-side; the editor
+// only ever sees config + an honest sync status (never the key). Uncustomized workspaces
+// resolve to the shared default assistant, so this is safe to open on any tenant.
+export interface VoiceOption {
+  voice_id: string;
+  label: string;
+  gender: "F" | "M";
+  note: string;
+  preview_url: string; // public Deepgram sample clip — for preview-listen in the editor
+}
+export interface VoiceConfig {
+  gender: "F" | "M";
+  voice_id: string;
+  speed: number;
+  first_message: string | null;
+  assistant_id: string;
+  is_custom: boolean; // a dedicated per-workspace assistant exists
+  vapi_synced: boolean; // the live assistant reflects this config
+  vapi_configured: boolean; // the server has a VAPI key at all
+  voices: VoiceOption[];
+  sync_error?: string | null; // set on save when the push couldn't go live
+}
+
+export async function get_voice_config(workspace_id: string, token?: string): Promise<VoiceConfig> {
+  return api<VoiceConfig>(`/api/voice-config/${workspace_id}`, undefined, token);
+}
+
+export async function save_voice_config(
+  workspace_id: string,
+  body: { voice_id: string; speed: number; first_message?: string | null },
+): Promise<VoiceConfig> {
+  return api<VoiceConfig>(`/api/voice-config/${workspace_id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
 // ── Claims (GET /api/claims/{workspace_id}) ──────────────────────────────────
 interface RawClaim extends Omit<ClaimRecord, "hedge_signals" | "is_paraphrased"> {
   hedge_signals: unknown;

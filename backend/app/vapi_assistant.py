@@ -31,21 +31,27 @@ DEFAULT_ASSISTANT_IDS = {
     "M": os.environ.get("VAPI_ASSISTANT_M", "0853702b-cb75-4609-8af0-d15653dcbbae"),
 }
 
-# Warm-professional Deepgram Aura voices (built into VAPI — no extra provider key). Gender
+# Warm-professional Deepgram Aura-2 voices (built into VAPI — no extra provider key). Gender
 # tags let the editor filter M/F; the note is the one-line character shown in the picker.
-# asteria/orion are the shared defaults, listed first in each gender.
+# asteria/orion are the shared defaults, listed first in each gender. Every voice here has a
+# verified public Deepgram sample (preview_url below), so the editor can offer preview-listen
+# — voices whose Aura-2 sample 404s (stella/perseus/angus) are deliberately not listed.
+_SAMPLE = "https://static.deepgram.com/examples/Aura-2-{voice}.wav"
 VOICE_LIBRARY = [
-    {"voice_id": "asteria", "label": "Asteria", "gender": "F", "note": "Warm and friendly (default)"},
-    {"voice_id": "luna",    "label": "Luna",    "gender": "F", "note": "Soft and calm"},
-    {"voice_id": "stella",  "label": "Stella",  "gender": "F", "note": "Bright and clear"},
-    {"voice_id": "athena",  "label": "Athena",  "gender": "F", "note": "Composed and steady"},
-    {"voice_id": "hera",    "label": "Hera",    "gender": "F", "note": "Measured and mature"},
-    {"voice_id": "orion",   "label": "Orion",   "gender": "M", "note": "Approachable and warm (default)"},
-    {"voice_id": "arcas",   "label": "Arcas",   "gender": "M", "note": "Natural and easy"},
-    {"voice_id": "perseus", "label": "Perseus", "gender": "M", "note": "Even and grounded"},
-    {"voice_id": "angus",   "label": "Angus",   "gender": "M", "note": "Relaxed and low"},
-    {"voice_id": "orpheus", "label": "Orpheus", "gender": "M", "note": "Rounded and calm"},
+    {"voice_id": "asteria",   "label": "Asteria",   "gender": "F", "note": "Warm and friendly (default)"},
+    {"voice_id": "luna",      "label": "Luna",      "gender": "F", "note": "Soft and calm"},
+    {"voice_id": "athena",    "label": "Athena",    "gender": "F", "note": "Composed and steady"},
+    {"voice_id": "hera",      "label": "Hera",      "gender": "F", "note": "Measured and mature"},
+    {"voice_id": "thalia",    "label": "Thalia",    "gender": "F", "note": "Bright and easygoing"},
+    {"voice_id": "orion",     "label": "Orion",     "gender": "M", "note": "Approachable and warm (default)"},
+    {"voice_id": "arcas",     "label": "Arcas",     "gender": "M", "note": "Natural and easy"},
+    {"voice_id": "apollo",    "label": "Apollo",    "gender": "M", "note": "Confident and clear"},
+    {"voice_id": "orpheus",   "label": "Orpheus",   "gender": "M", "note": "Rounded and calm"},
+    {"voice_id": "zeus",      "label": "Zeus",      "gender": "M", "note": "Deep and steady"},
 ]
+# A preview sample per voice, for the admin to listen before choosing (task #39).
+for _v in VOICE_LIBRARY:
+    _v["preview_url"] = _SAMPLE.format(voice=_v["voice_id"])
 
 VOICE_IDS = {v["voice_id"] for v in VOICE_LIBRARY}
 GENDER_FOR_VOICE = {v["voice_id"]: v["gender"] for v in VOICE_LIBRARY}
