@@ -8,7 +8,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from .auth import require_admin
 from .config import get_brand, get_settings
 from .db import close_pool, get_pool
-from .routers import chat, claims, plans, reports, sessions, voice, workflows, workspaces
+from .routers import (
+    chat,
+    claims,
+    plans,
+    reports,
+    sessions,
+    voice,
+    voice_config,
+    workflows,
+    workspaces,
+)
 
 
 @asynccontextmanager
@@ -39,6 +49,9 @@ app.include_router(claims.router, prefix="/api/claims", tags=["claims"], depende
 app.include_router(plans.router, prefix="/api/plans", tags=["plans"], dependencies=_admin)
 app.include_router(sessions.router, prefix="/api/sessions", tags=["sessions"])
 app.include_router(voice.router, prefix="/api/voice", tags=["voice"])
+# voice_config: mixed gate like `sessions` — the editor routes carry require_admin, the
+# by-token call-resolver stays public (the interviewee has no admin JWT). So no blanket dep.
+app.include_router(voice_config.router, prefix="/api/voice-config", tags=["voice-config"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"], dependencies=_admin)
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"], dependencies=_admin)
 app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"], dependencies=_admin)

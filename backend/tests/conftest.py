@@ -29,6 +29,7 @@ MIGRATIONS = [
     BACKEND / "db" / "migrations" / "0006_workflow_overlays.sql",
     BACKEND / "db" / "migrations" / "0007_internal_flags.sql",
     BACKEND / "db" / "migrations" / "0008_coverage_tracker.sql",
+    BACKEND / "db" / "migrations" / "0009_voice_config.sql",
 ]
 
 
