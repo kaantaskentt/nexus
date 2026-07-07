@@ -1,8 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FileText } from "lucide-react";
+import { FileText, ArrowRight } from "lucide-react";
 import { get_workspace, list_plans, list_sessions } from "@/lib/live";
 import { PlanStateChip } from "@/components";
+
+function shortDate(iso?: string): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? null
+    : d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
 
 // Interview Plans index — one row per plan, state rendered from the lifecycle
 // machine (the UI never decides transitions). Click a row for the plan detail; once
@@ -27,6 +35,20 @@ export default async function PlansPage({
       .map((s) => [s.interviewee_name!.toLowerCase(), s.id]),
   );
 
+  // A completed interview must be reachable from Plans even when it has no plan row —
+  // otherwise it shows on Interviews but vanishes here (YC-AUDIT #10). Surface those
+  // orphan sessions in their own section rather than dropping them.
+  const planNames = new Set(
+    plans.map((p) => p.interviewee_name?.toLowerCase()).filter(Boolean) as string[],
+  );
+  const orphanInterviews = sessions.filter(
+    (s) =>
+      s.status === "completed" &&
+      s.has_report &&
+      s.interviewee_name &&
+      !planNames.has(s.interviewee_name.toLowerCase()),
+  );
+
   return (
     <div className="mx-auto max-w-4xl px-8 py-10">
       <header className="mb-8">
@@ -42,6 +64,7 @@ export default async function PlansPage({
             const reportId = plan.interviewee_name
               ? reportByName.get(plan.interviewee_name.toLowerCase())
               : undefined;
+            const created = shortDate(plan.created_at);
             return (
               <li
                 key={plan.id}
@@ -59,6 +82,10 @@ export default async function PlansPage({
                   <p className="mt-1.5 line-clamp-1 text-sm text-ink-soft">
                     {plan.mission.goal}
                   </p>
+                  {/* Created date disambiguates two plans for the same person (#10). */}
+                  {created && (
+                    <p className="mt-1 text-xs text-ink-faint">Created {created}</p>
+                  )}
                 </Link>
                 <div className="flex shrink-0 items-center gap-3">
                   {reportId && (
@@ -76,6 +103,42 @@ export default async function PlansPage({
             );
           })}
         </ul>
+
+        {orphanInterviews.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-faint">
+              Completed interviews without a plan
+            </h2>
+            <p className="mt-1 text-sm text-ink-soft">
+              These ran before the plan board existed. Their reports are here.
+            </p>
+            <ul className="mt-4 space-y-3">
+              {orphanInterviews.map((s) => (
+                <li
+                  key={s.id}
+                  className="flex items-center justify-between gap-4 rounded-card border border-line bg-surface p-5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="font-display text-lg text-ink">{s.interviewee_name}</div>
+                    {s.interviewee_role && (
+                      <div className="text-xs uppercase tracking-wide text-ink-faint">
+                        {s.interviewee_role}
+                      </div>
+                    )}
+                  </div>
+                  <Link
+                    href={`/w/${workspace.slug}/report/${s.id}`}
+                    className="group inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-accent-ink transition-colors hover:bg-accent-soft"
+                  >
+                    <FileText className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    View report
+                    <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" strokeWidth={2} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
     </div>
   );
 }

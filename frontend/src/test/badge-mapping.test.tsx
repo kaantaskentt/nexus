@@ -179,13 +179,15 @@ describe("PlanStateChip", () => {
     "REVOKED",
   ];
 
-  it("renders all 12 states as distinct, non-empty labels", () => {
+  it("renders all 12 states as non-empty labels (COMPLETED/COMPILED share one word)", () => {
     const labels = states.map((s) => {
       const { container } = render(<PlanStateChip state={s} />);
       return container.textContent?.trim() ?? "";
     });
     expect(labels.every((l) => l.length > 0)).toBe(true);
-    expect(new Set(labels).size).toBe(12);
+    // One terminal word across the product (YC-AUDIT #13): COMPLETED and COMPILED both
+    // read "Completed", so 12 states resolve to 11 distinct user-facing labels.
+    expect(new Set(labels).size).toBe(11);
   });
 
   it("NEXUS_CHECK label comes from brand.product_name (A13.2)", () => {
