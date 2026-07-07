@@ -29,8 +29,10 @@ claims (auth is identity-only — any admin reads any workspace) · job-poll uni
 shape consolidation · NO_RESPONSE reminder scheduler · compile-side F21/F34 release flow
 (EMRE) · comparator patch landing (staged, EMRE ratifies) · #18 full-chain finale on prod
 (harness now needs admin creds env) · structural inventory model · aurora-atelier tenant
-still unclaimed (hide after Kaan confirms not his) · plans/page.tsx re-point to
-live-server (flagged in #37 notes). Morning packet §7 has the Kaan/Emre summary.
+still unclaimed (hide after Kaan confirms not his) · ~~plans/page.tsx re-point~~ (done,
+dce70f7, deployed + SSR-auth smoke passed) · backfill legacy plan states (reconcile fix is
+forward-only; Burak's pre-existing row still reads "Sent" beside its report — one UPDATE
+or on-read reconcile). Morning packet §7 has the Kaan/Emre summary.
 
 ---
 
