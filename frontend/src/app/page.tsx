@@ -79,7 +79,7 @@ export default async function Home() {
               {others.map(({ ws, prepared }) => (
                 <li key={ws.id}>
                   <Link
-                    href={`/w/${ws.slug}/snapshot`}
+                    href={`/w/${ws.slug}/home`}
                     className="lift card-hairline flex items-center justify-between rounded-card border border-line bg-surface px-4 py-3 hover:border-line-strong"
                   >
                     <div className="flex items-center gap-3">
@@ -131,7 +131,7 @@ function HeroCard({
   const c = ws.config ?? {};
   return (
     <Link
-      href={`/w/${ws.slug}/snapshot`}
+      href={`/w/${ws.slug}/home`}
       className="lift group block rounded-card border border-line bg-surface p-6 hover:border-line-strong"
     >
       <div className="flex items-start gap-5">

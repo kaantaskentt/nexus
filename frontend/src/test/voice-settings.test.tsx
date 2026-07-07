@@ -66,7 +66,7 @@ describe("VoiceSettings", () => {
     render(<VoiceSettings workspaceId="ws-1" initial={config()} />);
 
     fireEvent.click(screen.getByRole("button", { name: /use luna/i }));
-    fireEvent.change(screen.getByPlaceholderText(/thanks for taking the time/i), {
+    fireEvent.change(screen.getByPlaceholderText(/thanks so much for making the time/i), {
       target: { value: "  Welcome in.  " },
     });
     await act(async () => {

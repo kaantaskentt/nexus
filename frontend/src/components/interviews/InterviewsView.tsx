@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mic, MessageSquare, ArrowRight, Users } from "lucide-react";
+import { Mic, MessageSquare, ArrowRight, Users, Eye } from "lucide-react";
 import type { Workspace } from "@/lib/types";
 import type { SessionSummary } from "@/lib/live";
 import { rise, staggerParent } from "@/lib/variants";
@@ -39,7 +39,14 @@ export function InterviewsView({
           <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Interviews</h1>
           <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft">
             Every interview run for this company and where it stands. Completed interviews
-            open their post-interview report.
+            open their post-interview report.{" "}
+            <Link
+              href={`/w/${workspace.slug}/plans`}
+              className="font-medium text-accent-ink underline-offset-2 hover:underline"
+            >
+              Interview plans
+              <ArrowRight className="ml-0.5 inline h-3.5 w-3.5" strokeWidth={2} />
+            </Link>
           </p>
           {sessions.length > 0 && (
             <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-ink-faint">
@@ -111,6 +118,15 @@ function SessionRow({
         {status.label}
       </span>
 
+      {/* Observer (A19): every session opens its live window — transcript, insights,
+          coverage — regardless of report state. The report link stays for compiled ones. */}
+      <Link
+        href={`/w/${workspace.slug}/interviews/${s.id}`}
+        className="group inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink transition-all duration-150 ease-standard hover:border-line-strong hover:bg-surface-raised"
+      >
+        <Eye className="h-3.5 w-3.5" strokeWidth={1.75} />
+        {s.status === "active" ? "Observe live" : "Observe"}
+      </Link>
       {s.has_report ? (
         <Link
           href={`/w/${workspace.slug}/report/${s.id}`}

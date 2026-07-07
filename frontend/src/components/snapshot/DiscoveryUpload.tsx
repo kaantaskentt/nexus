@@ -40,10 +40,14 @@ export function DiscoveryUpload({
   workspaceId,
   defaultSpeaker,
   website,
+  hasRecords = false,
 }: {
   workspaceId: string;
   defaultSpeaker?: string;
   website?: string;
+  // True when the tenant already has raw records but no compiled snapshot cards (the
+  // Aurora state): the heading must say that honestly instead of greeting a "fresh" start.
+  hasRecords?: boolean;
 }) {
   const router = useRouter();
   const [transcript, setTranscript] = useState("");
@@ -123,13 +127,30 @@ export function DiscoveryUpload({
           <Mic className="h-7 w-7" strokeWidth={1.5} />
         </div>
         <h1 className="mt-6 font-display text-[2.5rem] leading-[1.1] text-ink">
-          Start with the CEO call
+          {hasRecords ? "Your snapshot isn't built yet" : "Start with the CEO call"}
         </h1>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-soft">
-          Paste or drop the discovery-call transcript. {brand.product_name} reads it the
-          way a world-class interviewer would, and builds your first Company Snapshot from
-          what was actually said.
+          {hasRecords
+            ? `Records from an earlier upload are saved, but no Company Snapshot has been ` +
+              `compiled from them yet. Paste or drop a discovery-call transcript to build it.`
+            : `Paste or drop the discovery-call transcript. ${brand.product_name} reads it the ` +
+              `way a world-class interviewer would, and builds your first Company Snapshot from ` +
+              `what was actually said.`}
         </p>
+
+        {/* What will appear here — the guided preview of the three snapshot sections. */}
+        <div className="mx-auto mt-6 grid max-w-lg grid-cols-1 gap-2 text-left sm:grid-cols-3">
+          {[
+            ["What Nexus Learned", "The company as described, each point tied to a quote"],
+            ["Areas to Investigate", "Open questions and gaps worth an interview"],
+            ["People to Interview", "Suggested roles, by what they can confirm"],
+          ].map(([t, d]) => (
+            <div key={t} className="rounded-lg border border-dashed border-line-strong/70 bg-surface-sunken/50 px-3 py-2.5">
+              <div className="text-xs font-semibold text-ink-soft">{t}</div>
+              <div className="mt-0.5 text-[11px] leading-snug text-ink-faint">{d}</div>
+            </div>
+          ))}
+        </div>
       </motion.div>
 
       <motion.div

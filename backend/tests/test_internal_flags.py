@@ -35,3 +35,21 @@ async def test_list_sessions_excludes_non_interview_kinds(db):
     async with _client() as c:
         rows = (await c.get(f"/api/workspaces/{ws}/sessions")).json()
     assert len(rows) == 1  # only the real interview
+
+
+async def test_list_sessions_kind_param_selects_eval_runs(db):
+    """The Simulations surface (A21) lists eval-kind runs explicitly via ?kind=eval —
+    still firewalled: each kind only ever sees itself, and junk kinds are rejected."""
+    ws = await make_workspace(db, industry="jewelry")
+    for kind in ("interview", "eval"):
+        await db.execute(
+            "insert into interview_sessions (workspace_id, modality, status, session_kind) "
+            "values ($1, 'text', 'completed', $2)",
+            ws, kind,
+        )
+    async with _client() as c:
+        evals = (await c.get(f"/api/workspaces/{ws}/sessions?kind=eval")).json()
+        bad = await c.get(f"/api/workspaces/{ws}/sessions?kind=everything")
+    assert len(evals) == 1
+    assert evals[0]["session_kind"] == "eval"
+    assert bad.status_code == 422

@@ -59,6 +59,26 @@ export default async function PlansPage({
           </p>
         </header>
 
+        {/* Designed empty state (EMRE sprint target 2): guide the action that creates the
+            first plan instead of a bare heading over nothing. */}
+        {plans.length === 0 && orphanInterviews.length === 0 && (
+          <div className="card-hairline flex flex-col items-center rounded-card border border-line bg-surface px-8 py-20 text-center">
+            <FileText className="h-9 w-9 text-ink-faint/60" strokeWidth={1.5} />
+            <p className="mt-4 font-display text-xl text-ink">No interview plans yet</p>
+            <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">
+              Plans are drafted from the Company Snapshot: each suggested person gets one
+              mission, and you approve it before anything reaches them. Start from Home —
+              once the snapshot exists, generate a plan for someone it suggests.
+            </p>
+            <Link
+              href={`/w/${workspace.slug}/home`}
+              className="mt-6 inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover"
+            >
+              Go to Home <ArrowRight className="h-4 w-4" strokeWidth={2} />
+            </Link>
+          </div>
+        )}
+
         <ul className="space-y-3">
           {plans.map((plan) => {
             const reportId = plan.interviewee_name

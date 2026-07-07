@@ -34,7 +34,7 @@ export function AddCompany() {
       });
       // Land on the new tenant's guided empty state (snapshot renders the upload CTA
       // while there are no records yet). refresh() clears the picker's cached list.
-      router.push(`/w/${ws.slug}/snapshot`);
+      router.push(`/w/${ws.slug}/home`);
       router.refresh();
     } catch {
       setError("Could not create the company. Check the API is reachable and try again.");

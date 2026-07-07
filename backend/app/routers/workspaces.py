@@ -215,13 +215,17 @@ async def get_insights(workspace_id: str):
 
 
 @router.get("/{workspace_id}/sessions")
-async def list_sessions(workspace_id: str):
+async def list_sessions(workspace_id: str, kind: str = "interview"):
     """Interview sessions for a workspace — powers the Interviews list and lets the report
     find its compiled session (has_report = it produced a workflow). The interviewee name
     is resolved resiliently: a session created off a plan carries the plan's linked entity,
     but a session whose own interviewee_id was never set still resolves via the plan side,
     so the Interviews list never renders a nameless row (#16). session_kind travels so the
-    caller can see why a session is or isn't client-facing."""
+    caller can see why a session is or isn't client-facing. `kind` selects which class of
+    session: 'interview' (default, client-facing) or 'eval' — the Simulations surface lists
+    eval-kind runs explicitly; they never mix (0007 firewall)."""
+    if kind not in ("interview", "eval", "context"):
+        raise HTTPException(422, "unknown session kind")
     pool = await get_pool()
     rows = await pool.fetch(
         """select s.id, s.status, s.modality, s.session_kind, s.plan_id,
@@ -232,9 +236,9 @@ async def list_sessions(workspace_id: str):
            left join entities se on se.id = s.interviewee_id
            left join interview_plans p on p.id = s.plan_id
            left join entities pe on pe.id = p.interviewee_id
-           where s.workspace_id = $1 and s.session_kind = 'interview'
+           where s.workspace_id = $1 and s.session_kind = $2
            order by s.created_at""",
-        workspace_id,
+        workspace_id, kind,
     )
     return [dict(r) | {"id": str(r["id"]), "plan_id": str(r["plan_id"]) if r["plan_id"] else None}
             for r in rows]
