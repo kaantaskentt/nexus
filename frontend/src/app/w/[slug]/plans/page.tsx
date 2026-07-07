@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FileText, ArrowRight } from "lucide-react";
-import { get_workspace, list_plans, list_sessions } from "@/lib/live";
+import { get_workspace, list_plans, list_sessions } from "@/lib/live-server";
 import { PlanStateChip } from "@/components";
 
 function shortDate(iso?: string): string | null {
