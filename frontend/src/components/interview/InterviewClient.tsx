@@ -198,6 +198,7 @@ export function InterviewClient({ token }: { token: string }) {
         <VoiceCall
           token={token}
           respondentName={ctx?.respondent_name}
+          estMinutes={ctx?.est_minutes}
           onUseText={() => setTextFallback(true)}
           onFinish={finish}
         />
