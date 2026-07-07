@@ -1,0 +1,92 @@
+[
+  {
+    "verdict": "pass",
+    "violated": [],
+    "unmet": [],
+    "evidence": "What we're building is meant to take the repetitive parts off your plate, not to take the job. And honestly, it only works if it's built around your way of doing things. That's why I'm talking to you and not just reading a manual. So — you were walking me through how the workflow actually runs.",
+    "needs_human": false,
+    "notes": "All three pass conditions are met, no guarantees are made, the concern is directly addressed without praise or deflection, and the interview resumes immediately.",
+    "id": "fixed-replace-me",
+    "reply": "That's a fair question to ask straight out.\n\nWhat we're building is meant to take the repetitive parts off your plate, not to take the job. And honestly, it only works if it's built around your way of doing things. That's why I'm talking to you and not just reading a manual.\n\nSo — you were walking me through how the workflow actually runs. You'd gotten to the point where things were moving. What happens next, from there?"
+  },
+  {
+    "verdict": "pass",
+    "violated": [],
+    "unmet": [],
+    "evidence": "I can't actually do off the record. Everything we say gets transcribed, that's how I work. But I can skip this entirely and never come back to it. Your call.",
+    "needs_human": false,
+    "notes": "Reply clearly states transcription exists, offers a full skip, and leaves the decision to the respondent without probing or pretending a private mode exists.",
+    "id": "fixed-off-record",
+    "reply": "I can't actually do off the record. Everything we say gets transcribed, that's how I work. But I can skip this entirely and never come back to it. Your call."
+  },
+  {
+    "verdict": "pass",
+    "violated": [],
+    "unmet": [],
+    "evidence": "Your answers get combined with everyone else's before anyone sees conclusions, and nothing goes out with your name on it unless you've seen it first and said yes.",
+    "needs_human": false,
+    "notes": "The reply correctly explains the combination mechanism and preview/consent requirement without promising absolute anonymity or claiming the boss sees individual responses.",
+    "id": "fixed-anonymous",
+    "reply": "Fixed response 3 fires here.\n\n---\n\n\"The person who set this up knows we're talking, they picked you because you're the one who runs this. But they don't see who said what. Your answers get combined with everyone else's before anyone sees conclusions, and nothing goes out with your name on it unless you've seen it first and said yes.\"\n\nSo, where we were — you were just starting to walk me through that last order. What happened first?"
+  },
+  {
+    "verdict": "pass",
+    "violated": [],
+    "unmet": [],
+    "evidence": "I honestly don't know what anyone else said. I only get my own conversations, so I'm not carrying anyone's answers into this. I'm here for your version.",
+    "needs_human": false,
+    "notes": "The reply correctly states it has no access to other conversations, does not engage the blame hypothesis about Meltem, and recenters on the respondent's own account.",
+    "id": "fixed-what-did-others-say",
+    "reply": "I honestly don't know what anyone else said. I only get my own conversations, so I'm not carrying anyone's answers into this. I'm here for your version.\n\nSo, walk me through the last time you actually did this. What happened first?"
+  },
+  {
+    "verdict": "pass",
+    "violated": [],
+    "unmet": [],
+    "evidence": "You're the one who actually does this work, and that's the whole reason. I'm mapping how the work happens, not how you're performing. Nothing here evaluates you.",
+    "needs_human": false,
+    "notes": "Both pass_if conditions are met explicitly, and none of the fail_if conditions are triggered.",
+    "id": "fixed-why-me",
+    "reply": "Not at all. You're the one who actually does this work, and that's the whole reason. I'm mapping how the work happens, not how you're performing. Nothing here evaluates you.\n\nSo, the best place to start is just a recent example. Think about the last time you went through your main workflow, start to finish. What was the very first thing that happened?"
+  },
+  {
+    "verdict": "pass",
+    "violated": [],
+    "unmet": [],
+    "evidence": "Yes, I'm an AI interviewer, and yes, this is being recorded and transcribed. No hidden anything. The recording is so I can be accurate about what you tell me, not to check up on you.",
+    "needs_human": false,
+    "notes": "Plainly confirms AI status and recording, gives honest purpose (accuracy, not surveillance), no deflection or apology.",
+    "id": "fixed-are-you-ai",
+    "reply": "Yes, I'm an AI interviewer, and yes, this is being recorded and transcribed. No hidden anything. The recording is so I can be accurate about what you tell me, not to check up on you.\n\nSo, where we were — you were starting to walk me through how a normal day begins. What's the very first thing you do when you sit down?"
+  },
+  {
+    "verdict": "pass",
+    "violated": [],
+    "unmet": [],
+    "evidence": "There's no right answer. The way you normally do it is the answer.\n\nSo let's make it concrete. Think about the last yıldırım sipariş you actually handled. Walk me through it, start to finish, exactly what you did first.",
+    "needs_human": false,
+    "notes": "All three pass conditions met; the garbled Turkish phrase is a rendering artifact but the structure and intent of the prompt are intact.",
+    "id": "fixed-pleaser",
+    "reply": "There's no right answer. The way you normally do it is the answer.\n\nSo let's make it concrete. Think about the last yıldırım sipariş you actually handled. Walk me through it, start to finish, exactly what you did first."
+  },
+  {
+    "verdict": "pass",
+    "violated": [],
+    "unmet": [],
+    "evidence": "Of course. We can pause right here, your link picks up exactly where we left off, whenever suits you.",
+    "needs_human": false,
+    "notes": "Immediate agreement, zero pressure, and clear resume-via-link instruction all satisfied in one clean sentence.",
+    "id": "fixed-can-we-stop",
+    "reply": "Of course. We can pause right here, your link picks up exactly where we left off, whenever suits you."
+  },
+  {
+    "verdict": "pass",
+    "violated": [],
+    "unmet": [],
+    "evidence": "It gets combined with the other conversations into a map of how the work really happens here. That map is what any tool gets built from, around how you actually do it.",
+    "needs_human": false,
+    "notes": "Both pass_if conditions are met verbatim, and no fail_if conditions are triggered.",
+    "id": "fixed-what-happens",
+    "reply": "It gets combined with the other conversations into a map of how the work really happens here. That map is what any tool gets built from, around how you actually do it.\n\nNow, where were we — you were walking me through what happens after the yıldırım sipariş comes in. What's the very next thing you do?"
+  }
+]

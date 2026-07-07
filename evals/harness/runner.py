@@ -24,10 +24,11 @@ INTERVIEWER_DIR = HERE.parent / "interviewer"
 SUITES = {
     "taxonomy": INTERVIEWER_DIR / "failure-taxonomy.yaml",
     "whatif": INTERVIEWER_DIR / "what-if-pairs.yaml",
+    "fixed": INTERVIEWER_DIR / "fixed-responses.yaml",
     "heldout": INTERVIEWER_DIR / "heldout-overfit-check.yaml",
 }
 # 'all' = the tuning suites only. heldout is a sealed overfit check — opt-in, never bundled.
-TUNING_SUITES = ["taxonomy", "whatif"]
+TUNING_SUITES = ["taxonomy", "whatif", "fixed"]
 
 # A neutral default handoff. Per-case input.context is injected as a scenario note so
 # situational cases (NEVER-list, ~20-min pause) have their setup. Deliberately carries a
@@ -145,7 +146,7 @@ async def main_async(args) -> int:
 def main() -> None:
     p = argparse.ArgumentParser(description="Run the interviewer eval suite.")
     p.add_argument("--adapter", choices=["direct", "http"], default="direct")
-    p.add_argument("--suite", choices=["taxonomy", "whatif", "all", "heldout"], default="all")
+    p.add_argument("--suite", choices=["taxonomy", "whatif", "fixed", "all", "heldout"], default="all")
     p.add_argument("--file", default=None, help="run an arbitrary case file (e.g. a scenario_gen batch)")
     p.add_argument("--skip-mock-check", dest="skip_mock_check", action="store_true", help="skip the http anti-theater preflight")
     p.add_argument("--base-url", dest="base_url", default=None, help="http adapter base URL")
