@@ -216,6 +216,13 @@ verified 4/4) — one command after Emre ratifies · demo runbook docs/DEMO-RUNB
 
 ## July 7 PARK NOTE v2 — EMRE DELIVERED, merge preempts everything (resume here)
 
+**HARD-PARKED ~12:30 PT at 95% context; repo clean at a80fa1d.** Emre voice link
+(fresh, pristine, verified): https://nexus-v2-alpha.vercel.app/i/CH7Zt-Y05gzhkkt_y4UwYvAQTQAtxlbT
+(the earlier Np2252 link was consumed by Kaan's 10:02 test call — session b38cc71a, 1 turn,
+harmless, ignore or clean). Merge tasks #6-#11 all PENDING, none started — the fresh
+session begins at #6 after reading A24 + the inbox. EVAL_MODE=1 still live on nexus-api
+(documented, A12-safe) for the P2 matrix resume; restore to 0 if the matrix gets deferred.
+
 **FIRST ACTION on resume:** `git pull` then read docs/emre-inbox/ (watchtower commits
 stage-7-interview-agent-draft1 + stage-3-ceo-call-v04 text copies, ~12:15 PT). The merge
 work order is captured as session tasks #6-#11 (fixed-response layer+evals · two-strike +
