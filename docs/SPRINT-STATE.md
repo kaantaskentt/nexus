@@ -1,4 +1,46 @@
-# Sprint state — V2 FINAL (July 6, ~04:00 PT) + evening workshop (July 6, ~19:15-20:00 PT)
+# Sprint state — V2 FINAL + evening workshop + Sprint-2 (voice/multi-company), July 6
+
+## SPRINT-2 — PROD DEPLOYED at a9e4e9b (~21:30 PT), smoke-green
+
+Three lanes, shipped + deployed + smoke-verified:
+- **Lane A (de-Burak + multi-company):** no demo tenant hardcoded in any code path;
+  2 cosmetic leaks fixed (AddCompany placeholder, DiscoveryUpload sample transcript);
+  picker reordered by recency (demo no longer permanent hero) + honest empty-hero.
+  Full stranger-walk E2E proven on a fresh A12-clean tenant (Northwind: 10 records, 8
+  accurate company-specific cards, plan-gen worked). Northwind hidden via is_internal
+  (reversible, audited). Resting picker = Bee Goddess + Aurora.
+- **Lane B (voice settings):** migration 0009 voice_configs + admin GET/PUT
+  /api/voice-config/{ws} (require_admin) + PUBLIC by-token resolver. Customizing a
+  workspace provisions its OWN dedicated VAPI assistant server-side (private key never
+  in browser; A12 isolation — never mutates shared asteria/orion). Config saves first,
+  VAPI push best-effort w/ honest vapi_synced/sync_error. Settings page /w/[slug]/settings
+  + nav link, 10 warm Aura-2 voices w/ real preview clips, gender filter. Dead speed
+  slider REMOVED (Aura has no speed param — every-button-works; plumbing dormant for a
+  future speed-capable provider). getCallVoice wires the live call to the workspace's
+  assistant w/ asteria fallback.
+- **Lane C (live interview room):** raw-WebGL audio-reactive glass orb (no three.js dep),
+  live transcript, A18-NEUTRAL progress (time + process state, NO claims ticker; coverage
+  prop left undefined — no honest live signal). Verified in isolation + composed in the
+  real app. Live-VAPI-call confirmation on prod = in flight.
+
+**DEPLOY NOTE (caught by smoke):** migration 0009 was NOT on live Supabase — voice-config
+route 500'd; applied by hand (statement_cache_size=0 for the pooler), now 200 w/ roster.
+Same hand-apply-migrations gotcha as 0008; always smoke a route that hits the new table.
+
+**A19 — NEXT BUILD PASS (Kaan's design verdict, staged in MERGE_PLAN A19 + 6656fcf).**
+Reference mock set: dark particle-orb room, Observer view (insight cards + topics ring),
+tabbed Voice Settings. Tonight shipped the A18-neutral v1 foundation (no live-insight
+badges = no correction-#1 surface); A19 is v2. FOUR mandatory corrections captured, one
+BINDING guardrail: live-insight trust badges MUST map through the real ladder (trust.ts +
+ConfidenceBadge), never all-Verified — a live single-source claim is Reported at most,
+tags never upgrade in-the-moment. audit-eng reviews that mapping before Observer ships.
+
+**KAAN DECISIONS OPEN (Sprint-2):** (1) drop Lane B/C reference PNGs into
+reference/ui-inspo/ to unblock the A19 compare-loop · (2) speed slider: swap to a
+speed-capable voice provider, or drop speed from the mock (test whether VAPI honors an
+Aura speed override in the A19 pass) · (3) voice roster listen-session (A11.4; default =
+10 warm Aura-2) · (4) picker contents for client demos (prune to Bee Goddess, or keep
+example workspaces). Plus the earlier-shift items (Emre ratifications, morning packet).
 
 ## EVENING WORKSHOP (YC audit) — PARKED CLEAN, PROD REDEPLOYED at 76aab67 (~19:51 PT)
 
