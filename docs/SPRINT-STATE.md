@@ -1,3 +1,23 @@
+# MERGE SHIFT — July 7 late afternoon (A24 Emre merge, A23 rhythm)
+
+Fully autonomous (Kaan left ~4:25p). Board: merge tasks 1-5, then the 3 product asks.
+
+**AUDIT VERDICTS (one line per landed task):**
+- Merge 1/5 fixed responses (e4b71ad): BUILT ✓ evals 9/9 fixed suite + 11/12 taxonomy
+  (flatter-2d = pre-existing flake, proven on pre-edit prompt 1/3 vs post 1/3; packet item).
+  Prod deploy rides the batch seam after merge 4/5 (prompt+eval layer deploys together).
+- Merge 2/5 two-strike + scope lock: BUILT ✓ navigator suite 4/4 (incl. thinness-guard
+  case) + test_coverage 6/6. Coverage directive two-strike escape = dormant seat, arm-B note.
+- Merge 3/5 sealed flags: BUILT ✓ test_disclosure 6/6, full backend 117p/1s, live smoke
+  3/3 (Tier-1 vent correctly NOT flagged). Migration 0011 needs hand-apply at deploy seam.
+  Tier-3 = stub only, OPEN as Emre marked.
+- Merge 4/5 playbook + yield: BUILT ✓ test_yield_stats 4/4, backend 121p/1s, FULL tuning
+  evals 40/40 (taxonomy+whatif+fixed+navigator).
+- Merge 5/5 stage-3 hooks + packet: BUILT ✓ test_people_map 4/4, backend 125p/1s.
+  MERGE-PACKET.md = per-delta classification; 5 ⚑ items for Kaan+Emre. MERGE_PLAN A25.
+
+---
+
 # Sprint state — DAY FINAL TRUTH, July 6 2026 (parked ~23:00 PT)
 
 ## ★ FIRST THING KAAN DOES: THE VOICE CASTING CALL (call all 4, your ears pick) ★
