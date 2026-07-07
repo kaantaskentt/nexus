@@ -40,5 +40,11 @@ You are the builder of Nexus. Kaan (product/business) and Emre (psychology/measu
 - **Progress pings:** short, milestone-based, non-blocking (schema live, first screen matches mockup, first compile run, first voice call). During the first 30 minutes of a build run: a one-line update every ~5 minutes.
 - Taste + intelligence together: before shipping any client-visible surface, ask "would Kaan feel proud showing this?" — if unsure, that's a check-in.
 
+## Standing rhythm (Kaan, July 7 — A23)
+BUILD → AUDIT → NEXT. After every task lands: verify on prod, run the affected tests,
+write a one-line audit verdict in SPRINT-STATE before starting the next item. Boring-and-
+solid beats sexy-and-fragile; if a change risks breaking something that works, propose it
+instead of building it.
+
 ## Updating this file
 This file is living. When a decision changes how the builder should behave, update the relevant section here AND log the decision in MERGE_PLAN.md. Keep this file under ~80 lines — it's loaded every session; bloat here is a tax on every future turn.

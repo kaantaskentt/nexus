@@ -320,6 +320,13 @@ Sprint decisions, all binding:
 Gate: EMRE-READY only after a clean prod stranger-walk (fresh company, both modalities,
 mid-interview switch, guided empty states, real identity).
 
+## A23 — Standing rhythm: BUILD → AUDIT → NEXT (July 7, Kaan)
+
+Every landed task gets: prod verification + affected tests + a one-line audit verdict in
+SPRINT-STATE, before the next item starts. No over-engineering: prefer boring-and-solid;
+changes that risk working surfaces get PROPOSED, not built. Queue discipline: finish
+in-flight work first; Emre docs merge preempts everything the moment his files land.
+
 ## A22 — Day-audit watchlist dispositions (July 7, Kaan-ordered simplifications)
 
 1. **Plan-state NO_RESPONSE loop: CUT.** The audit's framing was "build the scheduler or
