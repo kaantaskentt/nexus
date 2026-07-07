@@ -214,6 +214,31 @@ verified 4/4) — one command after Emre ratifies · demo runbook docs/DEMO-RUNB
 3. #34 screenshot sweep = last commit. Update this file at shift end.
 4. evals-1: finish quality-prompt fix; mine the #18 transcripts for eval cases.
 
+## July 7 afternoon — Apify degradation + unit economics (closes production-gap item 8)
+
+**Apify balance exhausted — graceful degradation CONFIRMED (code-verified, no live calls
+made, no retries burned):** `apify_linkedin_people` catches every failure, logs a server
+warning, returns None; recon coerces to an empty people pool, writes no linkedin_people
+source row, and proceeds website-only. Nothing surfaces to clients — people suggestions
+fall back to call-discovered chips (exactly what Bee Goddess shows live). Apify is only
+attempted when a linkedin actor_id is supplied, one sync call, no retry loop.
+
+**Unit economics from prod agent_runs (171 runs, all claude-sonnet-4-6 @ $3/$15 per MTok
+input/output; measured July 7):**
+
+| Unit | n | avg cost | p90 cost | avg runs | avg tokens |
+|---|---|---|---|---|---|
+| Interview cycle (session-linked runs) | 18 | $0.22 | $0.48 | 8 | 62,334 |
+| Compile (null-session runs, 15-min clusters) | 7 | $0.07 | $0.10 | 3 | 10,998 |
+| Full cycle (interview + compile) | — | $0.29 | ~$0.58 | — | — |
+
+**Kaan's $20 buys ~70 full cycles at average usage (~34 at p90), or ~91 interviews /
+~298 compiles taken alone.** Caveats: agent_runs counts our audited seats only (VAPI
+voice minutes and Deepgram transcription bill separately on VAPI's side; OpenAI
+embeddings separately); no prompt caching is currently measured in these numbers, so
+real costs can only come in at-or-below this. Compile clustering is a 15-minute-gap
+heuristic over null-session runs.
+
 **OPEN QUESTIONS / KAAN DECISIONS:**
 - aurora-atelier tenant visible in prod picker — unclaimed by any lane at park time; if
   not Kaan's own Act-1 test, hide via is_internal like the QA tenant. DO NOT delete.
