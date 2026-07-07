@@ -163,6 +163,12 @@ as the empty interview_quality). Fixed in #22 (parse failure now fails/retries t
 the prompt that emits unparseable output is constrained in #23. So a truly empty `perception_gaps[]` will now mean
 "no gap," not "a gap was dropped."
 
+## 7. Evening workshop (YC audit) — what the psych lens found + what shipped
+
+- **The cut:** the interviewer persona is world-class; every real trust risk was **downstream** of the conversation. The respondent was promised one thing (role-level attribution, review before anything is shared) while the founder-facing surfaces showed another — names on pain findings, a "CEO vs floor" verdict, and a "you'll get to review before it's shared" line backed by **no mechanism**.
+- **Shipped tonight** (frontend + copy, on `yc-taste-fixes`): render-level **de-attribution default** (pains + open questions show role, name gated behind `name_released`, off by default); consent + done screen now **name the audience**; the future-tense review promise is de-vaporwared to an honest present; **"CEO vs floor" → "Leadership and floor view"** (chip softened to "and"); **"Admissions Worth Chasing" → "Open Questions"**; the "Perception gaps" tile now counts leadership/floor conflicts so the number matches the story.
+- **Waits on Emre:** the **compile-side F21/F34 release flow** — how and when a respondent releases their name, and how `name_released` gets set on a record (the render default is safe until you define it, see §4). Also still yours: the F38-F43 registry flags and the perception-gap **same-speaker-retraction** eligibility rule (#29, pre-staged, verified 4/4).
+
 ## Standing after the review
 
 - The suite grows from every dress rehearsal + real interview (`docs/EVALS.md` §7). I own the transcript-mining
