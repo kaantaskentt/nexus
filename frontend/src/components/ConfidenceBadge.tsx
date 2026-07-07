@@ -41,9 +41,14 @@ const MAP: Record<Confidence, { label: string; pill: string; title: string }> = 
 export function ConfidenceBadge({
   confidence,
   className,
+  context,
 }: {
   confidence: Confidence;
   className?: string;
+  // Optional low-emphasis prefix (e.g. "Trust") for surfaces where the green tier pill
+  // sits beside problem headlines and could misread as "good/bad" instead of "how well
+  // verified". Off by default so trust-native surfaces (Insights, Knowledge) are unchanged.
+  context?: string;
 }) {
   const c = MAP[confidence];
   return (
@@ -60,6 +65,11 @@ export function ConfidenceBadge({
         className,
       )}
     >
+      {context && (
+        <span className="mr-1.5 border-r border-current/25 pr-1.5 font-normal opacity-70">
+          {context}
+        </span>
+      )}
       {c.label}
     </motion.span>
   );

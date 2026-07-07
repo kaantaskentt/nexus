@@ -140,7 +140,7 @@ export function SnapshotView({
                           <TopicIcon className="h-3.5 w-3.5 text-accent/70" strokeWidth={1.75} />
                           {meta.label}
                         </span>
-                        <ConfidenceBadge confidence={card.confidence} />
+                        <ConfidenceBadge confidence={card.confidence} context="Trust" />
                       </div>
                     </motion.article>
                   );
@@ -199,7 +199,7 @@ export function SnapshotView({
                       >
                         <div className="mb-3 flex items-center justify-between gap-3">
                           <h3 className="font-display text-lg text-ink">{cf.title}</h3>
-                          <ConfidenceBadge confidence={card.confidence} />
+                          <ConfidenceBadge confidence={card.confidence} context="Trust" />
                         </div>
                         <p className="text-sm leading-relaxed text-ink-soft">{cf.note}</p>
                       </article>
@@ -407,7 +407,7 @@ function AreaDrawer({
                           className="flex items-start justify-between gap-3 text-sm text-ink-soft"
                         >
                           <span>{b.text}</span>
-                          <ConfidenceBadge confidence={b.confidence} className="shrink-0" />
+                          <ConfidenceBadge confidence={b.confidence} context="Trust" className="shrink-0" />
                         </li>
                       ))}
                     </ul>
