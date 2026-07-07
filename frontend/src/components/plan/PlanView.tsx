@@ -131,8 +131,8 @@ export function PlanView({
               </p>
             )}
             <p className="mt-3 text-xs text-ink-faint">
-              Non-response ages here with one gentle reminder, no decline. Declines happen
-              offline and are visible to the {brand.product_name} team only.
+              Non-response simply ages here, no decline. Declines happen offline and are
+              visible to the {brand.product_name} team only.
             </p>
           </div>
         )}

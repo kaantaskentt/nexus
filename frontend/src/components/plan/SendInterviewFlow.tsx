@@ -281,8 +281,8 @@ export function SendInterviewFlow({
                     <h3 className="font-display text-xl text-ink">Invite sent to {firstName}</h3>
                     <p className="mx-auto mt-1 max-w-sm text-sm text-ink-soft">
                       The plan now tracks progress: Sent, Opened, In progress, Completed. If
-                      there&apos;s no response, it ages on the board with one gentle reminder.
-                      There is no decline; a decline would be a bias signal.
+                      there&apos;s no response, it simply ages on the board. There is no
+                      decline; a decline would be a bias signal.
                     </p>
                   </div>
                   {result && (

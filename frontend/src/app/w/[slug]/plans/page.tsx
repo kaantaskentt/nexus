@@ -54,8 +54,8 @@ export default async function PlansPage({
       <header className="mb-8">
           <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Interview Plans</h1>
           <p className="mt-2 text-sm text-ink-soft">
-            One mission per person. Non-response is a signal: plans age on the board,
-            with a single gentle reminder. There is no decline.
+            One mission per person. Non-response is a signal: plans age on the board.
+            There is no decline.
           </p>
         </header>
 

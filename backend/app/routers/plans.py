@@ -49,18 +49,24 @@ or a person-judgment into any value (reformulate to open-form process language i
 """
 
 # One source of truth for legal transitions (MERGE_PLAN Phase 3).
+# NO_RESPONSE cut from the live machine (A22 / DAY-AUDIT watchlist): the state had no
+# writer — no scheduler ever moved SENT there and no UI offered it — so the reminder
+# loop was decision debt, not behavior. Non-response stays a SIGNAL the board shows by
+# age (a SENT plan visibly ages; sent time is in the transition log), not a stored state.
+# The enum value stays in Postgres (dropping enum members is unsafe) and the chip still
+# renders it for any hand-set legacy row; NO_RESPONSE→SENT remains as the escape hatch.
 TRANSITIONS: dict[str, set[str]] = {
     "DRAFT": {"NEXUS_CHECK", "AWAITING_APPROVAL"},  # custom path flips order (A6)
     "NEXUS_CHECK": {"AWAITING_APPROVAL", "DRAFT"},
     "AWAITING_APPROVAL": {"APPROVED", "DRAFT", "NEXUS_CHECK"},
     "APPROVED": {"SENT", "REVOKED"},
-    "SENT": {"OPENED", "NO_RESPONSE", "REVOKED"},
-    "OPENED": {"IN_PROGRESS", "NO_RESPONSE", "REVOKED"},
+    "SENT": {"OPENED", "REVOKED"},
+    "OPENED": {"IN_PROGRESS", "REVOKED"},
     "IN_PROGRESS": {"PAUSED", "COMPLETED"},
     "PAUSED": {"IN_PROGRESS", "COMPLETED"},
     "COMPLETED": {"COMPILED"},
     "COMPILED": set(),
-    "NO_RESPONSE": {"SENT"},  # one gentle reminder max (A4)
+    "NO_RESPONSE": {"SENT"},  # legacy escape hatch only — no path leads here anymore
     "REVOKED": set(),
 }
 

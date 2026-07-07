@@ -320,6 +320,21 @@ Sprint decisions, all binding:
 Gate: EMRE-READY only after a clean prod stranger-walk (fresh company, both modalities,
 mid-interview switch, guided empty states, real identity).
 
+## A22 — Day-audit watchlist dispositions (July 7, Kaan-ordered simplifications)
+
+1. **Plan-state NO_RESPONSE loop: CUT.** The audit's framing was "build the scheduler or
+   cut the states"; Kaan ordered simplification. The state had NO writer (no scheduler,
+   no UI path) and zero rows on prod — decision debt, not behavior. SENT/OPENED no longer
+   offer it; the enum value stays in Postgres (safe), the chip still renders legacy rows,
+   and NO_RESPONSE→SENT survives as their escape hatch. Client copy no longer promises a
+   reminder. Amends A4's "single gentle reminder": non-response remains a SIGNAL (plans
+   visibly age), the reminder returns only if/when real usage demands a scheduler.
+2. **voice_configs "advanced fields": KEEP, watchlist closed by events.** The flagged
+   field was `speed` — dormant when Deepgram (fixed-rate) was the provider. A20 made
+   ElevenLabs the default and it honors speed server-side; the A19 pass plans the slider.
+   The premise of the watchlist item no longer holds. (Noted: 0009's column defaults
+   asteria/F are stale vs A20 but unreachable — every write sets voice_id; left alone.)
+
 **A20 opener restoration (same day, Kaan voice feedback; EMRE-SEAM):** the first canned
 opener jumped straight to the day-to-day ask — abrupt. A canned message costs the same
 latency whether short or complete, so DEFAULT_FIRST_MESSAGE now carries the persona's FULL
