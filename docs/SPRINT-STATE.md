@@ -39,8 +39,11 @@ tags never upgrade in-the-moment. audit-eng reviews that mapping before Observer
 reference/ui-inspo/ to unblock the A19 compare-loop · (2) speed slider: swap to a
 speed-capable voice provider, or drop speed from the mock (test whether VAPI honors an
 Aura speed override in the A19 pass) · (3) voice roster listen-session (A11.4; default =
-10 warm Aura-2) · (4) picker contents for client demos (prune to Bee Goddess, or keep
-example workspaces). Plus the earlier-shift items (Emre ratifications, morning packet).
+10 warm Aura-2) · (4) picker contents + hero ordering for client demos: prune to Bee
+Goddess or keep example workspaces; AND pure-recency (shipped — an empty real tenant like
+Aurora can lead) vs newest-PREPARED (content leads, demo displaced by any newer populated
+workspace) — one-line switch staged, audit-eng holds it. Plus the earlier-shift items
+(Emre ratifications, morning packet).
 
 ## EVENING WORKSHOP (YC audit) — PARKED CLEAN, PROD REDEPLOYED at 76aab67 (~19:51 PT)
 
