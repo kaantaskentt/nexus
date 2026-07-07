@@ -221,7 +221,7 @@ stage-7-interview-agent-draft1 + stage-3-ceo-call-v04 text copies, ~12:15 PT). T
 work order is captured as session tasks #6-#11 (fixed-response layer+evals · two-strike +
 scope lock · sealed-flags Tier-2 table + Tier-3 STUB ONLY · six-type playbook + yield
 outputs · stage-3 hooks + CONFLICT PACKET · Kaan's 3 product asks verify-then-build).
-Protocol: diff never overwrite; conflicts SURFACED in the packet, never silently picked;
+Protocol REFINED by Kaan (A24 — read it first): ADOPT/CONVERGENT/CONFLICT/OPEN per delta, tested build wins by default, reasoning always logged;
 Tier-3 stays open pending Emre's dedicated pass. A23 rhythm binds each piece.
 Matrix round 3 resume (below) moves to SECOND priority — its prod staging still holds.
 

@@ -320,6 +320,18 @@ Sprint decisions, all binding:
 Gate: EMRE-READY only after a clean prod stranger-walk (fresh company, both modalities,
 mid-interview switch, guided empty states, real identity).
 
+## A24 — Emre-merge stance refined (July 7, Kaan; overrides the old Emre-lane rule)
+
+Emre's docs are INSPIRATION, not gospel; the tested build holds presumption of
+correctness. Per-delta classification: (a) ADOPT — new, compatible, clearly improves
+(fixed responses, two-strike, sealed flags, six-type playbook expected here);
+(b) CONVERGENT — already built, sometimes better: keep ours, note convergence in the
+packet as design validation; (c) CONFLICT — judged on merits with proven behavior as
+default winner, reasoning logged either way, only genuinely contested calls surfaced to
+Kaan+Emre; (d) OPEN — human-gated exactly as Emre marked (Tier-3 imminent-harm handling).
+Never regress a tested behavior to match a document. Kaan verbatim: he trusts some of
+Emre's stuff, and what matters is how the information is used.
+
 ## A23 — Standing rhythm: BUILD → AUDIT → NEXT (July 7, Kaan)
 
 Every landed task gets: prod verification + affected tests + a one-line audit verdict in
