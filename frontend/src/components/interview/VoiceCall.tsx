@@ -22,12 +22,12 @@ import { getCallVoice } from "@/lib/respondent";
 //   - the transcript shows real `transcript` turns as they land;
 //   - respondent progress is NEUTRAL per A18 — time + process state, never a claims ticker.
 // If VAPI doesn't emit a signal we want, we degrade honestly rather than simulate it.
-// The two shared default assistants. Since A20 (July 7 casting verdict) BOTH speak the
-// global default voice — ElevenLabs "ryan" — so either id is a safe hard fallback; the
-// F/M split survives only for gender-tagged workspace configs that never synced.
+// The two shared default assistants, both on the A20 ElevenLabs recipe: (M) ryan — the
+// global default — and (F) sarah, the gendered fallback for F-tagged configs that never
+// synced. The hard fallback below uses the M slot (ryan is THE default voice).
 const ASSISTANTS = {
-  sharedF: "44d14d38-6de6-4079-aee0-b2bde53eaad3",
-  sharedM: "0853702b-cb75-4609-8af0-d15653dcbbae", // the global-default slot (ryan, A20)
+  sharedF: "44d14d38-6de6-4079-aee0-b2bde53eaad3", // 11labs sarah
+  sharedM: "0853702b-cb75-4609-8af0-d15653dcbbae", // 11labs ryan — the global default (A20)
 };
 
 type CallState = "idle" | "connecting" | "live" | "ended" | "error";

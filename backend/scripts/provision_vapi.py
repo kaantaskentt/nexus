@@ -7,11 +7,10 @@ This script only registers assistants whose brain is our custom-LLM endpoint and
 verbatim record comes from transcript webhooks. It is idempotent — assistants are keyed
 by name, updated in place if they already exist, so re-running never duplicates.
 
-Two shared assistants are created. Since A20 (Kaan's July 7 casting verdict) BOTH carry
-the global default voice — ElevenLabs "ryan", turbo v2.5, with the canned fast opener and
-the humanizing turn-taking block — so re-running this script preserves, never reverts,
-the live default. The F/M pair survives as fallback slots for gender-tagged workspace
-configs that never synced.
+Two shared assistants are created on the A20 recipe (turbo v2.5, canned fast opener,
+humanizing turn-taking block): (M) speaks "ryan" — the global default Kaan cast — and
+(F) speaks "sarah" (casting-A), so a female-gendered fallback is actually female. Re-running
+this script preserves, never reverts, the live pair.
 
 Auth: VOICE_SHARED_SECRET travels as a raw Authorization header on BOTH the custom-LLM
 model URL (model.headers) and the webhook (server.headers); the router checks equality.
@@ -31,18 +30,21 @@ VAPI_BASE = "https://api.vapi.ai"
 DEFAULT_PUBLIC_URL = "https://nexus-api-production-d644.up.railway.app"
 
 # The global default voice (A20 — Kaan's casting pick): ElevenLabs "ryan", turbo v2.5,
-# with the exact casting-winner settings. Keep in sync with app/vapi_assistant.voice_block.
-RYAN_VOICE = {
-    "provider": "11labs",
-    "voiceId": "ryan",
-    "model": "eleven_turbo_v2_5",
-    "stability": 0.45,
-    "similarityBoost": 0.75,
-    "style": 0.0,
-    "useSpeakerBoost": True,
-    "optimizeStreamingLatency": 3,
-    "speed": 1.0,
-}
+# with the exact casting-winner settings. The F slot carries "sarah" (casting-A, same
+# engine/settings) so a female-gendered fallback is actually female (watchtower correction,
+# July 7). Keep in sync with app/vapi_assistant.voice_block.
+def _elevenlabs_voice(voice_id: str) -> dict:
+    return {
+        "provider": "11labs",
+        "voiceId": voice_id,
+        "model": "eleven_turbo_v2_5",
+        "stability": 0.45,
+        "similarityBoost": 0.75,
+        "style": 0.0,
+        "useSpeakerBoost": True,
+        "optimizeStreamingLatency": 3,
+        "speed": 1.0,
+    }
 # The canned fast opener (A20) — static text speaks instantly; the model-generated mode
 # was the slow/robotic-opener root cause. Keep in sync with app/vapi_assistant.
 DEFAULT_FIRST_MESSAGE = (
@@ -50,8 +52,8 @@ DEFAULT_FIRST_MESSAGE = (
     "about what you do day to day."
 )
 VOICES = [
-    ("Nexus Interviewer (F)", RYAN_VOICE),  # F slot — speaks the global default (A20)
-    ("Nexus Interviewer (M)", RYAN_VOICE),  # M slot — speaks the global default (A20)
+    ("Nexus Interviewer (F)", _elevenlabs_voice("sarah")),  # F slot — casting-A female
+    ("Nexus Interviewer (M)", _elevenlabs_voice("ryan")),   # M slot — the global default (A20)
 ]
 
 

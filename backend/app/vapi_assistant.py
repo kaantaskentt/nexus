@@ -8,11 +8,11 @@ router (routers/voice_config.py) builds a DEDICATED assistant from — same brai
 transport, only the voice/opener differ. VAPI stays pure transport: the interview logic
 never lives here, only the knobs an admin is allowed to turn.
 
-The default assistant ids are the two globally-provisioned shared assistants. Since A20
-(July 7 casting verdict) BOTH speak the global default voice — ElevenLabs "ryan", turbo
-v2.5 — with the canned fast opener; the F/M split survives only as the fallback slot for
-gender-tagged workspace configs that never synced. Ids are env-overridable so a different
-VAPI account can point at its own pair without a code change."""
+The default assistant ids are the two globally-provisioned shared assistants, both on the
+A20 ElevenLabs recipe with the canned fast opener: (M) speaks "ryan" — the global default
+Kaan cast — and (F) speaks "sarah" (casting-A), so a gender-tagged workspace config that
+never synced falls back to a voice of the right gender. Ids are env-overridable so a
+different VAPI account can point at its own pair without a code change."""
 
 import os
 

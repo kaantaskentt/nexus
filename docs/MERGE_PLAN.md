@@ -287,3 +287,9 @@ the winning recipe instead of regressing to the pre-casting one. (3) `provision_
 re-provisions BOTH shared assistants to the ryan recipe (re-running preserves, never reverts).
 (4) docs/voice-config.md endpointing section revised to match. Speed slider stays hidden
 (A19); ElevenLabs honors speed server-side when that lands.
+
+**A20 correction (same morning, watchtower verification):** the initial patch put ryan on
+BOTH shared assistants — a male voice on the (F) slot. Fixed: (F) = ElevenLabs "sarah"
+(casting-A, same engine/settings), (M) stays ryan; the Voice Settings gender pick maps to a
+gendered fallback again. Uncustomized workspaces still resolve to the M slot (ryan, THE
+default); the F slot only serves F-tagged configs that never synced.
