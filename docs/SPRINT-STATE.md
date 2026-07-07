@@ -214,6 +214,32 @@ verified 4/4) — one command after Emre ratifies · demo runbook docs/DEMO-RUNB
 3. #34 screenshot sweep = last commit. Update this file at shift end.
 4. evals-1: finish quality-prompt fix; mine the #18 transcripts for eval cases.
 
+## July 7 PARK NOTE — session context exhausted mid-queue (resume here)
+
+**Rhythm:** A23 (BUILD→AUDIT→NEXT) live in CLAUDE.md + MERGE_PLAN (12765cd).
+**Done today + audited:** A20 voice (ryan default, full opener arc, VAPI-verified) ·
+A21 Emre-readiness sprint (gate PASSED, all six targets live on prod) · A22 watchlist
+cuts · runbook Act-2 dry-run + text fixes (d005ba2) · Apify degradation confirmed +
+unit economics table (1c08ba2: $0.22/interview avg, $0.29/full cycle, ~70 cycles per $20).
+
+**IN FLIGHT — matrix round 3 (resume first):** Anthropic credits RESTORED and verified.
+Prod is READY for the run: EVAL_MODE=1 is LIVE on nexus-api (double-gated, A12-safe;
+set 12:05ish PT) and eval admin eval-runner@nexus.test exists (password in the session
+scratchpad; recreate via create_admin.py --reset if lost). Next actions, exactly:
+(1) finish arm A: agency-account-manager + warehouse-foreman via
+    `python -m evals.harness.respondent_sim --persona X --turns 14 --json evals/e2e/runs/r3A-X.json`
+    (NEXUS_APP_BASE_URL=prod, NEXUS_ADMIN_EMAIL/PASSWORD set; ≤2 concurrent — 5-way timed out);
+(2) arm B: `railway variables --set COVERAGE_ROUTING=1 --service nexus-api`, rerun all 5 → r3B-*;
+(3) restore: COVERAGE_ROUTING unset + EVAL_MODE=0, delete eval-runner admin;
+(4) evidence table into proof-matrix.md §Round 3 + one-line audit verdict here.
+Arm A partials committed (30639a1): bookkeeper reproduced h-bk-3 gap at baseline.
+
+**Queue after (Kaan-confirmed, A23 rhythm binds):** (1) runbook Act-1 live-compile
+dry-run (now unblocked by credits) + fix friction; (2) deep-health endpoint (failed-jobs
+count + last-error age, honest, no vendors); (3) copy-invite-link button w/ sent-state +
+admin "Try it yourself" throwaway-session button; (4) fresh-eyes bug sweep on two
+workspaces; (5) naming proposal table for Kaan. Emre docs merge PREEMPTS all on landing.
+
 ## July 7 afternoon — Apify degradation + unit economics (closes production-gap item 8)
 
 **Apify balance exhausted — graceful degradation CONFIRMED (code-verified, no live calls
