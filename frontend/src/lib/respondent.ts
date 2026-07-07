@@ -98,6 +98,22 @@ export async function completeSession(token: string): Promise<{ status: string }
   return api(`/api/sessions/by-token/${encodeURIComponent(token)}/complete`, { method: "POST" });
 }
 
+// Which VAPI assistant this session's workspace uses (Sprint2-B / #39). Public + token-
+// keyed like the other respondent routes; the chosen voice and opener are baked into the
+// assistant server-side, so the browser only learns the assistant id to start the call
+// with — the private VAPI key never leaves the backend. An uncustomized workspace resolves
+// to the shared gender-default, so this is always safe to call before a voice call.
+export interface CallVoice {
+  assistant_id: string;
+  first_message: string | null;
+  voice_id: string;
+  gender: string;
+  speed: number;
+}
+export async function getCallVoice(token: string): Promise<CallVoice> {
+  return api<CallVoice>(`/api/voice-config/by-token/${encodeURIComponent(token)}`);
+}
+
 // Consent copy assembled from prompts/personas/consent-landing.md with whatever merge
 // fields the session provides; missing fields degrade to neutral, honest phrasing
 // (no fabricated names). The locked promises are kept by the interviewer at open/close.
