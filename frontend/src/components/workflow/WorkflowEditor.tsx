@@ -16,7 +16,6 @@ import {
   MessageSquarePlus,
   Sparkles,
   X,
-  Check,
   Loader2,
   Info,
 } from "lucide-react";
@@ -603,7 +602,7 @@ function BlueprintExport({ workflowId }: { workflowId: string }) {
               >
                 <div className="font-medium capitalize">{slot.replace(/_/g, " ")}</div>
                 <div className="mt-0.5 truncate">
-                  {val ? String(val) : <span className="inline-flex items-center gap-1"><Check className="h-3 w-3 opacity-0" />—</span>}
+                  {val ? String(val) : <span className="text-ink-faint/70">Not captured</span>}
                 </div>
               </div>
             ))}

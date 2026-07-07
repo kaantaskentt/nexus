@@ -91,6 +91,7 @@ Per Kaan's upgrade license, audited F1-F37 as a clinical/neuropsychologist. Full
   **F41 FAE** (perception-gap comparator: leadership's dispositional
   read vs the floor's situational cause, surfaced de-personalized and quarantine-safe). Wiring drafted, ready, not applied.
 - **Demand characteristics:** assessed → already covered (anti-sycophancy + F13 + examples-from-them); no new flag.
+- **[EMRE-SEAM] Render-side de-attribution shipped tonight; compile-side release flow is yours to ratify.** The YC-audit psych pass found the Insights/report surfaces rendered respondent NAMES on pain findings and open questions, contradicting the reflect-back-close role-level default (Beat 3, hard-rule 8). Fixed at the render layer: findings/admissions now show ROLE only, name gated behind a `name_released` flag that defaults OFF (`frontend/src/lib/types.ts`, `InsightsView.tsx`). The full **F21/F34 release flow** — where/when a respondent actually releases their name at the compiler, and how `name_released` gets set on a record — is your measurement/attribution lane and is NOT wired; the render default is safe (role-only) until you define it. Ratify the release semantics and we wire the compiler side to match.
 
 ## 5. TOP V3 engineering proposal — computed coverage tracking + route-to-untouched-must-hit
 

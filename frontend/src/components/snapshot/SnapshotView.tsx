@@ -101,7 +101,10 @@ export function SnapshotView({
                   {cfg.founder && (
                     <div className="text-sm text-ink-soft">
                       Meeting Owner: {cfg.founder}
-                      {cfg.founder_role && ` (${cfg.founder_role})`}
+                      {cfg.founder_role &&
+                        cfg.founder_role.trim().toLowerCase() !==
+                          cfg.founder.trim().toLowerCase() &&
+                        ` (${cfg.founder_role})`}
                     </div>
                   )}
                   {cfg.source && (
@@ -156,7 +159,7 @@ export function SnapshotView({
                 animate="show"
                 className="grid grid-cols-1 gap-4 sm:grid-cols-2"
               >
-                {areas.map((card) => {
+                {areas.map((card, i) => {
                   const a = card.content as AreaContent;
                   return (
                     <motion.button
@@ -166,8 +169,10 @@ export function SnapshotView({
                       className="lift group flex flex-col rounded-card border border-line bg-surface p-4 text-left hover:border-line-strong"
                     >
                       <div className="flex items-start gap-2">
+                        {/* Contiguous display position (1..n) — the record's own rank can be
+                            sparse/non-sequential and reads as a leaked index in the grid. */}
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold tabular text-on-accent shadow-elev-1">
-                          {a.rank}
+                          {i + 1}
                         </span>
                         <h3 className="font-semibold leading-snug text-ink">{a.title}</h3>
                       </div>

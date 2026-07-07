@@ -35,3 +35,4 @@ The spine tells you whether a workflow is **fully understood** — are all slots
 6. **No quarantined content, no employee verbatim attributed quotes.** Role-level attribution and paraphrase, as on the snapshot.
 7. Everything traces to records. If it isn't in the store, it isn't in the report.
 8. **No em-dashes in report or SOP prose.** Narration, findings, and SOP steps use commas/colons/periods, never the em-dash (glossary: client-facing copy style). The respondent's verbatim terms keep their own wording; only quoted transcript is exempt.
+9. **Plain words, no marketing cadence.** Report and SOP prose reads like an operator describing the work, not a brochure. No sales verbs or filler ("seamless", "leverage", "robust", "unlock", "empower", "streamline", "elevate", "delve"), no triadic list-rhythm for effect, no hedge-words ("perhaps", "arguably", "it seems"). State what the records say. The respondent's own vocabulary is exempt and stays verbatim.

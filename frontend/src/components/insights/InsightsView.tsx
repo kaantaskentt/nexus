@@ -19,9 +19,31 @@ function capitalize(s: string) {
   return s.replace(/^\w/, (c) => c.toUpperCase());
 }
 
+// Pain findings and open questions attribute by ROLE by default (reflect-back-close
+// Beat 3, hard-rule 8): the respondent's name is quarantined at this render surface
+// unless they explicitly released it. Returns the label to show, or null when there's
+// nothing safe to render (no role and no released name).
+function attributionLabel(
+  speaker: string | null,
+  role: string | null,
+  released?: boolean,
+): string | null {
+  if (released && speaker) return role ? `${speaker} · ${role}` : speaker;
+  return role;
+}
+
 export function InsightsView({ data }: { data: InsightsData }) {
   const { conflicts, key_findings, admissions, stats } = data;
   const nothing = conflicts.length === 0 && key_findings.length === 0 && admissions.length === 0;
+
+  // The flagship "Perception gaps" number must match the story on the page: a
+  // leadership-vs-floor conflict IS the classic perception gap (collision-detector.md).
+  // The backend gaps count can lag the labeled conflicts, so surface whichever is larger
+  // rather than show a "0" beside a visible leadership/floor gap.
+  const gapConflicts = conflicts.filter(
+    (c) => c.kind === "ceo_vs_floor" || c.kind === "perception_gap",
+  ).length;
+  const gapCount = Math.max(stats.gaps, gapConflicts);
 
   return (
     <>
@@ -43,7 +65,7 @@ export function InsightsView({ data }: { data: InsightsData }) {
               <Stat label="Interviews" value={stats.interviews} />
               <Stat label="Records" value={stats.records} />
               <Stat label="Conflicts" value={stats.conflicts} accent={stats.conflicts > 0} />
-              <Stat label="Perception gaps" value={stats.gaps} accent={stats.gaps > 0} />
+              <Stat label="Perception gaps" value={gapCount} accent={gapCount > 0} />
             </div>
 
             {conflicts.length > 0 && (
@@ -87,9 +109,9 @@ export function InsightsView({ data }: { data: InsightsData }) {
 
             {admissions.length > 0 && (
               <Section
-                title="Admissions Worth Chasing"
+                title="Open Questions"
                 count={admissions.length}
-                blurb="Where someone said they did not know. Each one seeds a question for the next round."
+                blurb="Where an honest not-sure came up. Each one seeds a question for the next round."
               >
                 <div className="card-hairline divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
                   {admissions.map((a) => (
@@ -141,7 +163,7 @@ function ConflictCard({ conflict: c }: { conflict: InsightConflict }) {
         <ConflictSideBlock side={c.a} />
         <div className="flex items-center justify-center">
           <span className="rounded-chip bg-surface px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-faint shadow-elev-1 sm:rotate-0">
-            vs
+            and
           </span>
         </div>
         <ConflictSideBlock side={c.b} />
@@ -193,12 +215,10 @@ function FindingCard({ finding: f }: { finding: KeyFinding }) {
       </div>
       <p className="mt-3 flex-1 text-[0.95rem] leading-relaxed text-ink">{f.text}</p>
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-faint">
-        {f.speaker && (
-          <span>
-            <span className="font-medium text-ink-soft">{f.speaker}</span>
-            {f.role && ` · ${f.role}`}
-          </span>
-        )}
+        {(() => {
+          const who = attributionLabel(f.speaker, f.role, f.name_released);
+          return who ? <span className="font-medium text-ink-soft">{who}</span> : null;
+        })()}
         {f.mention_count > 1 && <span className="tabular">mentioned {f.mention_count} times</span>}
       </div>
     </motion.article>
@@ -210,12 +230,14 @@ function AdmissionRow({ admission: a }: { admission: Admission }) {
     <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-start sm:gap-4">
       <div className="min-w-0 flex-1">
         <p className="text-sm leading-relaxed text-ink">{a.text}</p>
-        {a.speaker && (
-          <p className="mt-1 text-xs text-ink-faint">
-            <span className="font-medium text-ink-soft">{a.speaker}</span>
-            {a.role && ` · ${a.role}`}
-          </p>
-        )}
+        {(() => {
+          const who = attributionLabel(a.speaker, a.role, a.name_released);
+          return who ? (
+            <p className="mt-1 text-xs text-ink-faint">
+              <span className="font-medium text-ink-soft">{who}</span>
+            </p>
+          ) : null;
+        })()}
       </div>
       {a.objective && (
         <div className="flex items-start gap-1.5 rounded-md bg-accent-soft px-3 py-2 sm:max-w-[16rem]">

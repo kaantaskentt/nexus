@@ -147,6 +147,11 @@ export interface KeyFinding {
   speaker: string | null;
   role: string | null;
   session_id: string | null;
+  // Pain findings default to role-level attribution (reflect-back-close Beat 3,
+  // hard-rule 8). The speaker's NAME renders only when the respondent explicitly
+  // released it; absent/false means role-only. Compile-level enforcement of the full
+  // F21/F34 release flow is Emre-gated — this is the render-side default.
+  name_released?: boolean;
 }
 
 export interface Admission {
@@ -157,6 +162,8 @@ export interface Admission {
   role: string | null;
   objective: string | null; // the INTERVIEW-OBJECTIVE follow-up this admission seeds
   session_id: string | null;
+  // Role-level by default; the name renders only on explicit release (see KeyFinding).
+  name_released?: boolean;
 }
 
 export interface InsightsData {
