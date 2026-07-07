@@ -7,8 +7,9 @@ site. Read the "Rough edges" section once before you present so nothing surprise
 - **Login:** the admin account relayed to you separately (or your personal admin login). No
   signup on screen; admins are created by hand.
 - **What is live:** admin login, the multi-company picker, "Add company", CEO-call upload
-  with a live progressive compile, the Company Snapshot, Insights, the workflow editor,
-  and the post-interview report. Interview links open without a login by design.
+  with a live progressive compile, the Company Snapshot (the workspace **Home**), Insights,
+  Company Context (the record store), Workflows, the workflow editor, the live-interview
+  Observer, and the post-interview report. Interview links open without a login by design.
 
 The demo has two acts. Act 1 is the "watch it build itself" moment on a brand-new company.
 Act 2 shows the depth on the prepared Bee Goddess workspace, which already holds several
@@ -40,9 +41,10 @@ compiled interviews.
 
 ## Act 2: the depth (about 3 to 4 minutes)
 
-6. **Switch workspaces.** Use the picker (the Nexus mark, top left, returns you there) and
-   open **Bee Goddess**. It already has compiled interviews, so every surface is full.
-7. **Snapshot.** Show the trust badges (Verified / High / Reported / Scraped) and that every
+6. **Switch workspaces.** Use the workspace switcher at the top of the left sidebar (or
+   the Nexus mark, which returns to the picker) and open **Bee Goddess**. It already has
+   compiled interviews, so every surface is full.
+7. **Snapshot (the "Home" nav item).** Show the trust badges (Verified / High / Reported / Scraped) and that every
    claim traces to a quote. Point out that tags never upgrade: truth comes from comparing
    records, not editing them.
 8. **Insights.** Open Insights from the left nav. This is the cross-interview intelligence:
@@ -66,8 +68,15 @@ compiled interviews.
   create live in Act 1 is clean.
 - **Report:** renders fully, the workflow, key findings, and cross-interview conflicts. An
   earlier gap in the quality leg was re-run on prod and closed (task #24).
-- **First voice call:** voice is provisioned. If you want to show it, send a voice-modality
-  interview from a plan; the respondent page shows "Start voice conversation".
+- **Voice is cast and live:** the interviewer speaks ElevenLabs "ryan" (Kaan's casting
+  pick) with a full spoken intro: greeting, why the conversation exists, the sharing rules,
+  then the first question. The respondent page offers BOTH doors ("Start voice
+  conversation" / "Start by text instead") and mid-interview switching without losing
+  progress; a dropped call gets an honest reconnect screen. If you demo voice, mention the
+  switch: it lands well.
+- **Observer (new):** while an interview runs, open Interviews and hit "Observe live" for
+  the admin window: verbatim transcript as it lands, live notes (badged Reported, never
+  more), and the topics rail. Good moment for the trust story.
 
 ## If something goes sideways
 
@@ -77,6 +86,9 @@ compiled interviews.
   it. Ping the team; do not re-upload (that just queues a second compile).
 - **A screen looks stale after an edit:** reload once. Reads are no-cache now, so a reload
   always shows current data.
+- **Interview replies failing with server errors:** check the Anthropic credit balance
+  first (Plans & Billing). An exhausted account 500s every turn while the rest of the app
+  looks healthy — it happened July 7; the fix is a top-up, not a redeploy.
 - **Fallback:** if Act 1 is slow on the day, skip straight to Act 2 on Bee Goddess, which is
   already fully compiled and needs no wait.
 
