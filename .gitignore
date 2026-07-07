@@ -17,3 +17,6 @@ evals/e2e/runs/
 # UI review screenshots + Playwright scratch (design-gate artifacts, not source)
 .playwright-mcp/
 /*.png
+# Same convention after the screenshot sweep: ad-hoc png scratch dropped in the
+# screenshots folder stays local; committed provenance shots are added with -f.
+/docs/screenshots/*.png
