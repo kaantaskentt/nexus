@@ -25,9 +25,9 @@ it (no provider change needed); if A/B/C clearly beat D, we upgrade voice tier.
 ALL 4 CONNECTION-TESTED on prod (audit-eng, reached "You're connected" in the live orb room,
 0 errors). LATENCY finding for the bake-off: A/B/D connect to first audio in ~7-9s; CARTESIA
 (C) is SLOWER, ~16s handshake — factor that if judging "feels snappy." NOTE: the 4 sessions
-were driven to connected during testing, so a link may show a resume-state; they're resumable
-and functional. FINAL: these 4 links ARE the deliverable (no re-mint happened — team parked);
-call them as-is, they work. The consent
+were connection-tested then RESET IN PLACE to pristine pending (utterances cleared, pins kept),
+so Kaan hits each voice FRESH FROM THE OPENER — critical since opener velocity is what he's
+judging. FINAL: these 4 links ARE the deliverable, verified pristine + working. Call as-is. The consent
 page greets "Burak" (sessions reuse Burak's plan for content — cosmetic, fine for a bake-off;
 call from a phone/real mic, the orb reacts to the voice). Winner → editor default = next
 session (one --build re-run). Research + recipe rationale: docs/VOICE-RESEARCH.md. Our VAPI
