@@ -117,6 +117,9 @@ export function consentCopy(session: RespondentSession) {
         ? `${company} asked ${brand.product_name}`
         : `${brand.product_name} was asked`;
 
+  // Name the audience honestly: the respondent is owed who-sees-what, not just "shared".
+  const audience = company ? `the ${company} team who asked for it` : "the team who asked for it";
+
   return {
     heading: `A quick, honest conversation about ${topic}`,
     intro: `Hi ${name}, thanks for being here. ${askedBy} to understand how the work really happens, and your view matters because you're the one who does it. This takes about ${minutes} minutes, and you're in control the whole way.`,
@@ -127,6 +130,7 @@ export function consentCopy(session: RespondentSession) {
     ],
     handling: [
       "The conversation is recorded and summarized so your account is captured accurately.",
+      `A short summary of how the work flows goes to ${audience}. Pain points are shared by role, like "someone in packing," not by your name.`,
       "You review before you're named. Before anything is attributed to you by name, you'll see it, and you can change it, take your name off it, or leave it out.",
       "You won't be asked to rate anyone. If an opinion about a person comes up, it's kept out of what's shared unless you explicitly say otherwise.",
       "You can pause anytime and pick up later on the same link.",

@@ -173,9 +173,10 @@ export function InterviewClient({ token }: { token: string }) {
             Thank you{ctx?.respondent_name ? `, ${ctx.respondent_name}` : ""}
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-            That&apos;s everything we needed. We&apos;re putting together a short summary of
-            how the work flows. You&apos;ll get to review anything attributed to you by name
-            before it&apos;s shared. You can close this page now.
+            This really helps. We&apos;re putting together a short summary of how the work
+            flows for {ctx?.company_name ? `the ${ctx.company_name} team` : "the team"} who
+            asked for it. It&apos;s shared by role, not your name, and anything with your name
+            on it is only what you okayed while we talked. You can close this page now.
           </p>
         </div>
       </Shell>
@@ -321,8 +322,8 @@ export function InterviewClient({ token }: { token: string }) {
             </button>
           </div>
           <p className="mt-2 text-center text-[11px] text-ink-faint">
-            Your words are kept as you say them. You review anything attributed to you before
-            it&apos;s shared.
+            Your words are kept as you say them. Nothing is shared under your name without
+            your okay.
           </p>
         </div>
       </div>
