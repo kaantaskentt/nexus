@@ -26,8 +26,8 @@ ALL 4 CONNECTION-TESTED on prod (audit-eng, reached "You're connected" in the li
 0 errors). LATENCY finding for the bake-off: A/B/D connect to first audio in ~7-9s; CARTESIA
 (C) is SLOWER, ~16s handshake — factor that if judging "feels snappy." NOTE: the 4 sessions
 were driven to connected during testing, so a link may show a resume-state; they're resumable
-and functional. Fresh pristine tokens may be re-minted (voice-settings) — check for an updated
-link set below/in-thread; if none, these work as-is. The consent
+and functional. FINAL: these 4 links ARE the deliverable (no re-mint happened — team parked);
+call them as-is, they work. The consent
 page greets "Burak" (sessions reuse Burak's plan for content — cosmetic, fine for a bake-off;
 call from a phone/real mic, the orb reacts to the voice). Winner → editor default = next
 session (one --build re-run). Research + recipe rationale: docs/VOICE-RESEARCH.md. Our VAPI
