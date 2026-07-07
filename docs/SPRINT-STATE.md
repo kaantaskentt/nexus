@@ -219,6 +219,10 @@ verified 4/4) — one command after Emre ratifies · demo runbook docs/DEMO-RUNB
   not Kaan's own Act-1 test, hide via is_internal like the QA tenant. DO NOT delete.
 - Emre ratifications (evidence pre-loaded): F21 same-speaker-retraction (staged patch);
   F42 halo (2/3 multi-turn baseline); F38+ batch. Packet §4-§6.
+- Emre batch addition (July 7, from the A21 gate walk): the interviewer's own GENERATED
+  speech produced an em-dash mid-conversation. The no-em-dash rule binds authored UI copy
+  today; extending it to the persona prompt (stage7-interviewer) is Emre's call — flag
+  alongside his opener-wording pass (A20 opener restoration is EMRE-SEAM).
 - Kaan taste batch: coverage_routing feel change (OFF until nod) · 4 em-dash records on
   bee-goddess-demo (ruled documented+deferred-to-reseed; Kaan may override for a cosmetic
   one-time edit) · demo account address (admin@nexus.app) · voice-selection session.
