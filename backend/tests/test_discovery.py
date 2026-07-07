@@ -93,7 +93,7 @@ async def test_upload_stores_verbatim_and_enqueues_standard_compile(db):
     # The enqueued job is the STANDARD compile_session, flagged to render the snapshot.
     job = await db.fetchrow("select kind, payload from jobs where id = $1", out["job_id"])
     assert job["kind"] == "compile_session"
-    payload = json.loads(job["payload"])
+    payload = job["payload"]
     assert payload["render_snapshot"] is True
     assert payload["session_id"] == out["session_id"]
 

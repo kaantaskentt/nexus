@@ -63,7 +63,7 @@ async def worker_loop(worker_id: str = "worker-1", poll_seconds: float = 1.0) ->
         try:
             if handler is None:
                 raise RuntimeError(f"no handler registered for job kind {job['kind']!r}")
-            await handler(json.loads(job["payload"]))
+            await handler(job["payload"])
             await pool.execute("update jobs set status = 'done' where id = $1", job["id"])
         except Exception:
             err = traceback.format_exc()

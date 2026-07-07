@@ -42,11 +42,8 @@ _SPINE_CANON: list[tuple[str, tuple[str, ...]]] = [
 
 
 def _loads(v, default=None):
-    if isinstance(v, str):
-        try:
-            return json.loads(v)
-        except json.JSONDecodeError:
-            return default
+    # jsonb is decoded to Python objects by the pool codec (app.db.get_pool); this now
+    # only supplies the caller's default when the column was SQL NULL.
     return v if v is not None else default
 
 

@@ -2,7 +2,6 @@
 the standard generate_plan job; the job persists the plan and advances it to NEXUS_CHECK
 (A4). Non-negotiable #4: quarantined sentiment can never reach the plan generator."""
 
-import json
 
 from httpx import ASGITransport, AsyncClient
 
@@ -38,7 +37,7 @@ async def test_generate_endpoint_creates_draft_and_enqueues(db):
 
     job = await db.fetchrow("select kind, payload from jobs where id = $1", out["job_id"])
     assert job["kind"] == "generate_plan"
-    assert json.loads(job["payload"])["plan_id"] == out["plan_id"]
+    assert job["payload"]["plan_id"] == out["plan_id"]
 
 
 async def test_generate_endpoint_resolves_person_by_name(db):
@@ -97,11 +96,11 @@ async def test_generate_plan_job_persists_and_advances(db, monkeypatch):
         plan_id,
     )
     assert row["state"] == "NEXUS_CHECK"
-    mission = json.loads(row["mission"])
+    mission = row["mission"]
     assert mission["goal"].startswith("Understand how online returns")
     assert mission["topics"][0]["must_hit"] is True
-    assert json.loads(row["never_list"]) == ["Do not name or characterize any colleague"]
-    assert json.loads(row["suggested_questions"])[0]["topic"] == "process_step"
+    assert row["never_list"] == ["Do not name or characterize any colleague"]
+    assert row["suggested_questions"][0]["topic"] == "process_step"
 
     # The lifecycle move is recorded.
     t = await db.fetchrow(
