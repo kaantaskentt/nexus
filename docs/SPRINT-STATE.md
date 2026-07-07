@@ -1,3 +1,57 @@
+# Sprint state — DAY FINAL TRUTH, July 6 2026 (parked ~23:00 PT)
+
+## ★ FIRST THING KAAN DOES: THE VOICE CASTING CALL (call all 4, your ears pick) ★
+
+Kaan's test call felt robotic + slow (esp opener). Root cause found: the opener was
+MODEL-GENERATED live at call start (firstMessageMode). Fix in ALL 4: static canned
+opener (instant TTS) + response delay cut 2.5s → 0.5s + faster interrupt. Four prod links,
+each a DISTINCT premium voice (verified live: 4 distinct pinned assistants, all pages 200):
+
+- CASTING-A (ElevenLabs male "burt"):   https://nexus-v2-alpha.vercel.app/i/TseL3gZCmaTchjIRY_bLq9Y5EXgT4XDv
+- CASTING-B (ElevenLabs female "sarah"): https://nexus-v2-alpha.vercel.app/i/8xUwo4ENDOQEawOPT1iBlvp1eIQAfdVd
+- CASTING-C (Cartesia sonic-2):          https://nexus-v2-alpha.vercel.app/i/nQ5yTWzFi20UhN6GkHpCLO72EAUxypUQ
+- CASTING-D (Deepgram Aura "orion" — CONTROL, current voice + same timing fixes): https://nexus-v2-alpha.vercel.app/i/dT4tN9h5kaiD0mbn3ZJzSj0PEY0wjd-V
+
+D is the control on purpose: if D already sounds human, the timing/opener fix ALONE fixed
+it (no provider change needed); if A/B/C clearly beat D, we upgrade voice tier. The consent
+page greets "Burak" (sessions reuse Burak's plan for content — cosmetic, fine for a bake-off;
+call from a phone/real mic, the orb reacts to the voice). Winner → editor default = next
+session (one --build re-run). Research + recipe rationale: docs/VOICE-RESEARCH.md. Our VAPI
+key CONFIRMED supports ElevenLabs + Cartesia + Rime (tested live). voice-room's curated
+picks can swap in via one idempotent re-run if you want different voices.
+
+## KAAN DECISION LIST (consolidated — everything waiting on you)
+1. **Voice casting winner** — call A/B/C/D above, pick; we set it as default.
+2. **A19 redesign** — drop the reference mock PNGs into reference/ui-inspo/ to unblock the
+   dark-orb room / Observer view / tabbed Voice Settings build (staged in MERGE_PLAN A19).
+3. **Speed slider** — swap to a speed-capable provider or drop from the A19 mock (A19 pass
+   tests whether VAPI honors an Aura speed override).
+4. **Picker hero ordering** — pure recency (shipped, empty real tenant can lead) vs
+   newest-PREPARED (content leads); one-line switch staged in page.tsx (audit-eng holds it).
+5. **Picker contents** — prune to Bee Goddess for demos, or keep example workspaces.
+6. **Emre ratifications** (morning packet): F21 same-speaker-retraction (staged patch,
+   1 command), F42 halo (2/3 multi-turn evidence), F38+ batch.
+7. Earlier taste batch (voice roster confirm, badge labels), morning-review packet.
+
+## MORNING ITEMS (non-blocking, logged for next session)
+- Aurora tenant: 1 record / 0 cards renders an empty snapshot with NO upload affordance
+  (mild dead-end for that in-between state); pristine 0-record empty state is fine.
+- Casting cleanup: 4 casting VAPI assistants + 4 pinned sessions on bee-goddess-demo live;
+  clean up (delete assistants / expire sessions) after Kaan picks the winner.
+- Tenant-scoping (auth is identity-only — any admin reads any workspace); job-poll
+  unification; router _loads shim sweep; NO_RESPONSE reminder scheduler; API-shape
+  consolidation; harness-on-prod admin creds env (NEXUS_ADMIN_EMAIL/PASSWORD). All in YC-AUDIT.md.
+
+## PROD STATE (all live, smoke-verified)
+HEAD 644e747 deployed (Railway api+worker + Vercel). Auth enforced (Supabase JWT on all
+/api/* except token+voice routes). Migrations 0001-0009 applied to live (0008/0009 by hand,
+statement_cache_size=0 for the pooler). auth.users clean: Kaan + Emre + admin@nexus.app only.
+Demo login: admin@nexus.app / Nx-7bhUhOeIy4DP746f (rotated). Kaan: taskentbusiness@gmail.com
+/ Nx-6-MeUIdoGNUsrH45. THREE sprints shipped today: V2 product+auth (morning), YC-audit
+hardening (evening workshop — API auth P0 + trust-surface fixes), Sprint-2 voice+multi-company.
+
+---
+
 # Sprint state — V2 FINAL + evening workshop + Sprint-2 (voice/multi-company), July 6
 
 ## SPRINT-2 — PROD DEPLOYED at a9e4e9b (~21:30 PT), smoke-green
