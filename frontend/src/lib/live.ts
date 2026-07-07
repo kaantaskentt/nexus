@@ -278,12 +278,41 @@ export async function list_plans(workspace_id: string, token?: string): Promise<
 // NEXUS_CHECK. Poll list_plans until the new plan's state flips from DRAFT.
 export async function generate_plan(
   workspace_id: string,
-  person: { entity_id?: string; person_name?: string; person_role?: string },
+  person: { entity_id?: string; person_name?: string; person_role?: string; goal?: string },
 ): Promise<{ plan_id: string; state: string; job_id: number }> {
   return api<{ plan_id: string; state: string; job_id: number }>(`/api/plans/generate`, {
     method: "POST",
     body: JSON.stringify({ workspace_id, ...person }),
   });
+}
+
+// ── Context chat (#20 APIs, UI door July 7) ──────────────────────────────────
+export interface ChatCitation {
+  record_id: string;
+  tag: TrustTag | null;
+  claim_text: string;
+  evidence_quote: string | null;
+  topic: string;
+}
+export interface ChatAnswer {
+  answer: string;
+  citations: ChatCitation[];
+  suggestions: string[];
+}
+export async function ask_context(workspace_id: string, question: string): Promise<ChatAnswer> {
+  return api<ChatAnswer>(`/api/chat/${workspace_id}/ask`, {
+    method: "POST",
+    body: JSON.stringify({ question }),
+  });
+}
+export async function add_context(
+  workspace_id: string,
+  statement: string,
+): Promise<{ ok: boolean; session_id: string; job_id: number }> {
+  return api<{ ok: boolean; session_id: string; job_id: number }>(
+    `/api/chat/${workspace_id}/add-context`,
+    { method: "POST", body: JSON.stringify({ statement }) },
+  );
 }
 
 export async function get_plan(

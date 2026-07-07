@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { get_workspace, list_snapshot_cards, list_claims } from "@/lib/live-server";
 import { SnapshotView } from "@/components/snapshot/SnapshotView";
 import { DiscoveryUpload } from "@/components/snapshot/DiscoveryUpload";
+import { AddTranscriptDoor } from "@/components/snapshot/AddTranscriptDoor";
 
 // Home — the workspace landing (A21 IA). The Company Snapshot IS home. A tenant with no
 // compiled snapshot CARDS gets the guided discovery state — even when raw records already
@@ -31,5 +32,16 @@ export default async function HomePage({ params }: { params: { slug: string } })
     );
   }
 
-  return <SnapshotView workspace={workspace} cards={cards} claims={claims} />;
+  // Snapshot exists: the upload hero is gone, but a LATER call must still have a door
+  // (Kaan, July 7). Collapsed under the snapshot; append mode compiles into the same store.
+  const cfg = workspace.config ?? {};
+  return (
+    <>
+      <SnapshotView workspace={workspace} cards={cards} claims={claims} />
+      <AddTranscriptDoor
+        workspaceId={workspace.id}
+        defaultSpeaker={cfg.contact_person ?? cfg.founder}
+      />
+    </>
+  );
 }

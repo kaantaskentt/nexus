@@ -130,6 +130,10 @@ class GenerateIn(BaseModel):
     entity_id: str | None = None       # a known suggested-person entity (preferred)
     person_name: str | None = None     # or resolve/create by name + role
     person_role: str | None = None
+    # Kaan product ask (July 7): a CUSTOM interview — admin free-text focus the generator
+    # aims the mission at. Same lifecycle, same gate (NEXUS_CHECK -> human approval);
+    # the focus shapes objectives, it never bypasses review or reaches the respondent raw.
+    goal: str | None = None
 
 
 @router.post("/generate")
@@ -164,9 +168,10 @@ async def generate(body: GenerateIn):
         "values ($1, $2, $3, 'DRAFT') returning id",
         body.workspace_id, round_id, entity_id,
     )
-    job_id = await enqueue(
-        "generate_plan", {"plan_id": str(plan_id), "workspace_id": body.workspace_id}
-    )
+    payload = {"plan_id": str(plan_id), "workspace_id": body.workspace_id}
+    if body.goal and body.goal.strip():
+        payload["custom_goal"] = body.goal.strip()
+    job_id = await enqueue("generate_plan", payload)
     return {"plan_id": str(plan_id), "state": "DRAFT", "job_id": job_id}
 
 

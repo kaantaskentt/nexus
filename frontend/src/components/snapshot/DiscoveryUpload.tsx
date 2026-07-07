@@ -41,6 +41,7 @@ export function DiscoveryUpload({
   defaultSpeaker,
   website,
   hasRecords = false,
+  append = false,
 }: {
   workspaceId: string;
   defaultSpeaker?: string;
@@ -48,6 +49,9 @@ export function DiscoveryUpload({
   // True when the tenant already has raw records but no compiled snapshot cards (the
   // Aurora state): the heading must say that honestly instead of greeting a "fresh" start.
   hasRecords?: boolean;
+  // Add-transcript-later door (Kaan, July 7): the snapshot already exists and this is a
+  // LATER call compiling into the same record store. Compact heading, no first-time pitch.
+  append?: boolean;
 }) {
   const router = useRouter();
   const [transcript, setTranscript] = useState("");
@@ -127,19 +131,28 @@ export function DiscoveryUpload({
           <Mic className="h-7 w-7" strokeWidth={1.5} />
         </div>
         <h1 className="mt-6 font-display text-[2.5rem] leading-[1.1] text-ink">
-          {hasRecords ? "Your snapshot isn't built yet" : "Start with the CEO call"}
+          {append
+            ? "Add a call transcript"
+            : hasRecords
+              ? "Your snapshot isn't built yet"
+              : "Start with the CEO call"}
         </h1>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-soft">
-          {hasRecords
-            ? `Records from an earlier upload are saved, but no Company Snapshot has been ` +
-              `compiled from them yet. Paste or drop a discovery-call transcript to build it.`
-            : `Paste or drop the discovery-call transcript. ${brand.product_name} reads it the ` +
-              `way a world-class interviewer would, and builds your first Company Snapshot from ` +
-              `what was actually said.`}
+          {append
+            ? `A later call with the founder or team compiles into the same record store. ` +
+              `New claims are compared with what's already here, never merged over it, and ` +
+              `the snapshot updates when the new records land.`
+            : hasRecords
+              ? `Records from an earlier upload are saved, but no Company Snapshot has been ` +
+                `compiled from them yet. Paste or drop a discovery-call transcript to build it.`
+              : `Paste or drop the discovery-call transcript. ${brand.product_name} reads it the ` +
+                `way a world-class interviewer would, and builds your first Company Snapshot from ` +
+                `what was actually said.`}
         </p>
 
-        {/* What will appear here — the guided preview of the three snapshot sections. */}
-        <div className="mx-auto mt-6 grid max-w-lg grid-cols-1 gap-2 text-left sm:grid-cols-3">
+        {/* What will appear here — the guided preview of the three snapshot sections.
+            Hidden on the append door: the admin has already seen the snapshot. */}
+        <div className={append ? "hidden" : "mx-auto mt-6 grid max-w-lg grid-cols-1 gap-2 text-left sm:grid-cols-3"}>
           {[
             ["What Nexus Learned", "The company as described, each point tied to a quote"],
             ["Areas to Investigate", "Open questions and gaps worth an interview"],

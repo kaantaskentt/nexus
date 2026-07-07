@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { FileText, ArrowRight } from "lucide-react";
 import { get_workspace, list_plans, list_sessions } from "@/lib/live-server";
 import { PlanStateChip } from "@/components";
+import { CustomPlanDoor } from "@/components/plan/CustomPlanDoor";
 
 function shortDate(iso?: string): string | null {
   if (!iso) return null;
@@ -58,6 +59,10 @@ export default async function PlansPage({
             There is no decline.
           </p>
         </header>
+
+        {/* Custom interview door (Kaan, July 7): aim a plan with free-text focus. Same
+            lifecycle — generator drafts, NEXUS_CHECK reviews, human approves, then send. */}
+        <CustomPlanDoor workspaceId={workspace.id} />
 
         {/* Designed empty state (EMRE sprint target 2): guide the action that creates the
             first plan instead of a bare heading over nothing. */}

@@ -135,3 +135,59 @@ async def test_generate_plan_excludes_quarantined_records(db, monkeypatch):
 
     assert "handled every morning" in seen["content"]          # visible record reached it
     assert "careless" not in seen["content"]                    # quarantined never did
+
+
+# ── Custom interview door (Kaan product ask, July 7) ─────────────────────────
+
+
+async def test_generate_endpoint_passes_custom_goal(db):
+    """POST /generate with a free-text goal carries it into the job payload; the gate
+    (DRAFT -> NEXUS_CHECK -> human approval) is unchanged."""
+    ws = await make_workspace(db, industry="jewelry")
+    async with _client() as c:
+        r = await c.post(
+            "/api/plans/generate",
+            json={"workspace_id": str(ws), "person_name": "Deniz",
+                  "goal": "Find out how returns really get authorized"},
+        )
+    assert r.status_code == 200
+    out = r.json()
+    assert out["state"] == "DRAFT"
+    job = await db.fetchrow("select payload from jobs where id = $1", out["job_id"])
+    assert job["payload"]["custom_goal"] == "Find out how returns really get authorized"
+
+
+async def test_generate_plan_job_honors_custom_goal(db, monkeypatch):
+    """The custom focus reaches the generator's context and lands on mission.custom_focus
+    (honest provenance for the review screen)."""
+    ws = await make_workspace(db, industry="jewelry")
+    person = await _person(db, ws)
+    plan_id = await db.fetchval(
+        "insert into interview_plans (workspace_id, interviewee_id, state) "
+        "values ($1,$2,'DRAFT') returning id",
+        ws, person,
+    )
+    seen = {}
+
+    async def _capture(agent_name, user_content, **kw):
+        seen["content"] = user_content
+        return {"goal": "g", "topics": [], "suggested_questions": [], "never_list": []}
+
+    monkeypatch.setattr("app.pipeline.plan.run_agent_json", _capture)
+    await plan_pipeline.generate_plan(
+        {"plan_id": str(plan_id), "workspace_id": str(ws),
+         "custom_goal": "Find out how returns really get authorized"}
+    )
+    assert "Admin's custom focus" in seen["content"]
+    assert "returns really get authorized" in seen["content"]
+
+    mission = (await db.fetchrow("select mission from interview_plans where id=$1", plan_id))["mission"]
+    assert mission["custom_focus"] == "Find out how returns really get authorized"
+
+    # A record-derived plan keeps honest None provenance.
+    plan2 = await db.fetchval(
+        "insert into interview_plans (workspace_id, interviewee_id, state) "
+        "values ($1,$2,'DRAFT') returning id", ws, person)
+    await plan_pipeline.generate_plan({"plan_id": str(plan2), "workspace_id": str(ws)})
+    mission2 = (await db.fetchrow("select mission from interview_plans where id=$1", plan2))["mission"]
+    assert mission2["custom_focus"] is None

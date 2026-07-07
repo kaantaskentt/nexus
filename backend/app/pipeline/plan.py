@@ -98,6 +98,18 @@ async def generate_plan(payload: dict) -> None:
         + "\n\n# Compiled records (client-visible; derive neutral objectives, never transmit content)\n"
         + records
     )
+    # Custom interview (Kaan, July 7): the admin's free-text focus aims the mission.
+    # Every existing rule still binds — objectives stay neutral, nothing anyone said is
+    # transmitted, and the plan still passes NEXUS_CHECK + human approval before sending.
+    custom_goal = (payload.get("custom_goal") or "").strip()
+    if custom_goal:
+        context = (
+            "# Admin's custom focus for this interview\n"
+            f"{custom_goal}\n"
+            "Aim the goal and objectives at this focus, grounded in the records below. "
+            "The same rules bind: derive neutral objectives, never transmit anyone's "
+            "statements to the interviewee.\n\n"
+        ) + context
     turn = "Generate the interview plan for this person now."
     user_content = f"{context}\n\n{turn}\n{OUTPUT_CONTRACT}"
 
@@ -118,6 +130,9 @@ async def generate_plan(payload: dict) -> None:
         "handling_notes": data.get("handling_notes") or [],
         "vocabulary": data.get("vocabulary") or [],
         "time_budget_minutes": data.get("time_budget_minutes") or 30,
+        # Honest provenance: the admin's own focus text, kept on the mission so the
+        # review screen shows what this plan was aimed at. None for record-derived plans.
+        "custom_focus": custom_goal or None,
     }
     questions = data.get("suggested_questions") or []
     never = data.get("never_list") or []
