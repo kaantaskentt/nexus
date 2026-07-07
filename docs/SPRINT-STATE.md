@@ -7,10 +7,18 @@ MODEL-GENERATED live at call start (firstMessageMode). Fix in ALL 4: static cann
 opener (instant TTS) + response delay cut 2.5s → 0.5s + faster interrupt. Four prod links,
 each a DISTINCT premium voice (verified live: 4 distinct pinned assistants, all pages 200):
 
-- CASTING-A (ElevenLabs male "burt"):   https://nexus-v2-alpha.vercel.app/i/TseL3gZCmaTchjIRY_bLq9Y5EXgT4XDv
-- CASTING-B (ElevenLabs female "sarah"): https://nexus-v2-alpha.vercel.app/i/8xUwo4ENDOQEawOPT1iBlvp1eIQAfdVd
-- CASTING-C (Cartesia sonic-2):          https://nexus-v2-alpha.vercel.app/i/nQ5yTWzFi20UhN6GkHpCLO72EAUxypUQ
-- CASTING-D (Deepgram Aura "orion" — CONTROL, current voice + same timing fixes): https://nexus-v2-alpha.vercel.app/i/dT4tN9h5kaiD0mbn3ZJzSj0PEY0wjd-V
+- CASTING-A (ElevenLabs warm FEMALE "sarah", turbo v2.5): https://nexus-v2-alpha.vercel.app/i/TseL3gZCmaTchjIRY_bLq9Y5EXgT4XDv
+- CASTING-B (ElevenLabs warm MALE "ryan", turbo v2.5):    https://nexus-v2-alpha.vercel.app/i/8xUwo4ENDOQEawOPT1iBlvp1eIQAfdVd
+- CASTING-C (Cartesia sonic-2):                           https://nexus-v2-alpha.vercel.app/i/nQ5yTWzFi20UhN6GkHpCLO72EAUxypUQ
+- CASTING-D (Deepgram Aura "asteria" — CONTROL, current default voice + same timing fixes): https://nexus-v2-alpha.vercel.app/i/dT4tN9h5kaiD0mbn3ZJzSj0PEY0wjd-V
+
+(Voices PATCHed in place, so tokens/links above are FINAL and unchanged. All 4 carry:
+firstMessageMode "assistant-speaks-first" + canned opener, startSpeakingPlan waitSeconds 0.4
+livekit smart-endpoint, stopSpeakingPlan numWords 0. A/B: eleven_turbo_v2_5, stability 0.45 /
+similarityBoost 0.75 / speakerBoost / optimizeStreamingLatency 3. Two minor swap-if-wanted
+notes: Cartesia-C voiceId is VAPI-accepted but not dashboard-confirmed as the warmest pick
+(one PATCH swaps it, no re-mint); opener text is a consistent static warm line, not doc §2's
+exact wording. Neither blocks the bake-off — voice is the variable, opener is held constant.)
 
 D is the control on purpose: if D already sounds human, the timing/opener fix ALONE fixed
 it (no provider change needed); if A/B/C clearly beat D, we upgrade voice tier. The consent
