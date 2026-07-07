@@ -244,3 +244,18 @@ The live interview room shows the respondent progress, but that progress must be
 The **admin-side** live view is the opposite: it MAY show the richer captured-points ticker (records landing as the interview runs), because no respondent psychology applies to the operator watching. Two audiences, two truths — same call as the sentiment-quarantine and paraphrase splits.
 
 **EMRE-SEAM:** this is a psychology decision made at build time by engineering + watchtower judgment; **Emre's docs may refine it** — the exact neutral elements, whether a coverage count is even shown vs. a plain listening state, and any wording. Treat his deliverable as authoritative when it lands (diff, surface conflicts, never silently overwrite — per CLAUDE.md). Governs the sprint-2 live-interview-room lane.
+
+## A19 — Sprint-2 UI design verdict on the GPT reference set (July 6 evening — Kaan/watchtower)
+
+Reference images (GPT-generated) are taste-approved as the pixel target for the sprint-2 UI lanes. Kaan holds them; the lane can request PNGs dropped into `reference/ui-inspo/` for pixel reference. **ADOPT:**
+- **Live-interview centerpiece (Lane C):** the dark orb panel — particle sphere, amplitude-reactive, mic waveform bar below.
+- **Voice Settings (Lane B):** structure exactly as mocked — voice cards with play-preview, speed slider (default 0.9x), editable greeting incl. Turkish, and Voice / Behavior / Greetings / Advanced tabs.
+- **Observer view (admin, Lane C):** timestamped insight cards + a topics-covered ring + an "Add insight" button.
+
+**FOUR MANDATORY CORRECTIONS (these override the mock; the mock is wrong on each):**
+1. **Trust badges on live insights come from the REAL trust ladder — never all-Verified.** The mock shows every live insight as "Verified"; that is exactly the lie we do not tell. An in-the-moment, single-source claim is at most the lowest "Reported/stated" tier — **"Verified" requires independent corroboration that a live, uncompiled claim does not have.** Non-negotiable #1 holds live: tags never upgrade in-the-moment; truth only emerges from comparing records after compile. Reuse the existing ladder primitive (`frontend/src/lib/trust.ts`, `ConfidenceBadge`, pinned by `badge-mapping.test.tsx`) — do not invent live-only badge logic.
+2. **Observer vs. respondent are the same elements, different chrome.** The orb+transcript inside the admin shell (nav, breadcrumbs, company>person trail) is the OBSERVER view. The RESPONDENT room is the identical elements **chrome-free** — no nav, no breadcrumbs, no trail — a calm standalone frame. (Reinforces A18: the respondent surface is its own honest, low-pressure context.)
+3. **No employee face photos anywhere — initials chips only** (ties to the sentiment-quarantine / name-handling posture: people are roles, not faces).
+4. **Voice picker uses abstract waveform tiles, not human face photos** — name, gender, language chip, play-preview.
+
+Everything else in the reference set is taste-approved. Binds Lanes B (#39) and C (#40).
