@@ -21,7 +21,13 @@ notes: Cartesia-C voiceId is VAPI-accepted but not dashboard-confirmed as the wa
 exact wording. Neither blocks the bake-off — voice is the variable, opener is held constant.)
 
 D is the control on purpose: if D already sounds human, the timing/opener fix ALONE fixed
-it (no provider change needed); if A/B/C clearly beat D, we upgrade voice tier. The consent
+it (no provider change needed); if A/B/C clearly beat D, we upgrade voice tier.
+ALL 4 CONNECTION-TESTED on prod (audit-eng, reached "You're connected" in the live orb room,
+0 errors). LATENCY finding for the bake-off: A/B/D connect to first audio in ~7-9s; CARTESIA
+(C) is SLOWER, ~16s handshake — factor that if judging "feels snappy." NOTE: the 4 sessions
+were driven to connected during testing, so a link may show a resume-state; they're resumable
+and functional. Fresh pristine tokens may be re-minted (voice-settings) — check for an updated
+link set below/in-thread; if none, these work as-is. The consent
 page greets "Burak" (sessions reuse Burak's plan for content — cosmetic, fine for a bake-off;
 call from a phone/real mic, the orb reacts to the voice). Winner → editor default = next
 session (one --build re-run). Research + recipe rationale: docs/VOICE-RESEARCH.md. Our VAPI
