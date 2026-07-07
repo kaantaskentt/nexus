@@ -122,3 +122,32 @@ plan adapter is the next infra step, and it unblocks leading-question-catch.yaml
 The agent-vs-agent driver exercises the synchronous turn engine only. The full
 journey (compile → Phase-6 fan-out → report) also needs the QUEUE WORKER running (`python -m app.worker`) — per
 backend/README, the API only enqueues; without the worker the compile/report never appear. #15 must run both processes.
+## Round 3 (July 7) — coverage-routing A/B ON PROD: PARKED MID-RUN, credit exhaustion
+
+Method: 5-persona matrix against the LIVE prod API (EVAL_MODE flipped on for the run,
+A12-safe eval workspace), arm A = COVERAGE_ROUTING off (default), arm B = on. Runs in
+`runs/r3A-*.json`. Arm A got 3/5 before the shared Anthropic account ran OUT OF CREDITS
+(foreman sim died on the billing error; agency's prod-side turns hung into ReadTimeout —
+same root cause; a direct prod turn then 500'd, confirming the turn engine itself was down).
+
+**Arm A partials (flag OFF), single runs:**
+| Persona | Hidden | Traps taken | Heuristics |
+|---|---|---|---|
+| jewelry-ops-manager | 3/3 | 0/3 | jw-1..3 confirmed, jw-4 busted (correct) |
+| hotel-frontdesk-lead | 3/3 | 1/3 (closing "it just works" passed unprobed) | ho-1..3 confirmed |
+| bookkeeper (terse) | 1/3 | 0/3 | bk-3 **untouched** again; bk-4 partial |
+
+Read: the motivating terse-respondent coverage gap REPRODUCED on prod at baseline
+(h-bk-3 deadline-tracking untouched, H2+H3 unsurfaced this round — worse than round 2's
+2/3). That is exactly the evidence arm B exists to answer. Hotel's taken trap is new
+(round 2 was 0/3) — single-run variance vs. real regression, undecidable at n=1.
+
+**To resume once credits are topped up** (blocked, Kaan-only unblock):
+1. re-create an eval admin (scripts/create_admin.py), set EVAL_MODE=1 on nexus-api;
+2. finish arm A: agency-account-manager + warehouse-foreman (run ≤2 concurrent — 5-way
+   parallel caused adapter ReadTimeouts even before the credit wall);
+3. arm B: COVERAGE_ROUTING=1, same 5 personas, same method;
+4. restore EVAL_MODE=0 + unset COVERAGE_ROUTING, delete the eval admin;
+5. decision table for Kaan/Emre: does the per-turn classifier close bk-3/H2 on the terse
+   persona (and ag-2 on the polished one) without hurting the clean personas?
+State restored at park: EVAL_MODE=0 live, eval admin deleted, no flags left flipped.
