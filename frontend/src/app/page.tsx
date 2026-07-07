@@ -17,8 +17,9 @@ import { SignOutButton } from "@/components/SignOutButton";
 import { AddCompany } from "@/components/AddCompany";
 
 // Workspace picker + switcher (A17). After admin login this is the multi-company home:
-// a prepared workspace leads as the hero, every other company is an openable row, and
-// "Add company" mints a fresh real tenant. Counts render from real records, not JSX.
+// the most-recently-created workspace leads as the hero, every other company is an
+// openable row, and "Add company" mints a fresh real tenant. Counts render from real
+// records, not JSX. No workspace is special-cased by name or demo flag (Sprint2-A).
 export default async function Home() {
   const workspaces = await list_workspaces();
 
@@ -38,8 +39,12 @@ export default async function Home() {
     }),
   );
 
-  const hero = withCounts.find((w) => w.prepared) ?? withCounts[0];
-  const others = withCounts.filter((w) => w !== hero);
+  // Neutral ordering (Sprint2-A): most-recently-created first — the backend returns
+  // workspaces created_at ASC, so reverse. The newest workspace leads as the hero, so a
+  // real client Kaan just added is never visually subordinate to the seeded demo.
+  const ordered = [...withCounts].reverse();
+  const hero = ordered[0];
+  const others = ordered.slice(1);
 
   return (
     <div className="min-h-screen bg-canvas">
@@ -116,10 +121,12 @@ function HeroCard({
   ws,
   interviews,
   areas,
+  prepared,
 }: {
   ws: Awaited<ReturnType<typeof list_workspaces>>[number];
   interviews: number;
   areas: number;
+  prepared: boolean;
 }) {
   const c = ws.config ?? {};
   return (
@@ -176,11 +183,17 @@ function HeroCard({
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line pt-4">
-        <Meta icon={Users} label={`${interviews} suggested interviews`} />
-        <Meta icon={Sparkles} label={`${areas} areas to investigate`} />
-        <Meta icon={Database} label="Context seeded from discovery call" />
+        {prepared ? (
+          <>
+            <Meta icon={Users} label={`${interviews} suggested interviews`} />
+            <Meta icon={Sparkles} label={`${areas} areas to investigate`} />
+            <Meta icon={Database} label="Context seeded from discovery call" />
+          </>
+        ) : (
+          <Meta icon={Compass} label="Awaiting first CEO call — start with the discovery transcript" />
+        )}
         <span className="ml-auto inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard group-hover:-translate-y-px group-hover:bg-accent-hover group-hover:shadow-elev-2">
-          Enter workspace
+          {prepared ? "Enter workspace" : "Set up workspace"}
           <ArrowRight className="h-4 w-4" strokeWidth={2} />
         </span>
       </div>
