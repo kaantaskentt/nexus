@@ -16,4 +16,5 @@ from . import (  # noqa: F401  (importing registers each @handles job)
     snapshot,
     workflow,
     workflow_edit,
+    yield_stats,
 )

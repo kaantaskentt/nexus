@@ -335,6 +335,9 @@ async def compile_session(payload: dict) -> None:
     await enqueue("rate_pain", {"workspace_id": workspace_id, "session_id": session_id}, priority=95)
     # Stage 2: score pre-call heuristics against what the call actually surfaced (F13).
     await enqueue("score_heuristics", {"workspace_id": workspace_id, "session_id": session_id}, priority=100)
+    # Question yield + final coverage audit (Emre stage-7 §10, A24): analytics-grade,
+    # deterministic core, so it rides after the report-critical jobs.
+    await enqueue("compute_yield", {"session_id": session_id}, priority=120)
     await enqueue("detect_conflicts", {"workspace_id": workspace_id, "session_id": session_id}, priority=150)
 
     # Opt-in snapshot render (A17 discovery upload / #6): a single-call founder round

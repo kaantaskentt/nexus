@@ -32,6 +32,7 @@ MIGRATIONS = [
     BACKEND / "db" / "migrations" / "0009_voice_config.sql",
     BACKEND / "db" / "migrations" / "0010_observer_insights.sql",
     BACKEND / "db" / "migrations" / "0011_sealed_flags.sql",
+    BACKEND / "db" / "migrations" / "0012_yield_stats.sql",
 ]
 
 
