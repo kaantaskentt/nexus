@@ -214,6 +214,17 @@ verified 4/4) — one command after Emre ratifies · demo runbook docs/DEMO-RUNB
 3. #34 screenshot sweep = last commit. Update this file at shift end.
 4. evals-1: finish quality-prompt fix; mine the #18 transcripts for eval cases.
 
+## July 7 PARK NOTE v2 — EMRE DELIVERED, merge preempts everything (resume here)
+
+**FIRST ACTION on resume:** `git pull` then read docs/emre-inbox/ (watchtower commits
+stage-7-interview-agent-draft1 + stage-3-ceo-call-v04 text copies, ~12:15 PT). The merge
+work order is captured as session tasks #6-#11 (fixed-response layer+evals · two-strike +
+scope lock · sealed-flags Tier-2 table + Tier-3 STUB ONLY · six-type playbook + yield
+outputs · stage-3 hooks + CONFLICT PACKET · Kaan's 3 product asks verify-then-build).
+Protocol: diff never overwrite; conflicts SURFACED in the packet, never silently picked;
+Tier-3 stays open pending Emre's dedicated pass. A23 rhythm binds each piece.
+Matrix round 3 resume (below) moves to SECOND priority — its prod staging still holds.
+
 ## July 7 PARK NOTE — session context exhausted mid-queue (resume here)
 
 **Rhythm:** A23 (BUILD→AUDIT→NEXT) live in CLAUDE.md + MERGE_PLAN (12765cd).
