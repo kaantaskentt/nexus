@@ -52,3 +52,31 @@ Result: `UPDATE 1`. Post-check: picker query (`is_internal = false`) now returns
 `bee-goddess-demo` (+ a pre-existing `aurora-atelier`, not created by this task). The test
 tenant's data (29 claims, 14 snapshot cards) is intact for inspection, just hidden from the
 picker. One-off, non-demo test tenant only; never a real client tenant.
+
+## 2026-07-07 — hide the Sprint2-A stranger-walk tenant from the picker (northwind-coffee-roasters)
+
+**Why:** Sprint2-A (de-Burak / #38) proved the full new-company E2E by driving a real
+stranger company end-to-end on prod — create -> upload -> compile -> 8-card snapshot ->
+plan-gen for suggested-person Maya. That leaves an `is_demo=false, is_internal=false` tenant
+("Northwind Coffee Roasters") in the picker. Team-lead's call: a fictional company as picker
+residue is worse than a clean picker in front of a real client, and the de-Burak proof lives
+in the E2E report, not as permanent residue. Hide (reversible), do NOT delete. Keep
+`aurora-atelier` (established real 2nd tenant, and it demonstrates the neutral-reorder fix).
+
+**Target:** `workspaces.slug = 'northwind-coffee-roasters'` (id
+`ef074468-0d23-4a84-828c-054fda2943fa`, `is_demo=false`).
+
+**Exact statement:**
+```sql
+update workspaces set is_internal = true where slug = 'northwind-coffee-roasters';
+```
+Result: `UPDATE 1` (returned `is_internal=true, is_demo=false`). Post-state: resting picker
+(`is_internal = false`) = `bee-goddess-demo` + `aurora-atelier`. Northwind's data (10 records,
+8 snapshot cards, 1 plan) is intact for inspection; one flag-flip back to visible if Kaan
+wants the example. One-off, non-demo test tenant only; never a real client tenant.
+
+**Also this session (prod, all reversible / self-cleaning):** minted throwaway admins for the
+gated-API drive (`sprint2-stranger`, `sprint2-drive`, `sprint2-plan`) — each deleted from
+`auth.users` immediately after use; and minted voice-modality `interview_sessions` on the
+demo tenant's Burak plan for the voice test + Lane C's E2E (is_demo, token-gated by design).
+Sprint-end check pending: only Kaan + Emre + admin@nexus.app remain in `auth.users`.
