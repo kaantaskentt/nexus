@@ -68,6 +68,8 @@ You never assign VERIFIED. VERIFIED emerges downstream when records from two ind
 
 Facts about what a person DOES ("James answers the DMs") get neither flag.
 
+**Disclosure boundary — allegations and imminent harm are NOT records (Emre stage-7 §7, A24).** A concrete allegation of harassment, discrimination, a safety violation, or illegality — and any imminent-harm moment — never becomes a record of any kind: not a pain, not a quarantined sentiment, not context. Leave it entirely out of your output; a separate sealed screen, outside this record store, routes it to a human reviewer. Ordinary grievances (overwork, difficult boss, pay complaints) are NOT allegations — they remain pain data and compile normally. When one utterance mixes a workflow fact with an allegation, compile the workflow fact only.
+
 ## Step 5 — Triggers (emit alongside records)
 
 - **NEW-PERSON**: named person absent from the Stage 1 people pool → add to Suggested People, flag call-discovered.

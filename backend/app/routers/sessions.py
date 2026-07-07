@@ -135,6 +135,9 @@ async def complete(token: str):
     # (YC-AUDIT #7). COMPILED lands when the compile job finishes, in compiler.py.
     await reconcile_plan_state(pool, plan_id, "COMPLETED", "interview completed")
     await enqueue("compile_session", {"session_id": str(session["id"])})
+    # Disclosure screen runs beside the compile, never inside it — a failed compile
+    # must not skip the Tier-2 sealed-flag pass (Emre stage-7 §7, A24).
+    await enqueue("screen_disclosures", {"session_id": str(session["id"])})
     return {"status": "completed", "compile": "queued"}
 
 

@@ -154,6 +154,8 @@ async def webhook(request: Request, authorization: str | None = Header(default=N
         )
         # Hand the verbatim transcript to the Stage 4 compiler.
         await enqueue("compile_session", {"session_id": str(session_id)})
+        # Disclosure screen beside the compile (Emre stage-7 §7, A24) — see sessions.py.
+        await enqueue("screen_disclosures", {"session_id": str(session_id)})
 
     elif mtype == "status-update" and message.get("status") == "ended":
         await pool.execute(
