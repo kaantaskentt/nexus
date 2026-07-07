@@ -21,12 +21,20 @@ export interface SessionContext {
   modality?: "voice" | "text";
 }
 
+// One stored turn of the respondent's own conversation (A21 target 4). Verbatim — used
+// to render a lossless thread across reloads, drops, and voice/text switches.
+export interface TranscriptTurn {
+  speaker: "agent" | "respondent";
+  text: string;
+}
+
 export interface RespondentSession {
   id: string;
   status: "pending" | "active" | "paused" | "completed" | "expired";
   modality: "voice" | "text";
   language: string;
   context?: SessionContext; // present only if the backend supplies consent_context
+  transcript: TranscriptTurn[]; // the conversation so far ([] on a fresh session)
 }
 
 export interface TurnResult {
@@ -51,6 +59,7 @@ interface RawSession {
     est_minutes?: number | null;
     modality?: "voice" | "text" | null;
   };
+  transcript?: TranscriptTurn[];
 }
 
 const clean = (v?: string | null) => (v == null ? undefined : v);
@@ -63,6 +72,7 @@ export async function getSession(token: string): Promise<RespondentSession> {
     status: raw.status,
     modality: raw.modality,
     language: raw.language,
+    transcript: raw.transcript ?? [],
     context: c
       ? {
           respondent_name: clean(c.respondent_first_name),

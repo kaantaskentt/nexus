@@ -31,15 +31,29 @@ const ASSISTANTS = {
   sharedM: "0853702b-cb75-4609-8af0-d15653dcbbae", // 11labs ryan — the global default (A20)
 };
 
-type CallState = "idle" | "connecting" | "live" | "ended" | "error";
+// "dropped" is a call that ended WITHOUT the respondent asking it to (network, device,
+// provider) — it gets an honest reconnect screen, never a silent slide into text and
+// never a "Call ended" that implies it finished on purpose (A21 target 4; the July 6
+// drop read as a normal completion, which is how it silently became text).
+type CallState = "idle" | "connecting" | "live" | "ended" | "dropped" | "error";
 
 // Minimal structural view of the VAPI client we use (avoids `any`).
 interface VapiLike {
   on(event: string, cb: (payload?: unknown) => void): void;
-  start(assistant: string, opts?: { metadata?: Record<string, unknown> }): Promise<unknown>;
+  start(
+    assistant: string,
+    opts?: { metadata?: Record<string, unknown>; firstMessage?: string },
+  ): Promise<unknown>;
   stop(): void;
   setMuted(muted: boolean): void;
 }
+
+// Spoken when a conversation RE-enters voice (drop resume or a text→voice switch): the
+// full canned opening arc must not replay at someone mid-interview. The brain gets the
+// stored transcript server-side (build_voice_system), so "where we left off" is real.
+const RESUME_FIRST_MESSAGE =
+  "Hi again. We can pick up right where we left off, nothing you shared is lost. " +
+  "Whenever you're ready.";
 
 // A VAPI `message` of type transcript. Other message types are ignored.
 interface TranscriptMessage {
@@ -61,12 +75,16 @@ export function VoiceCall({
   token,
   respondentName,
   estMinutes,
+  priorTurns = [],
   onUseText,
   onFinish,
 }: {
   token: string;
   respondentName?: string;
   estMinutes?: number;
+  // The conversation so far (server transcript) — a resumed or switched-in call renders
+  // and continues the same thread instead of starting a fresh-looking one.
+  priorTurns?: Turn[];
   onUseText: () => void;
   onFinish: () => void;
 }) {
@@ -77,11 +95,15 @@ export function VoiceCall({
   // Live-room signal (all real, from VAPI events).
   const [volume, setVolume] = useState(0);
   const [orbState, setOrbState] = useState<OrbState>("connecting");
-  const [turns, setTurns] = useState<Turn[]>([]);
+  const [turns, setTurns] = useState<Turn[]>(priorTurns);
   const [partial, setPartial] = useState<Turn | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
 
   const vapiRef = useRef<VapiLike | null>(null);
+  // Set when the respondent pressed End — the only way a call-end is a normal "ended".
+  const endRequested = useRef(false);
+  // True once any turn exists — a re-entry speaks the resume line, never the full opener.
+  const hasHistory = useRef(priorTurns.length > 0);
   const pubKey = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY;
   const estSec = Math.max(60, (estMinutes ?? 20) * 60);
 
@@ -105,9 +127,25 @@ export function VoiceCall({
     setState("connecting");
     setOrbState("connecting");
     setErrorMsg(null);
-    setTurns([]);
     setPartial(null);
     setVolume(0);
+    endRequested.current = false;
+
+    // MIC PREFLIGHT — the July 6 drop's root cause was VAPI killing calls that never
+    // received customer audio (mic permission granted late or not at all). Settle the
+    // permission BEFORE the call exists, so a mic problem is an honest pre-call message
+    // instead of a mid-call drop. The probe stream is released immediately.
+    try {
+      const probe = await navigator.mediaDevices.getUserMedia({ audio: true });
+      probe.getTracks().forEach((t) => t.stop());
+    } catch {
+      setErrorMsg(
+        "We couldn't reach your microphone. Check the browser's mic permission and try again, or continue by text.",
+      );
+      setState("error");
+      return;
+    }
+
     try {
       const Vapi = (await import("@vapi-ai/web")).default;
       const vapi = new Vapi(pubKey) as unknown as VapiLike;
@@ -118,7 +156,9 @@ export function VoiceCall({
         setOrbState("listening");
       });
       vapi.on("call-end", () => {
-        setState("ended");
+        // Only a respondent-requested end is "ended"; anything else is a DROP and gets
+        // the reconnect screen (never a silent completion, never a silent text switch).
+        setState(endRequested.current ? "ended" : "dropped");
         setVolume(0);
       });
 
@@ -138,6 +178,7 @@ export function VoiceCall({
         const text = m.transcript.trim();
         if (!text) return;
         if (m.transcriptType === "final") {
+          hasHistory.current = true;
           setTurns((t) => [...t, { role, text }]);
           setPartial(null);
           // Respondent just finished a thought → interviewer is composing its reply.
@@ -150,9 +191,12 @@ export function VoiceCall({
       vapi.on("error", (e) => {
         const msg = e && typeof e === "object" && "message" in e && typeof (e as { message: unknown }).message === "string"
           ? (e as { message: string }).message
-          : "The call dropped. Your progress is saved.";
+          : null;
         setErrorMsg(msg);
-        setState("error");
+        // An error on a LIVE call is a drop (reconnectable); before connection it's a
+        // failure to start. Two different truths, two different screens.
+        setState((s) => (s === "live" ? "dropped" : "error"));
+        setVolume(0);
       });
       // Resolve THIS workspace's assistant (Sprint2-B / #39): the admin's chosen voice is
       // baked into a dedicated VAPI assistant server-side, so we only need its id. Falls
@@ -163,7 +207,11 @@ export function VoiceCall({
         assistantId = (await getCallVoice(token)).assistant_id || assistantId;
       } catch { /* keep the shared default */ }
       // session_token rides the metadata so the backend joins this call to the session.
-      await vapi.start(assistantId, { metadata: { session_token: token } });
+      // A conversation with history gets the resume line instead of the full opener.
+      await vapi.start(assistantId, {
+        metadata: { session_token: token },
+        ...(hasHistory.current ? { firstMessage: RESUME_FIRST_MESSAGE } : {}),
+      });
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "We couldn't start the call.");
       setState("error");
@@ -178,8 +226,16 @@ export function VoiceCall({
   }
 
   function endCall() {
+    endRequested.current = true;
     try { vapiRef.current?.stop(); } catch { /* ignore */ }
     setState("ended");
+  }
+
+  // Mid-call switch to text: a deliberate stop, then the same session continues as chat.
+  function switchToText() {
+    endRequested.current = true;
+    try { vapiRef.current?.stop(); } catch { /* ignore */ }
+    onUseText();
   }
 
   const hello = respondentName ? `, ${respondentName}` : "";
@@ -236,7 +292,7 @@ export function VoiceCall({
           </div>
         )}
 
-        {/* Controls */}
+        {/* Controls — including the mid-call switch: same conversation, other door. */}
         {live && (
           <div className="mt-6 flex items-center justify-center gap-3">
             <button
@@ -252,6 +308,13 @@ export function VoiceCall({
               {muted ? "Unmute" : "Mute"}
             </button>
             <button
+              onClick={switchToText}
+              title="Continue this same conversation by text — nothing is lost"
+              className="inline-flex items-center gap-2 rounded-md border border-line-strong px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-surface-raised"
+            >
+              <MessageSquare className="h-4 w-4" strokeWidth={1.75} /> Switch to text
+            </button>
+            <button
               onClick={endCall}
               className="inline-flex items-center gap-2 rounded-md bg-danger px-4 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:shadow-elev-2"
             >
@@ -259,6 +322,37 @@ export function VoiceCall({
             </button>
           </div>
         )}
+      </div>
+    );
+  }
+
+  // ── Dropped: the honest reconnect screen (never a silent fallback) ───
+  if (state === "dropped") {
+    return (
+      <div className="py-12 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
+          <PhoneOff className="h-6 w-6" strokeWidth={1.75} />
+        </div>
+        <h1 className="mt-5 font-display text-2xl text-ink">The call dropped</h1>
+        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">
+          {errorMsg ? `${errorMsg} ` : "Something interrupted the connection. "}
+          Everything you shared is saved. Pick up the same conversation by voice, or
+          continue it by text.
+        </p>
+        <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <button
+            onClick={startCall}
+            className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
+          >
+            <PhoneCall className="h-4 w-4" strokeWidth={1.75} /> Resume voice call
+          </button>
+          <button
+            onClick={onUseText}
+            className="inline-flex items-center gap-2 rounded-md border border-line-strong px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-surface-raised"
+          >
+            <MessageSquare className="h-4 w-4" strokeWidth={1.75} /> Continue by text
+          </button>
+        </div>
       </div>
     );
   }
@@ -323,35 +417,40 @@ export function VoiceCall({
     );
   }
 
-  // ── Idle: the invitation ─────────────────────────────────────────────
+  // ── Idle: the two-door start (voice or text, both real, same conversation) ──
+  const resuming = turns.length > 0;
   return (
     <div className="py-12 text-center">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent-soft text-accent-ink shadow-elev-1 ring-1 ring-inset ring-accent/20">
         <PhoneCall className="h-7 w-7" strokeWidth={1.75} />
       </div>
       <h1 className="mt-6 font-display text-3xl leading-tight text-ink">
-        Ready when you are{hello}
+        {resuming ? `Welcome back${hello}` : `Ready when you are${hello}`}
       </h1>
       <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-soft">
-        This is a relaxed voice conversation. Find a quiet moment, and talk the way you
-        normally would. Your browser will ask to use your microphone when you start.
+        {resuming
+          ? "Your conversation is saved. Pick it up by voice, or continue by text — same conversation either way."
+          : "Talk it through on a relaxed call, or type if you prefer — same conversation either way, and you can switch at any point without losing anything."}
       </p>
-      <div className="mt-8">
+      <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <button
           onClick={startCall}
           className="inline-flex items-center gap-2 rounded-md bg-accent px-7 py-3.5 text-base font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
         >
-          <Mic className="h-5 w-5" strokeWidth={1.75} /> Start voice conversation
+          <Mic className="h-5 w-5" strokeWidth={1.75} />
+          {resuming ? "Resume by voice" : "Start voice conversation"}
         </button>
-        <div className="mt-4">
-          <button
-            onClick={onUseText}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-soft underline-offset-2 hover:text-ink hover:underline"
-          >
-            <MessageSquare className="h-4 w-4" strokeWidth={1.75} /> Prefer to type? Use text chat instead
-          </button>
-        </div>
+        <button
+          onClick={onUseText}
+          className="inline-flex items-center gap-2 rounded-md border border-line-strong px-6 py-3.5 text-base font-medium text-ink transition-colors hover:bg-surface-raised"
+        >
+          <MessageSquare className="h-5 w-5" strokeWidth={1.75} />
+          {resuming ? "Continue by text" : "Start by text instead"}
+        </button>
       </div>
+      <p className="mt-4 text-xs text-ink-faint">
+        Starting a call will ask for your microphone.
+      </p>
     </div>
   );
 }

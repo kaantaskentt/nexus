@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, Pause, SendHorizontal, Check, RefreshCw, WifiOff, Flag } from "lucide-react";
+import { Lock, Mic, Pause, SendHorizontal, Check, RefreshCw, WifiOff, Flag } from "lucide-react";
 import brand from "@/lib/brand";
 import { BrandMark } from "@/components";
 import { VoiceCall } from "./VoiceCall";
@@ -21,6 +21,10 @@ type Msg = { role: "interviewer" | "respondent"; text: string };
 // The interviewee's live conversation. Per Kaan's P0 directive: every reply comes from
 // the real turn engine — there is no scripted fallback. A backend failure shows an
 // honest "connection lost, progress saved" state and a retry, never a fake reply.
+//
+// MODALITY FLEXIBILITY (A21 target 4): voice and text are two doors into the SAME
+// session — the server holds one transcript and one turn state, so switching direction
+// mid-interview loses nothing. `mode` picks the door; the transcript seeds both sides.
 export function InterviewClient({ token }: { token: string }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [session, setSession] = useState<RespondentSession | null>(null);
@@ -29,21 +33,48 @@ export function InterviewClient({ token }: { token: string }) {
   const [typing, setTyping] = useState(false);
   const [offerPause, setOfferPause] = useState(false);
   const [turnError, setTurnError] = useState(false);
-  const [textFallback, setTextFallback] = useState(false); // voice respondent chose text
+  const [mode, setMode] = useState<"voice" | "text">("text"); // set from session on load
   const lastMessage = useRef<string | null>(null); // for honest retry, not a fallback
   const scroller = useRef<HTMLDivElement>(null);
+
+  function seedFromTranscript(s: RespondentSession) {
+    // The server transcript is the one truth — reloads, drops, and modality switches
+    // all re-enter the conversation from here, never from a blank thread.
+    setMessages(
+      s.transcript.map((t) => ({
+        role: t.speaker === "agent" ? ("interviewer" as const) : ("respondent" as const),
+        text: t.text,
+      })),
+    );
+  }
 
   function loadSession() {
     setPhase("loading");
     getSession(token)
       .then((s) => {
         setSession(s);
-        setPhase("consent");
+        setMode(s.modality);
+        seedFromTranscript(s);
+        // A conversation that already has turns resumes straight into it — a started
+        // interview must never present as fresh (and never re-runs consent).
+        setPhase(s.transcript.length > 0 && s.status !== "completed" ? "chat" : "consent");
       })
       .catch(() => setPhase("load_error"));
   }
 
   useEffect(loadSession, [token]);
+
+  // Voice → text switch: re-pull the authoritative transcript (voice turns land via
+  // server webhooks), then open the text door on the same session.
+  async function switchToText() {
+    try {
+      const s = await getSession(token);
+      seedFromTranscript(s);
+    } catch {
+      /* keep whatever we have — the server still holds the record */
+    }
+    setMode("text");
+  }
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
@@ -68,7 +99,11 @@ export function InterviewClient({ token }: { token: string }) {
 
   async function start() {
     setPhase("chat");
-    await interviewerTurn(null); // interviewer speaks first (opening call)
+    // Text opening: the interviewer speaks first — but only on a truly fresh thread; a
+    // resumed conversation already has its turns. Voice opens inside the call itself.
+    if (mode === "text" && messages.length === 0) {
+      await interviewerTurn(null);
+    }
   }
 
   async function send() {
@@ -191,15 +226,20 @@ export function InterviewClient({ token }: { token: string }) {
     );
   }
 
-  // Voice sessions open on the call widget; text chat is the honest fallback (spec rule).
-  if (session.modality === "voice" && !textFallback) {
+  // The voice door: same session, same transcript. Switching to text mid-call re-pulls
+  // the server record first, so nothing said on the call is missing from the thread.
+  if (mode === "voice") {
     return (
       <Shell>
         <VoiceCall
           token={token}
           respondentName={ctx?.respondent_name}
           estMinutes={ctx?.est_minutes}
-          onUseText={() => setTextFallback(true)}
+          priorTurns={messages.map((m) => ({
+            role: m.role === "interviewer" ? ("assistant" as const) : ("user" as const),
+            text: m.text,
+          }))}
+          onUseText={switchToText}
           onFinish={finish}
         />
       </Shell>
@@ -221,6 +261,14 @@ export function InterviewClient({ token }: { token: string }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Voice and text are the same session — switching direction loses nothing. */}
+            <button
+              onClick={() => setMode("voice")}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-faint transition-colors hover:bg-surface-raised hover:text-ink"
+              title="Continue this same conversation by voice"
+            >
+              <Mic className="h-4 w-4" strokeWidth={1.75} /> Switch to voice
+            </button>
             <button
               onClick={pause}
               className={

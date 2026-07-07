@@ -72,8 +72,21 @@ async def _consent_context(session_row) -> dict:
 
 @router.get("/by-token/{token}")
 async def get_by_token(token: str):
+    """Session + consent context + the respondent's OWN transcript so far (their words,
+    their screen — A21 target 4). The transcript makes modality switches and reconnects
+    lossless in the UI: a voice call continued by text renders the whole thread, and a
+    reloaded page never presents a started interview as fresh."""
     session = await _session_for_token(token)
-    return {**dict(session), "context": await _consent_context(session)}
+    pool = await get_pool()
+    turns = await pool.fetch(
+        "select speaker, text from utterances where session_id = $1 order by turn_index",
+        session["id"],
+    )
+    return {
+        **dict(session),
+        "context": await _consent_context(session),
+        "transcript": [{"speaker": t["speaker"], "text": t["text"]} for t in turns],
+    }
 
 
 class TurnIn(BaseModel):

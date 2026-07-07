@@ -193,7 +193,13 @@ async def build_voice_system(session_id: str) -> str:
     """The persona + handoff system prompt for a voice call. The VAPI custom-LLM
     endpoint supplies the running conversation from its own (transcribed) messages;
     the verbatim record is captured separately from transcript webhooks, so this path
-    is generation-only and never writes utterances."""
+    is generation-only and never writes utterances.
+
+    MODALITY CONTINUITY (A21 target 4): VAPI only knows the CURRENT call's messages, so
+    any earlier stored turns — a dropped call being resumed, or a text thread the
+    respondent switched away from — are replayed into the system prompt. Without this a
+    reconnect restarts the interview from zero, which is exactly the progress loss the
+    reconnect UI promises against."""
     pool = await get_pool()
     session = await pool.fetchrow(
         "select s.plan_id, w.industry from interview_sessions s "
@@ -210,6 +216,23 @@ async def build_voice_system(session_id: str) -> str:
         "This package is your whole world. You were never told what anyone else said.\n\n"
         f"```json\n{json.dumps(package, ensure_ascii=False, indent=2)}\n```"
     )
+    prior = await pool.fetch(
+        "select speaker, text from utterances where session_id = $1 order by turn_index",
+        session_id,
+    )
+    if prior:
+        lines = "\n".join(
+            f"{'You' if u['speaker'] == 'agent' else 'Respondent'}: {u['text']}"
+            for u in prior
+        )
+        extra += (
+            "\n\n## The conversation so far — this interview is RESUMING\n"
+            "The interview already started (an earlier call, or by text). Below is the "
+            "verbatim record. Continue from where it left off: do NOT re-greet, do NOT "
+            "repeat the opening arc or the sharing rules, and do not re-ask what is "
+            "already answered here.\n\n"
+            f"{lines}"
+        )
     return f"{system}\n\n{extra}"
 
 
