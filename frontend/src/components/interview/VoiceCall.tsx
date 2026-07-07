@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import {
   Mic, MicOff, PhoneOff, PhoneCall, Loader2, MessageSquare, AlertTriangle, Check,
 } from "lucide-react";
-import { VoiceOrb, type OrbState } from "./VoiceOrb";
+import { ParticleOrb, type OrbState } from "./ParticleOrb";
+import { MicWaveform } from "./MicWaveform";
 import { LiveTranscript, type Turn } from "./LiveTranscript";
 import { InterviewProgress } from "./InterviewProgress";
 import { getCallVoice } from "@/lib/respondent";
@@ -188,18 +189,30 @@ export function VoiceCall({
     const live = state === "live";
     return (
       <div className="flex min-h-[calc(100vh-8rem)] flex-col py-6">
-        {/* The orb — centerpiece. Real volume + state drive it. */}
+        {/* The dark orb panel — A19 centerpiece. Particle sphere on real volume + state,
+            with the respondent's REAL mic waveform below (MicWaveform taps the live mic;
+            it unmounts while muted — honest about what the interviewer can hear). */}
         <div className="flex flex-col items-center">
-          <div className="relative h-52 w-52 sm:h-60 sm:w-60">
-            <VoiceOrb volume={live ? volume : 0} state={live ? orbState : "connecting"} />
-            {!live && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Loader2 className="h-7 w-7 animate-spin text-accent-ink" strokeWidth={1.75} />
-              </div>
-            )}
+          <div className="relative w-full max-w-lg overflow-hidden rounded-card bg-[#1c1712] px-6 pb-6 pt-8 shadow-elev-2 ring-1 ring-inset ring-white/[0.06]">
+            <div className="relative mx-auto h-52 w-52 sm:h-60 sm:w-60">
+              <ParticleOrb volume={live ? volume : 0} state={live ? orbState : "connecting"} />
+              {!live && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="h-7 w-7 animate-spin text-accent" strokeWidth={1.75} />
+                </div>
+              )}
+            </div>
+            <div className="mx-auto mt-3 h-9 w-64 max-w-full">
+              <MicWaveform active={live && !muted} />
+              {live && muted && (
+                <p className="flex h-full items-center justify-center gap-1.5 text-xs text-white/40">
+                  <MicOff className="h-3.5 w-3.5" strokeWidth={1.75} /> Microphone muted
+                </p>
+              )}
+            </div>
           </div>
 
-          <h1 className="mt-4 font-display text-2xl text-ink">
+          <h1 className="mt-5 font-display text-2xl text-ink">
             {live ? "You're connected" : "Connecting your call…"}
           </h1>
 

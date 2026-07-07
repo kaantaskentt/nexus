@@ -1,6 +1,6 @@
 "use client";
 
-import type { OrbState } from "./VoiceOrb";
+import type { OrbState } from "./ParticleOrb";
 
 // Respondent-side live progress — DELIBERATELY NEUTRAL (MERGE_PLAN A18, binding).
 //

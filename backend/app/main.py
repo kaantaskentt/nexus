@@ -11,6 +11,7 @@ from .db import close_pool, get_pool
 from .routers import (
     chat,
     claims,
+    observer,
     plans,
     reports,
     sessions,
@@ -55,6 +56,7 @@ app.include_router(voice_config.router, prefix="/api/voice-config", tags=["voice
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"], dependencies=_admin)
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"], dependencies=_admin)
 app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"], dependencies=_admin)
+app.include_router(observer.router, prefix="/api/observer", tags=["observer"], dependencies=_admin)
 
 
 @app.get("/health")

@@ -38,8 +38,14 @@ export const get_report = async (
   session_id: string,
   meta?: { interviewee_name?: string; interviewee_role?: string },
 ) => live.get_report(session_id, meta, (await tok()) ?? undefined);
+export const observe_session = async (workspace_id: string, session_id: string) =>
+  live.observe_session(workspace_id, session_id, (await tok()) ?? undefined);
+export const list_simulations = async (workspace_id: string) =>
+  live.list_simulations(workspace_id, (await tok()) ?? undefined);
+export const get_workflows = async (workspace_id: string) =>
+  live.get_workflows(workspace_id, (await tok()) ?? undefined);
 
 // Client-safe helpers re-exported so server pages that only need these don't reach for
 // lib/live (keeps every server page on a single import).
 export { reportIsCompiling } from "./live";
-export type { SessionSummary, SendResult, DiscoveryStart, WorkflowSummary, VoiceConfig, VoiceOption } from "./live";
+export type { SessionSummary, SendResult, DiscoveryStart, WorkflowSummary, VoiceConfig, VoiceOption, ObserverState } from "./live";

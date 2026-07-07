@@ -356,6 +356,90 @@ export async function list_sessions(workspace_id: string, token?: string): Promi
   }));
 }
 
+// Simulated interviews (session_kind='eval') — the Simulations surface. Same shape as
+// real sessions; the backend keeps the two classes firewalled (0007), so this list can
+// never leak into Interviews or vice versa.
+export async function list_simulations(workspace_id: string, token?: string): Promise<SessionSummary[]> {
+  const rows = await api<RawSessionSummary[]>(
+    `/api/workspaces/${workspace_id}/sessions?kind=eval`,
+    undefined,
+    token,
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    status: r.status,
+    modality: r.modality,
+    has_report: r.has_report,
+    interviewee_name: r.interviewee ?? undefined,
+    interviewee_role: r.interviewee_role ?? undefined,
+  }));
+}
+
+// ── Observer (GET/POST /api/observer/...) — A19 admin live window ─────────────
+// Everything here is REAL stored state: verbatim utterances, the coverage map the turn
+// engine actually computed (null = not tracked; the UI says so, never fakes a ring),
+// CLAIMED-pinned observer insights, and post-compile claims with their true tags. Badges
+// are derived ONLY via trust.ts/confidenceForTag (A19 correction #1).
+export interface ObserverUtterance {
+  turn_index: number;
+  speaker: "agent" | "respondent";
+  text: string;
+  at: string;
+}
+export interface ObserverInsight {
+  id: number;
+  text: string;
+  trust_tag: TrustTag; // always CLAIMED (data-layer pinned) — badge via confidenceForTag
+  at: string;
+}
+export interface ObserverClaim {
+  id: string;
+  text: string;
+  tag: TrustTag;
+  evidence_quote: string | null;
+  at: string;
+}
+export interface CoverageObjective {
+  label: string;
+  status?: "satisfied" | "partial" | "untouched";
+  must_hit?: boolean;
+}
+export interface ObserverState {
+  session: {
+    id: string;
+    status: string;
+    modality: "text" | "voice";
+    started_at: string | null;
+    interviewee: string | null;
+    interviewee_role: string | null;
+  };
+  utterances: ObserverUtterance[];
+  objectives: Array<string | CoverageObjective>;
+  coverage: { objectives?: CoverageObjective[] } | null;
+  coverage_tracking_enabled: boolean;
+  insights: ObserverInsight[];
+  claims: ObserverClaim[];
+}
+
+export async function observe_session(
+  workspace_id: string,
+  session_id: string,
+  token?: string,
+): Promise<ObserverState> {
+  return api<ObserverState>(`/api/observer/${workspace_id}/sessions/${session_id}`, undefined, token);
+}
+
+export async function add_observer_insight(
+  workspace_id: string,
+  session_id: string,
+  text: string,
+): Promise<ObserverInsight> {
+  return api<ObserverInsight>(`/api/observer/${workspace_id}/sessions/${session_id}/insights`, {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
+}
+
 // ── Report (GET /api/reports/{session_id}) ───────────────────────────────────
 // Backend enriched the workflow step to the frontend WorkflowStep shape (index/title/
 // tool{kind,name}/status/confidence/captured_from/captured_paraphrase/unverified_questions),
@@ -448,8 +532,8 @@ export interface WorkflowSummary {
   step_count: number;
 }
 
-export async function get_workflows(workspace_id: string): Promise<WorkflowSummary[]> {
-  return api<WorkflowSummary[]>(`/api/workflows/${workspace_id}`);
+export async function get_workflows(workspace_id: string, token?: string): Promise<WorkflowSummary[]> {
+  return api<WorkflowSummary[]>(`/api/workflows/${workspace_id}`, undefined, token);
 }
 
 export async function get_workflow_by_session(session_id: string): Promise<EffectiveWorkflow> {
