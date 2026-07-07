@@ -160,9 +160,10 @@ export function DiscoveryUpload({
             rows={10}
             placeholder={
               "Paste the transcript here, or drop a .txt / .md file.\n\n" +
-              "Ece: Every morning Burak handles the repricing, has for years.\n" +
-              "Interviewer: How long does it take?\n" +
-              "Ece: Two hours, maybe. The returns side is the real headache."
+              "Interviewer: Walk me through how the mornings usually start.\n" +
+              "Alex: I check the new orders first, then sort out anything from the day before.\n" +
+              "Interviewer: How long does that take?\n" +
+              "Alex: An hour, on a good day. The returns are the real headache."
             }
             className="w-full resize-y rounded-md bg-transparent px-4 py-3 text-sm leading-relaxed text-ink outline-none placeholder:text-ink-faint/70"
           />

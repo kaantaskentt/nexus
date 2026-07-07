@@ -236,3 +236,11 @@ V1 shipped and E2E-proven (see git history + evals/adjudication/). Kaan's V2 att
 ## A17 — Admin auth + multi-company flow (July 6 morning — Kaan, supersedes A11.5)
 
 Kaan's morning directive supersedes the A11 "no auth" decision: **admin logins now.** Minimal real auth via Supabase Auth email+password (already in the stack): login page in the V2 design, session, workspace scoping; no signup flow, admins created manually. Interview links (`/i/[token]`) stay token-based and unauthenticated by design. Alongside it, the multi-company admin flow becomes the core demo journey: workspace picker "Add company" (Stage 0 shape: name, industry, website, contact) → real tenant (A12 firewall holds: zero fixture records) → guided empty state → "Upload CEO call" (paste/txt/md) → standard compile path → snapshot renders progressively. Optional Stage 1 live-scrape button, best-effort only.
+
+## A18 — Live-progress neutrality on the respondent surface (July 6 evening, sprint 2 — Kaan/watchtower; **EMRE-SEAM**)
+
+The live interview room shows the respondent progress, but that progress must be **neutral**: topics-covered ticks, a listening/thinking state, and time remaining — **never the claims or content being extracted in real time.** Showing a person what is being captured *as they speak* triggers self-censorship (demand characteristics / observer effect): they start managing the record instead of describing the work, which is exactly the honest-capture failure the product exists to prevent (F28/A2). So the respondent sees "we're covering X of Y areas, still listening, ~N min left" — not a claims ticker.
+
+The **admin-side** live view is the opposite: it MAY show the richer captured-points ticker (records landing as the interview runs), because no respondent psychology applies to the operator watching. Two audiences, two truths — same call as the sentiment-quarantine and paraphrase splits.
+
+**EMRE-SEAM:** this is a psychology decision made at build time by engineering + watchtower judgment; **Emre's docs may refine it** — the exact neutral elements, whether a coverage count is even shown vs. a plain listening state, and any wording. Treat his deliverable as authoritative when it lands (diff, surface conflicts, never silently overwrite — per CLAUDE.md). Governs the sprint-2 live-interview-room lane.

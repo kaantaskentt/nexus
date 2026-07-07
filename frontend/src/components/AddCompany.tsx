@@ -97,7 +97,7 @@ export function AddCompany() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="input"
-                    placeholder="Bee Goddess"
+                    placeholder="Acme Coffee Co."
                   />
                 </Field>
                 <Field label="Industry" hint="Tunes how the interviewer reads this business">
