@@ -1,0 +1,65 @@
+# Sources: docs/emre-inbox/stage-7-interview-agent-draft1.md §4 (two-strike rule, scope lock)
+#   merged under A24 · stage7-interviewer.md "Two strikes" + "Scope lock" sections.
+# Target prompt: prompts/agents/stage7-interviewer.md
+# The two-strike cases set up prior deflections via input.context (the harness injects context
+# as a scenario note); the judge scores the interviewer's NEXT turn.
+
+- id: nav-two-strike-second-deflection
+  category: navigator
+  intent: After a second deflection the topic dies — no third ask, graceful move elsewhere.
+  input:
+    context: >
+      Earlier the interviewer asked about the invoicing handoff (a must-hit objective); the
+      respondent changed the subject. Ten minutes later it returned from a different angle,
+      and the respondent is now dodging it a second time.
+    turn: "Hah, you know what, let's talk about literally anything else. So anyway, the delivery runs..."
+  pass_if:
+    - Does not raise the invoicing handoff again in any form
+    - Follows the respondent to the delivery-runs thread or another open objective, warmly and without friction
+  fail_if:
+    - Asks about the invoicing handoff a third time, directly or rephrased
+    - Guilt-trips, remarks on the avoidance, or presses for a reason they will not discuss it
+
+- id: nav-two-strike-not-thinness
+  category: navigator
+  intent: GUARD — a terse answer is thinness, not deflection; it must still get the probe, never a topic-drop.
+  input:
+    context: Must-hit objective — how the stock count actually happens. Respondent is economical but not evasive.
+    turn: "I count it, I write it down. That's it really."
+  pass_if:
+    - Keeps probing the stock count (a concrete episode anchor or an exceptions probe)
+    - Does not treat the short answer as the topic being covered or declined
+  fail_if:
+    - Drops or switches away from the stock-count objective
+    - Treats the brevity as a refusal to discuss
+
+- id: nav-scope-lock-gold
+  category: navigator
+  intent: A discovered bigger problem gets one warm parking acknowledgment, then return to plan — no mining.
+  input:
+    context: >
+      The approved plan covers the pricing workflow only. The respondent has just finished
+      describing the pricing steps.
+    turn: "Honestly the pricing is fine. The real disaster here is the customs paperwork, that thing loses us whole days every single week."
+  pass_if:
+    - Acknowledges the customs point warmly and signals it deserves its own conversation
+    - Returns to the pricing plan (or another in-plan objective) rather than opening a customs line of questioning
+  fail_if:
+    - Launches substantive questioning about the customs paperwork (episodes, steps, tools, durations)
+    - Ignores the disclosure coldly with no acknowledgment at all
+
+- id: nav-scope-lock-one-clarifier-ok
+  category: navigator
+  intent: At most one clarifying sentence to know what is being parked — then back to plan.
+  input:
+    context: >
+      The approved plan covers order preparation only. Two turns ago the respondent mentioned
+      "the warehouse mess" in passing and the interviewer asked one clarifying question; the
+      respondent has now explained it is a recurring inventory-location problem.
+    turn: "Yeah so basically nobody knows where anything is shelved anymore, it's chaos. I could go on for an hour about that."
+  pass_if:
+    - Declines the invitation to go deeper, signaling the topic will get its own conversation
+    - Steers back to order preparation or another in-plan objective
+  fail_if:
+    - Takes the hour-long invitation and keeps questioning the warehouse problem
+    - Pivots the remaining interview to the warehouse topic

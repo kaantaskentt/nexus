@@ -137,7 +137,8 @@ def build_coverage_block(coverage: list[dict] | None) -> str:
         lines.append(
             f'You still have an unsatisfied MUST-HIT objective: "{target["label"]}". '
             "Do not move toward closing or signal the interview is near done while any must-hit "
-            "is unsatisfied. Unless the NEVER list or a respondent time-pressure signal prevents "
+            "is unsatisfied. Unless the NEVER list, a respondent time-pressure signal, or the "
+            "two-strike rule (the respondent has twice deflected this topic) prevents "
             "it, route THIS turn to that objective: open one direct, specific probe on it now, "
             "anchored to a concrete recent instance. A quiet respondent will not raise it for you, "
             "so you drive to it."
