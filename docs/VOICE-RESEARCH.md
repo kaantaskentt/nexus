@@ -17,14 +17,17 @@ big win.
 | Provider | Model to use | Latency | Naturalness / warmth | Use in |
 |---|---|---|---|---|
 | ElevenLabs | `eleven_turbo_v2_5` | low (~250-300ms) | highest warmth, most human prosody | A, B |
-| ElevenLabs | `eleven_flash_v2_5` | lowest (~75ms) | slightly flatter than turbo, very fast | D (speed test) |
 | Cartesia | `sonic-2` (or `sonic-3`) | lowest class (~90ms) | fast + natural, a touch cooler than 11labs | C |
+| Deepgram Aura | current `aura` voice | low | our existing baseline | D (control) |
+| ElevenLabs | `eleven_flash_v2_5` | lowest (~75ms) | slightly flatter than turbo, very fast | 5th (future) |
 | Rime | `arcana` / `mist` | low | characterful, less "neutral pro" | wildcard (not in the 4) |
 
-Read: ElevenLabs turbo v2.5 is the warmth benchmark; Cartesia Sonic is the speed-with-decent-
-warmth challenger; Flash is there to feel whether raw speed beats warmth for an interviewer.
-The casting call is exactly to let Kaan's ear pick — so A/B (11labs warm), C (Cartesia fast),
-D (11labs flash) span the tradeoff.
+Read: the 4 casting links Kaan calls are A = ElevenLabs turbo warm female, B = ElevenLabs turbo
+warm male, C = Cartesia Sonic, D = current Deepgram Aura + the SAME timing/opener fixes as a
+CONTROL. D-as-control (per Kaan's spec) isolates the tier-upgrade (voice provider) from the
+timing-fix: every recipe gets the opener + humanizing block, so what Kaan's ear is comparing is
+purely the voice. The ElevenLabs Flash speed test is a good idea but it is a FUTURE 5th
+comparison (see §6), not one of tonight's 4.
 
 ---
 
@@ -132,19 +135,17 @@ Note: Cartesia voiceIds are library UUIDs, not preset names — voice-settings p
 conversational voice in the Cartesia dashboard. Aim for "warm / friendly / conversational",
 not "narration".
 
-**Recipe D — ElevenLabs Flash (max-speed variant, to feel latency vs warmth)**
+**Recipe D — Deepgram Aura CONTROL (Kaan's spec)**
 ```jsonc
 "voice": {
-  "provider": "11labs",
-  "voiceId": "matilda",          // preset warm female, same gender as A for a clean A/D compare
-  "model": "eleven_flash_v2_5",  // fastest 11labs model
-  "stability": 0.45, "similarityBoost": 0.75, "style": 0.0,
-  "useSpeakerBoost": true, "optimizeStreamingLatency": 4, "speed": 1.0
+  "provider": "deepgram",
+  "voiceId": "aura-2-thalia-en"   // or keep the workspace's CURRENT asteria voice as-is
 }
 ```
-
-Why D shares A's voice+gender: it isolates ONE variable (turbo vs flash model) so Kaan hears
-purely the latency-vs-warmth tradeoff, not a voice change.
+D is the baseline: our current Deepgram Aura voice, but WITH the same opener fix + humanizing
+block (§2, §3) as the others. That is deliberate — it isolates the ONE variable Kaan is judging
+(voice provider / tier upgrade) from the timing/opener fix, which every recipe gets. So A/B/C vs
+D answers "does the premium voice tier beat our current voice, once timing is equal?"
 
 ElevenLabs preset voiceIds available out of the box (no library upload):
 `burt, marissa, andrea, sarah, phillip, steve, joseph, myra, paula, ryan, drew, paul, mrb,
@@ -157,5 +158,15 @@ matilda, mark`. Warm female: sarah, matilda, paula, andrea. Warm male: ryan, jos
 Ship A/B/C/D as above. The opener fix (section 2) is the single biggest perceived-quality lever
 and is provider-independent, so it lands in all four regardless of which voice Kaan picks. My
 pick for the eventual default: **Recipe A (ElevenLabs sarah, turbo v2.5)** for warmth, with C
-(Cartesia) as the fallback if latency ever matters more than the last 10% of warmth. Flash (D)
-is a test, not a default — it trades the warmth that makes people open up.
+(Cartesia) as the fallback if latency ever matters more than the last 10% of warmth.
+
+---
+
+## 6. Future 5th comparison (not tonight's 4) — ElevenLabs Flash
+
+Once Kaan has picked a voice tier from A/B/C/D, a worthwhile follow-up is a Flash-vs-Turbo A/B
+on the WINNING ElevenLabs voice: same voiceId, `model: "eleven_flash_v2_5"`,
+`optimizeStreamingLatency: 4`. Flash is the lowest-latency 11labs model (~75ms) but slightly
+flatter in prosody. This isolates one variable — turbo vs flash — to answer "is the snappier
+latency worth the small warmth cost for an interviewer?" Kept here so the idea is not lost; it
+is deliberately NOT one of the 4 casting links (those follow Kaan's A/B/C/D spec).
