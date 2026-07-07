@@ -274,3 +274,16 @@ every uncustomized workspace resolves to ryan with the fast opener. Fixes the ro
 opener Kaan flagged (root cause: model-generated first line). Per-workspace overrides via
 the Voice Settings editor still win. Resolver default metadata updated to report ryan/M
 honestly (voice_config.py).
+
+**A20 completion (same morning, builder):** the recipe now lives in CODE, not just in the
+hand-patched assistants, so no code path can silently revert it: (1) `vapi_assistant.py`
+roster adds the ElevenLabs tier — ryan (M, the default) and sarah (F, casting-A) — with a
+`provider`-aware `voice_block` emitting the exact casting recipe; ElevenLabs presets have no
+public sample clip, so `preview_url` is None and the editor renders those cards without a
+play button (honest preview). (2) `first_message_block` empty case => the canned fast opener,
+never the model-generated mode; `build_assistant_config` timing aligned to the A20 humanizing
+block (0.4s livekit, numWords 0) — so a Voice Settings save creates dedicated assistants on
+the winning recipe instead of regressing to the pre-casting one. (3) `provision_vapi.py`
+re-provisions BOTH shared assistants to the ryan recipe (re-running preserves, never reverts).
+(4) docs/voice-config.md endpointing section revised to match. Speed slider stays hidden
+(A19); ElevenLabs honors speed server-side when that lands.

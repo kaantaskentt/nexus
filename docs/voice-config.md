@@ -32,16 +32,17 @@ Both check an `Authorization` shared secret when `VOICE_SHARED_SECRET` is set. S
     "language": "en"             // TR designed-in; switch per invite language
   },
 
-  // (2) PATIENT ENDPOINTING — episodic recall needs 2–3s of thinking silence without
-  // the agent barging in. CIT ("think about the last time…") produces long pauses.
+  // (2) TURN-TAKING — REVISED BY A20 (July 7 casting + humanizing pass). The original
+  // 2.5s fixed wait read as dead air on real calls; livekit's SEMANTIC endpointing now
+  // owns the "recall pause ≠ end of turn" job, with a snappy 0.4s floor.
   "startSpeakingPlan": {
-    "waitSeconds": 2.5,                 // don't treat a recall pause as end-of-turn
+    "waitSeconds": 0.4,
     "smartEndpointingPlan": { "provider": "livekit" }
   },
 
-  // (6) INTERRUPTION — yield immediately; never talk over the respondent.
+  // (6) INTERRUPTION — yield instantly on any speech; never talk over the respondent.
   "stopSpeakingPlan": {
-    "numWords": 1,               // any word from them stops our TTS at once
+    "numWords": 0,               // A20: zero-word threshold, any voiced speech stops TTS
     "voiceSeconds": 0.2,
     "backoffSeconds": 1.0
   },
