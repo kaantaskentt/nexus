@@ -145,6 +145,11 @@ async def build_handoff_package(plan_id: str) -> dict:
             mission.get("definition_of_done", mission.get("DoD"))
         ),
         "time_budget_minutes": mission.get("time_budget_minutes", DEFAULT_TIME_BUDGET_MIN),
+        # Stage-3 v04 artifact ask (A24): the exec's authorization for employees to share
+        # work artifacts, captured on the CEO call and recorded on the plan mission. The
+        # interviewer only invokes the sponsor's blessing when this is True — it never
+        # asserts an authorization nobody captured.
+        "artifact_sharing_authorized": bool(mission.get("artifact_sharing_authorized")),
     }
 
     await pool.execute(

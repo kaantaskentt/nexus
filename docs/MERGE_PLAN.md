@@ -332,6 +332,20 @@ Kaan+Emre; (d) OPEN — human-gated exactly as Emre marked (Tier-3 imminent-harm
 Never regress a tested behavior to match a document. Kaan verbatim: he trusts some of
 Emre's stuff, and what matters is how the information is used.
 
+## A25 — Emre merge executed (July 7 evening, merge shift, under A24)
+
+Both inbox docs merged; every delta classified in docs/emre-inbox/MERGE-PACKET.md.
+Shipped: fixed-response layer (9 invariant scripts, hard rule 14, eval suite) ·
+two-strike + scope lock (+ coverage-directive escape, dormant seat) · sealed_flags
+Tier-2 at the data layer (0011, screen job beside compile, compiler disclosure
+boundary) with Tier-3 STUB ONLY (OPEN as marked) · six-type playbook folded into the
+Register taxonomy · question-yield outputs (0012, deterministic QYS + fail-open final
+coverage audit) · stage-3 hooks (people_map session_kind 0013, artifact authorization
+passthrough). CONFLICTs resolved for the tested build: coverage 3-status model kept
+(A/B integrity), anonymity script merged to preview/release mechanism. Five ⚑ items
+surfaced to Kaan+Emre (packet tail). Evals 40/40 tuning + 9/9 fixed + 4/4 navigator;
+backend 125 passed.
+
 ## A23 — Standing rhythm: BUILD → AUDIT → NEXT (July 7, Kaan)
 
 Every landed task gets: prod verification + affected tests + a one-line audit verdict in

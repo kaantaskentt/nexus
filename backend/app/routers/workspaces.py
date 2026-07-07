@@ -248,6 +248,10 @@ class DiscoveryIn(BaseModel):
     transcript: str
     speaker_name: str | None = None   # who gave the call; defaults to the workspace contact
     speaker_role: str | None = None
+    # 'interview' = CEO discovery call (default). 'people_map' = the stage-3 v04 branch:
+    # a short intake with a named person who maps who-does-what; same verbatim + compile
+    # path, but never relabels the workspace's founder/source (A24 merge).
+    session_kind: str = "interview"
 
 
 @router.post("/{workspace_id}/discovery")
@@ -261,6 +265,9 @@ async def upload_discovery(workspace_id: str, body: DiscoveryIn):
     they compile. A12 holds: this only ever touches the real tenant it's posted to."""
     if not body.transcript.strip():
         raise HTTPException(422, "transcript is empty")
+    if body.session_kind not in ("interview", "people_map"):
+        raise HTTPException(422, "session_kind must be 'interview' or 'people_map'")
+    is_people_map = body.session_kind == "people_map"
     pool = await get_pool()
 
     ws = await pool.fetchrow(
@@ -270,8 +277,16 @@ async def upload_discovery(workspace_id: str, body: DiscoveryIn):
         raise HTTPException(404, "workspace not found")
 
     config = _loads(ws["config"]) or {}
-    speaker = (body.speaker_name or config.get("contact_person") or "Founder").strip()
-    role = (body.speaker_role or "Founder").strip()
+    if is_people_map:
+        # The people-map subject is a NAMED person ("ask Meltem, she runs Izmir"), never
+        # a founder default — an unnamed people-map intake is a data-entry error.
+        if not (body.speaker_name or "").strip():
+            raise HTTPException(422, "people_map upload requires speaker_name")
+        speaker = body.speaker_name.strip()
+        role = (body.speaker_role or "Line manager").strip()
+    else:
+        speaker = (body.speaker_name or config.get("contact_person") or "Founder").strip()
+        role = (body.speaker_role or "Founder").strip()
 
     # The founder is the interviewee of the discovery call (source='interview' — their own
     # words, not scraped). resolve_or_create keeps it idempotent across re-uploads.
@@ -279,16 +294,17 @@ async def upload_discovery(workspace_id: str, body: DiscoveryIn):
 
     round_id = await pool.fetchval(
         "insert into interview_rounds (workspace_id, label, status) "
-        "values ($1, 'CEO discovery call', 'open') returning id",
+        "values ($1, $2, 'open') returning id",
         workspace_id,
+        "People-map interview" if is_people_map else "CEO discovery call",
     )
     session_id = await pool.fetchval(
         """insert into interview_sessions
              (workspace_id, round_id, interviewee_id, modality, status, language,
               session_kind, ended_at)
-           values ($1, $2, $3, 'text', 'completed', 'en', 'interview', now())
+           values ($1, $2, $3, 'text', 'completed', 'en', $4, now())
            returning id""",
-        workspace_id, round_id, ceo_id,
+        workspace_id, round_id, ceo_id, body.session_kind,
     )
 
     turns = parse_transcript(body.transcript)  # verbatim — hedges/fillers preserved
@@ -298,13 +314,15 @@ async def upload_discovery(workspace_id: str, body: DiscoveryIn):
             session_id, t["turn_index"], t["speaker"], t["text"],
         )
 
-    # Surface the meeting owner + source on the snapshot header (honest — it IS this call).
-    config["founder"] = config.get("founder") or speaker
-    config["founder_role"] = config.get("founder_role") or role
-    config["source"] = "CEO Discovery Call"
-    await pool.execute(
-        "update workspaces set config = $2 where id = $1", workspace_id, json.dumps(config)
-    )
+    if not is_people_map:
+        # Surface the meeting owner + source on the snapshot header (honest — it IS this
+        # call). A people-map intake never relabels the founder or the snapshot source.
+        config["founder"] = config.get("founder") or speaker
+        config["founder_role"] = config.get("founder_role") or role
+        config["source"] = "CEO Discovery Call"
+        await pool.execute(
+            "update workspaces set config = $2 where id = $1", workspace_id, json.dumps(config)
+        )
 
     job_id = await enqueue(
         "compile_session",
