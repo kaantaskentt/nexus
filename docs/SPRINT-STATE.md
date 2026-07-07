@@ -35,7 +35,11 @@ key CONFIRMED supports ElevenLabs + Cartesia + Rime (tested live). voice-room's 
 picks can swap in via one idempotent re-run if you want different voices.
 
 ## KAAN DECISION LIST (consolidated — everything waiting on you)
-1. **Voice casting winner** — call A/B/C/D above, pick; we set it as default.
+1. ~~Voice casting winner~~ RESOLVED July 7: Kaan picked CASTING-B (ElevenLabs "ryan" +
+   timing fixes). Set as the GLOBAL DEFAULT for all workspaces (both shared default VAPI
+   assistants PATCHed to the ryan recipe; resolver metadata + tests updated; MERGE_PLAN A20).
+   Live + verified on prod (uncustomized workspace reports ryan/M, fast opener). Cleanup of
+   the 4 casting assistants/sessions is the remaining next-session tidy.
 2. **A19 redesign** — drop the reference mock PNGs into reference/ui-inspo/ to unblock the
    dark-orb room / Observer view / tabbed Voice Settings build (staged in MERGE_PLAN A19).
 3. **Speed slider** — swap to a speed-capable provider or drop from the A19 mock (A19 pass
