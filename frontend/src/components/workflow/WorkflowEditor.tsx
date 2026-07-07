@@ -182,38 +182,44 @@ export function WorkflowEditor({
           </div>
         </div>
 
-        {/* Canvas */}
-        <motion.div
-          variants={staggerParent}
-          initial="hidden"
-          animate="show"
-          className="mt-6 flex items-stretch gap-1 overflow-x-auto pb-4"
-        >
-          {visible.map((step, i) => (
-            <div key={step.step_id} className="flex items-stretch gap-1">
-              <EditableStepCard
-                step={step}
-                position={i}
-                total={visible.length}
-                onRename={rename}
-                onAnnotate={annotate}
-                onToggleHide={toggleHide}
-                onReorder={reorder}
-                disabled={busy}
-              />
-              {i < visible.length - 1 && (
-                <div className="flex items-center">
-                  <ArrowRight className="h-4 w-4 shrink-0 text-ink-faint" strokeWidth={2} />
-                </div>
-              )}
-            </div>
-          ))}
-          {visible.length === 0 && (
-            <div className="w-full rounded-card border border-dashed border-line-strong bg-surface p-10 text-center text-sm text-ink-soft">
-              No steps yet. Add a manual step to start mapping this workflow.
-            </div>
+        {/* Canvas. The right-edge fade signals "scroll for more" so a partially-visible
+            step reads as a peek, not a hard cut (DESIGN-V2 §4.8). */}
+        <div className="relative mt-6">
+          <motion.div
+            variants={staggerParent}
+            initial="hidden"
+            animate="show"
+            className="flex items-stretch gap-1 overflow-x-auto pb-4"
+          >
+            {visible.map((step, i) => (
+              <div key={step.step_id} className="flex items-stretch gap-1">
+                <EditableStepCard
+                  step={step}
+                  position={i}
+                  total={visible.length}
+                  onRename={rename}
+                  onAnnotate={annotate}
+                  onToggleHide={toggleHide}
+                  onReorder={reorder}
+                  disabled={busy}
+                />
+                {i < visible.length - 1 && (
+                  <div className="flex items-center">
+                    <ArrowRight className="h-4 w-4 shrink-0 text-ink-faint" strokeWidth={2} />
+                  </div>
+                )}
+              </div>
+            ))}
+            {visible.length === 0 && (
+              <div className="w-full rounded-card border border-dashed border-line-strong bg-surface p-10 text-center text-sm text-ink-soft">
+                No steps yet. Add a manual step to start mapping this workflow.
+              </div>
+            )}
+          </motion.div>
+          {visible.length > 0 && (
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-14 bg-gradient-to-l from-canvas to-transparent" />
           )}
-        </motion.div>
+        </div>
       </div>
 
       <ExportPanel workflowId={workflowId} kind={panel} onClose={() => setPanel(null)} />

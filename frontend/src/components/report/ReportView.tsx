@@ -111,21 +111,26 @@ export function ReportView({
                   the findings.
                 </div>
               ) : (
-                <div className="flex items-stretch gap-1 overflow-x-auto pb-2">
-                  {report.steps.map((step, i) => (
-                    <div key={step.index} className="flex items-start gap-1">
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                      >
-                        <WorkflowStepCard step={step} onClick={() => setOpenStep(step)} />
-                      </motion.div>
-                      {i < report.steps.length - 1 && (
-                        <ArrowRight className="mt-16 h-4 w-4 shrink-0 text-ink-faint" strokeWidth={2} />
-                      )}
-                    </div>
-                  ))}
+                // Horizontal step rail. The right-edge fade signals "scroll for more" so a
+                // partially-visible card reads as a peek, not a hard cut (DESIGN-V2 §4.8).
+                <div className="relative">
+                  <div className="flex items-stretch gap-1 overflow-x-auto pb-2">
+                    {report.steps.map((step, i) => (
+                      <div key={step.index} className="flex items-start gap-1">
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                        >
+                          <WorkflowStepCard step={step} onClick={() => setOpenStep(step)} />
+                        </motion.div>
+                        {i < report.steps.length - 1 && (
+                          <ArrowRight className="mt-16 h-4 w-4 shrink-0 text-ink-faint" strokeWidth={2} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-14 bg-gradient-to-l from-surface-raised to-transparent" />
                 </div>
               )}
             </section>
