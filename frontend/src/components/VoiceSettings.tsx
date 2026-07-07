@@ -19,7 +19,10 @@ export function VoiceSettings({
   initial: VoiceConfig;
 }) {
   const [voiceId, setVoiceId] = useState(initial.voice_id);
-  const [speed, setSpeed] = useState(initial.speed);
+  // speed is stored but not user-editable yet: the current Deepgram Aura voices have no
+  // speed control, so we don't render a slider that does nothing (every-button-works). We
+  // pass the stored value straight through; a real control returns with speed-capable voices.
+  const [speed] = useState(initial.speed);
   const [firstMessage, setFirstMessage] = useState(initial.first_message ?? "");
   const [gender, setGender] = useState<"F" | "M">(initial.gender);
 
@@ -172,22 +175,13 @@ export function VoiceSettings({
         </div>
       </Section>
 
-      {/* Speed */}
-      <Section title="Speaking pace" hint="Slower can feel calmer; most interviews sit near normal">
-        <div className="flex items-center gap-4">
-          <input
-            type="range"
-            min={0.5}
-            max={2.0}
-            step={0.05}
-            value={speed}
-            onChange={(e) => setSpeed(Number(e.target.value))}
-            className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-surface-sunken accent-accent"
-          />
-          <span className="w-16 shrink-0 text-right text-sm tabular-nums text-ink-soft">
-            {speed.toFixed(2)}×
-          </span>
-        </div>
+      {/* Speaking pace — no dead slider: the current voices have no speed knob, so we say
+          so plainly rather than ship a control that no-ops (every-button-works). */}
+      <Section title="Speaking pace" hint="How quickly the interviewer speaks">
+        <p className="rounded-lg border border-line bg-surface-sunken px-3.5 py-2.5 text-sm text-ink-soft">
+          These voices speak at a natural, even pace suited to interviews. Adjustable speed
+          isn&apos;t available for them yet — it arrives with the next set of voices.
+        </p>
       </Section>
 
       {/* First message */}
