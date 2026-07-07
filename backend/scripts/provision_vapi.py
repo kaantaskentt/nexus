@@ -46,10 +46,30 @@ def _elevenlabs_voice(voice_id: str) -> dict:
         "speed": 1.0,
     }
 # The canned fast opener (A20) — static text speaks instantly; the model-generated mode
-# was the slow/robotic-opener root cause. Keep in sync with app/vapi_assistant.
+# was the slow/robotic-opener root cause. Carries the persona's full opening arc
+# (stage7-interviewer.md Opening moves 1-3). EMRE-SEAM: wording is Emre's to refine.
+# Keep in sync with app/vapi_assistant.DEFAULT_FIRST_MESSAGE. Brand stays config: the
+# product name is read from config/brand.json (this script keeps no app imports).
+def _product_name() -> str:
+    import pathlib
+    try:
+        cfg = pathlib.Path(__file__).resolve().parents[2] / "config" / "brand.json"
+        return json.loads(cfg.read_text()).get("product_name", "Nexus")
+    except OSError:
+        return "Nexus"
+
+
 DEFAULT_FIRST_MESSAGE = (
-    "Hi, thanks for taking the time. Whenever you're ready, just tell me a little "
-    "about what you do day to day."
+    f"Hi, I'm {_product_name()}. Thanks so much for making the time. I'm here to understand how "
+    "your work actually happens, day to day, the real version, not the tidy one. "
+    "There are no right answers, and nothing here is a test. One quick note before we "
+    "start: I'll turn our conversation into a short summary of how the work flows, and "
+    "before anything you say is attributed to you by name, you'll see it first and can "
+    "change it or take your name off it. And I don't ask you to judge anyone. If an "
+    "opinion about a person comes up, I keep it out of what I share unless you tell me "
+    "to include it. We'll take about thirty minutes, and you can pause anytime. Ready "
+    "when you are. Could you start by walking me through what a normal day looks like "
+    "for you, from the very beginning?"
 )
 VOICES = [
     ("Nexus Interviewer (F)", _elevenlabs_voice("sarah")),  # F slot — casting-A female

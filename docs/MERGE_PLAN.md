@@ -293,3 +293,13 @@ BOTH shared assistants — a male voice on the (F) slot. Fixed: (F) = ElevenLabs
 (casting-A, same engine/settings), (M) stays ryan; the Voice Settings gender pick maps to a
 gendered fallback again. Uncustomized workspaces still resolve to the M slot (ryan, THE
 default); the F slot only serves F-tagged configs that never synced.
+
+**A20 opener restoration (same day, Kaan voice feedback; EMRE-SEAM):** the first canned
+opener jumped straight to the day-to-day ask — abrupt. A canned message costs the same
+latency whether short or complete, so DEFAULT_FIRST_MESSAGE now carries the persona's FULL
+opening arc from stage7-interviewer.md Opening moves 1-3: greeting + who this is and why
+the conversation exists + the sharing-rules promise (EK 3.2) + the shape + the day-to-day
+invitation. Timing recipe untouched (assistant-speaks-first, turbo v2.5, 0.4s livekit).
+Both shared assistants PATCHed + fetch-verified. EMRE-SEAM: the exact wording is Emre's to
+refine — replace the text in vapi_assistant.DEFAULT_FIRST_MESSAGE (and provision script +
+Voice Settings placeholder), keep the arc.

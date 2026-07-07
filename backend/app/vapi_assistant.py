@@ -94,12 +94,32 @@ def voice_block(voice_id: str, speed: float) -> dict:
 
 # The canned fast opener (A20 / VOICE-RESEARCH §2). A static first line starts TTS the
 # instant the call connects; the old model-generated mode added a full LLM round-trip of
-# dead air and read stiff — the root cause of the robotic opener Kaan flagged. Domain-
-# neutral (non-negotiable #8): industry context stays runtime-injected, never baked here.
-DEFAULT_FIRST_MESSAGE = (
-    "Hi, thanks for taking the time. Whenever you're ready, just tell me a little "
-    "about what you do day to day."
-)
+# dead air and read stiff — the root cause of the robotic opener Kaan flagged. A canned
+# message costs the same latency whether short or complete (Kaan, July 7), so it carries
+# the persona's FULL opening arc from prompts/agents/stage7-interviewer.md Opening moves
+# 1-3: greet + who this is and why, the sharing-rules promise (EK 3.2 — made before any
+# real question, every time), the shape, then the day-to-day invitation. Domain-neutral
+# (non-negotiable #8): industry context stays runtime-injected, never baked here.
+# EMRE-SEAM: the exact wording is Emre's to refine — replace the text, keep the arc.
+def _default_first_message() -> str:
+    from .config import get_brand
+
+    name = get_brand().get("product_name", "Nexus")
+    return (
+        f"Hi, I'm {name}. Thanks so much for making the time. I'm here to understand how "
+        "your work actually happens, day to day, the real version, not the tidy one. "
+        "There are no right answers, and nothing here is a test. One quick note before we "
+        "start: I'll turn our conversation into a short summary of how the work flows, and "
+        "before anything you say is attributed to you by name, you'll see it first and can "
+        "change it or take your name off it. And I don't ask you to judge anyone. If an "
+        "opinion about a person comes up, I keep it out of what I share unless you tell me "
+        "to include it. We'll take about thirty minutes, and you can pause anytime. Ready "
+        "when you are. Could you start by walking me through what a normal day looks like "
+        "for you, from the very beginning?"
+    )
+
+
+DEFAULT_FIRST_MESSAGE = _default_first_message()
 
 
 def first_message_block(first_message: str | None) -> dict:

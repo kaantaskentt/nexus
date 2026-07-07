@@ -197,19 +197,22 @@ export function VoiceSettings({
         </p>
       </Section>
 
-      {/* First message — the placeholder IS the standard opener (A20 canned line), so what
-          the admin sees greyed out is exactly what plays when they leave this empty. */}
+      {/* First message — the placeholder IS the standard opener (A20 canned arc: greeting,
+          why this conversation exists, the sharing-rules promise, then the invitation), so
+          what the admin sees greyed out is exactly what plays when they leave this empty.
+          EMRE-SEAM: the standard wording is Emre's to refine (backend DEFAULT_FIRST_MESSAGE). */}
       <Section title="Opening line" hint="Leave empty to use the standard opener">
         <textarea
           value={firstMessage}
           onChange={(e) => setFirstMessage(e.target.value)}
-          rows={2}
-          placeholder="Hi, thanks for taking the time. Whenever you're ready, just tell me a little about what you do day to day."
+          rows={5}
+          placeholder="Hi, I'm Nexus. Thanks so much for making the time. I'm here to understand how your work actually happens, day to day, the real version, not the tidy one. There are no right answers, and nothing here is a test. One quick note before we start: I'll turn our conversation into a short summary of how the work flows, and before anything you say is attributed to you by name, you'll see it first and can change it or take your name off it. And I don't ask you to judge anyone. If an opinion about a person comes up, I keep it out of what I share unless you tell me to include it. We'll take about thirty minutes, and you can pause anytime. Ready when you are. Could you start by walking me through what a normal day looks like for you, from the very beginning?"
           className="input resize-none"
         />
         <p className="mt-1.5 text-xs text-ink-faint">
-          When empty, the interviewer opens with the standard line above, spoken the moment
-          the call connects.
+          When empty, the interviewer opens with the standard greeting above, spoken the
+          moment the call connects: who it is, why this conversation exists, how sharing
+          works, then the first question.
         </p>
       </Section>
 
