@@ -64,6 +64,46 @@ TRANSITIONS: dict[str, set[str]] = {
     "REVOKED": set(),
 }
 
+# Session-driven lifecycle reconciliation (YC-AUDIT #7). TRANSITIONS above is the
+# admin-facing machine — what a human may click. This is the system closing the loop from
+# what actually happened on the respondent's side: a completed/compiled session advances
+# its own plan so the plan chip can never read "Sent" beside a finished report. The session
+# is the source of truth that an interview ran, so it advances the plan directly rather than
+# walking the click-path (OPENED/IN_PROGRESS are display-derivable and have no writer today
+# — see docs/FOR-TUNC.md). Forward-only and idempotent: never regresses a plan, never
+# resurrects a REVOKED one.
+_LIFECYCLE_RANK: dict[str, int] = {
+    "DRAFT": 0, "NEXUS_CHECK": 1, "AWAITING_APPROVAL": 2, "APPROVED": 3,
+    "NO_RESPONSE": 4, "SENT": 4, "OPENED": 5, "PAUSED": 6, "IN_PROGRESS": 6,
+    "COMPLETED": 7, "COMPILED": 8,
+}
+
+
+async def reconcile_plan_state(conn, plan_id, to_state: str, note: str) -> str | None:
+    """Advance a plan to a session-driven state (COMPLETED/COMPILED). No-ops on a
+    plan-less session, a REVOKED plan, or when the plan is already at/past to_state.
+    Records the move as a 'system' transition. Returns the prior state if it moved."""
+    if plan_id is None:
+        return None
+    row = await conn.fetchrow("select state from interview_plans where id = $1", plan_id)
+    if row is None:
+        return None
+    current = row["state"]
+    if current == "REVOKED":
+        return None
+    if _LIFECYCLE_RANK.get(to_state, 0) <= _LIFECYCLE_RANK.get(current, -1):
+        return None  # already there or further along — idempotent
+    await conn.execute(
+        "update interview_plans set state = $2, updated_at = now() where id = $1",
+        plan_id, to_state,
+    )
+    await conn.execute(
+        """insert into plan_state_transitions (plan_id, from_state, to_state, actor, note)
+           values ($1, $2, $3, 'system', $4)""",
+        plan_id, current, to_state, note,
+    )
+    return current
+
 
 @router.get("/{workspace_id}")
 async def list_plans(workspace_id: str):

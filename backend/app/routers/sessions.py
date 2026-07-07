@@ -4,13 +4,15 @@ run_interview_turn is transport-agnostic: text chat and VAPI both land here."""
 import json
 import secrets
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from ..auth import require_admin
 from ..config import get_settings
 from ..db import get_pool
 from ..pipeline.interview import run_interview_turn
 from ..queue import enqueue
+from .plans import reconcile_plan_state
 
 router = APIRouter()
 
@@ -109,10 +111,16 @@ async def complete(token: str):
     pool = await get_pool()
     if session["status"] == "completed":
         return {"status": "completed", "compile": "already queued"}
+    plan_id = await pool.fetchval(
+        "select plan_id from interview_sessions where id = $1", session["id"]
+    )
     await pool.execute(
         "update interview_sessions set status = 'completed', ended_at = now() where id = $1",
         session["id"],
     )
+    # Advance the plan in lockstep so it can't read "Sent" while its interview is done
+    # (YC-AUDIT #7). COMPILED lands when the compile job finishes, in compiler.py.
+    await reconcile_plan_state(pool, plan_id, "COMPLETED", "interview completed")
     await enqueue("compile_session", {"session_id": str(session["id"])})
     return {"status": "completed", "compile": "queued"}
 
@@ -123,7 +131,7 @@ class EvalBootstrapIn(BaseModel):
     language: str = "en"
 
 
-@router.post("/eval-bootstrap")
+@router.post("/eval-bootstrap", dependencies=[Depends(require_admin)])
 async def eval_bootstrap(body: EvalBootstrapIn):
     """Test-only: mint an is_demo session from a handoff package so the eval harness
     can drive the real turn engine. Double-gated per A12: refused unless EVAL_MODE is

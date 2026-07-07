@@ -363,6 +363,13 @@ async def compile_session(payload: dict) -> None:
             priority=200,
         )
 
+    # Close the plan lifecycle: its records are compiled (YC-AUDIT #7). Local import —
+    # routers.plans imports this module, so a top-level import would cycle. Forward-only
+    # and idempotent, so a plan-less discovery call or a re-compile is a safe no-op.
+    from ..routers.plans import reconcile_plan_state
+
+    await reconcile_plan_state(pool, session["plan_id"], "COMPILED", "interview compiled")
+
 
 @handles("compile_session")
 async def _compile_session_job(payload: dict) -> None:
