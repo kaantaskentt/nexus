@@ -175,6 +175,28 @@ async def generate(body: GenerateIn):
     return {"plan_id": str(plan_id), "state": "DRAFT", "job_id": job_id}
 
 
+@router.post("/{plan_id}/redraft")
+async def redraft(plan_id: str):
+    """Re-run generation for a plan whose draft never landed (the credit-outage empty
+    drafts) or that the Nexus check returned. Same pipeline, same gate — the redraft
+    lands in NEXUS_CHECK and the check runs again. Only legal pre-approval."""
+    pool = await get_pool()
+    plan = await pool.fetchrow(
+        "select workspace_id, state, mission from interview_plans where id = $1", plan_id
+    )
+    if plan is None:
+        raise HTTPException(404, "plan not found")
+    if plan["state"] not in ("DRAFT", "NEXUS_CHECK"):
+        raise HTTPException(409, f"cannot redraft a plan in state {plan['state']}")
+    mission = plan["mission"]
+    mission = json.loads(mission) if isinstance(mission, str) else (mission or {})
+    payload = {"plan_id": plan_id, "workspace_id": str(plan["workspace_id"])}
+    if mission.get("custom_focus"):
+        payload["custom_goal"] = mission["custom_focus"]  # a custom plan keeps its aim
+    job_id = await enqueue("generate_plan", payload)
+    return {"plan_id": plan_id, "state": plan["state"], "job_id": job_id}
+
+
 @router.post("/{plan_id}/transition")
 async def transition(plan_id: str, to_state: str, actor: str = "admin", note: str | None = None):
     pool = await get_pool()

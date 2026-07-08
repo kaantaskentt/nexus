@@ -51,6 +51,7 @@ export function DiscoveryUpload({
   website,
   hasRecords = false,
   append = false,
+  scrapedCount = 0,
 }: {
   workspaceId: string;
   defaultSpeaker?: string;
@@ -61,6 +62,9 @@ export function DiscoveryUpload({
   // Add-transcript-later door (Kaan, July 7): the snapshot already exists and this is a
   // LATER call compiling into the same record store. Compact heading, no first-time pitch.
   append?: boolean;
+  // Website-scan records already saved (premium audit P1-4): named honestly as scan
+  // reference data, never implied to be a lost upload.
+  scrapedCount?: number;
 }) {
   const router = useRouter();
   const [transcript, setTranscript] = useState("");
@@ -236,6 +240,13 @@ export function DiscoveryUpload({
                 `way a world-class interviewer would, and builds your first Company Snapshot from ` +
                 `what was actually said.`}
         </p>
+        {!append && !hasRecords && scrapedCount > 0 && (
+          <p className="mx-auto mt-2 max-w-md text-xs text-ink-faint">
+            The website scan already saved {scrapedCount} reference record
+            {scrapedCount === 1 ? "" : "s"}. They&apos;ll enrich the snapshot once the call
+            compiles; the conversation itself is what builds it.
+          </p>
+        )}
 
         {/* What will appear here — the guided preview of the three snapshot sections.
             Hidden on the append door: the admin has already seen the snapshot. */}

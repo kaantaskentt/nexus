@@ -30,7 +30,12 @@ export function InterviewsView({
   workspace: Workspace;
   sessions: SessionSummary[];
 }) {
-  const done = sessions.filter((s) => s.status === "completed").length;
+  // Expired links are noise for a returning admin (premium audit P1-5): kept out of the
+  // list, honestly counted below it. Nothing is deleted; an expired session with a
+  // report would still show (reports never expire).
+  const expired = sessions.filter((s) => s.status === "expired" && !s.has_report);
+  const visible = sessions.filter((s) => !(s.status === "expired" && !s.has_report));
+  const done = visible.filter((s) => s.status === "completed").length;
 
   return (
     <>
@@ -58,11 +63,11 @@ export function InterviewsView({
               <ArrowRight className="ml-0.5 inline h-3.5 w-3.5" strokeWidth={2} />
             </Link>
           </p>
-          {sessions.length > 0 && (
+          {visible.length > 0 && (
             <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-ink-faint">
               <span className="tabular">
-                <span className="font-semibold text-ink">{sessions.length}</span>{" "}
-                {sessions.length === 1 ? "interview" : "interviews"}
+                <span className="font-semibold text-ink">{visible.length}</span>{" "}
+                {visible.length === 1 ? "interview" : "interviews"}
               </span>
               <span className="tabular">
                 <span className="font-semibold text-ink">{done}</span> completed
@@ -71,7 +76,7 @@ export function InterviewsView({
           )}
         </motion.div>
 
-        {sessions.length === 0 ? (
+        {visible.length === 0 ? (
           <EmptyInterviews />
         ) : (
           <motion.div
@@ -80,10 +85,15 @@ export function InterviewsView({
             animate="show"
             className="card-hairline mt-8 divide-y divide-line overflow-hidden rounded-card border border-line bg-surface"
           >
-            {sessions.map((s) => (
+            {visible.map((s) => (
               <SessionRow key={s.id} workspace={workspace} session={s} />
             ))}
           </motion.div>
+        )}
+        {expired.length > 0 && (
+          <p className="mt-3 text-xs text-ink-faint">
+            {expired.length} expired invitation{expired.length === 1 ? "" : "s"} hidden.
+          </p>
         )}
       </div>
     </>

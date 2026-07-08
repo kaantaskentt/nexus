@@ -153,6 +153,27 @@ async def get_voice_config(workspace_id: str):
     return _editor_state(row)
 
 
+@router.post("/{workspace_id}/test-session", dependencies=[Depends(require_admin)])
+async def create_test_session(workspace_id: str):
+    """'Hear it live' (premium audit P1-3): mint a throwaway voice_test session so the
+    admin can audition the workspace's ACTUAL assistant — real opener, real voice, real
+    timing — in one click. Firewalled by kind: never compiles, never screened, never
+    listed as an interview. The link expires like any invite; nothing to clean up."""
+    import secrets
+
+    pool = await get_pool()
+    if await pool.fetchval("select 1 from workspaces where id = $1", workspace_id) is None:
+        raise HTTPException(404, "workspace not found")
+    token = secrets.token_urlsafe(24)
+    await pool.execute(
+        """insert into interview_sessions
+             (workspace_id, modality, language, invite_token, status, session_kind)
+           values ($1, 'voice', 'en', $2, 'pending', 'voice_test')""",
+        workspace_id, token,
+    )
+    return {"token": token, "invite_path": f"/i/{token}"}
+
+
 class VoiceConfigIn(BaseModel):
     voice_id: str
     speed: float = Field(1.0, ge=0.5, le=2.0)

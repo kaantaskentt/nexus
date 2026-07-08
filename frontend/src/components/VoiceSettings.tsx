@@ -2,8 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Check, AlertTriangle, Mic, Info, Play, Pause } from "lucide-react";
-import { save_voice_config, type VoiceConfig, type VoiceOption } from "@/lib/live";
+import { Loader2, Check, AlertTriangle, Mic, Info, Play, Pause, Phone } from "lucide-react";
+import {
+  save_voice_config,
+  create_voice_test_session,
+  type VoiceConfig,
+  type VoiceOption,
+} from "@/lib/live";
 
 // In-app Voice Settings (Sprint-2 Lane B / #39). An admin tunes the interview voice for
 // this workspace WITHOUT the VAPI dashboard. The private VAPI key never reaches here — the
@@ -27,6 +32,7 @@ export function VoiceSettings({
   const [gender, setGender] = useState<"F" | "M">(initial.gender);
 
   const [saving, setSaving] = useState(false);
+  const [testBusy, setTestBusy] = useState(false);
   const [saved, setSaved] = useState<VoiceConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -240,6 +246,38 @@ export function VoiceSettings({
             <>Save voice</>
           )}
         </button>
+        {/* Hear it live (premium audit P1-3): the honest audition — a throwaway test
+            call with the real assistant. Firewalled server-side (voice_test kind:
+            never compiles, never listed). Save first so you hear the picked voice. */}
+        <button
+          onClick={async () => {
+            if (testBusy) return;
+            setTestBusy(true);
+            setError(null);
+            try {
+              const t = await create_voice_test_session(workspaceId);
+              window.open(t.invite_path, "_blank", "noopener");
+            } catch (e) {
+              setError(e instanceof Error ? e.message : "Couldn't start a test call");
+            } finally {
+              setTestBusy(false);
+            }
+          }}
+          disabled={testBusy}
+          title={dirty ? "Save first — the test call uses the saved voice" : undefined}
+          className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-surface-sunken/40 disabled:opacity-60"
+        >
+          {testBusy ? (
+            <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+          ) : (
+            <Phone className="h-4 w-4" strokeWidth={1.75} />
+          )}
+          Hear it live
+        </button>
+        <span className="text-xs text-ink-faint">
+          Opens a private test call with this workspace&apos;s interviewer. Nothing you say
+          is kept.
+        </span>
         {!dirty && saved && (
           <motion.span
             initial={{ opacity: 0 }}

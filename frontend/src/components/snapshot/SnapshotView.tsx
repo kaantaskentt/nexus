@@ -270,7 +270,12 @@ export function SnapshotView({
                 <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-4 bg-gradient-to-b from-canvas to-transparent" />
                 <div className="space-y-3">
                   {railEvidence.map((claim) => (
-                    <EvidenceQuoteCard key={claim.id} claim={claim} sourceLabel="CEO Call" />
+                    <EvidenceQuoteCard
+                      key={claim.id}
+                      claim={claim}
+                      sourceLabel="CEO Call"
+                      contextHref={`/w/${workspace.slug}/context`}
+                    />
                   ))}
                 </div>
               </div>

@@ -35,6 +35,7 @@ MIGRATIONS = [
     BACKEND / "db" / "migrations" / "0012_yield_stats.sql",
     BACKEND / "db" / "migrations" / "0013_people_map.sql",
     BACKEND / "db" / "migrations" / "0014_demo_synthetic.sql",
+    BACKEND / "db" / "migrations" / "0015_voice_test.sql",
 ]
 
 

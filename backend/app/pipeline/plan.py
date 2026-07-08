@@ -18,9 +18,11 @@ retries and the plan stays at DRAFT — never a half-written plan advanced into 
 import json
 import logging
 
+from datetime import datetime, timezone
+
 from ..db import get_pool
 from ..llm import run_agent_json
-from ..queue import handles
+from ..queue import enqueue, handles
 from .compiler import _load_industry_block
 
 log = logging.getLogger("nexus.plan")
@@ -152,6 +154,85 @@ async def generate_plan(payload: dict) -> None:
             plan_id,
         )
     log.info("generate_plan: plan %s generated (%d topics) → NEXUS_CHECK", plan_id, len(mission["topics"]))
+    # A4 for real (premium audit P0-1): the reviewer seat was seeded in 0001 but never
+    # wired, so every plan parked in NEXUS_CHECK forever and Approve 409'd. The check
+    # now actually runs, and IT moves the plan forward.
+    await enqueue("nexus_check", {"plan_id": plan_id, "workspace_id": workspace_id}, priority=90)
+
+
+async def run_nexus_check(payload: dict) -> None:
+    """Run the Nexus-check reviewer over a generated plan (A4: Nexus checks before the
+    admin approves). PASS → AWAITING_APPROVAL; RETURN → DRAFT. Either way the verdict
+    and every flag land in the plan's change_log — the gate is auditable, never silent.
+    Idempotent: only acts on a plan still sitting in NEXUS_CHECK."""
+    plan_id = payload["plan_id"]
+    pool = await get_pool()
+    plan = await pool.fetchrow(
+        "select p.state, p.mission, p.suggested_questions, p.never_list, p.change_log, "
+        "w.industry from interview_plans p join workspaces w on w.id = p.workspace_id "
+        "where p.id = $1",
+        plan_id,
+    )
+    if plan is None:
+        raise RuntimeError(f"nexus_check: no plan {plan_id}")
+    if plan["state"] != "NEXUS_CHECK":
+        return
+
+    def _loads(v, default):
+        return json.loads(v) if isinstance(v, str) else (v if v is not None else default)
+
+    mission = _loads(plan["mission"], {})
+    questions = _loads(plan["suggested_questions"], [])
+    never = _loads(plan["never_list"], [])
+    change_log = _loads(plan["change_log"], [])
+
+    user_content = (
+        "# Plan to review\n"
+        f"mission: {json.dumps(mission, ensure_ascii=False)}\n"
+        f"suggested_questions: {json.dumps(questions, ensure_ascii=False)}\n"
+        f"never_list: {json.dumps(never, ensure_ascii=False)}\n\n"
+        "Run the Nexus check now. Return ONLY the JSON verdict object."
+    )
+    data = await run_agent_json(
+        "nexus_check_reviewer",
+        user_content,
+        workspace_id=payload.get("workspace_id"),
+        industry_block=_load_industry_block(plan["industry"]),
+        max_tokens=3000,
+    )
+    flags = data.get("flags") or []
+    passed = str(data.get("verdict", "")).strip().upper() == "PASS" and not any(
+        f.get("severity") == "fail" for f in flags
+    )
+    change_log.append({
+        "at": datetime.now(timezone.utc).isoformat(),
+        "actor": "nexus_check",
+        "verdict": "PASS" if passed else "RETURN",
+        "flags": flags,
+        "indirect_routes": data.get("indirect_routes") or [],
+    })
+    to_state = "AWAITING_APPROVAL" if passed else "DRAFT"
+    note = (
+        f"Nexus check {'passed' if passed else 'returned the plan'} "
+        f"({len(flags)} flag{'s' if len(flags) != 1 else ''})"
+    )
+    async with pool.acquire() as conn, conn.transaction():
+        await conn.execute(
+            "update interview_plans set state=$2, change_log=$3, updated_at=now() "
+            "where id=$1 and state='NEXUS_CHECK'",
+            plan_id, to_state, json.dumps(change_log),
+        )
+        await conn.execute(
+            "insert into plan_state_transitions (plan_id, from_state, to_state, actor, note) "
+            "values ($1, 'NEXUS_CHECK', $2, 'nexus_check', $3)",
+            plan_id, to_state, note,
+        )
+    log.info("nexus_check: plan %s → %s (%d flags)", plan_id, to_state, len(flags))
+
+
+@handles("nexus_check")
+async def _nexus_check_job(payload: dict) -> None:
+    await run_nexus_check(payload)
 
 
 @handles("generate_plan")

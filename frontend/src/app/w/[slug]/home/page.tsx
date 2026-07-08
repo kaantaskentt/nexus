@@ -22,12 +22,17 @@ export default async function HomePage({ params }: { params: { slug: string } })
 
   if (cards.length === 0) {
     const cfg = workspace.config ?? {};
+    // Honest empty state (premium audit P1-4): SCRAPED records are website-scan
+    // reference data, not "an earlier upload" — a scraped-only tenant is still a fresh
+    // start, and saying otherwise reads as "my upload got lost."
+    const interviewClaims = claims.filter((c) => c.tag !== "SCRAPED");
     return (
       <DiscoveryUpload
         workspaceId={workspace.id}
         defaultSpeaker={cfg.contact_person ?? cfg.founder}
         website={cfg.website}
-        hasRecords={claims.length > 0}
+        hasRecords={interviewClaims.length > 0}
+        scrapedCount={claims.length - interviewClaims.length}
       />
     );
   }

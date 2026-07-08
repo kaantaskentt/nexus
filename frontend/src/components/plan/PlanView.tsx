@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import type { InterviewPlan, PlanState, Workspace } from "@/lib/types";
 import brand from "@/lib/brand";
-import { transition_plan, refine_plan } from "@/lib/live";
+import { transition_plan, refine_plan, redraft_plan } from "@/lib/live";
 import { PlanStateChip, MustHitDot, DiscoveryTag, BrandMark } from "@/components";
 import { SendInterviewFlow } from "./SendInterviewFlow";
 
@@ -54,6 +54,7 @@ export function PlanView({
   plan: InterviewPlan;
   reportSessionId?: string;
 }) {
+  const router = useRouter();
   const [state, setState] = useState<PlanState>(plan.state);
   const [flowOpen, setFlowOpen] = useState(false);
   const [pending, setPending] = useState<PlanState | null>(null);
@@ -62,10 +63,36 @@ export function PlanView({
   const isLive = TRACK.includes(state);
   // COMPILED is terminal but sits on the COMPLETED node, so the tracker still shows.
   const showTracker = isLive || state === "PAUSED" || state === "COMPILED";
-  const preApproval = (["DRAFT", "NEXUS_CHECK", "AWAITING_APPROVAL"] as PlanState[]).includes(state);
-  // Gate guard (Kaan P1-D, July 7): an empty mission is nothing to approve. Readiness
-  // first — the button unlocks when generation has landed a goal and topics.
+  // Premium audit P0-1: Approve renders ONLY where APPROVED is a legal transition
+  // (AWAITING_APPROVAL). NEXUS_CHECK shows the live checking state (the check is a real
+  // job now); DRAFT shows redraft affordances. The old always-on button 409'd.
+  const canApprove = state === "AWAITING_APPROVAL";
+  const checking = state === "NEXUS_CHECK";
   const missionEmpty = !plan.mission.goal?.trim() && plan.mission.topics.length === 0;
+  const isDraft = state === "DRAFT";
+  const [redrafting, setRedrafting] = useState(false);
+
+  // While the check runs (or an empty draft generates), the state flips server-side in
+  // seconds — poll a refresh so the admin never has to reload to see it unlock.
+  useEffect(() => {
+    if (!checking && !(isDraft && missionEmpty)) return;
+    const t = setInterval(() => router.refresh(), 5000);
+    return () => clearInterval(t);
+  }, [checking, isDraft, missionEmpty, router]);
+
+  async function redraft() {
+    if (redrafting) return;
+    setRedrafting(true);
+    setError(null);
+    try {
+      await redraft_plan(plan.id);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Redraft failed");
+    } finally {
+      setRedrafting(false);
+    }
+  }
   // Revoke is the admin-side counterpart to Send; legal only where the server allows it
   // (APPROVED / SENT / OPENED — see routers/plans.py TRANSITIONS).
   const canRevoke = (["APPROVED", "SENT", "OPENED"] as PlanState[]).includes(state);
@@ -402,13 +429,13 @@ export function PlanView({
             read-only here. NO_RESPONSE and REVOKED carry their own banners above. */}
         {!isRevoked && !isNoResponse && (
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            {preApproval && (
+            {canApprove && (
               <button
                 onClick={() => requestTransition("APPROVED")}
                 disabled={pending != null || missionEmpty}
                 title={
                   missionEmpty
-                    ? "This plan hasn't drafted yet: no goal or topics to approve. It fills in when generation lands."
+                    ? "This plan hasn't drafted yet: no goal or topics to approve."
                     : undefined
                 }
                 className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
@@ -417,10 +444,33 @@ export function PlanView({
                 {pending === "APPROVED" ? "Approving…" : "Approve plan"}
               </button>
             )}
-            {preApproval && missionEmpty && (
-              <span className="text-xs text-ink-faint">
-                Approval unlocks once the mission has a goal and topics.
+            {checking && (
+              <span className="inline-flex items-center gap-2 text-sm text-ink-soft">
+                <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                Nexus is checking this plan for leaks and leading questions. It unlocks
+                for your approval when the check lands, usually within a minute.
               </span>
+            )}
+            {isDraft && (
+              <>
+                <button
+                  onClick={redraft}
+                  disabled={redrafting}
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:opacity-50"
+                >
+                  {redrafting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                  ) : (
+                    <PencilLine className="h-4 w-4" strokeWidth={2} />
+                  )}
+                  {missionEmpty ? "Draft the plan" : "Draft again"}
+                </button>
+                <span className="max-w-md text-xs leading-relaxed text-ink-faint">
+                  {missionEmpty
+                    ? "Drafting didn't land for this plan (generation can be interrupted). Drafting runs the same pipeline and the same Nexus check."
+                    : "This draft was returned by the Nexus check or sent back for revision. Refine it below, or draft again from the records (that replaces the current draft)."}
+                </span>
+              </>
             )}
 
             {state === "APPROVED" && (

@@ -162,6 +162,12 @@ export async function get_voice_config(workspace_id: string, token?: string): Pr
   return api<VoiceConfig>(`/api/voice-config/${workspace_id}`, undefined, token);
 }
 
+export async function create_voice_test_session(
+  workspace_id: string,
+): Promise<{ token: string; invite_path: string }> {
+  return api(`/api/voice-config/${workspace_id}/test-session`, { method: "POST" });
+}
+
 export async function save_voice_config(
   workspace_id: string,
   body: { voice_id: string; speed: number; first_message?: string | null },
@@ -324,6 +330,12 @@ export interface RefineResult {
   applied: { target: string; op: string; value: string }[];
   rejected: { target?: string; op?: string; value?: string; reason?: string }[];
 }
+export async function redraft_plan(
+  plan_id: string,
+): Promise<{ plan_id: string; state: string; job_id: number }> {
+  return api(`/api/plans/${plan_id}/redraft`, { method: "POST" });
+}
+
 export async function refine_plan(plan_id: string, instruction: string): Promise<RefineResult> {
   return api<RefineResult>(`/api/plans/${plan_id}/refine-chat`, {
     method: "POST",
