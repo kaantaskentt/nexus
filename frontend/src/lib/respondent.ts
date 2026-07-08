@@ -35,6 +35,10 @@ export interface RespondentSession {
   language: string;
   context?: SessionContext; // present only if the backend supplies consent_context
   transcript: TranscriptTurn[]; // the conversation so far ([] on a fresh session)
+  // Admin voice-test mode only (P0-C): a way back to Voice Settings. Never set for
+  // real respondents — their view stays chrome-free.
+  test_mode?: boolean;
+  test_back_path?: string;
 }
 
 export interface TurnResult {
@@ -60,6 +64,8 @@ interface RawSession {
     modality?: "voice" | "text" | null;
   };
   transcript?: TranscriptTurn[];
+  test_mode?: boolean;
+  test_back_path?: string;
 }
 
 const clean = (v?: string | null) => (v == null ? undefined : v);
@@ -73,6 +79,8 @@ export async function getSession(token: string): Promise<RespondentSession> {
     modality: raw.modality,
     language: raw.language,
     transcript: raw.transcript ?? [],
+    test_mode: raw.test_mode || undefined,
+    test_back_path: raw.test_back_path || undefined,
     context: c
       ? {
           respondent_name: clean(c.respondent_first_name),

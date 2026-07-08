@@ -43,8 +43,19 @@ def _check_secret(supplied: str | None) -> None:
 
 
 def _session_token(body: dict) -> str | None:
-    """VAPI echoes the assistant's metadata on every request and on the call object."""
-    for path in (body.get("metadata"), (body.get("call") or {}).get("metadata")):
+    """VAPI echoes the session metadata in DIFFERENT places depending on the payload:
+    for web calls started with vapi.start(assistant, overrides) it lives at
+    call.assistantOverrides.metadata — NOT call.metadata. The old resolver only checked
+    the latter, so every webhook event for web calls was silently dropped as
+    unattributable (voice transcripts never stored; the spoken opener never persisted,
+    which made the text fallback re-greet). Check every known location."""
+    call = body.get("call") or {}
+    for path in (
+        body.get("metadata"),
+        call.get("metadata"),
+        (call.get("assistantOverrides") or {}).get("metadata"),
+        (body.get("assistantOverrides") or {}).get("metadata"),
+    ):
         if isinstance(path, dict) and path.get("session_token"):
             return path["session_token"]
     return None
@@ -111,7 +122,9 @@ async def webhook(request: Request, authorization: str | None = Header(default=N
     message = body.get("message", {})
     mtype = message.get("type")
     call = message.get("call") or {}
-    token = (call.get("metadata") or {}).get("session_token") or _session_token(body)
+    # Webhook payloads nest the call under message.call — resolve against that shape
+    # first, then the raw body (covers both webhook and custom-llm shapes).
+    token = _session_token({"call": call}) or _session_token(message) or _session_token(body)
 
     pool = await get_pool()
     if not token:

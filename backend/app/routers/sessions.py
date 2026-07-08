@@ -22,7 +22,7 @@ EVAL_WORKSPACE_SLUG = "eval-harness"
 async def _session_for_token(token: str):
     pool = await get_pool()
     row = await pool.fetchrow(
-        """select id, workspace_id, status, modality, language, resumable_state
+        """select id, workspace_id, status, modality, language, resumable_state, session_kind
            from interview_sessions
            where invite_token = $1 and (token_expires_at is null or token_expires_at > now())""",
         token,
@@ -82,11 +82,20 @@ async def get_by_token(token: str):
         "select speaker, text from utterances where session_id = $1 order by turn_index",
         session["id"],
     )
-    return {
+    out = {
         **dict(session),
         "context": await _consent_context(session),
         "transcript": [{"speaker": t["speaker"], "text": t["text"]} for t in turns],
     }
+    # Admin test mode (P0-C): a voice_test call gets a way back to Voice Settings.
+    # ONLY for tests — real respondents stay chrome-free and never learn admin routes.
+    if session["session_kind"] == "voice_test":
+        slug = await pool.fetchval(
+            "select slug from workspaces where id = $1", session["workspace_id"]
+        )
+        out["test_mode"] = True
+        out["test_back_path"] = f"/w/{slug}/settings"
+    return out
 
 
 class TurnIn(BaseModel):

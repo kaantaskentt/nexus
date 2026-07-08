@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BrandMark } from "@/components";
+import { displaySpokenText } from "@/lib/transcript-display";
 
 // Live transcript for the voice room (task #40 Lane C). Shows the REAL conversation as it
 // flows — finalized turns from VAPI `transcript` (final) messages, plus the in-progress
@@ -77,7 +78,8 @@ function TurnRow({ turn, live }: { turn: Turn; live?: boolean }) {
           (live ? " italic" : "")
         }
       >
-        {turn.text}
+        {/* Display-layer only (P0-B): "tidy 1" renders "tidy one"; storage is verbatim. */}
+        {displaySpokenText(turn.text)}
       </div>
     </motion.div>
   );

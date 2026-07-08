@@ -1,5 +1,7 @@
 "use client";
 
+import { mergeTurns } from "@/lib/transcript-display";
+
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Lock, Mic, Pause, SendHorizontal, Check, RefreshCw, WifiOff, Flag } from "lucide-react";
@@ -40,11 +42,15 @@ export function InterviewClient({ token }: { token: string }) {
   function seedFromTranscript(s: RespondentSession) {
     // The server transcript is the one truth — reloads, drops, and modality switches
     // all re-enter the conversation from here, never from a blank thread.
+    // mergeTurns: voice transcripts store one row per speech chunk (verbatim); display
+    // groups consecutive same-speaker rows into one coherent message (P0-B).
     setMessages(
-      s.transcript.map((t) => ({
-        role: t.speaker === "agent" ? ("interviewer" as const) : ("respondent" as const),
-        text: t.text,
-      })),
+      mergeTurns(
+        s.transcript.map((t) => ({
+          role: t.speaker === "agent" ? ("interviewer" as const) : ("respondent" as const),
+          text: t.text,
+        })),
+      ),
     );
   }
 
@@ -144,7 +150,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "loading") {
     return (
-      <Shell>
+      <Shell testBackPath={session?.test_back_path}>
         <div className="flex h-64 items-center justify-center text-ink-faint">Loading…</div>
       </Shell>
     );
@@ -152,7 +158,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "load_error" || !session) {
     return (
-      <Shell>
+      <Shell testBackPath={session?.test_back_path}>
         <div className="mx-auto max-w-md py-16 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-surface-raised text-ink-faint">
             <WifiOff className="h-5 w-5" strokeWidth={1.75} />
@@ -175,7 +181,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "paused") {
     return (
-      <Shell>
+      <Shell testBackPath={session?.test_back_path}>
         <div className="mx-auto max-w-md py-16 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
             <Check className="h-5 w-5" strokeWidth={2} />
@@ -199,7 +205,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "done") {
     return (
-      <Shell>
+      <Shell testBackPath={session?.test_back_path}>
         <div className="mx-auto max-w-md py-16 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success-soft text-tag-verified">
             <Check className="h-6 w-6" strokeWidth={2.5} />
@@ -220,7 +226,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "consent") {
     return (
-      <Shell>
+      <Shell testBackPath={session?.test_back_path}>
         <ConsentLanding session={session} onStart={start} />
       </Shell>
     );
@@ -230,7 +236,7 @@ export function InterviewClient({ token }: { token: string }) {
   // the server record first, so nothing said on the call is missing from the thread.
   if (mode === "voice") {
     return (
-      <Shell>
+      <Shell testBackPath={session?.test_back_path}>
         <VoiceCall
           token={token}
           respondentName={ctx?.respondent_name}
@@ -251,7 +257,7 @@ export function InterviewClient({ token }: { token: string }) {
   const minutes = ctx?.est_minutes ?? 20;
 
   return (
-    <Shell>
+    <Shell testBackPath={session?.test_back_path}>
       <div className="flex h-[calc(100vh-4rem)] flex-col">
         <div className="flex items-center justify-between border-b border-line pb-3">
           <div>
@@ -381,7 +387,7 @@ export function InterviewClient({ token }: { token: string }) {
 }
 
 // Calm, standalone shell — the respondent is not inside the workspace app.
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children, testBackPath }: { children: React.ReactNode; testBackPath?: string }) {
   return (
     <div className="min-h-screen bg-canvas">
       <header className="flex h-16 items-center px-6">
@@ -390,6 +396,15 @@ function Shell({ children }: { children: React.ReactNode }) {
             {brand.product_name}
           </span>
           <BrandMark className="h-3.5 w-3.5 text-accent" />
+          {/* Admin test mode ONLY (P0-C): a way back. Real respondents get no chrome. */}
+          {testBackPath && (
+            <a
+              href={testBackPath}
+              className="ml-auto inline-flex items-center gap-1 rounded-md border border-line px-2.5 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
+            >
+              ← Test call · Back to Voice Settings
+            </a>
+          )}
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-6">{children}</main>

@@ -7,6 +7,7 @@ import {
 import { ParticleOrb, type OrbState } from "./ParticleOrb";
 import { MicWaveform } from "./MicWaveform";
 import { LiveTranscript, type Turn } from "./LiveTranscript";
+import { mergeTurns } from "@/lib/transcript-display";
 import { InterviewProgress } from "./InterviewProgress";
 import { getCallVoice } from "@/lib/respondent";
 
@@ -95,11 +96,19 @@ export function VoiceCall({
   // Live-room signal (all real, from VAPI events).
   const [volume, setVolume] = useState(0);
   const [orbState, setOrbState] = useState<OrbState>("connecting");
-  const [turns, setTurns] = useState<Turn[]>(priorTurns);
+  const [turns, setTurns] = useState<Turn[]>(() => mergeTurns(priorTurns));
   const [partial, setPartial] = useState<Turn | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
+  // "You're talking but the call can't hear you" (P0-A): local mic activity with zero
+  // user transcript events is the July 6/7 drop signature surfaced EARLY and honestly.
+  const [micWarning, setMicWarning] = useState(false);
 
   const vapiRef = useRef<VapiLike | null>(null);
+  const heardRef = useRef(false); // any user transcript event arrived
+  const mutedRef = useRef(false);
+  const watchdog = useRef<{ timer: number | null; stream: MediaStream | null; ctx: AudioContext | null }>(
+    { timer: null, stream: null, ctx: null },
+  );
   // Set when the respondent pressed End — the only way a call-end is a normal "ended".
   const endRequested = useRef(false);
   // True once any turn exists — a re-entry speaks the resume line, never the full opener.
@@ -108,7 +117,11 @@ export function VoiceCall({
   const estSec = Math.max(60, (estMinutes ?? 20) * 60);
 
   // Always tear the call down if the component unmounts mid-conversation.
-  useEffect(() => () => { try { vapiRef.current?.stop(); } catch { /* already gone */ } }, []);
+  useEffect(() => () => {
+    try { vapiRef.current?.stop(); } catch { /* already gone */ }
+    stopMicWatchdog();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Real elapsed-time timer — drives the neutral "time remaining" only. Runs while live.
   useEffect(() => {
@@ -154,12 +167,14 @@ export function VoiceCall({
       vapi.on("call-start", () => {
         setState("live");
         setOrbState("listening");
+        startMicWatchdog();
       });
       vapi.on("call-end", () => {
         // Only a respondent-requested end is "ended"; anything else is a DROP and gets
         // the reconnect screen (never a silent completion, never a silent text switch).
         setState(endRequested.current ? "ended" : "dropped");
         setVolume(0);
+        stopMicWatchdog();
       });
 
       // REAL volume drive for the orb (assistant output level, 0..1).
@@ -172,14 +187,27 @@ export function VoiceCall({
       vapi.on("speech-end", () => { setOrbState("listening"); setVolume(0); });
 
       // Transcript turns (real). Partial lines update the live row; final lines commit.
+      // Consecutive same-speaker finals MERGE into one bubble (P0-B): the transcriber
+      // finalizes per TTS/speech chunk, and one bubble per fragment read as noise.
       vapi.on("message", (m) => {
         if (!isTranscript(m)) return;
         const role = m.role === "assistant" ? "assistant" : "user";
         const text = m.transcript.trim();
         if (!text) return;
+        if (role === "user") {
+          // The call CAN hear them — stand the watchdog down for this call.
+          heardRef.current = true;
+          setMicWarning(false);
+        }
         if (m.transcriptType === "final") {
           hasHistory.current = true;
-          setTurns((t) => [...t, { role, text }]);
+          setTurns((t) => {
+            const last = t[t.length - 1];
+            if (last && last.role === role) {
+              return [...t.slice(0, -1), { role, text: `${last.text} ${text}` }];
+            }
+            return [...t, { role, text }];
+          });
           setPartial(null);
           // Respondent just finished a thought → interviewer is composing its reply.
           if (role === "user") setOrbState("thinking");
@@ -222,7 +250,46 @@ export function VoiceCall({
     const v = vapiRef.current;
     if (!v) return;
     const next = !muted;
-    try { v.setMuted(next); setMuted(next); } catch { /* ignore */ }
+    try { v.setMuted(next); setMuted(next); mutedRef.current = next; } catch { /* ignore */ }
+  }
+
+  // ── Mic watchdog (P0-A) ─────────────────────────────────────────────
+  // The recurring drop signature (Jul 2 / Jun 25 / Jul 6 / tonight's test call) is VAPI
+  // receiving NO customer audio: the person talks, nothing transcribes, the call
+  // silence-times-out. Detect it in the first minute: if the LOCAL mic shows sustained
+  // speech but no user transcript event ever arrives, say so honestly while the call is
+  // still up — instead of letting it die quietly.
+  function startMicWatchdog() {
+    if (watchdog.current.timer != null) return;
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = new Ctx();
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      ctx.createMediaStreamSource(stream).connect(analyser);
+      const buf = new Uint8Array(analyser.frequencyBinCount);
+      let talkMs = 0;
+      watchdog.current = {
+        stream,
+        ctx,
+        timer: window.setInterval(() => {
+          if (heardRef.current) return; // the call hears them — nothing to warn about
+          analyser.getByteTimeDomainData(buf);
+          let peak = 0;
+          for (let i = 0; i < buf.length; i++) peak = Math.max(peak, Math.abs(buf[i] - 128));
+          if (peak > 18 && !mutedRef.current) talkMs += 300;
+          if (talkMs > 2000) setMicWarning(true);
+        }, 300),
+      };
+    }).catch(() => { /* preflight already surfaced permission problems */ });
+  }
+
+  function stopMicWatchdog() {
+    const w = watchdog.current;
+    if (w.timer != null) window.clearInterval(w.timer);
+    w.stream?.getTracks().forEach((t) => t.stop());
+    void w.ctx?.close().catch(() => undefined);
+    watchdog.current = { timer: null, stream: null, ctx: null };
   }
 
   function endCall() {
@@ -272,6 +339,19 @@ export function VoiceCall({
             {live ? "You're connected" : "Connecting your call…"}
           </h1>
 
+          {live && micWarning && (
+            <div className="mt-4 flex max-w-md items-start gap-2 rounded-md border border-danger/30 bg-danger-soft px-4 py-2.5 text-sm text-danger">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
+              <span>
+                Your microphone is picking you up, but the call isn&apos;t receiving it.
+                Try a different mic or browser, or{" "}
+                <button onClick={switchToText} className="font-semibold underline underline-offset-2">
+                  switch to text
+                </button>{" "}
+                — same conversation, nothing lost.
+              </span>
+            </div>
+          )}
           {live ? (
             <div className="mt-4">
               <InterviewProgress state={orbState} elapsedSec={elapsedSec} estSec={estSec} />
