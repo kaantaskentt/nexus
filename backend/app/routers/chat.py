@@ -66,6 +66,37 @@ def _records_block(records: list[dict]) -> str:
     return "\n".join(lines) if lines else "(no records retrieved)"
 
 
+def _answer_text(value) -> str:
+    """The prompt contract says `answer` is a plain string, but the model occasionally
+    nests it (e.g. {"text": ..., "rationale": ...}). The API promises a string; enforce
+    it here so no client ever receives an object where copy belongs."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        text = value.get("text") or value.get("answer")
+        if isinstance(text, str):
+            return text
+    return "" if value is None else str(value)
+
+
+def _suggestion_items(raw) -> list[dict]:
+    """Suggestions per the prompt contract are {text, rationale} objects; older outputs
+    were bare strings. Normalize both to the object shape and drop anything malformed."""
+    items = []
+    for s in raw or []:
+        if isinstance(s, str) and s.strip():
+            items.append({"text": s.strip(), "rationale": None})
+        elif isinstance(s, dict):
+            text = s.get("text")
+            if isinstance(text, str) and text.strip():
+                rationale = s.get("rationale")
+                items.append({
+                    "text": text.strip(),
+                    "rationale": rationale if isinstance(rationale, str) else None,
+                })
+    return items
+
+
 class AskIn(BaseModel):
     question: str
 
@@ -99,9 +130,9 @@ async def ask(workspace_id: str, body: AskIn):
         for cid in cited
     ]
     return {
-        "answer": data.get("answer", ""),
+        "answer": _answer_text(data.get("answer")),
         "citations": citations,
-        "suggestions": data.get("suggestions") or [],
+        "suggestions": _suggestion_items(data.get("suggestions")),
     }
 
 

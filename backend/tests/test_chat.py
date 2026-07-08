@@ -47,6 +47,36 @@ async def test_ask_filters_hallucinated_citations(db, monkeypatch):
     assert body["suggestions"][0]["text"] == "explore the repricing steps"
 
 
+async def test_ask_normalizes_model_shape_drift(db, monkeypatch):
+    """July 8 crash report #1: the model sometimes nests answer as {text, rationale} and
+    mixes string/object suggestions. The API must always return a string answer and
+    uniform {text, rationale} suggestions — the frontend renders these verbatim."""
+    ws = await make_workspace(db, industry="jewelry")
+
+    async def fake_agent(agent_name, user_content, **kw):
+        return json.dumps({
+            "answer": {"text": "Burak owns it.", "rationale": "records say so"},
+            "citations": [],
+            "suggestions": [
+                "bare string suggestion",
+                {"text": "object suggestion", "rationale": "closes a gap"},
+                {"rationale": "malformed, no text"},
+                42,
+            ],
+        })
+
+    monkeypatch.setattr(chat, "run_agent", fake_agent)
+    async with _client() as c:
+        r = await c.post(f"/api/chat/{ws}/ask", json={"question": "who owns repricing?"})
+    body = r.json()
+    assert r.status_code == 200
+    assert body["answer"] == "Burak owns it."  # a string, never an object
+    assert body["suggestions"] == [
+        {"text": "bare string suggestion", "rationale": None},
+        {"text": "object suggestion", "rationale": "closes a gap"},
+    ]
+
+
 async def test_ask_unknown_workspace_404(db, monkeypatch):
     async with _client() as c:
         r = await c.post(

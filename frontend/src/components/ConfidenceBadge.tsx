@@ -51,6 +51,10 @@ export function ConfidenceBadge({
   context?: string;
 }) {
   const c = MAP[confidence];
+  // A tier we don't recognize (or a null that slipped past a caller's guard) renders NO
+  // badge rather than a wrong one — and never crashes the page (July 8 Observer report:
+  // compiled claims can carry tag=null before adjudication).
+  if (!c) return null;
   return (
     <motion.span
       // Badge changes animate so a tier shift reads as a state change, not a repaint.

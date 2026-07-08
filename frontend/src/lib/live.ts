@@ -351,10 +351,15 @@ export interface ChatCitation {
   evidence_quote: string | null;
   topic: string;
 }
+// Suggestions follow the prompt contract: a neutral follow-up plus the gap it closes.
+export interface ChatSuggestion {
+  text: string;
+  rationale: string | null;
+}
 export interface ChatAnswer {
   answer: string;
   citations: ChatCitation[];
-  suggestions: string[];
+  suggestions: ChatSuggestion[];
 }
 export async function ask_context(workspace_id: string, question: string): Promise<ChatAnswer> {
   return api<ChatAnswer>(`/api/chat/${workspace_id}/ask`, {
@@ -481,7 +486,7 @@ export interface ObserverInsight {
 export interface ObserverClaim {
   id: string;
   text: string;
-  tag: TrustTag;
+  tag: TrustTag | null; // null until adjudication tags it — render NO badge, never a guess
   evidence_quote: string | null;
   at: string;
 }

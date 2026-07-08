@@ -442,7 +442,9 @@ function InsightRail({
                 <span className="text-[11px] tabular text-ink-faint">
                   {timeOf(c.at)} · {c.kind}
                 </span>
-                <ConfidenceBadge confidence={confidenceForTag(c.tag)} />
+                {/* Claims can be untagged (tag=null pre-adjudication) — same guard as the
+                    Knowledge surfaces: no badge rather than a made-up tier. */}
+                {c.tag && <ConfidenceBadge confidence={confidenceForTag(c.tag)} />}
               </div>
               <p className="mt-1.5 text-sm leading-relaxed text-ink">{c.text}</p>
               {c.quote && (

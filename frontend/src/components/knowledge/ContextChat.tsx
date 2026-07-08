@@ -113,14 +113,18 @@ export function ContextChat({ workspaceId }: { workspaceId: string }) {
           )}
           {result.suggestions.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
+              {/* Suggestions are {text, rationale} objects (prompt contract) — render the
+                  text, carry the rationale as a tooltip. Rendering the object itself was
+                  the July 8 white-screen (React #31). */}
               {result.suggestions.map((s) => (
                 <button
-                  key={s}
+                  key={s.text}
                   type="button"
-                  onClick={() => ask(s)}
+                  onClick={() => ask(s.text)}
+                  title={s.rationale ?? undefined}
                   className="rounded-full border border-line px-2.5 py-1 text-[11px] text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
                 >
-                  {s}
+                  {s.text}
                 </button>
               ))}
             </div>

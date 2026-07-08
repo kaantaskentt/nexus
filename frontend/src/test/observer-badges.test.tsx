@@ -74,6 +74,28 @@ describe("ObserverView badge honesty (A19 correction #1)", () => {
     expect(screen.getByText("Reported")).toBeInTheDocument();
   });
 
+  it("renders an untagged claim (tag=null, pre-adjudication) with no badge and no crash", () => {
+    // July 8 crash report #2: Observe on the completed Ece interview white-screened —
+    // 3 of its compiled claims carried tag=null and MAP[undefined].title threw.
+    render(
+      <ObserverView
+        workspaceId="ws-1"
+        sessionId="s-1"
+        initial={state({
+          session: { ...state().session, status: "completed" },
+          claims: [
+            { id: "c1", text: "The morning count is done by hand.", tag: null, evidence_quote: null, at: "2026-07-07T17:00:00Z" },
+          ],
+        })}
+      />,
+    );
+    expect(screen.getByText("The morning count is done by hand.")).toBeInTheDocument();
+    // No badge of any tier — absence is the honest render for an untagged claim.
+    for (const label of ["Verified", "High", "Reported", "Scraped"]) {
+      expect(screen.queryByText(label)).toBeNull();
+    }
+  });
+
   it("says coverage is not tracked instead of faking a ring when the map is null", () => {
     render(<ObserverView workspaceId="ws-1" sessionId="s-1" initial={state()} />);
     expect(screen.getByText(/coverage tracking is off/i)).toBeInTheDocument();
