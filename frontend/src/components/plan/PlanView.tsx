@@ -23,7 +23,7 @@ import {
   PauseCircle,
   Loader2,
 } from "lucide-react";
-import type { InterviewPlan, PlanState, Workspace } from "@/lib/types";
+import type { InterviewPlan, PlanCheckFlag, PlanState, Workspace } from "@/lib/types";
 import brand from "@/lib/brand";
 import { transition_plan, refine_plan, redraft_plan } from "@/lib/live";
 import { PlanStateChip, MustHitDot, DiscoveryTag, BrandMark } from "@/components";
@@ -70,6 +70,18 @@ export function PlanView({
   const checking = state === "NEXUS_CHECK";
   const missionEmpty = !plan.mission.goal?.trim() && plan.mission.topics.length === 0;
   const isDraft = state === "DRAFT";
+  // The most recent NEXUS_CHECK return, if any: a returned draft must show WHY it came
+  // back (July 8 bug-hunt — the flags were stored in change_log but never rendered, so
+  // the admin saw a flagged question sitting in the plan with no explanation).
+  const checkFlags: PlanCheckFlag[] = (() => {
+    for (let i = plan.change_log.length - 1; i >= 0; i--) {
+      const entry = plan.change_log[i];
+      if (entry?.actor === "nexus_check" && Array.isArray(entry.flags) && entry.flags.length > 0) {
+        return entry.flags;
+      }
+    }
+    return [];
+  })();
   const [redrafting, setRedrafting] = useState(false);
 
   // While the check runs (or an empty draft generates), the state flips server-side in
@@ -427,6 +439,56 @@ export function PlanView({
         {/* Bottom action bar. Actions follow the server's lifecycle: approve a pending
             plan, then send it; revoke where legal (APPROVED/SENT/OPENED); once live it's
             read-only here. NO_RESPONSE and REVOKED carry their own banners above. */}
+        {/* What the check flagged — rendered on a returned draft so the reasons travel
+            with the plan instead of dying in the audit log. Severity order as stored. */}
+        {isDraft && !missionEmpty && checkFlags.length > 0 && (
+          <section className="mt-6 rounded-card border border-accent/25 bg-accent-soft/40 p-4">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-accent-ink">
+              <AlertTriangle className="h-4 w-4" strokeWidth={1.75} />
+              What the check flagged
+            </h2>
+            <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+              Nexus reviewed this draft and sent it back. Each item names the problem and a
+              suggested fix — apply them with Refine Plan below, or draft again.
+            </p>
+            <ul className="mt-3 space-y-2.5">
+              {checkFlags.map((f, i) => (
+                <li key={i} className="rounded-lg border border-line bg-surface p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {f.severity && (
+                      <span
+                        className={
+                          "rounded-chip px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.05em] ring-1 ring-inset ring-ink/[0.04] " +
+                          (f.severity === "fail"
+                            ? "bg-danger-soft text-danger"
+                            : f.severity === "fix"
+                              ? "bg-pain-moderate text-tag-guess"
+                              : "bg-surface-sunken text-ink-faint")
+                        }
+                      >
+                        {f.severity}
+                      </span>
+                    )}
+                    {f.kind && (
+                      <span className="text-xs font-medium text-ink">{f.kind.replace(/-/g, " ")}</span>
+                    )}
+                    {f.where && <span className="text-xs text-ink-faint">· {f.where}</span>}
+                  </div>
+                  {f.issue && (
+                    <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{f.issue}</p>
+                  )}
+                  {f.proposed_fix && (
+                    <p className="mt-1.5 text-xs leading-relaxed text-ink-faint">
+                      <span className="font-medium text-ink-soft">Suggested fix:</span>{" "}
+                      {f.proposed_fix}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {!isRevoked && !isNoResponse && (
           <div className="mt-6 flex flex-wrap items-center gap-3">
             {canApprove && (

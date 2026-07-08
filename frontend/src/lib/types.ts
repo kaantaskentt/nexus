@@ -200,6 +200,16 @@ export interface SuggestedQuestion {
   topic?: ClaimTopic;
 }
 
+// One finding from a NEXUS_CHECK run, as written into the plan's change_log when the
+// check RETURNs a draft. The plan page renders these so a returned draft always says WHY.
+export interface PlanCheckFlag {
+  kind?: string; // e.g. "leading-question", "never-collision"
+  severity?: string; // "fail" | "fix" | "note"
+  issue?: string;
+  where?: string;
+  proposed_fix?: string;
+}
+
 export interface InterviewPlan {
   id: string;
   workspace_id: string;
@@ -213,7 +223,9 @@ export interface InterviewPlan {
   suggested_questions: SuggestedQuestion[];
   never_list: string[];
   suppressed_flags: { rule: string; kind: string }[];
-  change_log: { at: string; actor: string; change: string }[];
+  // Audited history. Refine entries carry `change`; a nexus_check RETURN entry carries
+  // `verdict` + `flags` instead.
+  change_log: { at: string; actor: string; change?: string; verdict?: string; flags?: PlanCheckFlag[] }[];
   // Plan-page extras (stage6 mockup): interviewee discovery tag, est-time breakdown,
   // approval stamp, Refine-Plan chat transcript, and the live plan-changes digest.
   interviewee_tag?: { label: string; tone: "first" | "call" | "new" };
