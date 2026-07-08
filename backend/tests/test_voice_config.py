@@ -210,10 +210,11 @@ def test_first_message_block_never_model_generated():
 
 
 def test_library_preview_urls_are_honest():
-    """ElevenLabs presets have no public sample clip => preview_url None (the editor hides
-    the play button); every listed Deepgram voice keeps its verified sample URL."""
+    """Kaan veto July 7: stock provider samples are BANNED (they speak someone else's
+    company name). A preview_url exists only when WE generated the clip (manifest ->
+    local /voice-previews/ path); otherwise None and the editor shows an honest
+    'Preview unavailable' badge. No stock domain may ever reappear."""
     for v in VOICE_LIBRARY:
-        if v["provider"] == "11labs":
-            assert v["preview_url"] is None
-        else:
-            assert v["preview_url"].startswith("https://static.deepgram.com/")
+        assert v["preview_url"] is None or v["preview_url"].startswith("/voice-previews/")
+        if v["preview_url"]:
+            assert "deepgram.com" not in v["preview_url"] and "elevenlabs" not in v["preview_url"]

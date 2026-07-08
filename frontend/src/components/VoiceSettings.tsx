@@ -165,11 +165,14 @@ export function VoiceSettings({
                     )}
                   </button>
                 ) : (
-                  // No public sample clip exists for this voice — an honest static badge,
-                  // never a play button that does nothing. Clicks pass through to select.
+                  // No generated clip for this voice — an honest static badge, never a
+                  // play button that does nothing, and NEVER a stock provider sample
+                  // (those speak someone else's company name — Kaan veto, July 7).
+                  // Clicks pass through to select.
                   <div
                     className="pointer-events-none relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line text-ink-faint"
-                    title="No sample clip for this voice yet"
+                    title="Preview unavailable"
+                    aria-label="Preview unavailable"
                   >
                     <Mic className="h-4 w-4" strokeWidth={1.75} />
                   </div>
@@ -206,7 +209,7 @@ export function VoiceSettings({
           value={firstMessage}
           onChange={(e) => setFirstMessage(e.target.value)}
           rows={5}
-          placeholder="Hi, I'm Nexus. Thanks so much for making the time. I'm here to understand how your work actually happens, day to day, the real version, not the tidy one. There are no right answers, and nothing here is a test. One quick note before we start: I'll turn our conversation into a short summary of how the work flows, and nothing gets quoted back with your name on it, your answers get combined with everyone else's before anyone sees conclusions. And I don't ask you to judge anyone. If an opinion about a person comes up, I keep it out of what I share unless you tell me to include it. We'll take about thirty minutes, and you can pause anytime. Ready when you are. Could you start by walking me through what a normal day looks like for you, from the very beginning?"
+          placeholder="Hi, I'm Nexus. Thanks so much for making the time. I'm here to understand how your work actually happens, day to day, the real version, not the tidy one. There are no right answers, and nothing here is a test. One quick note before we start: I'll turn our conversation into a short summary of how the work flows, and nothing gets quoted back with your name on it, your answers get combined with everyone else's before anyone sees conclusions. And I don't ask you to judge anyone. If an opinion about a person comes up, I keep it out of what I share unless you tell me to include it. We'll take about thirty minutes, and you can pause anytime. Ready when you are. So, to start: what do you actually do here? How would you describe your job to someone new?"
           className="input resize-none"
         />
         <p className="mt-1.5 text-xs text-ink-faint">

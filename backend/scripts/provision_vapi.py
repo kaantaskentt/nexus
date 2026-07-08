@@ -71,8 +71,8 @@ DEFAULT_FIRST_MESSAGE = (
     "everyone else's before anyone sees conclusions. And I don't ask you to judge anyone. If an "
     "opinion about a person comes up, I keep it out of what I share unless you tell me "
     "to include it. We'll take about thirty minutes, and you can pause anytime. Ready "
-    "when you are. Could you start by walking me through what a normal day looks like "
-    "for you, from the very beginning?"
+    "when you are. So, to start: what do you actually do here? How would you describe "
+    "your job to someone new?"
 )
 VOICES = [
     ("Nexus Interviewer (F)", _elevenlabs_voice("sarah")),  # F slot — casting-A female

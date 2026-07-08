@@ -14,7 +14,9 @@ Kaan cast — and (F) speaks "sarah" (casting-A), so a gender-tagged workspace c
 never synced falls back to a voice of the right gender. Ids are env-overridable so a
 different VAPI account can point at its own pair without a code change."""
 
+import json
 import os
+from pathlib import Path
 
 VAPI_BASE = "https://api.vapi.ai"
 
@@ -36,12 +38,18 @@ DEFAULT_ASSISTANT_IDS = {
 # The voice roster spans two providers (A20). ElevenLabs turbo v2.5 presets are the premium
 # tier Kaan picked in the July 7 casting call — "ryan" is the global default. The Deepgram
 # Aura-2 voices (built into VAPI, no extra key) remain as options. Gender tags let the editor
-# filter M/F; the note is the one-line character shown in the picker. Deepgram voices have a
-# verified public sample (preview_url), so the editor offers preview-listen — Aura-2 voices
-# whose sample 404s (stella/perseus/angus) are deliberately not listed. The ElevenLabs presets
-# have NO public sample clip, so their preview_url is None and the editor renders those cards
-# without a play button rather than faking one.
-_SAMPLE = "https://static.deepgram.com/examples/Aura-2-{voice}.wav"
+# filter M/F; the note is the one-line character shown in the picker.
+# PREVIEWS (Kaan veto, July 7): the stock provider sample clips are BANNED — they speak
+# someone else's company name ("welcome to ClearPath Solutions"), which is worse than no
+# preview. A preview now exists only when WE generated it in the product's own register
+# (scripts/generate_voice_previews.py writes frontend/public/voice-previews/ and the
+# manifest below). No manifest entry -> preview_url None -> the editor shows an honest
+# "Preview unavailable" label, never a play button on foreign audio.
+_PREVIEW_MANIFEST = Path(__file__).resolve().parent / "voice_previews.json"
+try:
+    _PREVIEWS: dict = json.loads(_PREVIEW_MANIFEST.read_text())
+except (OSError, ValueError):
+    _PREVIEWS = {}
 ELEVENLABS_MODEL = "eleven_turbo_v2_5"
 DEFAULT_VOICE_ID = "ryan"  # A20 — Kaan's casting-call verdict, the voice of Nexus
 VOICE_LIBRARY = [
@@ -58,10 +66,10 @@ VOICE_LIBRARY = [
     {"voice_id": "orpheus",   "label": "Orpheus",   "provider": "deepgram", "gender": "M", "note": "Rounded and calm"},
     {"voice_id": "zeus",      "label": "Zeus",      "provider": "deepgram", "gender": "M", "note": "Deep and steady"},
 ]
-# A preview sample per voice, for the admin to listen before choosing (task #39). Only the
-# Deepgram voices have one; None is the honest "no clip" signal the editor respects.
+# A preview per voice ONLY when we generated it ourselves; None is the honest "no clip"
+# signal the editor renders as "Preview unavailable".
 for _v in VOICE_LIBRARY:
-    _v["preview_url"] = _SAMPLE.format(voice=_v["voice_id"]) if _v["provider"] == "deepgram" else None
+    _v["preview_url"] = _PREVIEWS.get(f"{_v['provider']}:{_v['voice_id']}")
 
 VOICE_IDS = {v["voice_id"] for v in VOICE_LIBRARY}
 GENDER_FOR_VOICE = {v["voice_id"]: v["gender"] for v in VOICE_LIBRARY}
@@ -114,8 +122,8 @@ def _default_first_message() -> str:
         "everyone else's before anyone sees conclusions. And I don't ask you to judge anyone. If an "
         "opinion about a person comes up, I keep it out of what I share unless you tell me "
         "to include it. We'll take about thirty minutes, and you can pause anytime. Ready "
-        "when you are. Could you start by walking me through what a normal day looks like "
-        "for you, from the very beginning?"
+        "when you are. So, to start: what do you actually do here? How would you describe "
+        "your job to someone new?"
     )
 
 

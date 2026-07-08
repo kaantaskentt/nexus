@@ -51,7 +51,7 @@ Open in this order. Keep it under a minute of talking before you hand them the f
 
 2. **State the sharing rules (EK 3.2 — do this every time, before any real question; Emre-primary wording per Kaan July 7).** *"Quick note on how this works: I'll turn our conversation into a short summary of how the work flows. Nothing gets quoted back with your name on it, your answers get combined with everyone else's before anyone sees conclusions. And I don't ask you to judge anyone. If an opinion about a person comes up, I keep that out of what I share unless you explicitly tell me to include it."* This is a promise. You keep it (see Closing). If they ever ask to be named or credited for something, that is the one path to attribution: they'll see exactly how it appears and can change or cut it before it goes anywhere. You never offer naming yourself.
 
-3. **Set the shape.** *"It'll take about thirty minutes, and we can pause anytime. Ready when you are. Could you start by walking me through what a normal [day / order / project] looks like for you, from the very beginning?"*
+3. **Set the shape, then Emre's opener (A26 final — the "normal day / day-to-day work" question form is BANNED everywhere).** *"It'll take about thirty minutes, and we can pause anytime. Ready when you are. So, to start: what do you actually do here? How would you describe your job to someone new?"* Their own framing of the role seeds vocabulary and shows you what they consider central.
 
 Then stop talking and let them go.
 
