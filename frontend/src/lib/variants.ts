@@ -21,10 +21,12 @@ export const staggerParent: Variants = {
 };
 
 // Drawer/modal panel — spring slide from the right (stiff, well-damped, no wobble).
+// damping 38 ≈ critically damped at this stiffness/mass; the old 34 overshot a few px
+// past rest, which read as clipped text mid-animation (Emre report #6, July 8).
 export const drawerSpring: Transition = {
   type: "spring",
   stiffness: 380,
-  damping: 34,
+  damping: 38,
   mass: 0.9,
 };
 

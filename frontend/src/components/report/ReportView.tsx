@@ -23,6 +23,8 @@ import { ConfidenceBadge } from "@/components";
 import { confidenceForTag } from "@/lib/trust";
 import { conflictKindMeta } from "@/lib/conflicts";
 import { scrimFade, drawerSpring } from "@/lib/variants";
+import { useEscapeClose } from "@/lib/useEscapeClose";
+import { StepRail } from "@/components/StepRail";
 import { WorkflowStepCard, toolLabel } from "./WorkflowStepCard";
 
 export function ReportView({
@@ -59,8 +61,10 @@ export function ReportView({
     <>
       <div className="mx-auto max-w-6xl px-8 py-8">
         <div className="flex items-center justify-between">
+          {/* The label and destination agree (same class as Emre report #9): reports
+              are listed on Interviews, so back goes there. */}
           <Link
-            href={`/w/${workspace.slug}/plans`}
+            href={`/w/${workspace.slug}/interviews`}
             className="inline-flex items-center gap-1 text-sm text-ink-faint hover:text-ink"
           >
             <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> Back to Interviews
@@ -97,7 +101,7 @@ export function ReportView({
                 <h2 className="font-display text-xl text-ink">{report.workflow_name}</h2>
                 {workflowId && (
                   <Link
-                    href={`/w/${workspace.slug}/workflow/${workflowId}`}
+                    href={`/w/${workspace.slug}/workflow/${workflowId}?from=report:${sessionId}`}
                     className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
                   >
                     <PenLine className="h-4 w-4" strokeWidth={1.75} /> Open workflow editor
@@ -111,10 +115,10 @@ export function ReportView({
                   the findings.
                 </div>
               ) : (
-                // Horizontal step rail. The right-edge fade signals "scroll for more" so a
-                // partially-visible card reads as a peek, not a hard cut (DESIGN-V2 §4.8).
-                <div className="relative">
-                  <div className="flex items-stretch gap-1 overflow-x-auto pb-2">
+                // Horizontal step rail — StepRail adds edge fades + chevrons driven by
+                // real scroll state (Emre report #8: the fade alone read as a hard cut).
+                <StepRail fadeFrom="from-surface-raised">
+                  <div className="flex items-stretch gap-1">
                     {report.steps.map((step, i) => (
                       <div key={step.index} className="flex items-start gap-1">
                         <motion.div
@@ -130,8 +134,7 @@ export function ReportView({
                       </div>
                     ))}
                   </div>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-14 bg-gradient-to-l from-surface-raised to-transparent" />
-                </div>
+                </StepRail>
               )}
             </section>
 
@@ -262,22 +265,28 @@ export function ReportView({
           </aside>
         </div>
 
-        {/* Bottom action bar. SOP export ships with the workflow editor (#21); the
-            transcript view opens the verbatim record. Both are disabled until wired
-            (every-button-works: no decorative click targets). */}
+        {/* Bottom action bar — both wired to the real features (Emre report #4): SOP
+            deep-opens the workflow editor's working generator; the transcript opens the
+            Observer view's verbatim record. SOP stays honestly disabled only until the
+            workflow map has landed. */}
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Action
             primary
             icon={FileText}
             label="Generate SOP"
-            sub="Creates the standard operating procedure from verified steps, with the respondent's own words as evidence."
-            soon="Generate SOP ships with the workflow editor in this build"
+            sub="Creates the standard operating procedure from the mapped steps, in the respondent's own vocabulary."
+            href={
+              workflowId
+                ? `/w/${workspace.slug}/workflow/${workflowId}?panel=sop&from=report:${sessionId}`
+                : undefined
+            }
+            soon={workflowId ? undefined : "Available as soon as the workflow map lands"}
           />
           <Action
             icon={MessageSquare}
             label="View full transcript"
-            sub="Read the full conversation, including all answers and context."
-            soon="Transcript view ships in the next build"
+            sub="Read the full conversation, verbatim, in the interview view."
+            href={`/w/${workspace.slug}/interviews/${sessionId}`}
           />
         </div>
       </div>
@@ -333,36 +342,42 @@ function Action({
   sub,
   primary,
   soon,
+  href,
 }: {
   icon: typeof FileText;
   label: string;
   sub: string;
   primary?: boolean;
-  // When set, the action isn't wired yet: it renders disabled with this tooltip and a
-  // "Coming in this build" tag, instead of being a decorative click target.
+  // When set (and no href), the action isn't available yet: it renders disabled with
+  // this tooltip instead of being a decorative click target (every-button-works).
   soon?: string;
+  // A wired action navigates to the real feature.
+  href?: string;
 }) {
-  const disabled = Boolean(soon);
+  const disabled = !href;
+  const className =
+    "inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-semibold transition-all duration-150 ease-standard " +
+    (disabled
+      ? "cursor-not-allowed border border-line text-ink-faint opacity-70"
+      : primary
+        ? "bg-accent text-on-accent shadow-elev-1 hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
+        : "border border-line-strong text-ink hover:bg-surface-raised");
   return (
     <div className="text-center">
-      <button
-        disabled={disabled}
-        title={soon}
-        className={
-          "inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-semibold transition-all duration-150 ease-standard " +
-          (disabled
-            ? "cursor-not-allowed border border-line text-ink-faint opacity-70"
-            : primary
-              ? "bg-accent text-on-accent shadow-elev-1 hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
-              : "border border-line-strong text-ink hover:bg-surface-raised")
-        }
-      >
-        <Icon className="h-4 w-4" strokeWidth={1.75} />
-        {label}
-      </button>
-      {disabled && (
+      {href ? (
+        <Link href={href} className={className}>
+          <Icon className="h-4 w-4" strokeWidth={1.75} />
+          {label}
+        </Link>
+      ) : (
+        <button disabled title={soon} className={className}>
+          <Icon className="h-4 w-4" strokeWidth={1.75} />
+          {label}
+        </button>
+      )}
+      {disabled && soon && (
         <div className="mt-2 inline-block rounded-chip bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-ink-faint ring-1 ring-inset ring-ink/[0.04]">
-          Coming in this build
+          {soon}
         </div>
       )}
       <p className="mx-auto mt-2 max-w-[16rem] text-xs text-ink-faint">{sub}</p>
@@ -381,6 +396,7 @@ function StepDetailDrawer({
   total: number;
   onClose: () => void;
 }) {
+  useEscapeClose(step !== null, onClose);
   return (
     <AnimatePresence>
       {step && (

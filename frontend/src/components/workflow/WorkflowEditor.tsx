@@ -35,6 +35,8 @@ import {
   request_sop,
 } from "@/lib/live";
 import { rise, staggerParent, drawerSpring, scrimFade } from "@/lib/variants";
+import { useEscapeClose } from "@/lib/useEscapeClose";
+import { StepRail } from "@/components/StepRail";
 
 // The workflow editor (V2 #21) — the third glass flagship. Claim-derived steps are the
 // immutable base; every edit is an append-only overlay the backend records with
@@ -44,16 +46,24 @@ import { rise, staggerParent, drawerSpring, scrimFade } from "@/lib/variants";
 export function WorkflowEditor({
   workspace,
   workflow,
+  back,
+  initialPanel = null,
 }: {
   workspace: Workspace;
   workflow: EffectiveWorkflow;
+  // Origin-aware back link (Emre report #9): each entry point declares where it came
+  // from; the route computes href+label so this component never guesses.
+  back?: { href: string; label: string };
+  // Deep-open a drawer on arrival (?panel=sop) — the report's Generate SOP lands here.
+  initialPanel?: null | "sop" | "blueprint";
 }) {
   const workflowId = workflow.workflow_id;
   const [steps, setSteps] = useState<WorkflowEditStep[]>(workflow.steps);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showHidden, setShowHidden] = useState(false);
-  const [panel, setPanel] = useState<null | "sop" | "blueprint">(null);
+  const [panel, setPanel] = useState<null | "sop" | "blueprint">(initialPanel);
+  const backLink = back ?? { href: `/w/${workspace.slug}/workflows`, label: "Back to Workflows" };
 
   // One edit: optimistic-first, then reconcile against the server's folded truth. On
   // failure we restore the pre-edit snapshot and surface it inline (never a silent drop).
@@ -112,10 +122,10 @@ export function WorkflowEditor({
     <>
       <div className="mx-auto max-w-6xl px-8 py-8">
         <Link
-          href={`/w/${workspace.slug}/plans`}
+          href={backLink.href}
           className="inline-flex items-center gap-1 text-sm text-ink-faint hover:text-ink"
         >
-          <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> Back to Interviews
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> {backLink.label}
         </Link>
 
         <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
@@ -181,14 +191,14 @@ export function WorkflowEditor({
           </div>
         </div>
 
-        {/* Canvas. The right-edge fade signals "scroll for more" so a partially-visible
-            step reads as a peek, not a hard cut (DESIGN-V2 §4.8). */}
-        <div className="relative mt-6">
+        {/* Canvas. StepRail carries the scroll affordance (edge fades + chevrons that
+            exist only when there is more to see — Emre report #8). */}
+        <StepRail className="mt-6" fadeFrom="from-canvas">
           <motion.div
             variants={staggerParent}
             initial="hidden"
             animate="show"
-            className="flex items-stretch gap-1 overflow-x-auto pb-4"
+            className="flex items-stretch gap-1 pb-2"
           >
             {visible.map((step, i) => (
               <div key={step.step_id} className="flex items-stretch gap-1">
@@ -215,10 +225,7 @@ export function WorkflowEditor({
               </div>
             )}
           </motion.div>
-          {visible.length > 0 && (
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-14 bg-gradient-to-l from-canvas to-transparent" />
-          )}
-        </div>
+        </StepRail>
       </div>
 
       <ExportPanel workflowId={workflowId} kind={panel} onClose={() => setPanel(null)} />
@@ -414,6 +421,7 @@ function ExportPanel({
   kind: null | "sop" | "blueprint";
   onClose: () => void;
 }) {
+  useEscapeClose(kind !== null, onClose);
   return (
     <AnimatePresence>
       {kind && (

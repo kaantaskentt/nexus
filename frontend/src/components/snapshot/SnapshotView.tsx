@@ -21,6 +21,7 @@ import {
 } from "@/components";
 import { TOPIC_META, NEUTRAL_TOPIC } from "@/lib/topics";
 import { rise, staggerParent, drawerSpring, scrimFade, drawerSection } from "@/lib/variants";
+import { useEscapeClose } from "@/lib/useEscapeClose";
 import brand from "@/lib/brand";
 import { GeneratePlanButton } from "./GeneratePlanButton";
 
@@ -335,6 +336,7 @@ function AreaDrawer({
   claimsById: Map<string, ClaimRecord>;
   onClose: () => void;
 }) {
+  useEscapeClose(area !== null, onClose);
   return (
     <AnimatePresence>
       {area && (

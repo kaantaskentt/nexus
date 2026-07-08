@@ -3,6 +3,7 @@ import "server-only";
 // admin token from the request's Supabase cookie and passes it through, so backend
 // admin routes admit the SSR fetch. Client Components keep importing lib/live.ts directly
 // (browser token). Signatures match live.ts exactly — a server page only swaps its import.
+import { cache } from "react";
 import * as live from "./live";
 import { serverAccessToken } from "./server-token";
 import type { NewCompany } from "./live";
@@ -13,9 +14,17 @@ async function tok(): Promise<string | null> {
   return serverAccessToken();
 }
 
-export const list_workspaces = async () => live.list_workspaces((await tok()) ?? undefined);
+// ONE workspace-list fetch per request (Emre report #7 — perceived slowness): the
+// layout, get_workspace, and any page share the same promise. api.ts is no-store
+// (deliberate, #13), which also disables Next's fetch dedupe — React cache() restores
+// dedupe within a single request without reintroducing cross-request staleness.
+const requestWorkspaces = cache(async () =>
+  live.list_workspaces((await tok()) ?? undefined),
+);
+
+export const list_workspaces = async () => requestWorkspaces();
 export const get_workspace = async (slug: string) =>
-  live.get_workspace(slug, (await tok()) ?? undefined);
+  (await requestWorkspaces()).find((w) => w.slug === slug);
 export const list_plans = async (workspace_id: string) =>
   live.list_plans(workspace_id, (await tok()) ?? undefined);
 export const get_plan = async (workspace_id: string, plan_id: string) =>

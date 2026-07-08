@@ -46,7 +46,7 @@ export default async function AgentSkillsPage({ params }: { params: { slug: stri
           {workflows.map((w) => (
             <Link
               key={w.workflow_id}
-              href={`/w/${workspace.slug}/workflow/${w.workflow_id}`}
+              href={`/w/${workspace.slug}/workflow/${w.workflow_id}?from=skills`}
               className="group flex items-center gap-4 px-4 py-4 transition-colors hover:bg-surface-raised"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-ink ring-1 ring-inset ring-accent/15">

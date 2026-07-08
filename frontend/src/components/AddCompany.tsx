@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Plus, X, Building2, ArrowRight, Loader2 } from "lucide-react";
 import { create_workspace } from "@/lib/live";
 import { scrimFade } from "@/lib/variants";
+import { useEscapeClose } from "@/lib/useEscapeClose";
 
 // Add company (A17 Stage 0). Opens a modal for name / industry / website / contact,
 // creates a REAL tenant (is_demo=false, zero records), then drops the admin onto that
@@ -19,6 +20,8 @@ export function AddCompany() {
   const [contact, setContact] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Escape mirrors the backdrop click: closes unless a create is in flight.
+  useEscapeClose(open && !submitting, () => setOpen(false));
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -106,9 +106,18 @@ export default async function PlansPage({
                       {plan.interviewee_role}
                     </div>
                   )}
-                  <p className="mt-1.5 line-clamp-1 text-sm text-ink-soft">
-                    {plan.mission.goal}
-                  </p>
+                  {/* An aborted generation leaves a DRAFT with an empty mission (Emre
+                      report #5) — say so instead of rendering a blank line; the detail
+                      page carries the draft/redraft affordance. */}
+                  {plan.mission.goal?.trim() ? (
+                    <p className="mt-1.5 line-clamp-1 text-sm text-ink-soft">
+                      {plan.mission.goal}
+                    </p>
+                  ) : (
+                    <p className="mt-1.5 text-sm italic text-ink-faint">
+                      No mission drafted yet — open to draft one.
+                    </p>
+                  )}
                   {/* Created date disambiguates two plans for the same person (#10). */}
                   {created && (
                     <p className="mt-1 text-xs text-ink-faint">Created {created}</p>
