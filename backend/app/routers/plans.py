@@ -225,6 +225,13 @@ async def transition(plan_id: str, to_state: str, actor: str = "admin", note: st
     # text, no quarantined records — enforced in handoff.build_handoff_package).
     if to_state == "APPROVED":
         await enqueue("build_handoff", {"plan_id": plan_id})
+    # Entering NEXUS_CHECK runs the REAL check (July 8 bug-hunt #2): a refined returned
+    # draft goes back through the gate carrying its refinements — the only prior path
+    # forward was redraft, which regenerates and DISCARDS them. Without this enqueue the
+    # state would sit seeded-but-never-run (the exact P0-1 failure class).
+    if to_state == "NEXUS_CHECK":
+        ws = await pool.fetchval("select workspace_id from interview_plans where id = $1", plan_id)
+        await enqueue("nexus_check", {"plan_id": plan_id, "workspace_id": str(ws)}, priority=90)
     return {"plan_id": plan_id, "from": from_state, "to": to_state}
 
 

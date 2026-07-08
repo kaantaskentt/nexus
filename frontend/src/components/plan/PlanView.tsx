@@ -515,10 +515,30 @@ export function PlanView({
             )}
             {isDraft && (
               <>
+                {/* A refined returned draft can go BACK through the check carrying its
+                    refinements (bug-hunt #2: redraft regenerates and discards them). */}
+                {!missionEmpty && (
+                  <button
+                    onClick={() => requestTransition("NEXUS_CHECK")}
+                    disabled={pending != null || redrafting}
+                    className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:opacity-50"
+                  >
+                    {pending === "NEXUS_CHECK" ? (
+                      <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                    ) : (
+                      <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
+                    )}
+                    Send back for check
+                  </button>
+                )}
                 <button
                   onClick={redraft}
-                  disabled={redrafting}
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:opacity-50"
+                  disabled={redrafting || pending != null}
+                  className={
+                    missionEmpty
+                      ? "inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:opacity-50"
+                      : "inline-flex items-center justify-center gap-2 rounded-md border border-line px-5 py-3 text-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-surface-sunken/40 disabled:opacity-50"
+                  }
                 >
                   {redrafting ? (
                     <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
@@ -530,7 +550,7 @@ export function PlanView({
                 <span className="max-w-md text-xs leading-relaxed text-ink-faint">
                   {missionEmpty
                     ? "Drafting didn't land for this plan (generation can be interrupted). Drafting runs the same pipeline and the same Nexus check."
-                    : "This draft was returned by the Nexus check or sent back for revision. Refine it below, or draft again from the records (that replaces the current draft)."}
+                    : "Refine the draft below and send it back for check — your edits travel with it. Draft again regenerates from the records and replaces this draft."}
                 </span>
               </>
             )}

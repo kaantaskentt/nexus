@@ -113,3 +113,25 @@ async def test_redraft_illegal_after_send(db):
     async with _client() as c:
         r = await c.post(f"/api/plans/{plan_id}/redraft")
     assert r.status_code == 409
+
+async def test_transition_into_check_enqueues_the_job(db):
+    """July 8 bug-hunt #2: a refined returned draft goes BACK through the gate via
+    DRAFT → NEXUS_CHECK, carrying its refinements. The transition must enqueue the real
+    check job — a state that only flips the label would sit seeded-but-never-run (the
+    P0-1 failure class all over again)."""
+    ws = await make_workspace(db, industry="jewelry")
+    person = await _person(db, ws)
+    plan_id = await _plan(db, ws, person, state="DRAFT",
+                          mission={"goal": "refined goal", "topics": []})
+
+    async with _client() as c:
+        r = await c.post(f"/api/plans/{plan_id}/transition?to_state=NEXUS_CHECK")
+    assert r.status_code == 200
+    assert await db.fetchval(
+        "select state from interview_plans where id = $1", plan_id) == "NEXUS_CHECK"
+    job = await db.fetchrow(
+        "select kind, payload from jobs where kind='nexus_check' "
+        "and payload->>'plan_id' = $1 order by id desc limit 1", str(plan_id))
+    assert job is not None
+    payload = json.loads(job["payload"]) if isinstance(job["payload"], str) else job["payload"]
+    assert payload["workspace_id"] == str(ws)
