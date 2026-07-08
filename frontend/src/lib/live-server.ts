@@ -51,6 +51,8 @@ export const observe_session = async (workspace_id: string, session_id: string) 
   live.observe_session(workspace_id, session_id, (await tok()) ?? undefined);
 export const list_simulations = async (workspace_id: string) =>
   live.list_simulations(workspace_id, (await tok()) ?? undefined);
+export const get_simulation_history = async () =>
+  live.get_simulation_history((await tok()) ?? undefined);
 export const get_workflows = async (workspace_id: string) =>
   live.get_workflows(workspace_id, (await tok()) ?? undefined);
 

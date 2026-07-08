@@ -453,6 +453,33 @@ export async function list_sessions(workspace_id: string, token?: string): Promi
 // Simulated interviews (session_kind='eval') — the Simulations surface. Same shape as
 // real sessions; the backend keeps the two classes firewalled (0007), so this list can
 // never leak into Interviews or vice versa.
+// Simulation proving history (task #28): the cast of simulated characters and the judged
+// round results the Simulations page renders. Read-only; runs stay harness-driven.
+export interface SimulationCastMember {
+  key: string;
+  role: string;
+  style: string;
+  tests: string;
+}
+export interface SimulationRound {
+  round: number;
+  date: string;
+  label: string;
+  surfaced: number;
+  surfaced_total: number;
+  traps_taken: number;
+  traps_total: number;
+  complete: boolean;
+  note: string;
+}
+export interface SimulationHistory {
+  cast: SimulationCastMember[];
+  rounds: SimulationRound[];
+}
+export async function get_simulation_history(token?: string): Promise<SimulationHistory> {
+  return api<SimulationHistory>("/api/simulations/history", undefined, token);
+}
+
 export async function list_simulations(workspace_id: string, token?: string): Promise<SessionSummary[]> {
   const rows = await api<RawSessionSummary[]>(
     `/api/workspaces/${workspace_id}/sessions?kind=eval`,

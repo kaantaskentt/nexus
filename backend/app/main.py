@@ -16,6 +16,7 @@ from .routers import (
     plans,
     reports,
     sessions,
+    simulations,
     voice,
     voice_config,
     workflows,
@@ -59,6 +60,7 @@ app.include_router(chat.router, prefix="/api/chat", tags=["chat"], dependencies=
 app.include_router(integrations.router, prefix="/api/integrations", tags=["integrations"], dependencies=_admin)
 app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"], dependencies=_admin)
 app.include_router(observer.router, prefix="/api/observer", tags=["observer"], dependencies=_admin)
+app.include_router(simulations.router, prefix="/api/simulations", tags=["simulations"], dependencies=_admin)
 
 
 @app.get("/health")
