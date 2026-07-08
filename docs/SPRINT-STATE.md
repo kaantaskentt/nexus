@@ -1,3 +1,49 @@
+# VERDICT SHIFT — July 7 evening (Kaan's taste verdicts 1-10 + P1 batches, A26/A27)
+
+**AUDIT VERDICTS (A23, one line each; all committed + pushed):**
+- P1 jargon (v5): eval-harness ws is_internal on PROD (it WAS in the picker) + code fix;
+  Simulations copy client-language; Knowledge Base → Company Context. ✓ tsc/lint/43
+- P1 discoverability (v6): New interview primary button on Interviews → /plans?new=1,
+  door lands open. ✓
+- P1 copy: founder-voiced upload placeholder (pain+name+belief, fictional). ✓
+- v1 anonymity Emre-primary (flat promise; naming respondent-initiated only) across
+  prompt + all 3 opener copies + evals (fixed suite 10/10, new wants-credit case). ✓
+- v3 opener speed 1.07 (no per-message TTS on VAPI) PATCHed+verified. NEAR-MISS: a
+  secretless provision run stripped live auth headers ~3 min; restored, script now
+  refuses without VOICE_SHARED_SECRET. ✓
+- v4 artifact push softened (no-pressure fallback, last-one-you-did anchor). ✓
+- v2 tea-break v1: deterministic fade detector (attention.py, 2-signal rule,
+  personality guard) + one natural-language offer, shared once-max flag. ✓ 6/6, 133p
+- KAAN TASTE VETO (final): "normal day / day-to-day work" opening question BANNED;
+  Emre's form live everywhere + assistants re-PATCHed + fetch-verified. HELD for Kaan:
+  descriptive "day to day" in the intro sentence (watchtower asking; drop is one edit).
+- Voice previews: stock clips BANNED (ClearPath leak); manifest-driven own-register
+  clips (generate_voice_previews.py; needs ELEVENLABS/DEEPGRAM keys), honest
+  "Preview unavailable" badge meanwhile. ✓ test re-pinned
+- P1-A low-context plan competence (A27 delta method) + C questions-always + D approve
+  gate + E SOP dimensions + B Refine Plan panel LIVE (audited change log, dead chip
+  killed). ✓ plan_runner thin-context 2/2, refine+plan tests 10/10
+- v7 Fireflies import + speaker mapping (labels-only rewrite; CEO pick feeds compiler).
+  ✓ LIVE smoke: 5 real meetings, Kaan+Emre transcript fetched. backend 139p
+- v8 demo transcript generator: kind='demo', provenance.synthetic STRUCTURAL, Example
+  CEO entity (real contact never minted), Synthetic chip in Company Context. ✓ 3/3
+- v9 coverage_routing stays OFF (round 3 pending) · v10 voice admin-per-workspace, no
+  respondent choice · diagrams+naming deferred.
+- Protocol: docs/FEEDBACK-QUEUE.md checked at every boundary (empty at each check).
+- Migrations 0014 applied to live Supabase. FINAL DEPLOY ✓ (Railway api+worker SUCCESS,
+  Vercel Production Ready). PROD SMOKE ✓: health ok · picker clean (no eval-harness) ·
+  Fireflies route live (15 real meetings) · demo-transcript route deployed (honest 404
+  shape check). FEEDBACK-QUEUE checked at final boundary: empty.
+
+**OPEN FOR KAAN/EMRE after this shift:** descriptive "day to day" in the opener intro
+(held for Kaan's word; one-line drop if banned) · ELEVENLABS/DEEPGRAM keys to actually
+generate preview clips (script ready) · MERGE-PACKET ⚑ items that survive the verdicts:
+flatter-2d judge ruling (Emre) · consent-line partial-compile copy (Kaan) · Tier-3 pass
+(Emre+Kaan). Matrix round 3 still next in queue (EVAL_MODE staging holds; note arm B now
+carries two-strike escape + tea-break nudge — log as arm-B build delta in proof-matrix).
+
+---
+
 # MERGE SHIFT — July 7 late afternoon (A24 Emre merge, A23 rhythm)
 
 Fully autonomous (Kaan left ~4:25p). Board: merge tasks 1-5, then the 3 product asks.
