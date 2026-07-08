@@ -16,7 +16,7 @@ from ..config import REPO_ROOT, get_settings
 from ..db import get_pool
 from ..llm import client, get_agent_config, load_prompt, run_chat
 from ..queue import handles
-from . import coverage, handoff
+from . import attention, coverage, handoff
 
 PAUSE_OFFER_MINUTES = 20
 _START_NUDGE = "(The respondent has joined and is ready to begin.)"
@@ -121,6 +121,21 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
         if cov_block:
             extra_system = f"{extra_system}\n\n{cov_block}"
 
+    # Tea-break v1 (A26): fade-triggered pause offer. Deterministic signals, injected
+    # ONCE per session — pause_offered is the shared once-max flag with the 20-minute
+    # offer, so the respondent never gets asked twice by two different mechanisms.
+    prior_state = session["resumable_state"]
+    prior_state = json.loads(prior_state) if isinstance(prior_state, str) else (prior_state or {})
+    fade = None
+    if not prior_state.get("pause_offered"):
+        fade = attention.detect_fade(utterances)
+        if fade:
+            budget = package.get("time_budget_minutes", 30)
+            extra_system = (
+                f"{extra_system}\n\n"
+                + attention.build_fade_nudge(fade["signals"], elapsed_min, budget)
+            )
+
     return {
         "session": session,
         "messages": _messages_from(utterances),
@@ -129,6 +144,7 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
         "elapsed_min": elapsed_min,
         "package": package,
         "coverage": cov,
+        "fade_offered": bool(fade),
     }
 
 
@@ -147,6 +163,9 @@ async def _finalize_turn(ctx: dict, reply: str) -> dict:
     prior = session["resumable_state"]
     prior = json.loads(prior) if isinstance(prior, str) else (prior or {})
     should_offer_pause = elapsed_min >= PAUSE_OFFER_MINUTES and not prior.get("pause_offered")
+    # A fade-triggered offer consumes the same once-max budget as the clock offer.
+    if ctx.get("fade_offered"):
+        should_offer_pause = True
     new_state = {
         **prior,
         "turn_count": prior.get("turn_count", 0) + 1,
