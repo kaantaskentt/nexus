@@ -1,3 +1,34 @@
+# OVERNIGHT PARK NOTE — July 8 ~02:45 PT (context exhausted; resume here)
+
+**VOICE P0: DONE AND PROVEN.** Root cause was product-wide: web calls carry the session
+token at call.assistantOverrides.metadata; our resolver checked call.metadata only, so
+EVERY voice webhook event was dropped as unattributable (no voice transcript ever
+stored; opener never persisted; text fallback re-greeted). Fixed at all resolution
+points + client mic watchdog (local-speech-but-no-transcript banner, one-click text
+switch) + merged bubbles + display number normalization + test-mode back link.
+PROOF ON PROD (exact VAPI shapes, session VsjNKhAf…): webhook stored both roles;
+custom-LLM replied to "I work on sales…" with a real episode probe; by-token transcript
+carries both rows + test_mode + back path. Deployed (Railway SUCCESS + Vercel).
+CAVEAT: Kaan's own mic never reached VAPI (env-side); the watchdog now surfaces it
+in-call. His next Hear-it-live attempt is the human confirmation.
+
+**RESUME QUEUE (overnight mandate, in order):**
+1. Task #26 remainder: logo→home + clickable breadcrumbs (AppShell; test-back DONE).
+2. Task #27 voice cards: verify click-to-select on prod (Kaan says dead — check the
+   absolute-inset selection button z-order vs the new badge), restore provider-hosted
+   sample clips w/ 'provider sample' microcopy (Deepgram Aura-2 sample URLs were
+   _SAMPLE https://static.deepgram.com/examples/Aura-2-{voice}.wav — restore via the
+   manifest as provider fallbacks, ElevenLabs library preview URLs if findable),
+   auto-swap on ELEVENLABS_API_KEY.
+3. Task #28 Simulations page: serve round history (proof-matrix data: 14/16 r1,
+   13/16+1trap r2) + five-persona cast + plain-language explainer; Run button PROPOSED.
+4. Continuous stranger bug-hunt (browser walks + suites) until limits. No new features.
+5. docs/FOR-EMRE.md WRITTEN — review/polish only if Emre feedback arrives.
+Check docs/FEEDBACK-QUEUE.md at every boundary. All work through 79b726f+ committed;
+nothing uncommitted at park.
+
+---
+
 # AUDIT SHIFT — July 7 night (premium SaaS audit, Kaan's evening mandate)
 
 Three-persona prod walk → docs/PREMIUM-AUDIT.md (ranked, screenshot evidence in
