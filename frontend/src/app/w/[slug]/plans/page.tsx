@@ -18,8 +18,10 @@ function shortDate(iso?: string): string | null {
 // an interview has completed and compiled, a "View report" link appears on its plan.
 export default async function PlansPage({
   params,
+  searchParams,
 }: {
   params: { slug: string };
+  searchParams?: { new?: string };
 }) {
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
@@ -62,7 +64,7 @@ export default async function PlansPage({
 
         {/* Custom interview door (Kaan, July 7): aim a plan with free-text focus. Same
             lifecycle — generator drafts, NEXUS_CHECK reviews, human approves, then send. */}
-        <CustomPlanDoor workspaceId={workspace.id} />
+        <CustomPlanDoor workspaceId={workspace.id} defaultOpen={searchParams?.new === "1"} />
 
         {/* Designed empty state (EMRE sprint target 2): guide the action that creates the
             first plan instead of a bare heading over nothing. */}

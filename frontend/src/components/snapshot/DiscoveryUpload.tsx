@@ -193,11 +193,16 @@ export function DiscoveryUpload({
             }}
             rows={10}
             placeholder={
+              // Founder-voiced example on purpose (Kaan P1, July 7): this surface takes a
+              // CEO call, so the example teaches CEO register — business-level narration
+              // with a pain, a name, and a belief. Fictional cast only (A12).
               "Paste the transcript here, or drop a .txt / .md file.\n\n" +
-              "Interviewer: Walk me through how the mornings usually start.\n" +
-              "Alex: I check the new orders first, then sort out anything from the day before.\n" +
-              "Interviewer: How long does that take?\n" +
-              "Alex: An hour, on a good day. The returns are the real headache."
+              "You: Tell me how the business actually runs, day to day.\n" +
+              "CEO: Honestly? Mornings are all about the metal prices, everything waits on those. " +
+              "Deniz reprices before the stores open, his own spreadsheet, takes him maybe two hours.\n" +
+              "You: And you'd like that to be faster?\n" +
+              "CEO: I think the whole thing could be automatic by nine. But I'm guessing, " +
+              "Deniz is the one who really knows."
             }
             className="w-full resize-y rounded-md bg-transparent px-4 py-3 text-sm leading-relaxed text-ink outline-none placeholder:text-ink-faint/70"
           />

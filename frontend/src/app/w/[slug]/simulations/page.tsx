@@ -20,9 +20,10 @@ export default async function SimulationsPage({ params }: { params: { slug: stri
     <div className="mx-auto max-w-4xl px-8 py-10">
       <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Simulations</h1>
       <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft">
-        Practice interviews against simulated respondents: realistic personas that test an
-        interview plan before a real person ever gets a link. Simulated runs are firewalled
-        from your company&apos;s real record: nothing said here enters the knowledge base.
+        Practice interviews against simulated employees: realistic personas that pressure-test
+        an interview plan before a real person ever gets a link. It&apos;s how we train and
+        test the interviewer. Simulated runs are kept fully separate from your company&apos;s
+        real records: nothing said here enters your company context.
       </p>
 
       {runs.length === 0 ? (

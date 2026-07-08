@@ -9,9 +9,16 @@ import { generate_plan } from "@/lib/live";
 // own free-text focus instead of only the snapshot's suggestions. Same lifecycle as
 // every plan — the generator drafts it, NEXUS_CHECK reviews it, a human approves before
 // anything sends. The focus shapes objectives; it never reaches the respondent raw.
-export function CustomPlanDoor({ workspaceId }: { workspaceId: string }) {
+export function CustomPlanDoor({
+  workspaceId,
+  defaultOpen = false,
+}: {
+  workspaceId: string;
+  // True when arriving via the "New interview" door (?new=1): land with the form open.
+  defaultOpen?: boolean;
+}) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [goal, setGoal] = useState("");

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mic, MessageSquare, ArrowRight, Users, Eye } from "lucide-react";
+import { Mic, MessageSquare, ArrowRight, Users, Eye, Plus } from "lucide-react";
 import type { Workspace } from "@/lib/types";
 import type { SessionSummary } from "@/lib/live";
 import { rise, staggerParent } from "@/lib/variants";
@@ -36,7 +36,17 @@ export function InterviewsView({
     <>
       <div className="mx-auto max-w-4xl px-8 py-10">
         <motion.div variants={rise} initial="hidden" animate="show">
-          <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Interviews</h1>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Interviews</h1>
+            {/* Discoverability (Kaan verdict 6, July 7): the custom-interview flow gets a
+                primary door HERE — the page Kaan looked for it on. Lands with the form open. */}
+            <Link
+              href={`/w/${workspace.slug}/plans?new=1`}
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover"
+            >
+              <Plus className="h-4 w-4" strokeWidth={2} /> New interview
+            </Link>
+          </div>
           <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft">
             Every interview run for this company and where it stands. Completed interviews
             open their post-interview report.{" "}

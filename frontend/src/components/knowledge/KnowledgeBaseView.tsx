@@ -116,7 +116,7 @@ export function KnowledgeBaseView({ records }: { records: KnowledgeRecord[] }) {
     <>
       <div className="mx-auto max-w-6xl px-8 py-10">
         <motion.div variants={rise} initial="hidden" animate="show">
-          <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Knowledge Base</h1>
+          <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Company Context</h1>
           <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft">
             Every record extracted so far, with its trust tag and the words it came from.
             Truth emerges from comparing records, so nothing here is edited or merged.
@@ -369,8 +369,8 @@ function EmptyStore() {
       <Layers className="h-9 w-9 text-ink-faint/60" strokeWidth={1.5} />
       <p className="mt-4 font-display text-xl text-ink">No records yet</p>
       <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">
-        Records appear here as interviews are compiled. Run the first interview and the
-        knowledge base fills with claims, each tagged by how well it is verified.
+        Records appear here as interviews are compiled. Run the first interview and your
+        company context fills with claims, each tagged by how well it is verified.
       </p>
     </div>
   );

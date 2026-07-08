@@ -159,8 +159,10 @@ async def eval_bootstrap(body: EvalBootstrapIn):
         ws = await conn.fetchval("select id from workspaces where slug = $1", EVAL_WORKSPACE_SLUG)
         if ws is None:
             ws = await conn.fetchval(
-                "insert into workspaces (name, slug, industry, is_demo) "
-                "values ('Eval Harness', $1, 'jewelry', true) returning id",
+                # is_internal: the eval tenant must never surface in the client-facing
+                # picker (Kaan verdict 5, July 7 — he saw "Eval Harness" and was confused).
+                "insert into workspaces (name, slug, industry, is_demo, is_internal) "
+                "values ('Eval Harness', $1, 'jewelry', true, true) returning id",
                 EVAL_WORKSPACE_SLUG,
             )
         # A throwaway plan carries the posted package; the turn engine loads it by plan_id.
