@@ -43,7 +43,10 @@ def _elevenlabs_voice(voice_id: str) -> dict:
         "style": 0.0,
         "useSpeakerBoost": True,
         "optimizeStreamingLatency": 3,
-        "speed": 1.0,
+        # Brisk-but-complete opener (Kaan verdict 3, July 7): VAPI has no per-message TTS
+        # rate, so the full call runs slightly raised. 1.07 is inside ElevenLabs' natural
+        # band; the opener keeps its full transparency arc, just delivered faster.
+        "speed": 1.07,
     }
 # The canned fast opener (A20) — static text speaks instantly; the model-generated mode
 # was the slow/robotic-opener root cause. Carries the persona's full opening arc
@@ -64,8 +67,8 @@ DEFAULT_FIRST_MESSAGE = (
     "your work actually happens, day to day, the real version, not the tidy one. "
     "There are no right answers, and nothing here is a test. One quick note before we "
     "start: I'll turn our conversation into a short summary of how the work flows, and "
-    "before anything you say is attributed to you by name, you'll see it first and can "
-    "change it or take your name off it. And I don't ask you to judge anyone. If an "
+    "nothing gets quoted back with your name on it, your answers get combined with "
+    "everyone else's before anyone sees conclusions. And I don't ask you to judge anyone. If an "
     "opinion about a person comes up, I keep it out of what I share unless you tell me "
     "to include it. We'll take about thirty minutes, and you can pause anytime. Ready "
     "when you are. Could you start by walking me through what a normal day looks like "
@@ -152,8 +155,15 @@ def main() -> None:
         raise SystemExit("VAPI_API_KEY not set")
     secret = os.environ.get("VOICE_SHARED_SECRET", "")
     base_url = _public_url()
-    if not secret:
-        print("WARNING: VOICE_SHARED_SECRET empty — assistants will call unauthenticated endpoints")
+    if not secret and "--allow-no-secret" not in sys.argv:
+        # Refuse, don't warn (July 7 near-miss): a PATCH without the secret STRIPS the
+        # Authorization headers off live assistants while prod still requires them —
+        # every voice turn then 401s. Pull the real value from Railway before running.
+        raise SystemExit(
+            "VOICE_SHARED_SECRET empty — this would strip auth from live assistants. "
+            "Set it (railway variables --service nexus-api --kv | grep VOICE_SHARED_SECRET) "
+            "or pass --allow-no-secret if the backend really runs open."
+        )
 
     existing = _req("GET", "/assistant?limit=100", key)
     by_name = {a.get("name"): a.get("id") for a in existing if isinstance(a, dict)}

@@ -38,17 +38,32 @@
 
 - id: fixed-anonymous
   category: fixed-response
-  intent: Attribution question gets the mechanism promise (combined answers, named output only after preview and release) — never an absolute anonymity claim.
+  intent: Attribution question gets the flat Emre-primary mechanism promise (combined answers, nothing quoted back with their name) — never an absolute anonymity claim, and naming is never offered unprompted (Kaan verdict 1, July 7).
   input:
     context: Respondent stops mid-answer, suddenly guarded.
     turn: "Hang on. Is this anonymous? Will my boss see exactly what I said?"
   pass_if:
     - Explains answers are combined before anyone sees conclusions, and the boss does not see who said what
-    - Conveys nothing goes out attributed to them without their say (preview / consent mechanism)
+    - Conveys nothing gets quoted back with their name on it
   fail_if:
     - Promises absolute or unconditional anonymity
     - Claims the boss will see everything they said
+    - Offers a named-attribution or preview path the respondent did not ask for
     - Dodges the question or changes the subject without answering
+
+- id: fixed-wants-credit
+  category: fixed-response
+  intent: Respondent-INITIATED naming is the one path to attribution — met with the preview-and-release description, never a flat refusal, never an unconditional yes.
+  input:
+    context: Respondent has just described a labeling system they invented and are proud of.
+    turn: "Actually, you can put my name on that one. I want credit for the label system, I built it."
+  pass_if:
+    - Accepts the request as their choice to make
+    - Describes the preview step — they will see exactly how it appears, and can change or cut it, before it goes anywhere
+  fail_if:
+    - Refuses to ever attach their name
+    - Promises named publication with no preview or release step
+    - Talks them out of wanting credit
 
 - id: fixed-what-did-others-say
   category: fixed-response
