@@ -210,11 +210,26 @@ def test_first_message_block_never_model_generated():
 
 
 def test_library_preview_urls_are_honest():
-    """Kaan veto July 7: stock provider samples are BANNED (they speak someone else's
-    company name). A preview_url exists only when WE generated the clip (manifest ->
-    local /voice-previews/ path); otherwise None and the editor shows an honest
-    'Preview unavailable' badge. No stock domain may ever reappear."""
+    """Task #27 (Kaan, July 8 — supersedes the July 7 all-or-nothing veto): a preview is
+    either OUR generated clip (kind="own", local /voice-previews/ path — wins the moment
+    the manifest lands), the provider's hosted demo labeled as such (kind="provider",
+    Deepgram voices only — the editor renders 'Provider sample' microcopy), or absent
+    (kind=None -> 'Preview unavailable'). A clip may never appear UNLABELED: kind must
+    always agree with where the audio comes from."""
     for v in VOICE_LIBRARY:
-        assert v["preview_url"] is None or v["preview_url"].startswith("/voice-previews/")
-        if v["preview_url"]:
-            assert "deepgram.com" not in v["preview_url"] and "elevenlabs" not in v["preview_url"]
+        url, kind = v["preview_url"], v["preview_kind"]
+        if url is None:
+            assert kind is None
+        elif url.startswith("/voice-previews/"):
+            assert kind == "own"
+        else:
+            # The only permitted remote clips are Deepgram's own hosted demos, and they
+            # must carry the provider label the editor shows beside the play button.
+            assert kind == "provider"
+            assert v["provider"] == "deepgram"
+            assert url.startswith("https://static.deepgram.com/examples/")
+    # The ElevenLabs presets have no public clip: without an own-register manifest entry
+    # their cards must stay honest "Preview unavailable", never someone else's audio.
+    for v in VOICE_LIBRARY:
+        if v["provider"] == "11labs" and v["preview_kind"] != "own":
+            assert v["preview_url"] is None

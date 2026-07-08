@@ -12,10 +12,10 @@ import { save_voice_config } from "@/lib/live";
 const saveMock = vi.mocked(save_voice_config);
 
 const VOICES = [
-  { voice_id: "asteria", label: "Asteria", gender: "F" as const, note: "Warm and friendly", provider: "deepgram" as const, preview_url: "https://s/asteria.wav" },
-  { voice_id: "luna", label: "Luna", gender: "F" as const, note: "Soft and calm", provider: "deepgram" as const, preview_url: "https://s/luna.wav" },
-  { voice_id: "ryan", label: "Ryan", gender: "M" as const, note: "Warm and conversational (default)", provider: "11labs" as const, preview_url: null },
-  { voice_id: "orion", label: "Orion", gender: "M" as const, note: "Approachable and warm", provider: "deepgram" as const, preview_url: "https://s/orion.wav" },
+  { voice_id: "asteria", label: "Asteria", gender: "F" as const, note: "Warm and friendly", provider: "deepgram" as const, preview_url: "https://s/asteria.wav", preview_kind: "provider" as const },
+  { voice_id: "luna", label: "Luna", gender: "F" as const, note: "Soft and calm", provider: "deepgram" as const, preview_url: "/voice-previews/luna.mp3", preview_kind: "own" as const },
+  { voice_id: "ryan", label: "Ryan", gender: "M" as const, note: "Warm and conversational (default)", provider: "11labs" as const, preview_url: null, preview_kind: null },
+  { voice_id: "orion", label: "Orion", gender: "M" as const, note: "Approachable and warm", provider: "deepgram" as const, preview_url: "https://s/orion.wav", preview_kind: "provider" as const },
 ];
 
 function config(over: Partial<VoiceConfig> = {}): VoiceConfig {
@@ -100,6 +100,15 @@ describe("VoiceSettings", () => {
     // The audio got the voice's public sample url and was played.
     expect(playSpy).toHaveBeenCalled();
     expect(lastSrc.value).toBe("https://s/asteria.wav");
+  });
+
+  it("labels provider-hosted demos as 'Provider sample'; own clips carry no label (#27)", () => {
+    render(<VoiceSettings workspaceId="ws-1" initial={config()} />);
+    // Female roster: Asteria (provider demo) is labeled, Luna (own clip) is not.
+    const asteriaCard = screen.getByText("Asteria").closest("div[class*='lift']") as HTMLElement;
+    const lunaCard = screen.getByText("Luna").closest("div[class*='lift']") as HTMLElement;
+    expect(asteriaCard.textContent).toMatch(/provider sample/i);
+    expect(lunaCard.textContent).not.toMatch(/provider sample/i);
   });
 
   it("renders no play button for a voice without a sample clip (A20 ElevenLabs roster)", () => {

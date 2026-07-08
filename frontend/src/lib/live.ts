@@ -143,7 +143,10 @@ export interface VoiceOption {
   gender: "F" | "M";
   note: string;
   provider: "11labs" | "deepgram"; // A20: ElevenLabs joined the roster (ryan is the default)
-  preview_url: string | null; // public sample clip; null = none exists, render no play button
+  preview_url: string | null; // sample clip; null = none exists, render no play button
+  // How to label the clip (#27): "own" = our generated register, "provider" = the
+  // provider's hosted demo (renders "Provider sample" microcopy), null = no clip.
+  preview_kind?: "own" | "provider" | null;
 }
 export interface VoiceConfig {
   gender: "F" | "M";

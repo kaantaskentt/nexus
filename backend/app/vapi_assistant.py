@@ -39,12 +39,17 @@ DEFAULT_ASSISTANT_IDS = {
 # tier Kaan picked in the July 7 casting call — "ryan" is the global default. The Deepgram
 # Aura-2 voices (built into VAPI, no extra key) remain as options. Gender tags let the editor
 # filter M/F; the note is the one-line character shown in the picker.
-# PREVIEWS (Kaan veto, July 7): the stock provider sample clips are BANNED — they speak
-# someone else's company name ("welcome to ClearPath Solutions"), which is worse than no
-# preview. A preview now exists only when WE generated it in the product's own register
-# (scripts/generate_voice_previews.py writes frontend/public/voice-previews/ and the
-# manifest below). No manifest entry -> preview_url None -> the editor shows an honest
-# "Preview unavailable" label, never a play button on foreign audio.
+# PREVIEWS (task #27, Kaan July 8 — supersedes the July 7 all-or-nothing veto): a
+# three-tier chain, each tier honest about what it is.
+#   1. OWN clip from the manifest (scripts/generate_voice_previews.py: real opener line,
+#      our brand, per-provider TTS — needs ELEVENLABS/DEEPGRAM keys). Wins automatically
+#      the moment the manifest lands, so generating clips IS the swap.
+#   2. PROVIDER sample (Deepgram's hosted Aura-2 demos, verified live July 8). These speak
+#      the provider's own demo copy, so the editor labels them "Provider sample" — the
+#      July 7 ClearPath objection was a stock clip PRESENTED as ours; labeled, it's just
+#      the provider's voice demo.
+#   3. None -> the editor's honest "Preview unavailable" badge (the ElevenLabs presets
+#      have no public clip).
 _PREVIEW_MANIFEST = Path(__file__).resolve().parent / "voice_previews.json"
 try:
     _PREVIEWS: dict = json.loads(_PREVIEW_MANIFEST.read_text())
@@ -66,10 +71,19 @@ VOICE_LIBRARY = [
     {"voice_id": "orpheus",   "label": "Orpheus",   "provider": "deepgram", "gender": "M", "note": "Rounded and calm"},
     {"voice_id": "zeus",      "label": "Zeus",      "provider": "deepgram", "gender": "M", "note": "Deep and steady"},
 ]
-# A preview per voice ONLY when we generated it ourselves; None is the honest "no clip"
-# signal the editor renders as "Preview unavailable".
+# Resolve the preview chain per voice. preview_kind tells the editor how to label it:
+# "own" (no extra copy needed), "provider" (renders the "Provider sample" microcopy),
+# or None (renders "Preview unavailable").
+_PROVIDER_SAMPLE = "https://static.deepgram.com/examples/Aura-2-{voice}.wav"
 for _v in VOICE_LIBRARY:
-    _v["preview_url"] = _PREVIEWS.get(f"{_v['provider']}:{_v['voice_id']}")
+    _own = _PREVIEWS.get(f"{_v['provider']}:{_v['voice_id']}")
+    if _own:
+        _v["preview_url"], _v["preview_kind"] = _own, "own"
+    elif _v["provider"] == "deepgram":
+        _v["preview_url"] = _PROVIDER_SAMPLE.format(voice=_v["voice_id"])
+        _v["preview_kind"] = "provider"
+    else:
+        _v["preview_url"], _v["preview_kind"] = None, None
 
 VOICE_IDS = {v["voice_id"] for v in VOICE_LIBRARY}
 GENDER_FOR_VOICE = {v["voice_id"]: v["gender"] for v in VOICE_LIBRARY}

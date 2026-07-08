@@ -189,6 +189,13 @@ export function VoiceSettings({
                     {active && <Check className="h-4 w-4 text-accent" strokeWidth={2.5} />}
                   </div>
                   <span className="mt-0.5 block truncate text-xs text-ink-faint">{v.note}</span>
+                  {/* Honest clip provenance (#27): the provider's hosted demo speaks the
+                      provider's copy, not ours — say so. Own-register clips need no label. */}
+                  {v.preview_kind === "provider" && (
+                    <span className="mt-0.5 block text-[10px] uppercase tracking-[0.06em] text-ink-faint/80">
+                      Provider sample
+                    </span>
+                  )}
                 </div>
               </div>
             );
