@@ -69,3 +69,19 @@ One line of what, one line of why. Full evidence + ranking: docs/PREMIUM-AUDIT.m
 is yours); preview clips need ElevenLabs/Deepgram keys; the "day to day" descriptive
 phrase in the opener intro is held for your word; PREMIUM-AUDIT.md's PROPOSED section
 has the ambitious ideas I didn't build.
+
+## Voice P0 (your test call) — found, fixed, PROVEN on prod
+- **The real bug, product-wide:** for browser calls, VAPI puts our session token at
+  `call.assistantOverrides.metadata` — our webhook only checked `call.metadata`, so every
+  voice transcript event EVER was silently dropped: nothing you said in a voice call was
+  being stored, the spoken opener never persisted, and the text fallback re-greeted you
+  mid-conversation (exactly what you saw). Fixed at every resolution point.
+- **Your call itself:** VAPI's own log shows it never received ANY of your audio (the
+  recurring mic signature; the call silence-timed-out). New in-call watchdog: if your mic
+  is picking you up locally but the call hears nothing, a banner says so within seconds,
+  with one-click switch to text. No more silent death.
+- **Proof (prod, exact VAPI shapes):** user words in → stored; agent reply out:
+  "Got it, so you're owning the whole list-building side... Walk me through how you
+  actually build a list. The last one you made, start to finish, what did you do first?"
+- **Bubbles:** one coherent bubble per turn (chunks merged), "tidy 1" displays "tidy one"
+  (storage stays verbatim). **Test calls** now carry "Back to Voice Settings".
