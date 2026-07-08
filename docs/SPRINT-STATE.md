@@ -1,3 +1,71 @@
+# WEDNESDAY SHIFT — July 8 day (Emre crash report preempt + parked queue + stranger walk)
+
+**EMRE CRASH REPORT: 9/9 verdicts delivered** (docs/emre-inbox/CRASH-REPORT-VERDICTS-jul8.md
+— his deeper pass today should read that first). Verify-then-fix held: every item
+reproduced on prod before fixing, every fix re-verified on prod after deploy.
+
+**AUDIT VERDICTS (A23, one line each; all committed, deployed, prod-verified):**
+- Crash 1+2+3 (7f108f7): Ask-context React #31 = suggestions are {text,rationale} objects
+  (answer was fine) — API normalizes + UI renders contract ✓ · Observe crash = tag=null on
+  3 Ece claims → badge guard both layers ✓ · error boundaries (workspace shell survives;
+  global covers picker + /i) ✓. backend 148p/1s, frontend 52/52 at deploy.
+- Crash 4-9 (9917651): report Generate SOP deep-opens the editor's working SOP drawer
+  (?panel=sop), View transcript → interview view ✓ · empty Selin DRAFT says "No mission
+  drafted yet" (real July 6 aborted generation, NOT pre-deploy) ✓ · Escape closes every
+  drawer/modal (shared hook) + drawerSpring critically damped (overshoot = the clip) ✓ ·
+  StepRail chevrons on both rails ✓ · origin-aware editor back link (workflows/skills/
+  report) + report back label/destination agree ✓ · perf: React cache() dedupes the
+  workspace list per request (was fetched 2x ~700ms per nav); warm soft-nav 1.5-2.5s
+  (was 2-3s+, 3.7s cold). Remaining floor = per-call Vercel→Railway→Supabase latency
+  (~300-500ms/call, regions already aligned sfo1/us-west) — FOLLOW-UP: pooler statement
+  cache, local JWT verify instead of GoTrue introspection, response caching.
+- Task #27 (b4ee9d7): click-to-select NOT-REPRODUCED on today's prod (real-browser click
+  flips aria-pressed; Kaan's report predates the badge pointer-events fix). Previews:
+  3-tier chain — own-register manifest clip wins when generated (that IS the auto-swap) →
+  Deepgram hosted Aura-2 demo labeled "Provider sample" (all 10 URLs verified live) →
+  honest "Preview unavailable" (11labs). Honesty test re-pinned: a clip may never appear
+  unlabeled. Playback verified live (button flips to Stop).
+- Task #28 (6e69b2e): Simulations page serves the proving record — GET /api/simulations/
+  history from app/simulation_history.py (versioned, sourced from proof-matrix.md, rounds
+  1-2 full + round 3 honestly partial) + five-character cast + explainer, all client-safe
+  (no-internal-vocabulary test guards it). Run button stays PROPOSED, not built.
+- Task #26 remainder (b46ba0a): logo → workspace Home; every breadcrumb above the leaf
+  is a link. ✓ verified live.
+- Bug-hunt #1 (558d666): NEXUS_CHECK's RETURN flags were stored in change_log but never
+  rendered — returned drafts now show "What the check flagged" (severity/issue/where/fix).
+  Found live: the Kerem plan was returned for a 1-6 scale question; reasons were invisible.
+- Bug-hunt #2 (f898268): refined returned drafts had no forward path except Draft-again
+  (which discards refinements). DRAFT→NEXUS_CHECK transition now enqueues the real check
+  job + "Send back for check" button. Proven live end-to-end: generate → RETURN → refine
+  (removed flagged question) → send back → check PASS → AWAITING_APPROVAL → approve → send.
+- Bug-hunt #3 (138bdd6): Send Interview modal had the SAME framer transform clobber fixed
+  July 7 on New Company — panel dropped below the fold, Send unreachable at 944px. Flex-
+  wrapper centering + Escape support. Verified live: full send completed after fix.
+- STRANGER WALK (Emre's not-tested list, all on a fresh fictional tenant meridian-print-
+  works, hidden post-walk via is_internal — data kept, reversible): Add company ✓ →
+  transcript compile ✓ (~5 min, honest progress, sharp snapshot: shadow-tools + single-
+  point risks all surfaced) → plan gen + full gate loop ✓ → invite send ✓ (token minted,
+  Sent state) → respondent consent ✓ (Emre-primary promise correct) → room fell back to
+  text gracefully with Switch-to-voice (headless, no mic) → turn engine ✓ (episode-anchor
+  reply). LIVE VOICE with a real mic remains the Kaan human-confirmation item.
+
+**FLAGGED FOR KAAN+EMRE (batched, one decision each):**
+1. INVITE-EMAIL CONSENT LINE vs interviewer promise: the locked invite line says "Before
+   anything is attributed to you by name, you'll get to review it" (attribution-by-default
+   with review); the consent page + opener promise flat non-attribution with respondent-
+   INITIATED naming only (Emre-primary, July 7). Two different promises on our own consent
+   surface. It's locked compliance copy, so I did not touch it — one wording ruling needed
+   (likely align invite to Emre-primary). prompts/personas/invite-email.md.
+2. Send-flow disabled "Preview message" never says WHY (email required) — P3, one title=.
+3. Perf follow-up above (backend latency floor) — engineering, needs a green light only
+   because it touches auth verification strategy.
+
+**Tenant note:** meridian-print-works = this shift's walk tenant (is_internal=true, one
+paused session for "Kerem", plan in SENT). Reactivate by flipping is_internal if useful
+for demos; delete nothing (A12: it's fictional, firewalled, and documents the walk).
+
+---
+
 # OVERNIGHT PARK NOTE — July 8 ~02:45 PT (context exhausted; resume here)
 
 **VOICE P0: DONE AND PROVEN.** Root cause was product-wide: web calls carry the session
