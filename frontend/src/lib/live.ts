@@ -286,6 +286,25 @@ export async function generate_plan(
   });
 }
 
+// ── Fireflies import (Kaan verdict 7, July 7) ────────────────────────────────
+export interface FirefliesMeeting {
+  id: string;
+  title: string;
+  date?: string | number | null;
+  duration_min?: number | null;
+}
+export async function list_fireflies_meetings(): Promise<FirefliesMeeting[]> {
+  return api<FirefliesMeeting[]>("/api/integrations/fireflies/meetings");
+}
+export async function get_fireflies_meeting(id: string): Promise<{
+  id: string;
+  title?: string | null;
+  speakers: string[];
+  transcript: string;
+}> {
+  return api(`/api/integrations/fireflies/meetings/${id}`);
+}
+
 // ── Refine Plan chat (V2 #20 API; panel wired July 7, Kaan P1-B) ─────────────
 export interface RefineResult {
   accepted: boolean;

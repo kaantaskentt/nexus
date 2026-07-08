@@ -13,7 +13,15 @@ import {
   ArrowRight,
   Mic,
 } from "lucide-react";
-import { upload_discovery, discovery_status, type DiscoveryStatus } from "@/lib/live";
+import {
+  upload_discovery,
+  discovery_status,
+  list_fireflies_meetings,
+  get_fireflies_meeting,
+  type DiscoveryStatus,
+  type FirefliesMeeting,
+} from "@/lib/live";
+import { detectSpeakers, applySpeakerMapping } from "@/lib/transcript-speakers";
 import { rise, staggerParent } from "@/lib/variants";
 import { WebsiteScan } from "./WebsiteScan";
 import brand from "@/lib/brand";
@@ -63,6 +71,50 @@ export function DiscoveryUpload({
   const [dragOver, setDragOver] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Fireflies import (Kaan verdict 7).
+  const [ffOpen, setFfOpen] = useState(false);
+  const [ffMeetings, setFfMeetings] = useState<FirefliesMeeting[] | null>(null);
+  const [ffError, setFfError] = useState<string | null>(null);
+  const [ffBusy, setFfBusy] = useState(false);
+
+  // Speaker mapping: detected labels -> confirmed names, and which one is the CEO.
+  // Applies to Fireflies imports AND pasted multi-speaker transcripts alike.
+  const [mapping, setMapping] = useState<Record<string, string>>({});
+  const [ceoSpeaker, setCeoSpeaker] = useState<string | null>(null);
+  const speakers = detectSpeakers(transcript);
+  const needsMapping = speakers.length >= 2;
+
+  async function openFireflies() {
+    setFfOpen(true);
+    setFfError(null);
+    if (ffMeetings) return;
+    setFfBusy(true);
+    try {
+      setFfMeetings(await list_fireflies_meetings());
+    } catch (e) {
+      setFfError(e instanceof Error ? e.message : "Couldn't reach Fireflies");
+    } finally {
+      setFfBusy(false);
+    }
+  }
+
+  async function importMeeting(m: FirefliesMeeting) {
+    setFfBusy(true);
+    setFfError(null);
+    try {
+      const t = await get_fireflies_meeting(m.id);
+      setTranscript(t.transcript);
+      setFileName(`Fireflies: ${t.title ?? m.title}`);
+      setMapping({});
+      setCeoSpeaker(null);
+      setFfOpen(false);
+    } catch (e) {
+      setFfError(e instanceof Error ? e.message : "Import failed");
+    } finally {
+      setFfBusy(false);
+    }
+  }
+
   useEffect(() => {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
@@ -90,11 +142,19 @@ export function DiscoveryUpload({
     if (!transcript.trim()) return;
     setPhase("compiling");
     setError(null);
+    // Confirmed speaker mapping rewrites LABELS only (text stays verbatim); the
+    // CEO-mapped name becomes the session's speaker so the compiler gets real roles.
+    let finalTranscript = transcript;
+    let speakerName = speaker.trim() || undefined;
+    if (needsMapping) {
+      finalTranscript = applySpeakerMapping(transcript, mapping);
+      if (ceoSpeaker) speakerName = (mapping[ceoSpeaker]?.trim() || ceoSpeaker) || speakerName;
+    }
     try {
       const { session_id } = await upload_discovery(
         workspaceId,
-        transcript,
-        speaker.trim() || undefined,
+        finalTranscript,
+        speakerName,
       );
       pollRef.current = setInterval(async () => {
         try {
@@ -207,12 +267,101 @@ export function DiscoveryUpload({
             className="w-full resize-y rounded-md bg-transparent px-4 py-3 text-sm leading-relaxed text-ink outline-none placeholder:text-ink-faint/70"
           />
           <div className="flex items-center justify-between gap-3 px-3 pb-2 pt-1">
-            <FileButton onFile={readFile} fileName={fileName} />
+            <div className="flex items-center gap-2">
+              <FileButton onFile={readFile} fileName={fileName} />
+              <button
+                type="button"
+                onClick={openFireflies}
+                className="inline-flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
+              >
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />
+                Import from Fireflies
+              </button>
+            </div>
             <span className="text-xs text-ink-faint">
               {transcript.trim() ? `${transcript.trim().split(/\s+/).length} words` : "verbatim, kept as-is"}
             </span>
           </div>
         </label>
+
+        {ffOpen && (
+          <div className="mt-3 rounded-card border border-line bg-surface p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-ink">Recent Fireflies meetings</p>
+              <button type="button" onClick={() => setFfOpen(false)} className="text-xs text-ink-soft hover:text-ink">
+                Close
+              </button>
+            </div>
+            {ffBusy && (
+              <p className="mt-3 flex items-center gap-2 text-sm text-ink-soft">
+                <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> Talking to Fireflies…
+              </p>
+            )}
+            {ffError && <p className="mt-3 text-sm text-danger">{ffError}</p>}
+            {!ffBusy && ffMeetings && ffMeetings.length === 0 && (
+              <p className="mt-3 text-sm text-ink-soft">No recent meetings on this Fireflies account.</p>
+            )}
+            {!ffBusy && ffMeetings && ffMeetings.length > 0 && (
+              <ul className="mt-2 max-h-56 divide-y divide-line overflow-y-auto">
+                {ffMeetings.map((m) => (
+                  <li key={m.id}>
+                    <button
+                      type="button"
+                      onClick={() => importMeeting(m)}
+                      className="flex w-full items-center justify-between gap-3 px-1 py-2.5 text-left transition-colors hover:bg-surface-sunken/50"
+                    >
+                      <span className="min-w-0 truncate text-sm text-ink">{m.title}</span>
+                      <span className="shrink-0 text-xs text-ink-faint">
+                        {m.date ? new Date(m.date).toLocaleDateString() : ""}
+                        {m.duration_min ? ` · ${m.duration_min} min` : ""}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {needsMapping && (
+          <div className="mt-3 rounded-card border border-line bg-surface p-4">
+            <p className="text-sm font-semibold text-ink">
+              I see {speakers.length} speakers. Who is who?
+            </p>
+            <p className="mt-1 text-xs text-ink-soft">
+              Confirm the names so the record knows who said what. Pick the founder or CEO;
+              their words anchor the snapshot. The spoken text itself stays exactly as it is.
+            </p>
+            <div className="mt-3 space-y-2">
+              {speakers.map((label) => (
+                <div key={label} className="flex flex-wrap items-center gap-3">
+                  <span className="w-32 shrink-0 truncate text-sm text-ink-soft" title={label}>
+                    {label}
+                  </span>
+                  <input
+                    value={mapping[label] ?? ""}
+                    onChange={(e) => setMapping((m) => ({ ...m, [label]: e.target.value }))}
+                    placeholder={`Keep "${label}"`}
+                    className="min-w-0 flex-1 rounded-md border border-line bg-surface-sunken/40 px-3 py-1.5 text-sm text-ink placeholder:text-ink-faint focus:border-line-strong focus:outline-none"
+                  />
+                  <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs text-ink-soft">
+                    <input
+                      type="radio"
+                      name="ceo-speaker"
+                      checked={ceoSpeaker === label}
+                      onChange={() => {
+                        setCeoSpeaker(label);
+                        setSpeaker((mapping[label]?.trim() || label));
+                      }}
+                      className="accent-current"
+                    />
+                    Founder / CEO
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
           <label className="flex-1">
