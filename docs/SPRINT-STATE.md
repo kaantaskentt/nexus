@@ -1,3 +1,25 @@
+# AUDIT SHIFT — July 7 night (premium SaaS audit, Kaan's evening mandate)
+
+Three-persona prod walk → docs/PREMIUM-AUDIT.md (ranked, screenshot evidence in
+docs/audit-screens/) → fixes top-down → docs/WHAT-CHANGED-TONIGHT.md (Kaan's return
+briefing — READ THAT FIRST).
+
+**AUDIT VERDICTS:**
+- P0-1 plan gate: nexus_check wired as a real job (was seeded-but-never-run since 0001;
+  Approve 409'd — reproduced on prod pre-fix). BUILT ✓ 6 new tests, backend 147p/1s.
+  Prod backfill ran: 4 stuck plans → 3 AWAITING_APPROVAL + 1 honest RETURN with real
+  flags (never-collision + numeric-scale catch). Verified in browser post-deploy.
+- P0-2 consent promise aligned to Emre-primary. ✓ drift guard 9/9, verified live.
+- P1-3 "Hear it live" voice test (0015 voice_test kind, firewalled at compile+screen).
+  ✓ 2 tests + live mint verified (kind checked in DB, consent page opened).
+- P1-4 scraped-only honesty · P1-5 8 stale sessions expired (Emre invite kept) +
+  expired hidden · P2-6 evidence links · queue P2 modal centering (framer transform
+  clobber) + P3 end-of-list signal (marked 79b726f). All ✓ tsc/lint/47/47.
+- Migrations 0015 hand-applied; Railway api+worker SUCCESS; Vercel Ready ×2.
+- FEEDBACK-QUEUE: 2 items pulled + landed at boundaries; empty at shift end.
+
+---
+
 # VERDICT SHIFT — July 7 evening (Kaan's taste verdicts 1-10 + P1 batches, A26/A27)
 
 **AUDIT VERDICTS (A23, one line each; all committed + pushed):**

@@ -52,3 +52,20 @@ One line of what, one line of why. Full evidence + ranking: docs/PREMIUM-AUDIT.m
 
 - **Also:** plan pages auto-refresh while a check or draft is running (no manual reload
   to see it unlock).
+
+- **From your feedback queue:** the New Company dialog is properly centered (an
+  animation transform was overriding the centering), and Company Context now says
+  where the bottom of the list is ("That's all 56 records.").
+
+- **Verified after deploy, on prod, with the browser:** the returned Burak plan shows
+  its honest "Draft again" state (the check caught a real never-list collision and a
+  numeric-scale question on it — the gate isn't a rubber stamp); the Selin plan shows a
+  working Approve button; Time PR tells the scan truth; the interviews list is one
+  clean list + "8 expired invitations hidden"; "Hear it live" minted a firewalled
+  voice_test session and opened the call page carrying the new consent promise.
+  Before/after screenshots: docs/audit-screens/ (audit-* vs audit-after-*).
+
+**Left deliberately for you:** the three approvable plans await YOUR approval (the gate
+is yours); preview clips need ElevenLabs/Deepgram keys; the "day to day" descriptive
+phrase in the opener intro is held for your word; PREMIUM-AUDIT.md's PROPOSED section
+has the ambitious ideas I didn't build.
