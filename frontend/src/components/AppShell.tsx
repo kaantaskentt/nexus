@@ -123,8 +123,11 @@ export function AppShell({
   return (
     <div className="flex min-h-screen bg-canvas">
       <aside className="sticky top-0 flex h-screen w-[236px] shrink-0 flex-col border-r border-line bg-surface">
+        {/* Logo → this workspace's Home (#26): inside a workspace the logo is "take me
+            back to the start of THIS company" — the picker stays one click away via the
+            switcher's "All companies". */}
         <Link
-          href="/"
+          href={`/w/${workspace.slug}/home`}
           className="flex items-center gap-1.5 px-6 pb-3 pt-6 transition-opacity hover:opacity-80"
         >
           <span className="font-display text-2xl tracking-tight text-ink">
@@ -183,12 +186,19 @@ export function AppShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="glass sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-4 border-b px-8">
+          {/* Breadcrumbs are all real links except the current leaf (#26): company →
+              workspace Home, section → its index — every crumb is a way back up. */}
           <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium text-ink">{workspace.name}</span>
-            {sectionLabel && (
+            <Link
+              href={`/w/${workspace.slug}/home`}
+              className="font-medium text-ink transition-colors hover:text-accent-ink"
+            >
+              {workspace.name}
+            </Link>
+            {sectionLabel && active && (
               <>
                 <span className="text-ink-faint">/</span>
-                {leafLabel && active ? (
+                {leafLabel ? (
                   <Link
                     href={NAV_HREF[active](workspace.slug)}
                     className="text-ink-soft transition-colors hover:text-ink"
