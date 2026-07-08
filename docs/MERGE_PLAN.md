@@ -346,6 +346,38 @@ passthrough). CONFLICTs resolved for the tested build: coverage 3-status model k
 surfaced to Kaan+Emre (packet tail). Evals 40/40 tuning + 9/9 fixed + 4/4 navigator;
 backend 125 passed.
 
+## A26 — Kaan taste-verdict batch (July 7 evening, 20-min session; all binding)
+
+(1) Anonymity fixed response EMRE-PRIMARY: flat "nothing gets quoted back with your
+name on it"; named attribution respondent-initiated ONLY, answered with preview-and-
+release (prompt open/close/fixed-3/rule-8 + all three canned-opener copies + evals).
+(2) Tea-break APPROVED, Kaan's framing: fade-triggered (v1 signals: shrinking answers,
+monosyllabic streak, time mentions, flat checkpoint), natural-language progress
+context, once max, never mid-story. (3) Opener keeps FULL wording, delivered brisk:
+VAPI has no per-message TTS rate → shared ElevenLabs recipe speed 1.07 (PATCHed +
+verified; provision script now refuses to run secretless after a near-miss stripped
+live auth headers for ~3 min). (4) Artifact pushes always carry the no-pressure
+fallback + "the last one you did" anchoring. (5) Client-visible jargon P1: eval-harness
+workspace is_internal (was in the live picker), Simulations copy in client language,
+Knowledge Base → Company Context naming. (6) "New interview" primary door on
+Interviews → custom flow lands open. (9) coverage_routing stays OFF pending round 3.
+(10) Voice = admin-per-workspace, no respondent choice. Placeholder examples are
+teaching material: CEO surfaces founder-voiced, respondent surfaces operator-voiced.
+
+## A27 — Low-context plan competence: the delta method (July 7, Kaan P1 batch)
+
+No hardcoded business-knowledge base, ever. The method is: MODEL domain knowledge
+scaffolds the ideal workflow of the domain (people matrix, trigger+cadence, inputs+
+storage, durations+parallelism, constraints, security — selector picks the fitting
+subset), verify-framing turns every scaffold element into neutral to-verify
+objectives, psychology (question bank + register) shapes the asking. Hard line:
+generic workflow knowledge allowed and explicitly to-verify; invented facts about
+THIS company forbidden (eval: thin-context plan carries zero unverifiable company-
+specific claims — evals/plan/thin-context-competence.yaml, 2/2 at adoption). Known
+Context = only the admin's own words ("as you described it"). Custom interviews stay
+~20 min. Same dimensions enrich the SOP generator output where records support them.
+Suggested questions always draft; Approve stays disabled while a mission is empty.
+
 ## A23 — Standing rhythm: BUILD → AUDIT → NEXT (July 7, Kaan)
 
 Every landed task gets: prod verification + affected tests + a one-line audit verdict in

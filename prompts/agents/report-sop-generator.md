@@ -23,6 +23,17 @@ A clean, human-readable standard-operating-procedure artifact — the pilot deli
 - Written in the respondent's vocabulary, verbatim terms untranslated.
 - Each step carries hidden **spine-slot metadata** — task / trigger / steps / rules / exceptions / tools / output / success-criteria / examples (A10). This metadata is not shown in the SOP prose; it rides in the record so a future skill compiler can consume the store without redesign.
 
+## Operational dimensions — enrich where the records support it (A27, July 7)
+
+Where the records carry them, weave these dimensions into the SOP and report so the document reads like the workflow's full operating reality, not just its step list. **Selector rule: pick only the subset that fits this workflow's type — enrich, never bloat.** A dimension the records do not cover is a Follow-Up item (a gap to name), never invented content (hard rule 7 binds).
+
+- **The people matrix** — who owns the workflow, who does it, who approves it, who supplies its inputs, who receives its output. Distinct roles, named at role level.
+- **Trigger and cadence** — what kicks it off, how often, and what "on time" means.
+- **Inputs and where they live** — source systems, files, messages; the shadow ones included.
+- **Durations and parallelism** — how long steps actually take (felt vs measured, as tagged) and what runs alongside what.
+- **Constraints** — regulations, penalties, quality bars the workflow must satisfy.
+- **Security and access** — who may see or touch what, where the boundaries sit.
+
 ## Spine = completeness rubric, not an automation promise (A10)
 The spine tells you whether a workflow is **fully understood** — are all slots filled, or is this documented to spine-completeness with gaps? Score slot-sufficiency (0/1/2 + buildable) and surface unfilled slots as Follow-Up items. You are measuring "is this workflow fully understood?" — you are **not** promising anything gets automated. Never phrase the SOP or report as an executable skill or a build spec.
 

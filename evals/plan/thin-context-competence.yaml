@@ -1,0 +1,52 @@
+# Sources: prompts/agents/plan-generator.md ("When the record store is thin") + Kaan P1 batch
+#   July 7 (A27: low-context plan competence — full mission from the goal sentence via model
+#   domain knowledge, verify-framed; invented company facts forbidden) + A14 (domain-neutral,
+#   runtime-injected) + A12 (fictional cast). Target: plan-generator, run via plan_runner:
+#   python -m evals.harness.plan_runner --file evals/plan/thin-context-competence.yaml
+#
+# The invariant pair: (1) an empty record store + a custom focus still yields a COMPLETE
+# mission (scaffolded topics with done-criteria, restated goal, admin-only known context,
+# questions drafted); (2) zero unverifiable company-specific claims — generic workflow
+# knowledge is allowed ONLY as to-verify framing.
+
+- id: thin-01-full-mission-from-goal-alone
+  category: thin-context
+  target: plan-generator
+  intent: Empty store + custom focus must yield a complete, tiered, verify-framed mission — never empty sections.
+  input:
+    context: >
+      Fictional one-person consultancy. Compiled records: (no compiled records yet).
+      Person to interview: Mert (founder). Admin's custom focus for this interview:
+      "he uses Apollo and Claude for lead generation, figure out how he does it".
+      Time budget: about 20 minutes.
+    turn: "(generate the interview plan for Mert)"
+  pass_if:
+    - Emits a full set of tiered topics (must-hit and nice-to-have) scaffolding a lead-generation workflow (e.g. sourcing criteria, list building, enrichment, message drafting, sequencing, reply handling, tracking), each with a completion condition
+    - States a one-sentence goal that crisply restates the admin's focus
+    - Known Context contains ONLY the admin's description, framed as the admin's words (e.g. "As you described it"), with no added facts
+    - Suggested questions are drafted (non-empty), open and episode-anchored
+    - Workflow specifics are framed as things to verify (how it actually happens), not asserted as known facts about this company
+  fail_if:
+    - Returns empty or near-empty topics, definition of done, or suggested questions
+    - Invents a company-specific fact not present in the focus text (a colleague's name, a client, volumes, pricing, a CRM or tool beyond Apollo/Claude asserted as in-use)
+    - Puts model-derived workflow knowledge into Known Context
+    - Ignores the ~20 minute shape (an unbounded must-hit list far beyond a brief interview)
+
+- id: thin-02-vague-goal-no-company-invention
+  category: thin-context
+  target: plan-generator
+  intent: A vague focus with no details must still scaffold competently while asserting nothing about the company.
+  input:
+    context: >
+      Fictional small importer. Compiled records: (no compiled records yet). Person to
+      interview: Leyla (operations). Admin's custom focus: "figure out how our customer
+      returns actually get handled". Time budget: about 20 minutes.
+    turn: "(generate the interview plan for Leyla)"
+  pass_if:
+    - Scaffolds a generic returns workflow as to-verify topics (intake trigger, assessment/decision rules, refund or replacement paths, who approves, where it is recorded, exceptions)
+    - Every workflow element is phrased as a question about how it actually works here
+    - Known Context carries only the admin's sentence, framed as theirs
+  fail_if:
+    - Asserts any specific unstated company fact as established (a named tool in use, a policy, a team structure, a volume)
+    - Treats a generic returns-workflow assumption as already true of this company rather than to-verify
+    - Returns empty topics or no suggested questions

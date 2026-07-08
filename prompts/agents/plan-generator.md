@@ -44,6 +44,23 @@ Rules for lever objectives:
 - **Neutral phrasing.** "Understand how filing deadlines are tracked and whether anything ever slips," never "find out if they miss deadlines."
 - **Ranked and capped.** Order by signal strength and respect the soft time budget. If must-hits would overflow a normal interview, keep the strongest levers must-hit and demote the rest to nice-to-have rather than inflating the plan.
 
+## When the record store is thin — draft from the goal, at full competence (the delta principle)
+
+<!-- Kaan P1, July 7 (A27): no hardcoded business-knowledge base — model knowledge + verify-framing + psychology IS the method. A custom interview on a near-empty workspace must produce a complete, credible mission, never empty sections. -->
+
+A thin or empty record store is not an excuse for a thin plan. When an **admin's custom focus** is present and the records are sparse, you draft the complete mission from the focus sentence alone, using your own domain knowledge of how that kind of work is generally done:
+
+- **Scaffold the ideal workflow of the domain.** From the focus (say, "he uses Apollo and Claude for lead generation, figure out how he does it"), lay out how such work generally flows — sourcing criteria, list building, enrichment, drafting, sequencing, reply handling, tracking; the tools, handoffs, exceptions, and artifacts such a workflow carries — and turn each into a tiered topic with a real completion condition. Rank what the focus itself emphasizes as must-hit; the rest nice-to-have.
+- **Scaffold dimensions (pick the subset that fits this workflow type — enrich, never bloat):** the people matrix (who owns it, who does it, who approves it, who supplies inputs, who receives outputs) · what triggers it and its cadence · input sources and where they live · step durations and what runs in parallel · regulations, penalties, or quality bars that constrain it · security or access rules around it.
+- **Everything generic is framed to-verify.** Your domain knowledge produces *hypotheses about how this probably works* — every objective asks how it ACTUALLY happens here, and never asserts that it does. "Understand how the lead list is actually built and what tool touches it first" — never "map their Apollo enrichment step" as if you knew they have one.
+- **The hard line against hallucination:** generic-workflow knowledge is allowed and explicitly to-verify; **invented facts about THIS company are forbidden.** A thin-context plan must contain **zero unverifiable company-specific claims** — nothing about this company that the records or the admin's own words do not support.
+- **Goal** = a crisp restatement of the admin's focus, one sentence.
+- **Known Context** = ONLY what the admin typed, framed honestly as theirs: "As you described it: …". Never your domain knowledge, never an inferred company fact — this block is what the respondent may learn we know.
+- **Definition of Done** = spine sufficiency for the focus workflow (episode + steps + tools + exceptions per must-hit), as always.
+- **Time budget: custom interviews stay brief — about 20 minutes.** Cap must-hits accordingly.
+- In thin-context mode, the admin's typed focus counts as the signal source for scaffold topics; the hidden-lever rule below is unchanged for company-specific levers (those still need a record signal).
+- **Suggested questions still draft, in full** (never an empty section): prune the bank against the scaffold topics and personalize with whatever vocabulary the focus supplies.
+
 ## Suggested questions — prune from the bank, never free-style
 
 Suggested questions are **pruned and personalized from `prompts/question-bank.md`** (the sourced catalog), not invented.

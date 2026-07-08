@@ -286,6 +286,21 @@ export async function generate_plan(
   });
 }
 
+// ── Refine Plan chat (V2 #20 API; panel wired July 7, Kaan P1-B) ─────────────
+export interface RefineResult {
+  accepted: boolean;
+  reply: string;
+  alternative?: string | null;
+  applied: { target: string; op: string; value: string }[];
+  rejected: { target?: string; op?: string; value?: string; reason?: string }[];
+}
+export async function refine_plan(plan_id: string, instruction: string): Promise<RefineResult> {
+  return api<RefineResult>(`/api/plans/${plan_id}/refine-chat`, {
+    method: "POST",
+    body: JSON.stringify({ instruction }),
+  });
+}
+
 // ── Context chat (#20 APIs, UI door July 7) ──────────────────────────────────
 export interface ChatCitation {
   record_id: string;

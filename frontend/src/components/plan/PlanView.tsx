@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Target,
   NotebookPen,
@@ -20,10 +21,11 @@ import {
   BellRing,
   AlertTriangle,
   PauseCircle,
+  Loader2,
 } from "lucide-react";
 import type { InterviewPlan, PlanState, Workspace } from "@/lib/types";
 import brand from "@/lib/brand";
-import { transition_plan } from "@/lib/live";
+import { transition_plan, refine_plan } from "@/lib/live";
 import { PlanStateChip, MustHitDot, DiscoveryTag, BrandMark } from "@/components";
 import { SendInterviewFlow } from "./SendInterviewFlow";
 
@@ -61,6 +63,9 @@ export function PlanView({
   // COMPILED is terminal but sits on the COMPLETED node, so the tracker still shows.
   const showTracker = isLive || state === "PAUSED" || state === "COMPILED";
   const preApproval = (["DRAFT", "NEXUS_CHECK", "AWAITING_APPROVAL"] as PlanState[]).includes(state);
+  // Gate guard (Kaan P1-D, July 7): an empty mission is nothing to approve. Readiness
+  // first — the button unlocks when generation has landed a goal and topics.
+  const missionEmpty = !plan.mission.goal?.trim() && plan.mission.topics.length === 0;
   // Revoke is the admin-side counterpart to Send; legal only where the server allows it
   // (APPROVED / SENT / OPENED — see routers/plans.py TRANSITIONS).
   const canRevoke = (["APPROVED", "SENT", "OPENED"] as PlanState[]).includes(state);
@@ -222,6 +227,11 @@ export function PlanView({
             <div className="mt-6 space-y-4">
               <MissionItem n={1} icon={Target} title="Goal">
                 <p className="text-sm leading-relaxed text-ink-soft">{plan.mission.goal}</p>
+                {plan.mission.custom_focus && (
+                  <p className="mt-1 text-xs text-ink-faint">
+                    Your focus, as you described it: &ldquo;{plan.mission.custom_focus}&rdquo;
+                  </p>
+                )}
               </MissionItem>
 
               <MissionItem n={2} icon={NotebookPen} title="Known Context">
@@ -395,12 +405,22 @@ export function PlanView({
             {preApproval && (
               <button
                 onClick={() => requestTransition("APPROVED")}
-                disabled={pending != null}
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:opacity-50"
+                disabled={pending != null || missionEmpty}
+                title={
+                  missionEmpty
+                    ? "This plan hasn't drafted yet: no goal or topics to approve. It fills in when generation lands."
+                    : undefined
+                }
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
                 {pending === "APPROVED" ? "Approving…" : "Approve plan"}
               </button>
+            )}
+            {preApproval && missionEmpty && (
+              <span className="text-xs text-ink-faint">
+                Approval unlocks once the mission has a goal and topics.
+              </span>
             )}
 
             {state === "APPROVED" && (
@@ -481,19 +501,50 @@ function MissionItem({
   );
 }
 
-// Refine Plan chat (A9 #6): plain language into machine rules with an audited change
-// log. The composer is honestly disabled until the backend refine endpoint lands (it is
-// being scoped) — no fabricated replies (no-mock-in-conversation). Any seeded transcript
-// is real plan data and still renders.
+// Refine Plan chat (A9 #6, wired live July 7 — Kaan P1-B): plain language into machine
+// rules via /refine-chat. The backend applies only bounded safe edits and records every
+// instruction, accepted or refused, to the plan's audited change_log. Replies below are
+// the agent's real responses; applied edits re-render via router.refresh().
 function RefinePlan({ plan }: { plan: InterviewPlan }) {
-  const messages = plan.refine_chat ?? [];
+  const router = useRouter();
+  type Msg = { role: "you" | "nexus"; at: string; text: string; author?: string };
+  const [messages, setMessages] = useState<Msg[]>((plan.refine_chat ?? []) as Msg[]);
+  const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function send() {
+    const text = draft.trim();
+    if (!text || busy) return;
+    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setMessages((m) => [...m, { role: "you", at: now, text }]);
+    setDraft("");
+    setBusy(true);
+    try {
+      const r = await refine_plan(plan.id, text);
+      const parts = [r.reply || (r.accepted ? "Done." : "I can't make that change.")];
+      if (r.applied.length > 0)
+        parts.push(`Applied ${r.applied.length} change${r.applied.length === 1 ? "" : "s"} to the plan (logged).`);
+      if (r.rejected.length > 0)
+        parts.push(`Refused ${r.rejected.length}: ${r.rejected.map((x) => x.reason).filter(Boolean).join("; ")}`);
+      if (r.alternative) parts.push(`Alternative: ${r.alternative}`);
+      setMessages((m) => [...m, { role: "nexus", at: now, text: parts.join(" ") }]);
+      if (r.applied.length > 0) router.refresh();
+    } catch (e) {
+      setMessages((m) => [
+        ...m,
+        { role: "nexus", at: now, text: e instanceof Error ? `That didn't go through: ${e.message}` : "That didn't go through. Try again." },
+      ]);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <section className="card-hairline flex min-h-[22rem] flex-col rounded-card border border-line bg-surface p-5">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="font-display text-lg text-ink">Refine Plan</h3>
         <span className="rounded-chip bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-ink-faint ring-1 ring-inset ring-ink/[0.04]">
-          Coming in this build
+          Every change logged
         </span>
       </div>
       <div className="flex-1 space-y-3 overflow-y-auto">
@@ -527,21 +578,23 @@ function RefinePlan({ plan }: { plan: InterviewPlan }) {
           ),
         )}
       </div>
-      <div className="mt-3 flex items-center gap-2 rounded-md border border-line bg-surface-sunken px-3 py-2 opacity-70">
+      <div className="mt-3 flex items-center gap-2 rounded-md border border-line bg-surface-sunken px-3 py-2">
         <Paperclip className="h-4 w-4 shrink-0 text-ink-faint" strokeWidth={1.75} />
         <input
-          disabled
-          placeholder={`Refine-with-${brand.product_name} lands with the chat agent`}
-          title="The refine endpoint is being wired in this build"
-          className="min-w-0 flex-1 cursor-not-allowed bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && send()}
+          disabled={busy}
+          placeholder={busy ? `${brand.product_name} is applying that…` : "e.g. add a question about how returns get approved"}
+          className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint disabled:cursor-wait"
         />
         <button
-          disabled
-          className="flex h-7 w-7 cursor-not-allowed items-center justify-center rounded-md bg-surface text-ink-faint"
-          aria-label="Send (coming in this build)"
-          title="The refine endpoint is being wired in this build"
+          onClick={send}
+          disabled={busy || !draft.trim()}
+          className="flex h-7 w-7 items-center justify-center rounded-md bg-surface text-accent-ink transition-colors enabled:hover:bg-accent-soft disabled:cursor-not-allowed disabled:text-ink-faint"
+          aria-label="Send refine instruction"
         >
-          <SendHorizontal className="h-4 w-4" strokeWidth={2} />
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : <SendHorizontal className="h-4 w-4" strokeWidth={2} />}
         </button>
       </div>
     </section>

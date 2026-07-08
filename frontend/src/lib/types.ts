@@ -186,6 +186,8 @@ export interface PlanMission {
   topics: PlanTopic[];
   definition_of_done: string[];
   handling_notes: string[];
+  // Custom interviews (July 7): the admin's own focus text, honest provenance on review.
+  custom_focus?: string | null;
 }
 
 export interface SuggestedQuestion {
