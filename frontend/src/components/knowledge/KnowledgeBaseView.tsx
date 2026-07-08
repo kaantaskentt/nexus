@@ -262,6 +262,14 @@ function RecordCard({ record: r }: { record: KnowledgeRecord }) {
         <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-faint">
           <TopicIcon className="h-3.5 w-3.5 text-accent/70" strokeWidth={1.75} />
           {meta.label}
+          {r.synthetic && (
+            <span
+              title="Compiled from a generated example call, not a real conversation."
+              className="rounded-chip bg-surface-sunken px-1.5 py-0.5 text-[10px] font-semibold normal-case tracking-normal text-ink-soft ring-1 ring-inset ring-ink/[0.06]"
+            >
+              Synthetic example
+            </span>
+          )}
         </span>
         {r.tag ? (
           <ConfidenceBadge confidence={confidenceForTag(r.tag)} />

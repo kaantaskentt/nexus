@@ -46,6 +46,7 @@ async def list_records(workspace_id: str):
         """select c.id, c.kind, c.topic, c.tag, c.claim_text, c.evidence_quote,
                   c.evidence_ts, c.mention_count, c.created_at,
                   c.session_id, c.scrape_source_id,
+                  coalesce((c.provenance->>'synthetic')::boolean, false) as synthetic,
                   sp.canonical_name as speaker_name, sp.role as speaker_role,
                   su.canonical_name as subject_name, su.entity_type as subject_type,
                   iv.canonical_name as session_person,
@@ -95,6 +96,7 @@ async def list_records(workspace_id: str):
             "source_kind": source_kind,
             "source_id": source_id,
             "source_label": source_label,
+            "synthetic": r["synthetic"],
             "created_at": r["created_at"].isoformat(),
         })
     return out

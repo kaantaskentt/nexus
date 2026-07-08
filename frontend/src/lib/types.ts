@@ -109,6 +109,9 @@ export interface KnowledgeRecord {
   source_kind: "interview" | "scrape" | "unknown";
   source_id: string;
   source_label: string;
+  // True when the record compiled from a generated example call (verdict 8): synthetic
+  // data is labeled everywhere it appears, never blended silently into real records.
+  synthetic?: boolean;
   created_at: string;
 }
 

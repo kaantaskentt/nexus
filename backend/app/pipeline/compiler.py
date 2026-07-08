@@ -274,6 +274,12 @@ async def compile_session(payload: dict) -> None:
             "speaker_name": rec.get("speaker_name"),
             "subject_name": rec.get("subject_name"),
         }
+        # Synthetic firewall at the record level (verdict 8 / A12 principle): a 'demo'
+        # session's records carry the label STRUCTURALLY — derived from the session kind
+        # here, never from caller discipline — so generated example data can never blend
+        # unlabeled into real records.
+        if session["session_kind"] == "demo":
+            provenance["synthetic"] = True
 
         await pool.execute(
             """insert into claim_records

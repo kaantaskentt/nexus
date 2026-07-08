@@ -76,11 +76,22 @@ export async function upload_discovery(
   workspace_id: string,
   transcript: string,
   speaker_name?: string,
+  session_kind?: "interview" | "people_map" | "demo",
 ): Promise<DiscoveryStart> {
   return api<DiscoveryStart>(`/api/workspaces/${workspace_id}/discovery`, {
     method: "POST",
-    body: JSON.stringify({ transcript, speaker_name: speaker_name || undefined }),
+    body: JSON.stringify({
+      transcript,
+      speaker_name: speaker_name || undefined,
+      session_kind: session_kind || undefined,
+    }),
   });
+}
+
+export async function generate_demo_transcript(
+  workspace_id: string,
+): Promise<{ transcript: string; synthetic: boolean; session_kind: "demo" }> {
+  return api(`/api/workspaces/${workspace_id}/demo-transcript`, { method: "POST" });
 }
 
 export interface DiscoveryStatus {

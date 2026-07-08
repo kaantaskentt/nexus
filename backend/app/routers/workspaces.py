@@ -250,7 +250,9 @@ class DiscoveryIn(BaseModel):
     speaker_role: str | None = None
     # 'interview' = CEO discovery call (default). 'people_map' = the stage-3 v04 branch:
     # a short intake with a named person who maps who-does-what; same verbatim + compile
-    # path, but never relabels the workspace's founder/source (A24 merge).
+    # path, but never relabels the workspace's founder/source (A24 merge). 'demo' = a
+    # SYNTHETIC generated transcript (verdict 8): compiles normally but every record is
+    # provenance-flagged synthetic and the founder/source is never relabeled.
     session_kind: str = "interview"
 
 
@@ -265,9 +267,10 @@ async def upload_discovery(workspace_id: str, body: DiscoveryIn):
     they compile. A12 holds: this only ever touches the real tenant it's posted to."""
     if not body.transcript.strip():
         raise HTTPException(422, "transcript is empty")
-    if body.session_kind not in ("interview", "people_map"):
-        raise HTTPException(422, "session_kind must be 'interview' or 'people_map'")
+    if body.session_kind not in ("interview", "people_map", "demo"):
+        raise HTTPException(422, "session_kind must be 'interview', 'people_map', or 'demo'")
     is_people_map = body.session_kind == "people_map"
+    is_demo_synth = body.session_kind == "demo"
     pool = await get_pool()
 
     ws = await pool.fetchrow(
@@ -284,6 +287,11 @@ async def upload_discovery(workspace_id: str, body: DiscoveryIn):
             raise HTTPException(422, "people_map upload requires speaker_name")
         speaker = body.speaker_name.strip()
         role = (body.speaker_role or "Line manager").strip()
+    elif is_demo_synth:
+        # Synthetic call: never mint the REAL founder/contact as the speaker of made-up
+        # claims — the example entity is labeled as such at the data layer too.
+        speaker = (body.speaker_name or "").strip() or "Example CEO (synthetic)"
+        role = (body.speaker_role or "Founder (example)").strip()
     else:
         speaker = (body.speaker_name or config.get("contact_person") or "Founder").strip()
         role = (body.speaker_role or "Founder").strip()
@@ -296,7 +304,9 @@ async def upload_discovery(workspace_id: str, body: DiscoveryIn):
         "insert into interview_rounds (workspace_id, label, status) "
         "values ($1, $2, 'open') returning id",
         workspace_id,
-        "People-map interview" if is_people_map else "CEO discovery call",
+        "People-map interview" if is_people_map
+        else "Example call (synthetic)" if is_demo_synth
+        else "CEO discovery call",
     )
     session_id = await pool.fetchval(
         """insert into interview_sessions
@@ -314,9 +324,10 @@ async def upload_discovery(workspace_id: str, body: DiscoveryIn):
             session_id, t["turn_index"], t["speaker"], t["text"],
         )
 
-    if not is_people_map:
+    if not is_people_map and not is_demo_synth:
         # Surface the meeting owner + source on the snapshot header (honest — it IS this
-        # call). A people-map intake never relabels the founder or the snapshot source.
+        # call). A people-map intake or a synthetic demo call never relabels the founder
+        # or the snapshot source.
         config["founder"] = config.get("founder") or speaker
         config["founder_role"] = config.get("founder_role") or role
         config["source"] = "CEO Discovery Call"
@@ -334,6 +345,35 @@ async def upload_discovery(workspace_id: str, body: DiscoveryIn):
         "job_id": job_id,
         "turns": len(turns),
     }
+
+
+@router.post("/{workspace_id}/demo-transcript")
+async def generate_demo_transcript(workspace_id: str):
+    """Generate a clearly-synthetic example CEO-call transcript for THIS company (Kaan
+    verdict 8) so the compile flow can be demoed live on any workspace. Returns the
+    transcript for the upload textarea; nothing compiles until the admin submits it —
+    and when they do, the 'demo' session kind flags every record synthetic at the data
+    layer (compile_session), never by caller discipline."""
+    pool = await get_pool()
+    ws = await pool.fetchrow(
+        "select id, name, industry, config from workspaces where id = $1", workspace_id
+    )
+    if ws is None:
+        raise HTTPException(404, "workspace not found")
+    config = _loads(ws["config"]) or {}
+    from ..llm import run_agent
+    from ..pipeline.compiler import _load_industry_block
+
+    user_content = (
+        f"# Company\nName: {ws['name']}\nIndustry: {ws['industry'] or 'unspecified'}\n"
+        + (f"Website: {config.get('website')}\n" if config.get("website") else "")
+        + "\nWrite the synthetic example CEO-call transcript now."
+    )
+    raw = await run_agent(
+        "demo_transcript", user_content, workspace_id=workspace_id,
+        industry_block=_load_industry_block(ws["industry"]), max_tokens=3000,
+    )
+    return {"transcript": raw.strip(), "synthetic": True, "session_kind": "demo"}
 
 
 @router.get("/{workspace_id}/discovery/{session_id}/status")

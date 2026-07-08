@@ -18,6 +18,7 @@ import {
   discovery_status,
   list_fireflies_meetings,
   get_fireflies_meeting,
+  generate_demo_transcript,
   type DiscoveryStatus,
   type FirefliesMeeting,
 } from "@/lib/live";
@@ -81,6 +82,29 @@ export function DiscoveryUpload({
   // Applies to Fireflies imports AND pasted multi-speaker transcripts alike.
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [ceoSpeaker, setCeoSpeaker] = useState<string | null>(null);
+
+  // Demo transcript generator (verdict 8): synthetic, clearly labeled, kind='demo' so
+  // every compiled record carries the structural synthetic flag.
+  const [isSynthetic, setIsSynthetic] = useState(false);
+  const [genBusy, setGenBusy] = useState(false);
+
+  async function generateExample() {
+    if (genBusy) return;
+    setGenBusy(true);
+    setError(null);
+    try {
+      const out = await generate_demo_transcript(workspaceId);
+      setTranscript(out.transcript);
+      setFileName("Generated example (synthetic)");
+      setIsSynthetic(true);
+      setMapping({});
+      setCeoSpeaker(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Example generation failed");
+    } finally {
+      setGenBusy(false);
+    }
+  }
   const speakers = detectSpeakers(transcript);
   const needsMapping = speakers.length >= 2;
 
@@ -105,6 +129,7 @@ export function DiscoveryUpload({
       const t = await get_fireflies_meeting(m.id);
       setTranscript(t.transcript);
       setFileName(`Fireflies: ${t.title ?? m.title}`);
+      setIsSynthetic(false);
       setMapping({});
       setCeoSpeaker(null);
       setFfOpen(false);
@@ -127,6 +152,7 @@ export function DiscoveryUpload({
     reader.onload = () => {
       setTranscript(String(reader.result ?? ""));
       setFileName(file.name);
+      setIsSynthetic(false);
     };
     reader.readAsText(file);
   }, []);
@@ -155,6 +181,7 @@ export function DiscoveryUpload({
         workspaceId,
         finalTranscript,
         speakerName,
+        isSynthetic ? "demo" : undefined,
       );
       pollRef.current = setInterval(async () => {
         try {
@@ -250,6 +277,7 @@ export function DiscoveryUpload({
             onChange={(e) => {
               setTranscript(e.target.value);
               setFileName(null);
+              setIsSynthetic(false);
             }}
             rows={10}
             placeholder={
@@ -277,12 +305,48 @@ export function DiscoveryUpload({
                 <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />
                 Import from Fireflies
               </button>
+              <button
+                type="button"
+                onClick={generateExample}
+                disabled={genBusy}
+                className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-line px-2.5 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink disabled:cursor-wait disabled:opacity-60"
+              >
+                {genBusy ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} />
+                ) : (
+                  <FileText className="h-3.5 w-3.5" strokeWidth={1.75} />
+                )}
+                {genBusy ? "Writing an example…" : "Generate example transcript"}
+              </button>
             </div>
             <span className="text-xs text-ink-faint">
               {transcript.trim() ? `${transcript.trim().split(/\s+/).length} words` : "verbatim, kept as-is"}
             </span>
           </div>
         </label>
+
+        {isSynthetic && (
+          <p className="mt-3 flex items-start gap-2 rounded-md border border-line bg-surface-sunken/60 px-3 py-2 text-xs leading-relaxed text-ink-soft">
+            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+            <span>
+              <span className="font-semibold text-ink">Synthetic example.</span> This
+              transcript was generated, with fictional people. If you compile it, every
+              record it produces is labeled synthetic in the record store, so it never
+              blends into real data.{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSynthetic(false);
+                  setTranscript("");
+                  setFileName(null);
+                }}
+                className="font-medium text-accent-ink hover:underline"
+              >
+                Clear it
+              </button>
+            </span>
+          </p>
+        )}
 
         {ffOpen && (
           <div className="mt-3 rounded-card border border-line bg-surface p-4">
