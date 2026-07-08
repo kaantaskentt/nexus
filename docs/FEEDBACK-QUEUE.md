@@ -9,5 +9,5 @@ Mark `[x]` with the commit hash when landed.
 
 ## Queue
 
-- [ ] 2026-07-07 19:10 · P2 · New Company modal renders anchored bottom-right instead of centered over the picker (screenshot evidence in chat) · fix: center the dialog, dim backdrop evenly
-- [ ] 2026-07-07 19:10 · P3 · Knowledge Base list scrolls endlessly with no end signal · fix: clear end-of-list state ("that's all N records") or honest pagination; user should always know where the bottom is
+- [x] (79b726f) 2026-07-07 19:10 · P2 · New Company modal renders anchored bottom-right instead of centered over the picker (screenshot evidence in chat) · fix: center the dialog, dim backdrop evenly
+- [x] (79b726f) 2026-07-07 19:10 · P3 · Knowledge Base list scrolls endlessly with no end signal · fix: clear end-of-list state ("that's all N records") or honest pagination; user should always know where the bottom is
