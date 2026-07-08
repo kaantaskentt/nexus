@@ -15,6 +15,22 @@ Fully autonomous (Kaan left ~4:25p). Board: merge tasks 1-5, then the 3 product 
   evals 40/40 (taxonomy+whatif+fixed+navigator).
 - Merge 5/5 stage-3 hooks + packet: BUILT ✓ test_people_map 4/4, backend 125p/1s.
   MERGE-PACKET.md = per-delta classification; 5 ⚑ items for Kaan+Emre. MERGE_PLAN A25.
+- Product asks (Kaan x3): BUILT ✓ custom interview door (goal → mission, gate intact) ·
+  add-transcript-later (AddTranscriptDoor, append mode) · context chat (cited Q&A +
+  add-as-context). tsc/lint clean, frontend 43/43, backend 127p/1s.
+- DEPLOY: migrations 0011-0013 hand-applied to live Supabase (verified: table, column,
+  constraint, agent seed). Railway api+worker SUCCESS 23:56Z; Vercel production Ready.
+  PROD SMOKE ✓: admin login 200 · 3 workspaces · /plans/generate accepts goal (honest
+  404 on bogus ws) · context chat live on bee-goddess-demo (7 CLAIMED citations, real
+  answer). Frontend SSR surfaces verified by tests+tsc; browser login walk = optional
+  morning nicety.
+
+**FOR KAAN+EMRE (the ⚑ batch, full detail in docs/emre-inbox/MERGE-PACKET.md):**
+anonymity-script wording nod (Emre) · flatter-2d judge-vs-venter-bridge ruling (Emre) ·
+consent-line partial-compile copy (Kaan taste) · Tier-3 protocol pass (Emre+Kaan) ·
+tea-break concept (Kaan). Matrix round 3 (arm A finish + arm B) remains next in queue —
+prod staging still holds (EVAL_MODE=1, eval-runner admin); NOTE: arm B now includes the
+two-strike escape clause in the coverage directive (logged, deliberate).
 
 ---
 
