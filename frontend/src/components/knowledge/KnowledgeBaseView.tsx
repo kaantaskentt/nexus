@@ -240,6 +240,13 @@ export function KnowledgeBaseView({ records }: { records: KnowledgeRecord[] }) {
                   {filtered.map((r) => (
                     <RecordCard key={r.id} record={r} />
                   ))}
+                  {/* End signal (feedback queue, July 7): the reader always knows where
+                      the bottom is — no infinite-feel scroll. */}
+                  <p className="pb-2 pt-4 text-center text-xs text-ink-faint">
+                    {filtered.length === records.length
+                      ? `That's all ${records.length} record${records.length === 1 ? "" : "s"}.`
+                      : `End of matches: ${filtered.length} of ${records.length} records shown.`}
+                  </p>
                 </motion.div>
               )}
             </div>

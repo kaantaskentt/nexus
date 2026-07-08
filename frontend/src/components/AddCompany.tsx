@@ -63,13 +63,17 @@ export function AddCompany() {
               onClick={() => !submitting && setOpen(false)}
               className="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]"
             />
-            <motion.div
-              initial={{ opacity: 0, y: 12, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 12, scale: 0.98 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="glass fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border p-6 shadow-elev-3"
-            >
+            {/* Centering lives on a flex wrapper, NOT translate classes: framer-motion's
+                animated transform (y/scale) overwrites Tailwind's -translate-x/y-1/2,
+                which anchored the dialog bottom-right (feedback queue, July 7). */}
+            <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 12, scale: 0.98 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="glass pointer-events-auto w-full max-w-md rounded-xl border p-6 shadow-elev-3"
+              >
               <div className="mb-5 flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent-ink ring-1 ring-inset ring-accent/20">
@@ -148,7 +152,8 @@ export function AddCompany() {
                   )}
                 </button>
               </form>
-            </motion.div>
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
