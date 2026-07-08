@@ -9,6 +9,7 @@ import {
 import brand from "@/lib/brand";
 import { BrandMark } from "@/components";
 import { send_interview, type SendResult } from "@/lib/live";
+import { useEscapeClose } from "@/lib/useEscapeClose";
 import type { InterviewPlan, Workspace } from "@/lib/types";
 
 type Step = "details" | "preview" | "sent";
@@ -47,6 +48,8 @@ export function SendInterviewFlow({
     setSendError(false);
     onClose();
   }
+  // Escape mirrors the backdrop click — but never mid-send (Emre report #6 family).
+  useEscapeClose(open && !sending, handleClose);
 
   // Real send: mints the respondent session + token and moves the plan to SENT.
   async function handleSend() {
@@ -86,13 +89,18 @@ export function SendInterviewFlow({
             onClick={handleClose}
             className="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]"
           />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, y: 8 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-card border border-line bg-canvas shadow-elev-3"
-          >
+          {/* Centering lives on a flex wrapper, NOT translate classes: framer-motion's
+              animated transform (y/scale) overwrites Tailwind's -translate-x/y-1/2 and
+              the panel drops below the fold, footer unreachable (July 8 bug-hunt #3 —
+              same clobber the New Company modal fixed on July 7). */}
+          <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 8 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="pointer-events-auto flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-card border border-line bg-canvas shadow-elev-3"
+            >
             <div className="flex items-center justify-between border-b border-line px-6 py-4">
               <div className="flex items-center gap-2">
                 <UserPlus className="h-5 w-5 text-accent" strokeWidth={1.75} />
@@ -307,7 +315,8 @@ export function SendInterviewFlow({
                 </div>
               )}
             </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
