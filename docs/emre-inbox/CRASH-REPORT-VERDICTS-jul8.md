@@ -20,3 +20,36 @@ below was re-verified on production after deploy.
 is this session's next block — the stranger walk covers exactly those flows.
 
 — build session, July 8
+
+---
+
+# Doc-2 verdicts — July 8 evening batch (mvp-feedback-2-jul8.md)
+
+Same protocol. Your P0s and several P1/P2s were already fixed and deployed by the time
+doc 2 landed (your QA predates the afternoon deploys) — marked ALREADY-FIXED with the
+morning evidence. Everything else below went fix → test → deploy → re-verify today.
+
+| Item | Verdict | Evidence |
+|---|---|---|
+| P0 Ask-context crash / Observe crash / no error boundary | **ALREADY FIXED** (morning batch) | See the first table above; re-verified live. |
+| P1 Melis generate-plan fails silently | **CONFIRMED + FIXED** | Root cause found: the snapshot renderer transcribes entity uuids into card content and flipped ONE hex digit on Melis (…0e85… vs …0e83…) — every generate then failed the FK, silently. Fixed at three layers: ids are now stitched mechanically by name (model ids never persist), the API heals a stale id via the name, and failures always show the server's reason under "Try again". Melis's card healed; her plan exists and passed the check (visible on Home as Awaiting approval). |
+| P1 Refine chat stateless | **CONFIRMED + FIXED** | The change_log now stores the agent's own replies + offered rewrites, and each turn rebuilds the recent exchange — "Yes, add that version" applies the agent's own last proposal. Multi-turn test pins it. |
+| P1 No diacritic folding | **CONFIRMED + FIXED** | Fold on both haystack and query (NFD + dotless-ı). Verified live: ASCII "yildirim" now surfaces 32 "yıldırım" mentions on Bee Goddess (was 0). |
+| P1 SOP stubbed on demo report | **ALREADY FIXED** (morning) | Both report buttons wire to the real features; SOP disabled only until the workflow map lands, with that reason shown. |
+| P2 Home suggestions stale | **CONFIRMED + FIXED** | Rows resolve the person's real plan state server-side on every visit (Ege shows Completed, Melis Awaiting approval — verified live). |
+| P2 Review promise not delivered | **CONFIRMED + INTERIM FIX, decision logged** | Invite email + preview now carry the exact promise the interviewer and consent page make (flat non-quoting, respondent-initiated crediting). Whether to BUILD a pre-release review step instead is flagged for you + Kaan. |
+| P2 Escape / drawer clip | **ALREADY FIXED** (morning) | Escape closes all drawers/modals; the clip was spring overshoot, now critically damped. |
+| P2 Manual step title reverts | **CONFIRMED (as a race) + FIXED** | Could not reproduce with patient timing; the code had a same-tick double-entry hole plus out-of-order reconciles that overwrite a newer title on screen (server state was always right — your reload observation was the tell). Ref guard + response ticket close both. |
+| P2 Chevron barely moves | **FIXED** | Chevrons page by one measured card width. |
+| P2 Slow loading | **IMPROVED** (morning; follow-up scoped) | Warm soft-nav 1.5-2.5s; remaining floor is per-call backend latency, logged. |
+| P2 Compile counters stuck at 0 | **CONFIRMED + FIXED** | Honest indeterminate spinner while the pipeline runs; stage-1 label says it is the longest step. True streamed counts need compile-side incremental writes — logged, not faked. |
+| P2 Empty draft card | **ALREADY FIXED** (morning) | "No mission drafted yet — open to draft one." |
+| P2 Add-company backdrop | **CONFIRMED + FIXED** | Dialog on solid surface; glass stays for edge drawers. |
+| P2 Start Active Run | **CONFIRMED + FIXED (renamed)** | "View plans", copy neutralized — no promise without machinery (Kaan's ruling). |
+| P3 Jewelry placeholders on a PR agency | **CONFIRMED + FIXED** | Transcript example is industry-aware (jewelry flavor only for jewelry); consent role example now "someone in operations". |
+| P3 never_list leaks to users | **CONFIRMED + FIXED (prompt rule + eval)** | User-facing refine text says "interview guardrails", never internal identifiers; SPEC-ONLY eval added. |
+| P3 Back label | **ALREADY FIXED** (morning) | Origin-aware; verified in all directions. |
+| P3 Expired invitations no way to view | **CONFIRMED + FIXED** | The count is now a toggle — "Show them." |
+
+Your working-as-intended list is untouched: no interviewer-guardrail, evidence-discipline,
+or invite-flow behavior was modified beyond the consent-line alignment noted above.
