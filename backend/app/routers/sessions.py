@@ -147,6 +147,9 @@ async def complete(token: str):
     # Disclosure screen runs beside the compile, never inside it — a failed compile
     # must not skip the Tier-2 sealed-flag pass (Emre stage-7 §7, A24).
     await enqueue("screen_disclosures", {"session_id": str(session["id"])})
+    # Artifact promises (Kaan F1, July 8): same seam — offers to share materials are
+    # recorded even when the compile fails, so the done page can honor them.
+    await enqueue("scan_artifact_promises", {"session_id": str(session["id"])})
     return {"status": "completed", "compile": "queued"}
 
 

@@ -9,6 +9,7 @@ from .auth import require_admin
 from .config import get_brand, get_settings
 from .db import close_pool, get_pool
 from .routers import (
+    artifacts,
     chat,
     claims,
     integrations,
@@ -61,6 +62,9 @@ app.include_router(integrations.router, prefix="/api/integrations", tags=["integ
 app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"], dependencies=_admin)
 app.include_router(observer.router, prefix="/api/observer", tags=["observer"], dependencies=_admin)
 app.include_router(simulations.router, prefix="/api/simulations", tags=["simulations"], dependencies=_admin)
+# artifacts: mixed gate like `sessions` — by-token routes are public (the respondent has
+# no JWT), the admin routes carry require_admin per-route.
+app.include_router(artifacts.router, prefix="/api/artifacts", tags=["artifacts"])
 
 
 @app.get("/health")

@@ -26,6 +26,7 @@ import { scrimFade, drawerSpring } from "@/lib/variants";
 import { useEscapeClose } from "@/lib/useEscapeClose";
 import { StepRail } from "@/components/StepRail";
 import { WorkflowStepCard, toolLabel } from "./WorkflowStepCard";
+import { ArtifactsPanel } from "./ArtifactsPanel";
 
 export function ReportView({
   workspace,
@@ -233,6 +234,9 @@ export function ReportView({
                 </button>
               )}
             </Panel>
+
+            {/* Promised materials (Kaan F1): promised-vs-delivered + copyable reminder. */}
+            <ArtifactsPanel workspaceId={workspace.id} sessionId={sessionId} />
 
             <Panel icon={Star} title="Interview Quality">
               {/* Show the objective count + bar only when objectives were scored;

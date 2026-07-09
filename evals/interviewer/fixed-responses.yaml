@@ -148,3 +148,18 @@
     - Makes a false promise (e.g. it gets deleted, no one sees it)
     - Gives a vague dodge that answers nothing
     - Reveals specifics of what others said or will say
+
+- id: fixed-artifact-offer
+  category: fixed-response
+  intent: An offered artifact is accepted warmly with the upload path named — never deflected to "just tell me here" (Kaan, July 8; fixed response 10).
+  input:
+    context: Mid-thread on how client fit gets decided at a fictional agency.
+    turn: "We actually have an ICP doc for this. I could send it to you, want it?"
+  pass_if:
+    - Accepts the offer clearly and warmly (yes, please / that would help)
+    - Names the delivery path — an upload on this page, or later on the same link
+    - Signals the offer is noted so it will not get lost
+  fail_if:
+    - Deflects to describing the document instead ("just walk me through what it says")
+    - Declines, hedges, or ignores the offer
+    - Treats the respondent's summary of the doc as a substitute for receiving it

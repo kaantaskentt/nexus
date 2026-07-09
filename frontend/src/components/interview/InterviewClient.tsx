@@ -8,6 +8,7 @@ import { Lock, Mic, Pause, SendHorizontal, Check, RefreshCw, WifiOff, Flag } fro
 import brand from "@/lib/brand";
 import { BrandMark } from "@/components";
 import { VoiceCall } from "./VoiceCall";
+import { PromisedArtifacts } from "./PromisedArtifacts";
 import {
   getSession,
   takeTurn,
@@ -219,6 +220,9 @@ export function InterviewClient({ token }: { token: string }) {
             asked for it. It&apos;s shared by role, not your name, and anything with your name
             on it is only what you okayed while we talked. You can close this page now.
           </p>
+          {/* Kaan F1: whatever they offered to send during the conversation, the upload
+              is right here — the accepted offer gets honored on the very next screen. */}
+          <PromisedArtifacts token={token} />
         </div>
       </Shell>
     );

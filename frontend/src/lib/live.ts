@@ -453,6 +453,58 @@ export async function list_sessions(workspace_id: string, token?: string): Promi
 // Simulated interviews (session_kind='eval') — the Simulations surface. Same shape as
 // real sessions; the backend keeps the two classes firewalled (0007), so this list can
 // never leak into Interviews or vice versa.
+// ── Artifact promises (Kaan F1, July 8) ──────────────────────────────────────
+// Respondent side is PUBLIC by-token (the done page lists what they offered and takes
+// the upload); admin side tracks promised-vs-delivered per session.
+export interface RespondentArtifact {
+  id: string;
+  item: string;
+  objective_context: string | null;
+  status: "promised" | "delivered";
+  file_name: string | null;
+}
+export async function list_artifacts_by_token(token: string): Promise<RespondentArtifact[]> {
+  return api<RespondentArtifact[]>(`/api/artifacts/by-token/${token}`, undefined, null);
+}
+export async function upload_artifact(
+  token: string,
+  artifact_id: string,
+  file_name: string,
+  file_mime: string,
+  content_base64: string,
+): Promise<{ ok: boolean; status: string }> {
+  return api(`/api/artifacts/by-token/${token}/${artifact_id}/upload`, {
+    method: "POST",
+    body: JSON.stringify({ file_name, file_mime, content_base64 }),
+  }, null);
+}
+export interface AdminArtifactPromise {
+  id: string;
+  item: string;
+  objective_context: string | null;
+  quote: string | null;
+  status: "promised" | "delivered";
+  created_at: string;
+  delivered_at: string | null;
+  file_name: string | null;
+  file_mime: string | null;
+  file_size: number;
+}
+export interface SessionArtifacts {
+  interviewee: string | null;
+  invite_path: string | null;
+  promises: AdminArtifactPromise[];
+}
+export async function session_artifacts(
+  workspace_id: string,
+  session_id: string,
+  token?: string,
+): Promise<SessionArtifacts> {
+  return api<SessionArtifacts>(
+    `/api/artifacts/${workspace_id}/sessions/${session_id}`, undefined, token,
+  );
+}
+
 // Simulation proving history (task #28): the cast of simulated characters and the judged
 // round results the Simulations page renders. Read-only; runs stay harness-driven.
 export interface SimulationCastMember {
