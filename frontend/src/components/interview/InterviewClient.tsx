@@ -156,7 +156,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "loading") {
     return (
-      <Shell testBackPath={session?.test_back_path}>
+      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
         <div className="flex h-64 items-center justify-center text-ink-faint">Loading…</div>
       </Shell>
     );
@@ -164,7 +164,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "load_error" || !session) {
     return (
-      <Shell testBackPath={session?.test_back_path}>
+      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
         <div className="mx-auto max-w-md py-16 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-surface-raised text-ink-faint">
             <WifiOff className="h-5 w-5" strokeWidth={1.75} />
@@ -187,7 +187,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "paused") {
     return (
-      <Shell testBackPath={session?.test_back_path}>
+      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
         <div className="mx-auto max-w-md py-16 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
             <Check className="h-5 w-5" strokeWidth={2} />
@@ -211,7 +211,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "done") {
     return (
-      <Shell testBackPath={session?.test_back_path}>
+      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
         <div className="mx-auto max-w-md py-16 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success-soft text-tag-verified">
             <Check className="h-6 w-6" strokeWidth={2.5} />
@@ -235,7 +235,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "consent") {
     return (
-      <Shell testBackPath={session?.test_back_path}>
+      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
         <ConsentLanding session={session} onStart={start} />
       </Shell>
     );
@@ -245,7 +245,7 @@ export function InterviewClient({ token }: { token: string }) {
   // the server record first, so nothing said on the call is missing from the thread.
   if (mode === "voice") {
     return (
-      <Shell testBackPath={session?.test_back_path}>
+      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
         <VoiceCall
           token={token}
           respondentName={ctx?.respondent_name}
@@ -266,7 +266,7 @@ export function InterviewClient({ token }: { token: string }) {
   const minutes = ctx?.est_minutes ?? 20;
 
   return (
-    <Shell testBackPath={session?.test_back_path}>
+    <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
       <div className="flex h-[calc(100vh-4rem)] flex-col">
         {/* Wraps on narrow phones (mobile pass, July 8): the action row pushed 6px past
             the viewport at 390px and the page wiggled sideways. */}
@@ -400,7 +400,15 @@ export function InterviewClient({ token }: { token: string }) {
 }
 
 // Calm, standalone shell — the respondent is not inside the workspace app.
-function Shell({ children, testBackPath }: { children: React.ReactNode; testBackPath?: string }) {
+function Shell({
+  children,
+  testBackPath,
+  contextCall,
+}: {
+  children: React.ReactNode;
+  testBackPath?: string;
+  contextCall?: boolean;
+}) {
   return (
     <div className="min-h-screen bg-canvas">
       <header className="flex h-16 items-center px-6">
@@ -409,6 +417,12 @@ function Shell({ children, testBackPath }: { children: React.ReactNode; testBack
             {brand.product_name}
           </span>
           <BrandMark className="h-3.5 w-3.5 text-accent" />
+          {/* F7: the context call labels itself BETA everywhere, honestly. */}
+          {contextCall && (
+            <span className="ml-2 rounded-chip bg-surface-sunken px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-ink-faint ring-1 ring-inset ring-ink/[0.06]">
+              Beta · Context call
+            </span>
+          )}
           {/* Admin test mode ONLY (P0-C): a way back. Real respondents get no chrome. */}
           {testBackPath && (
             <a

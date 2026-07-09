@@ -53,6 +53,7 @@ export default async function HomePage({ params }: { params: { slug: string } })
         industry={workspace.industry}
         hasRecords={interviewClaims.length > 0}
         scrapedCount={claims.length - interviewClaims.length}
+        contextCallBeta={Boolean(cfg.beta_context_call)}
       />
     );
   }

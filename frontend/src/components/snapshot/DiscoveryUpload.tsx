@@ -13,7 +13,7 @@ import {
   ArrowRight,
   Mic,
 } from "lucide-react";
-import {
+import { start_context_call,
   upload_discovery,
   discovery_status,
   list_fireflies_meetings,
@@ -53,6 +53,7 @@ export function DiscoveryUpload({
   hasRecords = false,
   append = false,
   scrapedCount = 0,
+  contextCallBeta = false,
 }: {
   workspaceId: string;
   defaultSpeaker?: string;
@@ -68,6 +69,9 @@ export function DiscoveryUpload({
   // Website-scan records already saved (premium audit P1-4): named honestly as scan
   // reference data, never implied to be a lost upload.
   scrapedCount?: number;
+  // F7 BETA (creation-time opt-in): offer the live context call as an alternative to
+  // the transcript upload. The upload stays; the beta is one extra labeled door.
+  contextCallBeta?: boolean;
 }) {
   const router = useRouter();
   const [transcript, setTranscript] = useState("");
@@ -76,6 +80,20 @@ export function DiscoveryUpload({
   const [phase, setPhase] = useState<Phase>("idle");
   const [status, setStatus] = useState<DiscoveryStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mintingCall, setMintingCall] = useState(false);
+
+  async function beginContextCall() {
+    setMintingCall(true);
+    setError(null);
+    try {
+      const minted = await start_context_call(workspaceId);
+      window.open(minted.invite_path, "_blank", "noopener");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "The context call could not be started.");
+    } finally {
+      setMintingCall(false);
+    }
+  }
   const [dragOver, setDragOver] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -249,6 +267,31 @@ export function DiscoveryUpload({
             {scrapedCount === 1 ? "" : "s"}. They&apos;ll enrich the snapshot once the call
             compiles; the conversation itself is what builds it.
           </p>
+        )}
+
+        {/* F7 BETA door: conduct the context call live instead of uploading. */}
+        {contextCallBeta && !append && (
+          <div className="mx-auto mt-5 max-w-md rounded-card border border-line bg-surface p-4 text-left">
+            <div className="flex items-center gap-2 text-sm font-medium text-ink">
+              Conduct the context call with {brand.product_name}
+              <span className="rounded-chip bg-surface-sunken px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-faint ring-1 ring-inset ring-ink/[0.06]">
+                Beta
+              </span>
+            </div>
+            <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+              No transcript yet? Do the first conversation live instead, by voice or
+              text. It compiles into the same snapshot an uploaded call would build.
+            </p>
+            <button
+              type="button"
+              onClick={beginContextCall}
+              disabled={mintingCall}
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-1.5 text-xs font-medium text-ink transition hover:bg-surface-sunken disabled:opacity-50"
+            >
+              <Mic className="h-3.5 w-3.5" strokeWidth={1.75} />
+              {mintingCall ? "Opening the call…" : "Start the context call"}
+            </button>
+          </div>
         )}
 
         {/* What will appear here — the guided preview of the three snapshot sections.

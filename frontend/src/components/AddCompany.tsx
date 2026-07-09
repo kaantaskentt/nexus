@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, X, Building2, ArrowRight, Loader2 } from "lucide-react";
 import { create_workspace } from "@/lib/live";
+import brand from "@/lib/brand";
 import { scrimFade } from "@/lib/variants";
 import { useEscapeClose } from "@/lib/useEscapeClose";
 
@@ -18,6 +19,7 @@ export function AddCompany() {
   const [industry, setIndustry] = useState("");
   const [website, setWebsite] = useState("");
   const [contact, setContact] = useState("");
+  const [betaContextCall, setBetaContextCall] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Escape mirrors the backdrop click: closes unless a create is in flight.
@@ -34,6 +36,7 @@ export function AddCompany() {
         industry: industry.trim() || undefined,
         website: website.trim() || undefined,
         contact_person: contact.trim() || undefined,
+        beta_context_call: betaContextCall || undefined,
       });
       // Land on the new tenant's guided empty state (snapshot renders the upload CTA
       // while there are no records yet). refresh() clears the picker's cached list.
@@ -134,6 +137,29 @@ export function AddCompany() {
                     placeholder="Founder or main contact"
                   />
                 </Field>
+
+                {/* F7 BETA opt-in: the context call replaces the transcript upload with
+                    a live conversation. Off by default; labeled honestly. */}
+                <label className="mb-4 flex cursor-pointer items-start gap-2.5 rounded-md border border-line bg-surface-sunken/40 px-3 py-2.5">
+                  <input
+                    type="checkbox"
+                    checked={betaContextCall}
+                    onChange={(e) => setBetaContextCall(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 accent-current"
+                  />
+                  <span className="text-sm leading-relaxed text-ink-soft">
+                    <span className="font-medium text-ink">
+                      Conduct the context call with {brand.product_name}
+                    </span>{" "}
+                    <span className="rounded-chip bg-surface px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-faint ring-1 ring-inset ring-ink/[0.06]">
+                      Beta
+                    </span>
+                    <span className="mt-0.5 block text-xs text-ink-faint">
+                      Instead of uploading a transcript, the founder does the first
+                      context conversation live, by voice or text.
+                    </span>
+                  </span>
+                </label>
 
                 {error && (
                   <p className="mb-4 rounded-md border border-danger/25 bg-danger-soft px-3 py-2 text-sm text-danger">
