@@ -363,10 +363,13 @@ export function VoiceCall({
           )}
         </div>
 
-        {/* Live transcript — real turns as the conversation flows. */}
+        {/* Live transcript — real turns as the conversation flows. Un-boxed (UI debate
+            spec (c)-1, Kaan feedback 1): the conversation fills the column the page
+            reserves instead of sitting capped in a 38vh card. The transcript IS the
+            product (non-negotiable 5); it gets the space. */}
         {live && (
-          <div className="mx-auto mt-6 w-full max-w-lg flex-1">
-            <div className="card-hairline h-full max-h-[38vh] min-h-[8rem] overflow-hidden rounded-card border border-line bg-surface/60 p-3">
+          <div className="mx-auto mt-6 min-h-0 w-full max-w-lg flex-1">
+            <div className="h-full p-1">
               <LiveTranscript turns={turns} partial={partial} />
             </div>
           </div>
