@@ -80,6 +80,7 @@ const LEAF_LABEL: Record<string, string> = {
   report: "Report",
   workflow: "Workflow",
   plans: "Plans",
+  trust: "Trust Center", // footer-linked page (F5) — crumb matches every other page
 };
 
 function initials(name: string): string {
