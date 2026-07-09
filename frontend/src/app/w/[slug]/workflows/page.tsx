@@ -15,7 +15,10 @@ export default async function WorkflowsPage({ params }: { params: { slug: string
   const workflows = await get_workflows(workspace.id);
 
   return (
-    <div className="mx-auto max-w-4xl px-8 py-10">
+    // Density floor, light version (Kaan-approved proposal 3, B-amended): a short list
+    // sits vertically centered in the canvas instead of top-third over dead cream, and
+    // one quiet line of context closes the page. No rail, no new chrome.
+    <div className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-4xl flex-col justify-center px-8 py-10">
       <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Workflows</h1>
       <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft">
         How the work actually flows, mapped from interviews step by step. Open a workflow
@@ -61,6 +64,13 @@ export default async function WorkflowsPage({ params }: { params: { slug: string
             </Link>
           ))}
         </div>
+      )}
+
+      {workflows.length > 0 && (
+        <p className="mt-4 text-xs text-ink-faint">
+          This is every workflow mapped so far. Each new interview can add one or refine
+          one that is already here.
+        </p>
       )}
     </div>
   );
