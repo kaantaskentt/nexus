@@ -17,7 +17,7 @@ Mark `[x]` with the commit hash when landed.
   the changed surface on prod before moving to the next. Orb Concept A (1) is the flagship
   visual change; the debate recommended shipping it after tonight's un-boxing settles, order
   is yours. · (source: chat)
-- [ ] 2026-07-09 01:15 · P2 · Kaan: add a way to DELETE interviews, in the UI, with a warning
+- [x] (shift 3, July 9 ~02:55) 2026-07-09 01:15 · P2 · Kaan: add a way to DELETE interviews, in the UI, with a warning
   dialog before it happens. His open question, answer it in the design: "if you delete, does it
   also go from the KB?" — i.e. decide the cascade semantics for the claim records the interview
   produced. Watchtower framing for the decision (not a verdict): deleting the source transcript

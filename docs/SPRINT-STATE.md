@@ -2,6 +2,25 @@
 
 **Lanes:** F2>F3>F5>F6 (team-lead) · UI debate (2 teammates) · F7 persona (teammate) · F8.
 
+**SHIFT 3 (July 9 ~02:30-03:00 PT): P2 DELETE INTERVIEWS - DONE + PROVEN ON PROD.**
+- Kaan's open question ANSWERED IN THE DESIGN: yes, deleting an interview removes its
+  records from the KB too (full cascade). Rationale: orphan claims nobody can audit
+  break the evidence-anchored ontology. Cascade (one transaction): claims + pain scores
+  + conflicts citing them + workflow/SOP/overlays + automation opportunities resting on
+  any of it + promises + observer notes; supersede chains cut honestly (survivor keeps
+  standing, link nulled); snapshot re-render queued when cards exist (no card cites
+  deleted evidence). DELIBERATE SURVIVALS: sealed flags RETAINED w/ session ref nulled
+  (safety layer - an admin delete must not scrub a Tier-2 disclosure; FLAGGED TO EMRE,
+  his protocol owns the final ruling) · agent-run audit rows retained · entities kept ·
+  plan set REVOKED with a plan_state_transitions audit row.
+- The warning dialog IS the feature: preview endpoint feeds EXACT counts ("1 record it
+  produced, removed from Company Context", "snapshot will be rebuilt", "cannot be
+  undone"). v1 scope: interview kind only (context calls/voice tests not deletable).
+- PROVEN LIVE end-to-end: disposable interview seeded on hidden Atlas tenant, deleted
+  through the real UI dialog on prod, DB verified (session+turns+claim gone, 7 neighbor
+  records untouched, entity survives, render_snapshot ran to done, queue clean), tenant
+  re-hidden. Backend 187p/1s, frontend 56/56.
+
 **SHIFT 2b (July 9 ~02:00 PT): ALL 7 KAAN-APPROVED UI PROPOSALS LANDED.** Each its own
 commit, each deployed and browser-verified on prod before the next (Kaan's rule):
 - P7 pattern RECORDED (A29 in MERGE_PLAN: outward-share trust line, standing).
