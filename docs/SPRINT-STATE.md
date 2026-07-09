@@ -19,6 +19,11 @@
   approval gate; zero system coupling) + quiet sidebar-footer link. tsc/lint/56 green,
   em-dash lint green (also fixed a pre-existing comment em-dash from E4, eb01a3b).
   Browser render check on prod rides the UI-debate walk (SSR-auth needs a real login).
+- F6 client seats DORMANT (e913e86+47692bf+b9aed0f): BUILT+DEPLOYED+VERIFIED —
+  user_roles (0019, applied live), seat resolution zero-IO while CLIENT_SEATS off,
+  picker+workspace routes scope only for flag-on client rows, /api/me live (admin),
+  prod picker still 4 tenants, unauth still 401. Dormancy proven by test both ways
+  (flag off ignores client rows; flag on + no row stays admin). Backend 173p/1s.
 
 # NIGHT BLOCK — July 8 late — COMPLETE (night-2 shift finished item N3). PARKED CLEAN.
 
