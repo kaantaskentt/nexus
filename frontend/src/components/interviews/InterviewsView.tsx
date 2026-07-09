@@ -3,11 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mic, MessageSquare, ArrowRight, Users, Eye, Plus } from "lucide-react";
+import { Mic, MessageSquare, ArrowRight, Users, Eye, Plus, Trash2 } from "lucide-react";
 import type { Workspace } from "@/lib/types";
 import type { SessionSummary } from "@/lib/live";
 import { rise, staggerParent } from "@/lib/variants";
 import { cn } from "@/lib/cn";
+import { DeleteInterviewDialog } from "./DeleteInterviewDialog";
 
 // Interview status → a calm pill. These are the interview_sessions states (F: pending →
 // active → completed, plus paused/expired), not the 12 plan states — a session is only
@@ -119,6 +120,7 @@ function SessionRow({
   session: SessionSummary;
 }) {
   const name = s.interviewee_name ?? "Interviewee";
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const status = STATUS[s.status] ?? { label: s.status, pill: "bg-surface-sunken text-ink-soft" };
   const ModalityIcon = s.modality === "voice" ? Mic : MessageSquare;
 
@@ -173,6 +175,23 @@ function SessionRow({
         >
           No report yet
         </span>
+      )}
+      {/* Delete (Kaan P2): one quiet affordance; the dialog does the real work of
+          saying exactly what a delete removes (records leave Company Context too). */}
+      <button
+        onClick={() => setConfirmingDelete(true)}
+        aria-label={`Delete ${name}'s interview`}
+        title="Delete this interview"
+        className="rounded-md p-2 text-ink-faint transition-colors hover:bg-danger-soft hover:text-danger"
+      >
+        <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+      </button>
+      {confirmingDelete && (
+        <DeleteInterviewDialog
+          sessionId={s.id}
+          name={name}
+          onClose={() => setConfirmingDelete(false)}
+        />
       )}
     </motion.div>
   );
