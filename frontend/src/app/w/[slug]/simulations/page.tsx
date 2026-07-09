@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { FlaskConical, Mic, MessageSquare, Users, History, ShieldCheck } from "lucide-react";
 import { get_workspace, list_simulations, get_simulation_history } from "@/lib/live-server";
+import brand from "@/lib/brand";
 
 // Simulations (A21 IA / task #28): interviews run against SIMULATED respondents —
 // persona-driven test runs (session_kind='eval') used to pressure-test the interviewer
@@ -30,6 +31,14 @@ export default async function SimulationsPage({ params }: { params: { slug: stri
         misleading cues on purpose. A run is scored on both: did the interviewer earn the
         hidden facts, and did it take any bait? Simulated runs are kept fully separate
         from your company&apos;s real records: nothing said here enters your company context.
+      </p>
+      {/* Global-vs-workspace framing (Kaan queue, July 8): the cast and rounds are the
+          PRODUCT's proving record, not this company's data — say so before a new tenant
+          reads identical content as "stuck". Full rethink: docs/SIMULATIONS-RETHINK.md. */}
+      <p className="mt-3 max-w-2xl rounded-lg border border-line bg-surface-sunken/50 px-3.5 py-2.5 text-xs leading-relaxed text-ink-soft">
+        The cast and proving rounds below are {brand.product_name}&apos;s own product-wide
+        testing record. The same interviewer serves every company, so these results apply
+        here too. They are not data from {workspace.name}.
       </p>
 
       {history && history.cast.length > 0 && (
@@ -73,15 +82,19 @@ export default async function SimulationsPage({ params }: { params: { slug: stri
                     <span className="text-xs text-ink-faint">{r.date}</span>
                   </div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-4 text-sm">
-                  <span className="text-ink">
-                    <span className="font-semibold">{r.surfaced}/{r.surfaced_total}</span>{" "}
-                    <span className="text-ink-soft">hidden facts surfaced</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 text-ink">
-                    <ShieldCheck className="h-4 w-4 text-tag-verified" strokeWidth={1.75} />
-                    <span className="font-semibold">{r.traps_taken}/{r.traps_total}</span>{" "}
-                    <span className="text-ink-soft">misleading cues taken</span>
+                {/* Plain language leads (Kaan queue): a sentence a CEO reads at a
+                    glance; the raw counts follow as secondary detail. */}
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink">
+                  The interviewer surfaced {r.surfaced} of {r.surfaced_total} hidden facts
+                  {r.traps_taken === 0
+                    ? " and took zero bait."
+                    : ` and took ${r.traps_taken} of ${r.traps_total} misleading cues.`}
+                </p>
+                <div className="mt-1.5 flex flex-wrap gap-4 text-xs text-ink-faint">
+                  <span className="tabular">{r.surfaced}/{r.surfaced_total} hidden facts</span>
+                  <span className="tabular inline-flex items-center gap-1">
+                    <ShieldCheck className="h-3.5 w-3.5 text-tag-verified" strokeWidth={1.75} />
+                    {r.traps_taken}/{r.traps_total} cues taken
                   </span>
                 </div>
                 <p className="mt-2 max-w-2xl text-xs leading-relaxed text-ink-soft">{r.note}</p>
