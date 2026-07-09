@@ -177,11 +177,13 @@ async def compile_session(payload: dict) -> None:
     )
     if session is None:
         raise RuntimeError(f"compile_session: no session {session_id}")
-    # A voice test is the admin auditioning the assistant — never data. Nothing it said
-    # may enter the record store (premium audit P1-3); the guard lives here, at the one
-    # choke point every completion path funnels through.
-    if session["session_kind"] == "voice_test":
-        log.info("compile_session: %s is a voice_test session — skipping compile", session_id)
+    # A voice test is the admin auditioning the assistant, a roleplay is the admin
+    # playing a fictional character (F8) — never data. Nothing said in either may enter
+    # the record store (premium audit P1-3 / marathon F8); the guard lives here, at the
+    # one choke point every completion path funnels through.
+    if session["session_kind"] in ("voice_test", "roleplay"):
+        log.info("compile_session: %s is a %s session — skipping compile",
+                 session_id, session["session_kind"])
         return
     workspace_id = str(session["workspace_id"])
     default_speaker_id = session["interviewee_id"]

@@ -60,8 +60,8 @@ async def screen_session(payload: dict) -> None:
     )
     if session is None:
         raise RuntimeError(f"screen_disclosures: no session {session_id}")
-    if session["session_kind"] == "voice_test":
-        return  # the admin auditioning a voice is not an interview; nothing to screen
+    if session["session_kind"] in ("voice_test", "roleplay"):
+        return  # admin auditioning a voice / playing a character (F8) — nothing to screen
     # Idempotent: a session is screened once; a re-complete never duplicates flags.
     existing = await pool.fetchval(
         "select count(*) from sealed_flags where session_id = $1", session_id

@@ -87,14 +87,16 @@ async def get_by_token(token: str):
         "context": await _consent_context(session),
         "transcript": [{"speaker": t["speaker"], "text": t["text"]} for t in turns],
     }
-    # Admin test mode (P0-C): a voice_test call gets a way back to Voice Settings.
-    # ONLY for tests — real respondents stay chrome-free and never learn admin routes.
-    if session["session_kind"] == "voice_test":
+    # Admin test mode (P0-C): a voice_test call gets a way back to Voice Settings; an
+    # F8 roleplay run goes back to Simulations. ONLY for admin test kinds — real
+    # respondents stay chrome-free and never learn admin routes.
+    if session["session_kind"] in ("voice_test", "roleplay"):
         slug = await pool.fetchval(
             "select slug from workspaces where id = $1", session["workspace_id"]
         )
         out["test_mode"] = True
-        out["test_back_path"] = f"/w/{slug}/settings"
+        section = "settings" if session["session_kind"] == "voice_test" else "simulations"
+        out["test_back_path"] = f"/w/{slug}/{section}"
     return out
 
 
