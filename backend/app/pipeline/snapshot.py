@@ -77,6 +77,22 @@ async def render_snapshot(payload: dict) -> None:
 
     data = await run_agent_json("snapshot_renderer", content, workspace_id=workspace_id)
 
+    # Entity ids are stitched MECHANICALLY, never trusted from the model (July 8, Emre
+    # doc-2 P1: the renderer mistranscribed one hex digit of Melis's uuid, and every
+    # Generate-plan on her card 500'd on the FK). Match by name against the real people
+    # list; overwrite on match, drop otherwise — a missing id downgrades gracefully to
+    # the name-resolve path at plan time, a corrupted one never persists.
+    ids_by_name = {p["canonical_name"].strip().casefold(): str(p["id"]) for p in people}
+
+    def _stitch(holder: dict | None) -> None:
+        if not isinstance(holder, dict):
+            return
+        real = ids_by_name.get((holder.get("name") or "").strip().casefold())
+        if real:
+            holder["entity_id"] = real
+        else:
+            holder.pop("entity_id", None)
+
     batch = (await pool.fetchval(
         "select coalesce(max(render_batch), 0) + 1 from snapshot_cards where workspace_id=$1",
         workspace_id)) or 1
@@ -86,10 +102,15 @@ async def render_snapshot(payload: dict) -> None:
             continue
         conf = card.get("confidence")
         conf = conf if conf in _CARD_CONF else None
+        card_content = card.get("content") or {}
+        if ctype == "suggested_person":
+            _stitch(card_content)
+        elif ctype == "area_to_investigate":
+            _stitch(card_content.get("who_holds"))
         await pool.execute(
             """insert into snapshot_cards (workspace_id, round_id, card_type, content, confidence, render_batch)
                values ($1,$2,$3,$4,$5,$6)""",
-            workspace_id, round_id, ctype, json.dumps(card.get("content") or {}), conf, batch,
+            workspace_id, round_id, ctype, json.dumps(card_content), conf, batch,
         )
 
 

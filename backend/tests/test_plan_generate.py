@@ -191,3 +191,23 @@ async def test_generate_plan_job_honors_custom_goal(db, monkeypatch):
     await plan_pipeline.generate_plan({"plan_id": str(plan2), "workspace_id": str(ws)})
     mission2 = (await db.fetchrow("select mission from interview_plans where id=$1", plan2))["mission"]
     assert mission2["custom_focus"] is None
+
+async def test_generate_heals_stale_entity_id_via_name(db):
+    """A provided entity_id that isn't in the workspace (stale/corrupted card) must not
+    500 — it falls back to resolving by name so the journey survives (Emre doc-2 P1)."""
+    from httpx import ASGITransport, AsyncClient
+    from app.main import app
+    from tests.conftest import make_workspace
+    ws = await make_workspace(db, industry="jewelry")
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as c:
+        r = await c.post("/api/plans/generate", json={
+            "workspace_id": str(ws),
+            "entity_id": "00000000-0000-0000-0000-00000000dead",
+            "person_name": "Melis", "person_role": "Digest owner",
+        })
+    assert r.status_code == 200
+    plan_id = r.json()["plan_id"]
+    name = await db.fetchval(
+        "select e.canonical_name from interview_plans p join entities e on e.id=p.interviewee_id "
+        "where p.id=$1", plan_id)
+    assert name == "Melis"

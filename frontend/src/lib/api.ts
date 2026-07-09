@@ -22,6 +22,18 @@ export async function api<T>(path: string, init?: RequestInit, token?: string | 
       ...init?.headers,
     },
   });
-  if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
+  if (!res.ok) {
+    // Carry the server's own reason when it gives one (FastAPI `detail`) — a caller
+    // showing e.message then surfaces the REAL error, not just a status code
+    // (July 8, Emre doc-2 P1: Generate-plan failures were fully silent).
+    let detail = "";
+    try {
+      const body = await res.json();
+      if (typeof body?.detail === "string") detail = body.detail;
+    } catch {
+      /* non-JSON error body — the status line below is all we honestly have */
+    }
+    throw new Error(detail ? `${detail} (API ${res.status})` : `API ${res.status}: ${path}`);
+  }
   return res.json();
 }

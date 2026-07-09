@@ -16,6 +16,10 @@ from ..pipeline.compiler import _load_industry_block
 from ..pipeline.handoff import _has_attribution, build_handoff_package
 from ..queue import enqueue
 
+import logging
+
+log = logging.getLogger("nexus.plans")
+
 router = APIRouter()
 
 INVITE_TTL_DAYS = 14
@@ -151,6 +155,19 @@ async def generate(body: GenerateIn):
         raise HTTPException(404, "workspace not found")
 
     entity_id = body.entity_id
+    if entity_id is not None:
+        # A provided id must actually exist in THIS workspace. Snapshot cards used to
+        # carry model-transcribed ids (one corrupted digit made every Generate-plan on
+        # that person 500 silently — July 8, Emre doc-2 P1 "Melis"). Ids are stitched
+        # mechanically now, but heal stale/foreign ids anyway: fall back to the name.
+        exists = await pool.fetchval(
+            "select 1 from entities where id = $1 and workspace_id = $2",
+            entity_id, body.workspace_id,
+        )
+        if not exists:
+            log.warning("generate: entity_id %s not in workspace %s — resolving by name %r",
+                        entity_id, body.workspace_id, body.person_name)
+            entity_id = None
     if entity_id is None:
         if not (body.person_name and body.person_name.strip()):
             raise HTTPException(422, "entity_id or person_name is required")

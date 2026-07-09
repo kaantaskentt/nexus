@@ -38,6 +38,8 @@ export function GeneratePlanButton({
   // Non-null once the plan has left DRAFT (reached review). Null while in the "done" phase
   // means we hit the poll ceiling and the plan is still being prepared.
   const [reachedState, setReachedState] = useState<PlanState | null>(null);
+  // The server's reason when generation fails — shown, never swallowed (Emre doc-2 P1).
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const cancelled = useRef(false);
 
   useEffect(() => {
@@ -70,8 +72,9 @@ export function GeneratePlanButton({
       if (cancelled.current) return;
       setReachedState(null);
       setPhase("done");
-    } catch {
+    } catch (e) {
       if (cancelled.current) return;
+      setErrorDetail(e instanceof Error ? e.message : "The request failed");
       setPhase("error");
     }
   }
@@ -97,13 +100,19 @@ export function GeneratePlanButton({
 
   if (phase === "error") {
     return (
-      <button
-        onClick={onGenerate}
-        className="inline-flex items-center gap-1.5 rounded-md border border-danger/30 px-3 py-1.5 text-sm font-medium text-danger transition-colors hover:bg-danger-soft"
-      >
-        <RotateCw className="h-4 w-4" strokeWidth={1.75} />
-        Try again
-      </button>
+      <div className="flex flex-col items-end gap-1 text-right">
+        <button
+          onClick={onGenerate}
+          className="inline-flex items-center gap-1.5 rounded-md border border-danger/30 px-3 py-1.5 text-sm font-medium text-danger transition-colors hover:bg-danger-soft"
+        >
+          <RotateCw className="h-4 w-4" strokeWidth={1.75} />
+          Try again
+        </button>
+        {/* Always say WHY — a bare retry that keeps failing reads as broken (it was). */}
+        <span className="max-w-[14rem] text-[11px] leading-snug text-danger/80">
+          {errorDetail ?? "The plan could not be created."}
+        </span>
+      </div>
     );
   }
 
