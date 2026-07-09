@@ -378,6 +378,15 @@ Context = only the admin's own words ("as you described it"). Custom interviews 
 ~20 min. Same dimensions enrich the SOP generator output where records support them.
 Suggested questions always draft; Approve stays disabled while a mission is empty.
 
+## A28 — Pre-review + one-commit-per-behavior-change (July 8 night, Kaan standing reinforcement)
+
+Before touching ANY existing feature, the builder writes a two-line pre-review in the
+shift log: what it does today / what it will do after, then answers honestly: is this
+SIMPLER or more complex for the user? If more complex, STOP — write it as a proposal
+instead of building. Every change to existing behavior lands as its OWN commit (never
+bundled) so any single change can be reverted alone. New surfaces may batch; behavior
+changes may not. The bar: better, not more complicated.
+
 ## A23 — Standing rhythm: BUILD → AUDIT → NEXT (July 7, Kaan)
 
 Every landed task gets: prod verification + affected tests + a one-line audit verdict in

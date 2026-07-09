@@ -44,7 +44,9 @@ You are the builder of Nexus. Kaan (product/business) and Emre (psychology/measu
 BUILD → AUDIT → NEXT. After every task lands: verify on prod, run the affected tests,
 write a one-line audit verdict in SPRINT-STATE before starting the next item. Boring-and-
 solid beats sexy-and-fragile; if a change risks breaking something that works, propose it
-instead of building it.
+instead of building it. Before touching any existing feature (A28): two-line pre-review
+in the log (today → after) + "simpler or more complex for the user?" — more complex means
+STOP and propose. Every behavior change is its own revertable commit, never bundled.
 
 ## Updating this file
 This file is living. When a decision changes how the builder should behave, update the relevant section here AND log the decision in MERGE_PLAN.md. Keep this file under ~80 lines — it's loaded every session; bloat here is a tax on every future turn.
