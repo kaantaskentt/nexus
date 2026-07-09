@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { GitCompareArrows, Flame, Target, Zap, ArrowRight, Calculator } from "lucide-react";
 import type { AutomationOpportunity } from "@/lib/live";
+import type { ClaimRecord } from "@/lib/types";
 import type {
   Admission,
   ConflictSide,
@@ -38,11 +39,16 @@ export function InsightsView({
   data,
   automation = [],
   slug,
+  workflowIds = [],
+  claims = [],
 }: {
   data: InsightsData;
   automation?: AutomationOpportunity[];
   slug?: string;
+  workflowIds?: string[];
+  claims?: ClaimRecord[];
 }) {
+  const claimsById = new Map(claims.map((c) => [c.id, c]));
   const { conflicts, key_findings, admissions, stats } = data;
   const nothing = conflicts.length === 0 && key_findings.length === 0 && admissions.length === 0;
 
@@ -184,13 +190,42 @@ export function InsightsView({
                       </p>
                     </div>
                   )}
-                  {o.workflow_id && slug && (
+                  {o.workflow_id && slug && workflowIds.includes(o.workflow_id) ? (
                     <Link
                       href={`/w/${slug}/workflow/${o.workflow_id}?from=insights${o.step_ids.length ? `&highlight=${o.step_ids.join(",")}` : ""}`}
                       className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
                     >
                       See it in the workflow <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
                     </Link>
+                  ) : (
+                    // No mapped workflow to open (Kaan P1): show the records the
+                    // opportunity rests on right here, and guide toward the actions
+                    // that create the map — never a link into the void.
+                    <details className="mt-3">
+                      <summary className="cursor-pointer text-sm font-medium text-accent hover:text-accent-hover">
+                        See the evidence ({o.claim_ids.length} record{o.claim_ids.length === 1 ? "" : "s"})
+                      </summary>
+                      <ul className="mt-2 space-y-1.5">
+                        {o.claim_ids.map((cid) => {
+                          const c = claimsById.get(cid);
+                          if (!c) return null;
+                          return (
+                            <li key={cid} className="rounded-md border border-line bg-surface-sunken/40 px-2.5 py-1.5 text-xs leading-relaxed text-ink-soft">
+                              {c.claim_text}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                      {slug && (
+                        <p className="mt-2 text-xs leading-relaxed text-ink-faint">
+                          No mapped workflow holds these steps yet.{" "}
+                          <Link href={`/w/${slug}/context`} className="font-medium text-accent-ink hover:underline">Add context</Link>{" "}
+                          or{" "}
+                          <Link href={`/w/${slug}/plans?new=1`} className="font-medium text-accent-ink hover:underline">schedule an interview</Link>{" "}
+                          to map it.
+                        </p>
+                      )}
+                    </details>
                   )}
                 </article>
               ))}
