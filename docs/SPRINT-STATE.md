@@ -2,6 +2,22 @@
 
 **Lanes:** F2>F3>F5>F6 (team-lead) · UI debate (2 teammates) · F7 persona (teammate) · F8.
 
+**SHIFT CLOSE (~00:50 PT July 9): every marathon order landed or honestly staged.**
+- F7 CEO context call (dbd1768): persona + eval suite BUILT AND CALIBRATED — final run
+  25 pass / 0 fail / 0 error across fixed (exit-condition coverage), adversarial
+  (seller / rambler / what-is-Nexus overclaim refusals) and calibration (stage-3 phase
+  design) suites. Teammate built + iterated; I closed the last case (belief walkthrough
+  must never read as "we'll check on you", one surgical persona line, re-run clean).
+  LIVE WIRING deliberately next-shift now the suite is green: docs/F7-WIRING.md has the
+  exact 3 binding points in pipeline/interview.py + beta toggle + compile notes. The
+  'context' session kind already exists in the constraint and compiles (by design).
+- NEXT SHIFT QUEUE: (1) F7 live wiring per F7-WIRING.md (flag-gated, Kaan+Emre test
+  users, BETA label everywhere) · (2) Kaan reads UI-DEBATE.md convergence: 7 proposals
+  wait on him (orb Concept A, fold Agent Skills into Workflows, density floor, preamble
+  trims, picker hero guardrail, Trust Center discoverability, trust-line pattern) ·
+  (3) Kaan real-mic call: confirms interruption feel + voice-room un-boxed transcript ·
+  (4) roleplay debrief Drive export (logged nice-to-have).
+
 **AUDIT VERDICTS (A23, one line each):**
 - F2 Company Report export (0018 + company_report.py + /r/[token], commits ..95c9fb0):
   BUILT+DEPLOYED+VERIFIED LIVE — mint idempotent, payload company_report.v1 composed at
