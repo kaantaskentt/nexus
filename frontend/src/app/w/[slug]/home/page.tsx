@@ -1,8 +1,15 @@
 import { notFound } from "next/navigation";
-import { get_workspace, list_snapshot_cards, list_claims, list_plans } from "@/lib/live-server";
+import {
+  get_workspace,
+  get_weekly_pulse,
+  list_snapshot_cards,
+  list_claims,
+  list_plans,
+} from "@/lib/live-server";
 import { SnapshotView } from "@/components/snapshot/SnapshotView";
 import { DiscoveryUpload } from "@/components/snapshot/DiscoveryUpload";
 import { AddTranscriptDoor } from "@/components/snapshot/AddTranscriptDoor";
+import { WeeklyPulseCard } from "@/components/snapshot/WeeklyPulseCard";
 
 // Home — the workspace landing (A21 IA). The Company Snapshot IS home. A tenant with no
 // compiled snapshot CARDS gets the guided discovery state — even when raw records already
@@ -53,9 +60,15 @@ export default async function HomePage({ params }: { params: { slug: string } })
   // Snapshot exists: the upload hero is gone, but a LATER call must still have a door
   // (Kaan, July 7). Collapsed under the snapshot; append mode compiles into the same store.
   const cfg = workspace.config ?? {};
+  // F3 Weekly Pulse: renders ONLY when the Settings toggle is on (off by default) —
+  // a workspace with the flag off is byte-for-byte the page it was before F3.
+  const pulse = cfg.weekly_pulse
+    ? await get_weekly_pulse(workspace.id).catch(() => null)
+    : null;
   return (
     <>
       <SnapshotView workspace={workspace} cards={cards} claims={claims} personPlans={personPlans} />
+      {pulse?.enabled && <WeeklyPulseCard pulse={pulse} />}
       <AddTranscriptDoor
         workspaceId={workspace.id}
         defaultSpeaker={cfg.contact_person ?? cfg.founder}
