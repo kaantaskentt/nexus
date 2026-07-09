@@ -11,7 +11,13 @@ import brand from "@/lib/brand";
 // F2 Monday Morning Report: ONE button. Minting is idempotent server-side, so pressing
 // it twice hands back the same link. The dialog offers the two things an admin wants:
 // copy the link (to forward) and open the print-ready page (to print or save as PDF).
-export function ExportReportButton({ workspaceId }: { workspaceId: string }) {
+export function ExportReportButton({
+  workspaceId,
+  workspaceSlug,
+}: {
+  workspaceId: string;
+  workspaceSlug?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
@@ -118,6 +124,17 @@ export function ExportReportButton({ workspaceId }: { workspaceId: string }) {
                     Names are never included: findings in the shared report are attributed
                     by role only. A quiet &quot;Powered by {brand.product_name}&quot; line sits in the
                     footer.
+                    {workspaceSlug && (
+                      <>
+                        {" "}
+                        <a
+                          href={`/w/${workspaceSlug}/trust`}
+                          className="text-ink-soft underline underline-offset-2 hover:text-ink"
+                        >
+                          How findings are handled
+                        </a>
+                      </>
+                    )}
                   </p>
                 </>
               )}

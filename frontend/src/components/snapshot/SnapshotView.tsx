@@ -102,7 +102,7 @@ export function SnapshotView({
                 <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">
                   Company Snapshot
                 </h1>
-                <ExportReportButton workspaceId={workspace.id} />
+                <ExportReportButton workspaceId={workspace.id} workspaceSlug={workspace.slug} />
               </div>
 
               {/* Company identity */}
@@ -289,6 +289,20 @@ export function SnapshotView({
                 </a>
               </div>
             )}
+
+            {/* Trust Center discoverability (Kaan-approved proposal 6): the product's
+                best trust asset, linked where the findings live, not only in the
+                sidebar footer. Quiet by design. */}
+            <p className="mt-6 text-xs text-ink-faint">
+              Everything above is built under strict handling rules:{" "}
+              <a
+                href={`/w/${workspace.slug}/trust`}
+                className="text-ink-soft underline underline-offset-2 hover:text-ink"
+              >
+                how your people&apos;s words are handled
+              </a>
+              .
+            </p>
           </div>
 
           {/* ── Evidence rail ───────────────────────────────────────── */}
