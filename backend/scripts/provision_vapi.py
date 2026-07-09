@@ -114,7 +114,7 @@ def _assistant_config(name: str, voice: dict, base_url: str, secret: str) -> dic
             "smartEndpointingPlan": {"provider": "livekit"},
         },
         # (6) INTERRUPTION — yield instantly on any speech; never talk over the respondent.
-        "stopSpeakingPlan": {"numWords": 0, "voiceSeconds": 0.2, "backoffSeconds": 1.0},
+        "stopSpeakingPlan": {"numWords": 2, "voiceSeconds": 0.4, "backoffSeconds": 1.0},
         # (7) SILENCE — long; the gentle check-in is the persona's job, not an auto hang-up.
         "silenceTimeoutSeconds": 30,
         "maxDurationSeconds": 3600,

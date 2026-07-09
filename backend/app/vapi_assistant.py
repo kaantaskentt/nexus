@@ -185,8 +185,11 @@ def build_assistant_config(
         # lets a person finish a thought. The old 2.5s wait read as dead air; livekit's
         # semantic turn detection covers the thinking-silence case the long wait was for.
         "startSpeakingPlan": {"waitSeconds": 0.4, "smartEndpointingPlan": {"provider": "livekit"}},
-        # INTERRUPTION — yield instantly on any speech; never talk over the respondent.
-        "stopSpeakingPlan": {"numWords": 0, "voiceSeconds": 0.2, "backoffSeconds": 1.0},
+        # INTERRUPTION (Kaan tune, July 8 night): a cough or "hmm" must NOT stop the
+        # agent; a real sentence-start MUST. numWords=2 makes interruption transcription-
+        # based (VAPI docs: 2-3 words filters backchannel), voiceSeconds=0.4 keeps a VAD
+        # floor under it. Start side untouched — opener velocity is a Kaan-won behavior.
+        "stopSpeakingPlan": {"numWords": 2, "voiceSeconds": 0.4, "backoffSeconds": 1.0},
         # SILENCE — long; the gentle check-in is the persona's job, not an auto hang-up.
         "silenceTimeoutSeconds": 30,
         "maxDurationSeconds": 3600,
