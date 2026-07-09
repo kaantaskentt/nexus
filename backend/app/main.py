@@ -12,6 +12,7 @@ from .routers import (
     artifacts,
     chat,
     claims,
+    company_report,
     integrations,
     observer,
     plans,
@@ -65,6 +66,9 @@ app.include_router(simulations.router, prefix="/api/simulations", tags=["simulat
 # artifacts: mixed gate like `sessions` — by-token routes are public (the respondent has
 # no JWT), the admin routes carry require_admin per-route.
 app.include_router(artifacts.router, prefix="/api/artifacts", tags=["artifacts"])
+# company report export (F2): mixed gate — mint requires admin, by-token is public
+# (a share link IS the audience the admin chose).
+app.include_router(company_report.router, prefix="/api/company-report", tags=["company-report"])
 
 
 @app.get("/health")

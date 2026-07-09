@@ -8,9 +8,11 @@
 import { api } from "./api";
 import type {
   ClaimRecord,
+  ConflictKind,
   KnowledgeRecord,
   InsightsData,
   InterviewPlan,
+  PainBand,
   TrustTag,
   PlanMission,
   PlanTopic,
@@ -770,4 +772,64 @@ export async function get_sop(workflow_id: string): Promise<WorkflowSop> {
 
 export async function get_blueprint(workflow_id: string): Promise<SkillBlueprint> {
   return api<SkillBlueprint>(`/api/workflows/${workflow_id}/blueprint`);
+}
+
+// ── Company Report export (F2 Monday Morning Report) ─────────────────────────
+// One button mints a share link; the public /r/[token] page composes the report at
+// read time (role-only attribution, versioned shape) — see backend company_report.py.
+export interface CompanyReportShare {
+  token: string;
+  path: string;
+}
+
+export async function mint_report_share(
+  workspace_id: string,
+  token?: string,
+): Promise<CompanyReportShare> {
+  return api(`/api/company-report/${workspace_id}/share`, { method: "POST" }, token);
+}
+
+export interface CompanyReportGap {
+  kind: ConflictKind;
+  status: "disputed" | "resolved";
+  note: string | null;
+  a: { text: string; tag: TrustTag | null; role: string | null };
+  b: { text: string; tag: TrustTag | null; role: string | null };
+}
+
+export interface CompanyReportStep {
+  index: number;
+  title: string | null;
+  action: string | null;
+  tool: { kind?: string; name?: string } | string | null;
+  status: string | null;
+}
+
+export interface CompanyReport {
+  shape: string;
+  generated_at: string;
+  company: { name: string; industry: string | null };
+  stats: { interviews: number; records: number; conflicts: number; gaps: number };
+  snapshot: SnapshotCard[];
+  key_findings: {
+    text: string;
+    band: PainBand | null;
+    tag: TrustTag | null;
+    mention_count: number;
+    role: string | null;
+  }[];
+  workflows: { name: string; steps: CompanyReportStep[] }[];
+  gaps: CompanyReportGap[];
+  opportunities: {
+    title: string;
+    summary: string;
+    signals: string[];
+    roi: AutomationRoi | null;
+  }[];
+  next_steps: { kind: "investigate" | "follow_up" | "interview"; text: string }[];
+}
+
+// Public: the share token is the only key (no bearer — same posture as /i/[token]).
+export async function get_company_report(share_token: string): Promise<CompanyReport> {
+  return api<CompanyReport>(`/api/company-report/by-token/${share_token}`, undefined, null);
 }
