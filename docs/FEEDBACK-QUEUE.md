@@ -8,6 +8,15 @@ Format per item: `- [ ] YYYY-MM-DD HH:MM · P1/P2/P3 · the feedback, verbatim-i
 Mark `[x]` with the commit hash when landed.
 
 ## Queue
+- [ ] 2026-07-09 01:25 · P1 · KAAN APPROVED ALL 7 UI-DEBATE PROPOSALS (docs/UI-DEBATE.md
+  section (b)). His words: "All ok for UI's, ship in order you want, and test after ship to
+  test any bugs." So: implement 1-6 in whatever order is safest (7 is a standing copy pattern,
+  just record it in CLAUDE.md/MERGE_PLAN). A28 still binds each one: pre-review + isolated
+  commits (these are approved directions, not approved diffs — the taste is approved, the
+  execution still gets the gate). Kaan's explicit order: TEST AFTER EACH SHIP — browser-walk
+  the changed surface on prod before moving to the next. Orb Concept A (1) is the flagship
+  visual change; the debate recommended shipping it after tonight's un-boxing settles, order
+  is yours. · (source: chat)
 - [ ] 2026-07-09 01:15 · P2 · Kaan: add a way to DELETE interviews, in the UI, with a warning
   dialog before it happens. His open question, answer it in the design: "if you delete, does it
   also go from the KB?" — i.e. decide the cascade semantics for the claim records the interview
