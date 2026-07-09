@@ -27,6 +27,7 @@ import { rise, staggerParent, drawerSpring, scrimFade, drawerSection } from "@/l
 import { useEscapeClose } from "@/lib/useEscapeClose";
 import brand from "@/lib/brand";
 import { GeneratePlanButton } from "./GeneratePlanButton";
+import { ExportReportButton } from "./ExportReportButton";
 
 // The quote a claim shows in the evidence rail (same fallback EvidenceQuoteCard uses).
 function railQuote(c: ClaimRecord): string {
@@ -95,9 +96,14 @@ export function SnapshotView({
           {/* ── Main column ─────────────────────────────────────────── */}
           <div className="min-w-0">
             <motion.div variants={rise} initial="hidden" animate="show">
-              <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">
-                Company Snapshot
-              </h1>
+              {/* F2: the one-button report export lives beside the title — the snapshot
+                  IS the report's source, so this is where an admin looks for it. */}
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">
+                  Company Snapshot
+                </h1>
+                <ExportReportButton workspaceId={workspace.id} />
+              </div>
 
               {/* Company identity */}
               <div className="mt-5 flex items-center gap-4">
