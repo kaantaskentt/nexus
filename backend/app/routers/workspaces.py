@@ -3,9 +3,10 @@
 import json
 import re
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from ..auth import require_admin, resolve_seat
 from ..db import get_pool
 from ..pipeline import entities
 from ..pipeline.transcript import parse_transcript
@@ -78,14 +79,23 @@ async def create_workspace(body: NewWorkspaceIn):
 
 
 @router.get("")
-async def list_workspaces():
+async def list_workspaces(user_id: str = Depends(require_admin)):
     pool = await get_pool()
+    # F6 (dormant): a client seat sees ONLY its own workspace in the picker. Admins
+    # (everyone while CLIENT_SEATS is off) keep today's full list, same query.
+    seat = await resolve_seat(user_id)
     # Internal scaffolding (eval/e2e/voice tenants, demo-respondent dup) is hidden by
     # default — it must never render as a real client workspace in the picker (#22).
-    rows = await pool.fetch(
-        "select id, name, slug, industry, is_demo, config from workspaces "
-        "where is_internal = false order by created_at"
-    )
+    if seat["role"] == "client":
+        rows = await pool.fetch(
+            "select id, name, slug, industry, is_demo, config from workspaces "
+            "where is_internal = false and id = $1", seat["workspace_id"]
+        )
+    else:
+        rows = await pool.fetch(
+            "select id, name, slug, industry, is_demo, config from workspaces "
+            "where is_internal = false order by created_at"
+        )
     return [{**dict(r), "config": _loads(r["config"])} for r in rows]
 
 

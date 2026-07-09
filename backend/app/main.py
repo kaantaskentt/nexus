@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .auth import require_admin
+from .auth import require_admin, require_workspace_seat, resolve_seat
 from .config import get_brand, get_settings
 from .db import close_pool, get_pool
 from .routers import (
@@ -49,18 +49,22 @@ app.add_middleware(
 # Exceptions: `sessions` (mixed — its interviewee by-token routes are public, so it gates
 # only eval-bootstrap internally) and `voice` (shared-secret gated).
 _admin = [Depends(require_admin)]
-app.include_router(workspaces.router, prefix="/api/workspaces", tags=["workspaces"], dependencies=_admin)
-app.include_router(claims.router, prefix="/api/claims", tags=["claims"], dependencies=_admin)
-app.include_router(plans.router, prefix="/api/plans", tags=["plans"], dependencies=_admin)
+# F6 (dormant): workspace-scoped routers take the seat dependency instead. It wraps the
+# same require_admin, and while CLIENT_SEATS is off it adds nothing (no IO, no checks) —
+# flag on, a 'client' seat is confined to its own {workspace_id} routes.
+_seat = [Depends(require_workspace_seat)]
+app.include_router(workspaces.router, prefix="/api/workspaces", tags=["workspaces"], dependencies=_seat)
+app.include_router(claims.router, prefix="/api/claims", tags=["claims"], dependencies=_seat)
+app.include_router(plans.router, prefix="/api/plans", tags=["plans"], dependencies=_seat)
 app.include_router(sessions.router, prefix="/api/sessions", tags=["sessions"])
 app.include_router(voice.router, prefix="/api/voice", tags=["voice"])
 # voice_config: mixed gate like `sessions` — the editor routes carry require_admin, the
 # by-token call-resolver stays public (the interviewee has no admin JWT). So no blanket dep.
 app.include_router(voice_config.router, prefix="/api/voice-config", tags=["voice-config"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"], dependencies=_admin)
-app.include_router(chat.router, prefix="/api/chat", tags=["chat"], dependencies=_admin)
+app.include_router(chat.router, prefix="/api/chat", tags=["chat"], dependencies=_seat)
 app.include_router(integrations.router, prefix="/api/integrations", tags=["integrations"], dependencies=_admin)
-app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"], dependencies=_admin)
+app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"], dependencies=_seat)
 app.include_router(observer.router, prefix="/api/observer", tags=["observer"], dependencies=_admin)
 app.include_router(simulations.router, prefix="/api/simulations", tags=["simulations"], dependencies=_admin)
 # artifacts: mixed gate like `sessions` — by-token routes are public (the respondent has
@@ -69,6 +73,14 @@ app.include_router(artifacts.router, prefix="/api/artifacts", tags=["artifacts"]
 # company report export (F2): mixed gate — mint requires admin, by-token is public
 # (a share link IS the audience the admin chose).
 app.include_router(company_report.router, prefix="/api/company-report", tags=["company-report"])
+
+
+@app.get("/api/me")
+async def me(user_id: str = Depends(require_admin)):
+    """Who am I + which seat (F6). Today every user resolves to admin; a client seat
+    appears only when CLIENT_SEATS is on and a user_roles row exists."""
+    seat = await resolve_seat(user_id)
+    return {"user_id": user_id, **seat}
 
 
 @app.get("/health")
