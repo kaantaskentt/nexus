@@ -62,3 +62,5 @@ export const get_workflows = async (workspace_id: string) =>
 // lib/live (keeps every server page on a single import).
 export { reportIsCompiling } from "./live";
 export type { SessionSummary, SendResult, DiscoveryStart, WorkflowSummary, VoiceConfig, VoiceOption, ObserverState } from "./live";
+export const get_weekly_pulse = async (workspace_id: string) =>
+  live.get_weekly_pulse(workspace_id, (await tok()) ?? undefined);

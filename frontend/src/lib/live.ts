@@ -833,3 +833,38 @@ export interface CompanyReport {
 export async function get_company_report(share_token: string): Promise<CompanyReport> {
   return api<CompanyReport>(`/api/company-report/by-token/${share_token}`, undefined, null);
 }
+
+// ── Weekly Pulse (F3) ─────────────────────────────────────────────────────────
+// OFF by default; deterministic digest from the week's records delta. The WhatsApp
+// text arrives ready-built from the backend (one testable source). No auto-sending.
+export interface WeeklyPulse {
+  enabled: boolean;
+  workspace_name: string;
+  totals: {
+    new_records: number;
+    new_interviews: number;
+    new_conflicts: number;
+    promises_kept: number;
+    promises_pending: number;
+  };
+  learned: { text: string; topic: string | null; role: string | null }[];
+  new_conflicts: { kind: ConflictKind; note: string | null }[];
+  promises: { kept: string[]; pending: string[] };
+  next_step: string | null;
+  whatsapp_text: string;
+}
+
+export async function get_weekly_pulse(workspace_id: string, token?: string): Promise<WeeklyPulse> {
+  return api<WeeklyPulse>(`/api/workspaces/${workspace_id}/pulse`, undefined, token);
+}
+
+export async function set_pulse_config(
+  workspace_id: string,
+  enabled: boolean,
+  token?: string,
+): Promise<{ enabled: boolean }> {
+  return api(`/api/workspaces/${workspace_id}/pulse-config`, {
+    method: "PUT",
+    body: JSON.stringify({ enabled }),
+  }, token);
+}

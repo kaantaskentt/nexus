@@ -58,6 +58,7 @@ export interface Workspace {
     approved_for_pilot?: boolean;
     contact_person?: string; // A17 new-company Stage 0 field
     website?: string; // A17 new-company Stage 0 field (feeds the optional recon scan)
+    weekly_pulse?: boolean; // F3 Weekly Pulse toggle — off by default
   };
 }
 

@@ -238,6 +238,167 @@ async def automation_opportunities(workspace_id: str):
     ]
 
 
+# ── Weekly Pulse (F3, marathon July 8) ──────────────────────────────────────
+# OFF by default, per-workspace toggle in config. The digest is composed
+# DETERMINISTICALLY from the week's records delta (no LLM seat): what changed is a
+# database fact, and a client-forwardable text must not hallucinate. The WhatsApp text
+# is built server-side so the copy has one testable source. No auto-sending anywhere.
+
+class PulseConfigIn(BaseModel):
+    enabled: bool
+
+
+@router.put("/{workspace_id}/pulse-config")
+async def set_pulse_config(workspace_id: str, body: PulseConfigIn):
+    """Flip the per-workspace Weekly Pulse toggle (stored in workspaces.config)."""
+    pool = await get_pool()
+    row = await pool.fetchrow("select config from workspaces where id = $1", workspace_id)
+    if row is None:
+        raise HTTPException(404, "workspace not found")
+    config = _loads(row["config"]) or {}
+    config["weekly_pulse"] = body.enabled
+    await pool.execute(
+        "update workspaces set config = $2 where id = $1", workspace_id, json.dumps(config)
+    )
+    return {"enabled": body.enabled}
+
+
+def _trim(text: str, n: int = 140) -> str:
+    text = " ".join((text or "").split())
+    return text if len(text) <= n else text[: n - 1].rstrip() + "…"
+
+
+@router.get("/{workspace_id}/pulse")
+async def weekly_pulse(workspace_id: str):
+    """The Monday digest: last 7 days of records delta. Role-only attribution (the
+    copyable text is built to be forwarded). Returns enabled=false with no digest work
+    skipped — the admin preview should render even while the toggle is off."""
+    pool = await get_pool()
+    ws = await pool.fetchrow(
+        "select name, config from workspaces where id = $1", workspace_id
+    )
+    if ws is None:
+        raise HTTPException(404, "workspace not found")
+    enabled = bool((_loads(ws["config"]) or {}).get("weekly_pulse", False))
+
+    new_claims = await pool.fetch(
+        """select c.claim_text, c.topic, e.role
+           from client_visible_claims c
+           left join entities e on e.id = c.speaker_id
+           where c.workspace_id = $1 and c.created_at > now() - interval '7 days'
+             and (c.tag is null or c.tag <> 'SCRAPED')
+           order by c.created_at desc""",
+        workspace_id,
+    )
+    new_interviews = await pool.fetchval(
+        """select count(*) from interview_sessions
+           where workspace_id = $1 and session_kind = 'interview'
+             and status = 'completed' and created_at > now() - interval '7 days'""",
+        workspace_id,
+    )
+    conflict_rows = await pool.fetch(
+        """select k.kind, k.resolution from claim_conflicts k
+           join client_visible_claims a on a.id = k.claim_a_id
+           join client_visible_claims b on b.id = k.claim_b_id
+           where k.workspace_id = $1 and k.created_at > now() - interval '7 days'
+           order by k.created_at desc""",
+        workspace_id,
+    )
+    new_conflicts = []
+    for r in conflict_rows:
+        res = _loads(r["resolution"])
+        note = (res.get("gap") or res.get("note")) if isinstance(res, dict) else None
+        new_conflicts.append({"kind": r["kind"], "note": note})
+
+    promises = await pool.fetch(
+        """select item, status, delivered_at from artifact_promises
+           where workspace_id = $1
+             and (created_at > now() - interval '7 days'
+                  or delivered_at > now() - interval '7 days'
+                  or status = 'promised')
+           order by created_at desc""",
+        workspace_id,
+    )
+    kept = [p["item"] for p in promises
+            if p["status"] == "delivered" and p["delivered_at"] is not None]
+    pending = [p["item"] for p in promises if p["status"] == "promised"]
+
+    # One suggested next step, same derivation the Company Report uses: the renderer's
+    # own open areas first, then an admission objective, then a suggested person.
+    next_step = None
+    cards = await pool.fetch(
+        """select card_type, content from snapshot_cards
+           where workspace_id = $1
+             and render_batch = (select max(render_batch) from snapshot_cards where workspace_id = $1)
+           order by card_type, id""",
+        workspace_id,
+    )
+    for r in cards:
+        if r["card_type"] == "area_to_investigate":
+            title = (_loads(r["content"]) or {}).get("title")
+            if title:
+                next_step = f"Investigate: {title}"
+                break
+    if next_step is None:
+        for r in cards:
+            if r["card_type"] == "suggested_person":
+                c = _loads(r["content"]) or {}
+                if c.get("name"):
+                    role = f" ({c['role']})" if c.get("role") else ""
+                    next_step = f"Schedule an interview with {c['name']}{role}"
+                    break
+
+    learned = [
+        {"text": _trim(r["claim_text"]), "topic": r["topic"], "role": r["role"]}
+        for r in new_claims[:3]
+    ]
+
+    # WhatsApp-ready text: plain, forwardable, honest. WhatsApp *bold* is the only markup.
+    lines = [f"*{ws['name']} weekly pulse*", ""]
+    if new_claims:
+        lines.append(f"What Nexus learned this week ({len(new_claims)} new records"
+                     + (f" from {new_interviews} interviews" if new_interviews else "")
+                     + "):")
+        for item in learned:
+            src = f" ({item['role']})" if item["role"] else ""
+            lines.append(f"- {item['text']}{src}")
+    else:
+        lines.append("No new records this week.")
+    lines.append("")
+    if new_conflicts:
+        lines.append(f"New conflicts found: {len(new_conflicts)}")
+        for c in new_conflicts[:3]:
+            if c["note"]:
+                lines.append(f"- {_trim(c['note'])}")
+    else:
+        lines.append("No new conflicts this week.")
+    lines.append("")
+    if kept or pending:
+        lines.append(f"Promises: {len(kept)} delivered, {len(pending)} still pending")
+        for item in pending[:3]:
+            lines.append(f"- pending: {_trim(item, 80)}")
+        lines.append("")
+    if next_step:
+        lines.append(f"Suggested next step: {next_step}")
+
+    return {
+        "enabled": enabled,
+        "workspace_name": ws["name"],
+        "totals": {
+            "new_records": len(new_claims),
+            "new_interviews": new_interviews or 0,
+            "new_conflicts": len(new_conflicts),
+            "promises_kept": len(kept),
+            "promises_pending": len(pending),
+        },
+        "learned": learned,
+        "new_conflicts": new_conflicts[:3],
+        "promises": {"kept": kept[:5], "pending": pending[:5]},
+        "next_step": next_step,
+        "whatsapp_text": "\n".join(lines).strip(),
+    }
+
+
 @router.get("/{workspace_id}/sessions")
 async def list_sessions(workspace_id: str, kind: str = "interview"):
     """Interview sessions for a workspace — powers the Interviews list and lets the report
