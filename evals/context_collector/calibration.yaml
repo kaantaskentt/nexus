@@ -1,0 +1,114 @@
+# Sources: docs/emre-inbox/stage-3-ceo-call-v04.md (phases + soft budgets; v0.4 build hooks — AI-history
+#   in warm-up, sign-off criteria in pain, "as far as you know" belief permission, deliberate read capture
+#   + NEVER list in people, success sentence + artifact + handover in close; people-map branch; "never
+#   recite the scrape back"; checkpoints) · prompts/agents/stage3-context-collector.md (persona behavior).
+# Target: prompts/agents/stage3-context-collector.md  ·  Runner: python -m evals.context_collector.run
+# Calibration against the Stage-3 phase design. The full Ece/Bee-Goddess dialogues live in the Drive
+# original (fictionalized here per A12 bias firewall — no real client appears); these assert the phase
+# moves and record-type captures those dialogues were written to demonstrate.
+
+- id: cal-warmup-ai-history
+  category: calibration-warmup
+  intent: Warm-up captures real AI history — what they tried and what it actually produced, not what they hoped.
+  input:
+    context: Warm-up phase, a fictional home-goods brand. He mentions dabbling with AI.
+    turn: "We played with ChatGPT for our product descriptions a while back. Seemed promising."
+  pass_if:
+    - Probes what it actually produced / what happened with it, not just that they tried it
+    - Distinguishes the outcome from the hope ("seemed promising" is not a result)
+  fail_if:
+    - Accepts "seemed promising" as the AI-history answer and moves on
+    - Pitches how the product's AI would do better
+    - Praises them for experimenting
+
+- id: cal-belief-permission-to-be-wrong
+  category: calibration-belief
+  intent: The belief walkthrough gives explicit permission to be wrong ("as far as you know") so the perception-gap baseline is honest.
+  input:
+    context: Belief phase. You are about to ask how he thinks fulfilment works end to end.
+    turn: "I mean, I can tell you how it's supposed to work, but I'm not down there every day, so I might be off."
+  pass_if:
+    - Explicitly welcomes his best-guess version (it is fine to be wrong / that is exactly what is wanted)
+    - Asks him to walk the process end to end as he understands it
+  fail_if:
+    - Signals his account will be checked against the staff as if catching him out
+    - Treats his belief as authoritative fact about the process
+    - Skips the walkthrough because he flagged uncertainty
+
+- id: cal-people-primary-and-never
+  category: calibration-people
+  intent: People phase gets a named primary doer per process plus the NEVER list (who/what to avoid, sensitivities).
+  input:
+    context: People phase. He named the process; you asked who actually runs it and anything to steer clear of.
+    turn: "Deniz runs that whole side. Just, one thing, don't bring up the restructuring with anyone, it's not public yet and people are jumpy."
+  pass_if:
+    - Registers Deniz as the named person for that work
+    - Captures the sensitivity as a NEVER-list item to carry into the interviews (do not raise the restructuring)
+  # NOTE (calibration July 9): this case tests NAME + NEVER-list capture, not read-quarantine. Asking the
+  # exec's read on Deniz ("how do you read Deniz, so I know how to walk in") is the DELIBERATE Phase-4
+  # capture the collector is here to get, so it is NOT a fail here — only a comparative ranking/scorecard
+  # of the team would be. Read-quarantine behavior is tested separately in cc-people-reads-quarantine-promise.
+  fail_if:
+    - Ignores or overrides the do-not-raise instruction (raises the restructuring, or asks about it)
+    - Asks him to RANK or SCORE his people comparatively (a leaderboard), as opposed to an individual read on Deniz
+    - Probes into the restructuring itself
+
+- id: cal-people-map-branch
+  category: calibration-people
+  intent: When the exec cannot name who does the work, open the people-map branch instead of forcing a name.
+  input:
+    context: People phase. Asked who actually handles reconciliation, he defers.
+    turn: "Honestly? No idea who does that day to day. Ask Meltem, she runs the Izmir office, she'd know."
+  pass_if:
+    - Accepts that the primary doer is unknown for now and notes Meltem as the route to find out
+    - Does not pressure him to invent a name he does not have
+  fail_if:
+    - Pushes him to guess a name he clearly does not know
+    - Treats the process's primary interviewee as settled
+    - Drops the thread entirely without noting the branch to Meltem
+
+- id: cal-close-handover-reality
+  category: calibration-close
+  intent: Close captures who actually runs the result after it is built (handover reality), not just the success sentence.
+  input:
+    context: Close phase. He gave the success sentence; you asked who owns the result once it exists.
+    turn: "Once it's built? I guess it just... runs itself, right? That's the whole point."
+  pass_if:
+    - Probes the real handover — who actually owns/operates it day to day, since "runs itself" is not a person
+    - Does not accept "runs itself" as the handover answer
+  fail_if:
+    - Confirms it will run itself with no human owner
+    - Promises an autonomous system that needs no one (overclaim)
+    - Moves to end without capturing the handover reality
+
+- id: cal-dont-recite-the-scrape
+  category: calibration-recon
+  intent: Spend recon to buy trust; never recite what the scrape already told you back at the client.
+  input:
+    context: Warm-up. The industry calibration already establishes the company has three retail locations and a wholesale arm.
+    turn: "So where do you want me to start?"
+  pass_if:
+    - Uses the known context to ask a sharper insider question (or to skip the obvious) rather than reciting it
+    - Hands him a concrete, specific starting point
+  fail_if:
+    - Recites the public facts back as if it discovered them ("I see you have three locations and a wholesale arm...")
+    - Makes him explain the basics the recon already covers
+    - Opens with a generic "tell me about your business"
+
+- id: cal-checkpoint-playback
+  category: calibration-checkpoint
+  intent: At a genuine phase boundary (rows already covered), play back what was heard in one breath and invite correction BEFORE opening the next phase — the checkpoint, not one more probe.
+  input:
+    # Setup makes this an unambiguous phase-boundary checkpoint: both pains were already walked as
+    # specific last-actual episodes and the sign-off checks are captured, so there is no thin row left to
+    # justify one more probe. The correct move is the playback, not another episode dig (anti-under-probing
+    # does not apply once the rows are genuinely covered).
+    context: End of the pain phase, about to move to the belief walkthrough. Both pain symptoms have ALREADY been walked as specific recent episodes (names, tools, the last time each happened), and his sign-off checks are captured. The pain rows are covered; nothing is thin.
+    turn: "Yeah, that's pretty much the picture on where it hurts. I think you've got it all."
+  pass_if:
+    - Plays back the pains/checks he described, in his terms, and invites him to fix anything wrong
+    - Does so as verification, not as praise
+  fail_if:
+    - Praises the summary or him ("great, really helpful")
+    - Switches topics with no playback / correction invitation
+    - Rewrites his content into tidy corporate language in the playback

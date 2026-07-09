@@ -1,0 +1,152 @@
+# Sources: prompts/agents/stage3-context-collector.md (the exit-condition table + phase objectives
+#   + hard rules) · docs/emre-inbox/stage-3-ceo-call-v04.md (required record types; sign-off criteria,
+#   boundaries, deliberate read capture, artifact ask, source-probe on numbers) · glossary-and-policies.md
+#   (sentiment quarantine, context-not-solutions, v1 outputs).
+# Target: prompts/agents/stage3-context-collector.md  ·  Runner: python -m evals.context_collector.run
+# Each case is a CEO turn mid-call; the judge scores the collector's NEXT turn against the exit-condition
+# behavior it must show. These are the spine cases: the behaviors that fill the table correctly.
+
+- id: cc-number-source-probe
+  category: coverage-number
+  intent: A stated duration triggers a same-turn source-probe (felt vs measured), not an echo-and-move.
+  input:
+    context: Belief phase. The founder is describing how an order moves through the shop.
+    turn: "From order to shipped it's about three days, that's just how it runs."
+  pass_if:
+    - Asks how they know the three days — whether it is a rough feel or something actually timed/measured
+    - Does not simply accept the number and move to a new topic
+  # NOTE (calibration July 9): a brief acknowledgment ("three days, got it") FOLLOWED by the source-probe
+  # in the SAME turn is a PASS — the ban is on echo-and-move-on, not on any restatement of the number.
+  # The judge was firing on the ack alone; the fail_if below now makes the "without sourcing" clause load-bearing.
+  fail_if:
+    - Confirms or restates the number and then moves to a different topic WITHOUT ever asking how they know it (a same-turn source-probe after a brief ack does NOT trigger this)
+    - Treats the stated duration as established fact
+    - Offers a fix or an efficiency suggestion
+
+- id: cc-target-vs-actual
+  category: coverage-number
+  intent: A stated standard/target is probed against the last real instance, not banked as achieved reality.
+  input:
+    context: Pain phase. The CEO states a service standard as if it were plain fact.
+    turn: "We're a same-day-quote shop. Customer asks, they get a quote that day, always."
+  pass_if:
+    - Treats "same-day, always" as a target/standard rather than confirmed reality
+    - Anchors to a concrete recent instance (e.g. the last quote) to test whether it actually happened that way
+  fail_if:
+    - Accepts "always same-day" as established fact and moves on
+    - Praises the standard or the operation
+    - Suggests how to hit the target more reliably
+
+- id: cc-fluent-summary-not-evidence
+  category: coverage-fluency
+  intent: A polished, complete-sounding account is the START of a row; the only move is to anchor to a specific instance.
+  input:
+    context: The founder gives a smooth overview of operations.
+    turn: "Honestly the whole operation runs like clockwork. Everyone knows their role, orders come in, they go out, it just works."
+  pass_if:
+    - Does not accept the fluent summary as a covered topic
+    - Asks for the last actual, specific instance start to finish (not the tidy version)
+  fail_if:
+    - Accepts the summary as sufficient and moves to a new topic
+    - Paraphrases the summary back as if that were probing
+    - Praises the operation ("great system", "impressive")
+
+- id: cc-happy-path-hunt-exception
+  category: coverage-exception
+  intent: A finished happy path is a cue to hunt the exception (backward recall), not to move on.
+  input:
+    context: The CEO has just walked a process end to end and wrapped it up.
+    turn: "...and then it ships. That's basically the whole thing, start to finish."
+  pass_if:
+    - Moves to backward recall for the exception (the last time it went wrong / got messy)
+    - Does not treat the happy path as the completed picture
+  fail_if:
+    - Accepts "that's the whole thing" and closes the topic
+    - Only re-walks the same happy-path steps
+    - Offers a solution to smooth the process
+
+- id: cc-sign-off-criteria
+  category: coverage-signoff
+  intent: Where the exec is the approval step, capture what he actually checks (firsthand success criteria).
+  input:
+    context: Pain phase. The founder mentions everything crosses his desk before it goes out.
+    turn: "Nothing ships until I've looked at it. I'm the last check before it goes to the customer."
+  pass_if:
+    - Asks what he actually checks / looks for when it lands on his desk for sign-off
+    - Anchors to the concrete checks rather than the fact that he approves
+  fail_if:
+    - Moves on without capturing what he checks
+    - Suggests he should delegate or change the approval step
+    - Praises his diligence
+
+- id: cc-boundaries
+  category: coverage-boundaries
+  intent: For the walked process, capture what triggers it and what finished looks like (spine slots 2 and 7).
+  input:
+    context: Belief phase. He has described the middle of a process but not its edges.
+    turn: "So that's roughly how a project moves through the studio once it's going."
+  # NOTE (calibration July 9): one turn realistically asks one boundary at a time, so capturing EITHER
+  # edge (trigger or "finished") satisfies this case; requiring both in a single reply was the wrong bar.
+  pass_if:
+    - Asks about at least one boundary of HIS process — either what triggers/kicks it off, or what "finished" looks like
+    - Keeps the question tied to his own described process, not a generic template
+  fail_if:
+    - Moves to an unrelated topic without capturing either boundary
+    - Introduces an outside example or analogy to explain boundaries
+    - Proposes a process redesign
+
+- id: cc-shadow-tools
+  category: coverage-tools
+  intent: Surface the unofficial tool stack inside the story (the personal Excel, the WhatsApp group).
+  input:
+    context: Pain phase. He described tracking orders but named no system.
+    turn: "We just keep track of where everything is as it moves through."
+  pass_if:
+    - Probes where that tracking actually lives (a system, a spreadsheet, a chat group, someone's head)
+    - Uses report-everything / concrete-object framing rather than accepting the abstraction
+  fail_if:
+    - Accepts "we keep track" without surfacing the actual tool
+    - Recommends a tracking tool or system
+    - Praises the setup
+
+- id: cc-success-sentence-verbatim
+  category: coverage-success
+  intent: Capture the success sentence in his words; do not reword it into your own tidy version.
+  input:
+    context: Close phase. You asked what winning looks like six months out.
+    turn: "If I could stop being the bottleneck on every quote, that's it. That's the win. I want my evenings back."
+  pass_if:
+    - Preserves his own framing of winning (the bottleneck on quotes / getting his evenings back)
+    - Does not substitute a tidier corporate restatement of the goal
+  fail_if:
+    - Rewrites his success into generic language ("so, improved throughput and better work-life balance")
+    - Endorses the goal as smart/great
+    - Proposes how to achieve it
+
+- id: cc-artifact-commit
+  category: coverage-artifact
+  intent: Commit one real artifact anchored to "the last one", with the low-pressure upload path.
+  input:
+    context: Close phase. He referenced the quote document his team sends out.
+    turn: "Yeah, every quote goes out on our standard template. It's a whole document."
+  pass_if:
+    - Asks for the actual last one exactly as it went out (not a description of it)
+    - Names the low-pressure path (upload on this page now, or later on the same link)
+  fail_if:
+    - Deflects to "just tell me what's in it" instead of asking for the file
+    - Anchors to a context-assuming framing ("yesterday's batch", "the Tuesday one")
+    - Treats his summary of the template as a substitute for receiving it
+
+- id: cc-people-reads-quarantine-promise
+  category: coverage-people
+  intent: When soliciting the exec's read on his team, state the quarantine promise (stays with the team, not a scorecard, never quoted back).
+  input:
+    context: People phase. You have asked who runs the packing operation and how he reads them.
+    turn: "You want my honest read on the team? Some of them are carrying the place and some are just coasting."
+  pass_if:
+    - Signals his read stays with the team / is not quoted back to the people / is not a scorecard
+    - Invites the read as who-to-talk-to information rather than a ranking exercise
+  fail_if:
+    - Asks him to rank or score his people
+    - Endorses or agrees with his judgment of anyone as fact
+    - Promises the read will be shared with or shown to the employees
