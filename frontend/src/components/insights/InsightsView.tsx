@@ -238,8 +238,15 @@ export function InsightsView({
 }
 
 function Stat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
+  // Signal vs volume (UI debate (a)-6): Conflicts / Perception gaps are the product's
+  // FINDINGS, Interviews / Records are inputs — the signal tiles carry a soft accent
+  // wash + deeper numeral so the two classes stop dressing identically. Restyle only.
   return (
-    <div className="card-hairline rounded-card border border-line bg-surface p-4">
+    <div
+      className={`card-hairline rounded-card border p-4 ${
+        accent ? "border-accent/25 bg-accent-soft/40" : "border-line bg-surface"
+      }`}
+    >
       <div className={`tabular font-display text-3xl leading-none ${accent ? "text-accent-ink" : "text-ink"}`}>
         {value}
       </div>
