@@ -1,3 +1,44 @@
+# NIGHT BLOCK — July 8 late — HARD-PARKED at ceiling (Kaan order). RESUME HERE.
+
+**DONE tonight (each committed + deployed + live-verified):**
+- N1 Simulations reframe: product-wide framing block + plain-language-first round scores
+  ("surfaced 14 of 16 hidden facts and took zero bait" leads; counts demoted). Design
+  proposal: docs/SIMULATIONS-RETHINK.md (recommend hold (b); build (c) per-workspace sims
+  WITH the Run button later). Queue item marked done.
+- P1 JUMP-QUEUE (Kaan, mid-block): branded not-found for /w/* (activation CTAs: Add
+  context / Schedule an interview) + global branded 404 + Insights opportunity links are
+  existence-checked at render (inline evidence view + CTAs when no workflow resolves).
+  Root cause of Kaan's 404: the walk tenant was re-hidden (is_internal) between his page
+  load and click — NO phantom ids (assessor validates against the live fold). DEEPER FIX
+  OPEN: synthesize a viewable workflow from records alone. Verified live (dead workflow
+  URL renders the branded guide inside the shell).
+- N2 MOBILE PASS (respondent journey @390px CSS): consent, chat, done — ONE break found
+  and fixed (chat header action row pushed 6px past the viewport; now wraps). Verified on
+  prod post-deploy: zero horizontal overflow on all three. Screenshots:
+  docs/audit-screens/mobile-consent-390.jpeg + mobile-done-390.jpeg.
+- N4 DEEP-HEALTH: GET /health/deep = {ok, failed_jobs, queued_jobs, running_jobs,
+  last_error_age_s} — one DB read, no vendors, tested + live. It immediately (and
+  correctly) flagged the July 7 version-skew relic (job 32); relic deleted, baseline
+  clean. WATCHTOWER: poll /health/deep every few minutes, page on ok:false; /health
+  stays the liveness probe. (Re-probe after relic delete = one curl, not yet done.)
+- N5 NAMING TABLE: docs/NAMING-PROPOSALS.md (headline rec: Agent Skills → Playbooks
+  until executable skills ship).
+
+**PARK CHECKPOINT — item N3 (Emre's untested list): 3 of 4 verified, no breaks found:**
+- ✓ Second-transcript compile into an existing snapshot: second CEO call posted to
+  meridian (job 136), compiled clean, snapshot now at render_batch 2 (append, not
+  replace). Content spot-check of the updated Home = fresh-session nicety (flip
+  is_internal briefly to view).
+- ✓ Fireflies listing: /api/integrations/fireflies/meetings → 200 with 15 real meetings.
+- ✓ Sign-out/sign-in: Sign out → /login → login (admin@nexus.app) → picker renders.
+- ✗ REMAINS (the only unfinished night item): the .txt/.md FILE upload path in
+  DiscoveryUpload (FileReader → textarea). Paste path proven twice; the file path never
+  exercised. Fresh session: open an upload door, attach a small .txt via playwright
+  browser_file_upload, confirm textarea fills + compile starts; fix what breaks.
+- Note: Melis's mobile test interview completed on meridian (test tenant, harmless).
+
+---
+
 # WEDNESDAY EVENING BATCH — July 8 (Emre doc-2 E1-E6 + Kaan features K1/K2+3) — COMPLETE
 
 All deployed (Railway api+worker + Vercel, HEAD 126b455; migrations 0016+0017 applied to
