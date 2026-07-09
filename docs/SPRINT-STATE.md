@@ -2,6 +2,28 @@
 
 **Lanes:** F2>F3>F5>F6 (team-lead) · UI debate (2 teammates) · F7 persona (teammate) · F8.
 
+**SHIFT 2b (July 9 ~02:00 PT): ALL 7 KAAN-APPROVED UI PROPOSALS LANDED.** Each its own
+commit, each deployed and browser-verified on prod before the next (Kaan's rule):
+- P7 pattern RECORDED (A29 in MERGE_PLAN: outward-share trust line, standing).
+- P4 Simulations lede 6 lines -> 2 (verified live). No disclosure built, per B verdict.
+- P6 Trust Center linked from the export dialog + a quiet snapshot handling-rules line
+  (all three surfaces verified live; no nav item added).
+- P2 Agent Skills folded into Workflows: nav 8 -> 7, /skills redirects, breadcrumb maps,
+  Workflows lede names the Blueprint export (redirect verified live).
+- P3 density floor LIGHT on Workflows (B amendment): content vertically centered + one
+  end-of-list context line (verified by DOM: block midpoint 711 vs viewport 708; the
+  profile zoom makes screenshots lie, measure instead).
+- P5 picker hero guard: hero = most recent PREPARED non-demo workspace; none -> neutral
+  rows. Verified live: Time PR heroes, the empty "1% Session" tenant demoted to a row.
+- P1 orb Concept A: live room = slim presence bar (64px orb tile + real mic waveform +
+  state/time) over a full-page transcript, controls docked bottom; connecting state
+  keeps the centered orb. VERIFIED IN A REAL LIVE CALL headless (voice test session:
+  Speaking state, opener streaming into the un-boxed transcript, evidence
+  docs/audit-screens/approved-proposals/p1-concept-a-live.jpeg). Kaan's real-mic call
+  remains the feel check (same call demos the interruption tuning).
+- Queue note: the P2 delete-interviews feature (cascade semantics) stays queued for the
+  next shift; destructive-action design deserves a fresh context, not end-of-budget.
+
 **SHIFT 2 (July 9 ~01:00-02:00 PT, watchtower-fired): F7 LIVE WIRING - DONE + PROVEN.**
 - F7 wiring (2df932a..3a2b165 + render fix): BUILT+DEPLOYED+FULL LOOP PROVEN ON PROD.
   Persona seeded (0021, applied live); kind 'context' binds context_collector in both
