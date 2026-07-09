@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { list_workspaces } from "@/lib/live-server";
+import { get_me, list_workspaces } from "@/lib/live-server";
 import { signedInUser } from "@/lib/server-user";
 import { AppShell } from "@/components";
 
@@ -20,15 +20,24 @@ export default async function WorkspaceLayout({
   children: React.ReactNode;
   params: { slug: string };
 }) {
-  const [workspaces, user] = await Promise.all([
+  // F6 (dormant): the seat fetch happens ONLY when NEXT_PUBLIC_CLIENT_SEATS=1 — with
+  // the flag unset (today), this layout does exactly what it did before F6.
+  const seatsOn = process.env.NEXT_PUBLIC_CLIENT_SEATS === "1";
+  const [workspaces, user, seat] = await Promise.all([
     list_workspaces().catch(() => []),
     signedInUser(),
+    seatsOn ? get_me().catch(() => null) : Promise.resolve(null),
   ]);
   const workspace = workspaces.find((w) => w.slug === params.slug);
   if (!workspace) notFound();
 
   return (
-    <AppShell workspace={workspace} workspaces={workspaces} user={user}>
+    <AppShell
+      workspace={workspace}
+      workspaces={workspaces}
+      user={user}
+      role={seat?.role ?? "admin"}
+    >
       {children}
     </AppShell>
   );

@@ -104,13 +104,22 @@ export function AppShell({
   workspace,
   workspaces = [],
   user,
+  role = "admin",
   children,
 }: {
   workspace: Workspace;
   workspaces?: Workspace[];
   user?: ShellUser | null;
+  // F6 (dormant): a client seat hides the internal machinery (Simulations, Agent
+  // Skills, Settings). Defaults to admin — nothing changes unless a caller passes
+  // "client", which only the flag-gated layout ever does.
+  role?: "admin" | "client";
   children: ReactNode;
 }) {
+  const navItems =
+    role === "client"
+      ? NAV.filter((n) => !["simulations", "skills", "settings"].includes(n.key))
+      : NAV;
   const pathname = usePathname();
   const seg = pathname.split("/")[3] ?? "home"; // /w/[slug]/<seg>
   const active = SEG_TO_NAV[seg] ?? null;
@@ -139,7 +148,7 @@ export function AppShell({
         <WorkspaceSwitcher current={workspace} all={workspaces} />
 
         <nav className="mt-2 flex flex-col gap-0.5 px-3">
-          {NAV.map((item) => {
+          {navItems.map((item) => {
             const isActive = item.key === active;
             const Icon = item.icon;
             return (
