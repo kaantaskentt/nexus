@@ -242,12 +242,16 @@ export function SendInterviewFlow({
                       Start the conversation →
                     </span>
 
+                    {/* Consent line mirrors prompts/personas/invite-email.md (Emre-primary,
+                        July 8): one promise everywhere, and only what the product delivers. */}
                     <p className="mt-4 border-t border-line pt-3 text-xs text-ink-faint">
                       <Lock className="mr-1 inline h-3 w-3" strokeWidth={2} />
                       By starting, you agree to have this conversation recorded and summarized so
-                      your account of the work can be captured accurately. Before anything is
-                      attributed to you by name, you&apos;ll get to review it, and you can change
-                      it, remove your name, or leave anything out.
+                      your account of the work can be captured accurately. Nothing is quoted with
+                      your name on it, and your answers are combined with everyone else&apos;s
+                      before anyone sees conclusions. If there&apos;s something you want credited
+                      to you, say so, and you&apos;ll see exactly how it appears before it goes
+                      anywhere.
                     </p>
 
                     <p className="mt-3 text-ink-soft">Thanks,<br />{brand.sender_name}</p>

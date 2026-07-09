@@ -26,8 +26,14 @@ It's a relaxed conversation, about {{EST_MINUTES}} minutes, and you can do it wh
 
 **[ Start the conversation → ]({{INTERVIEW_LINK}})**
 
-<!-- Consent line — not editable -->
-By starting, you agree to have this conversation recorded and summarized so your account of the work can be captured accurately. Before anything is attributed to you by name, you'll get to review it, and you can change it, remove your name, or leave anything out.
+<!-- Consent line — not editable. Aligned July 8 to the Emre-primary promise (Kaan
+     verdict 1, July 7): the interviewer, the consent landing, and this line must make
+     the SAME promise. The old wording ("before anything is attributed to you by name,
+     you'll get to review it") implied a review step that does not exist — a broken
+     promise on a consent surface (Emre doc-2 P2). Whether to BUILD a review step
+     instead is an open Kaan+Emre decision; until then the copy promises only what the
+     product delivers. -->
+By starting, you agree to have this conversation recorded and summarized so your account of the work can be captured accurately. Nothing is quoted with your name on it, and your answers are combined with everyone else's before anyone sees conclusions. If there's something you want credited to you, say so, and you'll see exactly how it appears before it goes anywhere.
 
 Thanks,
 {{SENDER_NAME}}
