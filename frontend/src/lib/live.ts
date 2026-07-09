@@ -938,3 +938,30 @@ export async function start_context_call(
 ): Promise<{ token: string; invite_path: string }> {
   return api(`/api/workspaces/${workspace_id}/context-call`, { method: "POST" });
 }
+
+// ── Interview deletion (Kaan P2) ──────────────────────────────────────────────
+// Two-step: the preview's EXACT counts feed the warning dialog; the delete runs the
+// full cascade (the interview's records leave the Knowledge Base with it).
+export interface DeletePreview {
+  deletable: boolean;
+  turns: number;
+  records: number;
+  conflicts: number;
+  workflows: number;
+  opportunities: number;
+  promises: number;
+  will_rerender_snapshot: boolean;
+  has_plan: boolean;
+}
+
+export async function get_delete_preview(session_id: string): Promise<DeletePreview> {
+  return api<DeletePreview>(`/api/sessions/${session_id}/delete-preview`);
+}
+
+export async function delete_interview(session_id: string): Promise<{
+  deleted: { records: number; conflicts: number; workflows: number; opportunities: number };
+  plan_revoked: boolean;
+  snapshot_rerender_queued: boolean;
+}> {
+  return api(`/api/sessions/${session_id}`, { method: "DELETE" });
+}

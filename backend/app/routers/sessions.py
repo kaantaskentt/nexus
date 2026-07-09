@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from ..auth import require_admin
 from ..config import get_settings
 from ..db import get_pool
+from ..pipeline import deletion
 from ..pipeline.interview import run_interview_turn
 from ..queue import enqueue
 from .plans import reconcile_plan_state
@@ -207,3 +208,29 @@ async def eval_bootstrap(body: EvalBootstrapIn):
             ws, plan_id, body.modality, body.language, token,
         )
     return {"token": token}
+
+
+# ── Interview deletion (Kaan P2, July 9) — admin-gated on this mixed router ─────
+# Two-step by design: the preview feeds the warning dialog with EXACT counts (the
+# dialog is the feature, not a nicety); the delete runs the documented full cascade
+# (app/pipeline/deletion.py — records go from the Knowledge Base too).
+
+
+@router.get("/{session_id}/delete-preview", dependencies=[Depends(require_admin)])
+async def delete_preview(session_id: str):
+    out = await deletion.preview_interview_delete(session_id)
+    if out is None:
+        raise HTTPException(404, "no such session")
+    if not out.get("deletable"):
+        raise HTTPException(422, out.get("reason", "this session cannot be deleted"))
+    return out
+
+
+@router.delete("/{session_id}", dependencies=[Depends(require_admin)])
+async def delete_session(session_id: str):
+    out = await deletion.delete_interview(session_id)
+    if out is None:
+        raise HTTPException(404, "no such session")
+    if not out.get("deletable"):
+        raise HTTPException(422, out.get("reason", "this session cannot be deleted"))
+    return out
