@@ -132,18 +132,22 @@ export function ObserverView({
       <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
         {/* Left: the room — same elements as the respondent side, admin chrome around. */}
         <div className="min-w-0">
-          <div className="relative overflow-hidden rounded-card bg-[#1c1712] px-6 py-6 shadow-elev-2 ring-1 ring-inset ring-white/[0.06]">
-            <div className="mx-auto h-40 w-40">
-              <ParticleOrb volume={pulse} state={orbState} />
+          {/* The orb is a VOICE presence element — on a text interview it reads as a
+              wrong-modality prop (UI debate safe win 4), so it renders for voice only. */}
+          {s.modality === "voice" && (
+            <div className="relative overflow-hidden rounded-card bg-[#1c1712] px-6 py-6 shadow-elev-2 ring-1 ring-inset ring-white/[0.06]">
+              <div className="mx-auto h-40 w-40">
+                <ParticleOrb volume={pulse} state={orbState} />
+              </div>
+              <p className="mt-2 text-center text-xs text-white/40">
+                {live
+                  ? "Conversation in progress. The orb pulses as turns land"
+                  : s.status === "completed"
+                    ? "Conversation ended"
+                    : "Waiting for the conversation to start"}
+              </p>
             </div>
-            <p className="mt-2 text-center text-xs text-white/40">
-              {live
-                ? "Conversation in progress. The orb pulses as turns land"
-                : s.status === "completed"
-                  ? "Conversation ended"
-                  : "Waiting for the conversation to start"}
-            </p>
-          </div>
+          )}
 
           {/* Verbatim transcript, timestamped. */}
           <div
