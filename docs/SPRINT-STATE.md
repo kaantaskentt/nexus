@@ -2,6 +2,25 @@
 
 **Lanes:** F2>F3>F5>F6 (team-lead) · UI debate (2 teammates) · F7 persona (teammate) · F8.
 
+**SHIFT 2 (July 9 ~01:00-02:00 PT, watchtower-fired): F7 LIVE WIRING - DONE + PROVEN.**
+- F7 wiring (2df932a..3a2b165 + render fix): BUILT+DEPLOYED+FULL LOOP PROVEN ON PROD.
+  Persona seeded (0021, applied live); kind 'context' binds context_collector in both
+  engine paths (plain sessions byte-identical, test-pinned); mint gated on the
+  creation-time beta opt-in (403 otherwise); CEO entity resolved like discovery so
+  records attribute the founder; BETA labels: AddCompany checkbox, DiscoveryUpload
+  door, room chip. LIVE PROOF (test tenant Atlas Courier, hidden post-walk): collector
+  opened with the BETA disclosure, anchored episodes, took the 30%-a-quarter boast
+  WITHOUT endorsing it ("what was bending inside the operation"), caught the shadow
+  spreadsheet; complete -> compile -> 7 records ALL attributed to Derya -> snapshot
+  7 cards incl. "Single-person dependency in dispatch corrections". BUILD->AUDIT found
+  one real gap live: render_snapshot never enqueued from the completion paths - fixed
+  on both (text+voice), A3 guardrail intact, test-pinned, redeployed, retro-render
+  verified. Backend 183p/1s, frontend 56/56, lints clean.
+- OPEN for Kaan+Emre (flagged, not built): the consent page a context-call CEO sees is
+  the RESPONDENT promise (role-only attribution) - wrong promise for the founder whose
+  words build the attributed snapshot. Test users know; a CEO-consent copy variant is
+  one wording decision before any real client uses the beta.
+
 **SHIFT CLOSE (~00:50 PT July 9): every marathon order landed or honestly staged.**
 - F7 CEO context call (dbd1768): persona + eval suite BUILT AND CALIBRATED. Full honest
   numbers (teammate lane, 5 consecutive runs on the calibrated state): 122/125 = 97.6%,
