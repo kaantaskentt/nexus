@@ -15,6 +15,7 @@ from . import (  # noqa: F401  (importing registers each @handles job)
     plan,
     quality,
     recon,
+    roleplay,
     snapshot,
     workflow,
     workflow_edit,

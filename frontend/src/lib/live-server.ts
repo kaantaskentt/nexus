@@ -65,3 +65,5 @@ export type { SessionSummary, SendResult, DiscoveryStart, WorkflowSummary, Voice
 export const get_weekly_pulse = async (workspace_id: string) =>
   live.get_weekly_pulse(workspace_id, (await tok()) ?? undefined);
 export const get_me = async () => live.get_me((await tok()) ?? undefined);
+export const list_roleplay = async (workspace_id: string) =>
+  live.list_roleplay(workspace_id, (await tok()) ?? undefined);
