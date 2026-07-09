@@ -9,8 +9,7 @@ import {
   Network,
   BookOpen,
   BarChart3,
-  Layers,
-  FlaskConical,
+    FlaskConical,
   Settings2,
   ChevronsUpDown,
   Check,
@@ -47,7 +46,6 @@ const NAV: {
   { key: "workflows", label: "Workflows", icon: Network, href: (s) => `/w/${s}/workflows` },
   { key: "context", label: "Company Context", icon: BookOpen, href: (s) => `/w/${s}/context` },
   { key: "insights", label: "Insights", icon: BarChart3, href: (s) => `/w/${s}/insights` },
-  { key: "skills", label: "Agent Skills", icon: Layers, href: (s) => `/w/${s}/skills` },
   { key: "simulations", label: "Simulations", icon: FlaskConical, href: (s) => `/w/${s}/simulations` },
   { key: "settings", label: "Settings", icon: Settings2, href: (s) => `/w/${s}/settings` },
 ];
@@ -66,7 +64,7 @@ const SEG_TO_NAV: Record<string, NavKey> = {
   context: "context",
   knowledge: "context",
   insights: "insights",
-  skills: "skills",
+  skills: "workflows", // Agent Skills folded into Workflows (Kaan-approved proposal 2)
   simulations: "simulations",
   settings: "settings",
 };

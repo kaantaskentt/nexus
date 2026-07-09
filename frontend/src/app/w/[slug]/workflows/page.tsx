@@ -19,7 +19,7 @@ export default async function WorkflowsPage({ params }: { params: { slug: string
       <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Workflows</h1>
       <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft">
         How the work actually flows, mapped from interviews step by step. Open a workflow
-        to review it, correct it, and export its SOP.
+        to review it, correct it, and export its SOP or Skill Blueprint.
       </p>
 
       {workflows.length === 0 ? (
