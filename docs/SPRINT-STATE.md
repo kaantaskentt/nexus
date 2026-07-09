@@ -1,4 +1,25 @@
-# NIGHT BLOCK — July 8 late — HARD-PARKED at ceiling (Kaan order). RESUME HERE.
+# NIGHT BLOCK — July 8 late — COMPLETE (night-2 shift finished item N3). PARKED CLEAN.
+
+**NIGHT-2 SHIFT (July 8 ~10pm): N3 closed 4/4 — .txt file upload path verified on prod, no breaks.**
+- ✗→✓ .txt/.md FILE upload (DiscoveryUpload FileReader path): real-browser test on prod,
+  meridian append door. Attached upload-test-call.txt via the file chooser → textarea
+  filled VERBATIM (99 words, file chip + word count correct), 2 speakers auto-detected,
+  CEO mapped → "Build the snapshot" → job 145 compile_session RUNNING at the click
+  timestamp → all 9 fan-out jobs done → snapshot re-rendered as render_batch 3 (20 cards;
+  batches 1+2 untouched — append held). New content live on Home: "Afternoon delivery run
+  goes late roughly twice a week" card, 2 new investigate areas, Baris (Delivery driver)
+  added to Suggested People, evidence quotes verbatim from the file. NO FIX NEEDED — the
+  path worked first try. Evidence: docs/audit-screens/txt-upload-filled.jpeg +
+  txt-upload-compiling.jpeg + txt-upload-snapshot-updated.jpeg.
+- Housekeeping: meridian is_internal flipped back to true (hidden again) · N4 leftover
+  re-probe DONE — /health/deep = {ok:true, 0 failed, 0 queued, 0 running} · second stale
+  relic found+deleted (job 11, build_workflow_schema, stuck "running" since July 6 —
+  same class as job 32) · playwright zombie Chrome from parked session cleared.
+- GOTCHA for future shifts: the persistent Playwright profile had a 50% page zoom baked
+  in (devicePixelRatio 0.5) — viewport screenshots capture the wrong region and come out
+  blank. Use fullPage screenshots + crop, or check window.devicePixelRatio first.
+
+--- (original park note below, kept for the record) ---
 
 **DONE tonight (each committed + deployed + live-verified):**
 - N1 Simulations reframe: product-wide framing block + plain-language-first round scores
