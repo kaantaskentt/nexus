@@ -64,7 +64,12 @@ export function InterviewClient({ token }: { token: string }) {
         seedFromTranscript(s);
         // A conversation that already has turns resumes straight into it — a started
         // interview must never present as fresh (and never re-runs consent).
-        setPhase(s.transcript.length > 0 && s.status !== "completed" ? "chat" : "consent");
+        // A completed link lands on the done page (Kaan F1): that's where the
+        // promised-materials uploads live, and the interviewer says "this same link
+        // works after too". Re-consenting a finished interview was a dead end.
+        setPhase(
+          s.status === "completed" ? "done" : s.transcript.length > 0 ? "chat" : "consent",
+        );
       })
       .catch(() => setPhase("load_error"));
   }
