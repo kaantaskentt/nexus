@@ -312,56 +312,63 @@ export function VoiceCall({
     const live = state === "live";
     return (
       <div className="flex min-h-[calc(100vh-8rem)] flex-col py-6">
-        {/* The dark orb panel — A19 centerpiece. Particle sphere on real volume + state,
-            with the respondent's REAL mic waveform below (MicWaveform taps the live mic;
-            it unmounts while muted — honest about what the interviewer can hear). */}
-        <div className="flex flex-col items-center">
-          <div className="relative w-full max-w-lg overflow-hidden rounded-card bg-[#1c1712] px-6 pb-6 pt-8 shadow-elev-2 ring-1 ring-inset ring-white/[0.06]">
-            <div className="relative mx-auto h-52 w-52 sm:h-60 sm:w-60">
-              <ParticleOrb volume={live ? volume : 0} state={live ? orbState : "connecting"} />
-              {!live && (
+        {live ? (
+          // Concept A (Kaan-approved proposal 1): the orb becomes a compact presence
+          // element in a slim top bar — 64px particle avatar in its dark tile, the REAL
+          // mic waveform beside it (unmounts while muted — honest about what the
+          // interviewer can hear), and the same state/time progress on the right. The
+          // conversation below owns the screen; the orb is a calm indicator of who is
+          // talking, not the stage.
+          <div className="mx-auto w-full max-w-lg">
+            <div className="flex flex-wrap items-center gap-4 rounded-card border border-line bg-surface px-4 py-3 shadow-elev-1">
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-[#1c1712] ring-1 ring-inset ring-white/[0.08]">
+                <ParticleOrb volume={volume} state={orbState} />
+              </div>
+              <div className="h-8 w-36">
+                <MicWaveform active={!muted} />
+                {muted && (
+                  <p className="flex h-full items-center gap-1.5 text-xs text-ink-faint">
+                    <MicOff className="h-3.5 w-3.5" strokeWidth={1.75} /> Muted
+                  </p>
+                )}
+              </div>
+              <div className="ml-auto">
+                <InterviewProgress state={orbState} elapsedSec={elapsedSec} estSec={estSec} />
+              </div>
+            </div>
+
+            {micWarning && (
+              <div className="mt-4 flex items-start gap-2 rounded-md border border-danger/30 bg-danger-soft px-4 py-2.5 text-sm text-danger">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
+                <span>
+                  Your microphone is picking you up, but the call isn&apos;t receiving it.
+                  Try a different mic or browser, or{" "}
+                  <button onClick={switchToText} className="font-semibold underline underline-offset-2">
+                    switch to text
+                  </button>{" "}
+                  — same conversation, nothing lost.
+                </span>
+              </div>
+            )}
+          </div>
+        ) : (
+          // Connecting stays the centered moment it always was — it lasts seconds and
+          // the big orb is the right "line is opening" signal.
+          <div className="flex flex-col items-center">
+            <div className="relative w-full max-w-lg overflow-hidden rounded-card bg-[#1c1712] px-6 pb-6 pt-8 shadow-elev-2 ring-1 ring-inset ring-white/[0.06]">
+              <div className="relative mx-auto h-52 w-52 sm:h-60 sm:w-60">
+                <ParticleOrb volume={0} state="connecting" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Loader2 className="h-7 w-7 animate-spin text-accent" strokeWidth={1.75} />
                 </div>
-              )}
+              </div>
             </div>
-            <div className="mx-auto mt-3 h-9 w-64 max-w-full">
-              <MicWaveform active={live && !muted} />
-              {live && muted && (
-                <p className="flex h-full items-center justify-center gap-1.5 text-xs text-white/40">
-                  <MicOff className="h-3.5 w-3.5" strokeWidth={1.75} /> Microphone muted
-                </p>
-              )}
-            </div>
-          </div>
-
-          <h1 className="mt-5 font-display text-2xl text-ink">
-            {live ? "You're connected" : "Connecting your call…"}
-          </h1>
-
-          {live && micWarning && (
-            <div className="mt-4 flex max-w-md items-start gap-2 rounded-md border border-danger/30 bg-danger-soft px-4 py-2.5 text-sm text-danger">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
-              <span>
-                Your microphone is picking you up, but the call isn&apos;t receiving it.
-                Try a different mic or browser, or{" "}
-                <button onClick={switchToText} className="font-semibold underline underline-offset-2">
-                  switch to text
-                </button>{" "}
-                — same conversation, nothing lost.
-              </span>
-            </div>
-          )}
-          {live ? (
-            <div className="mt-4">
-              <InterviewProgress state={orbState} elapsedSec={elapsedSec} estSec={estSec} />
-            </div>
-          ) : (
+            <h1 className="mt-5 font-display text-2xl text-ink">Connecting your call…</h1>
             <p className="mx-auto mt-2 max-w-sm text-center text-sm leading-relaxed text-ink-soft">
               One moment while the line opens. Your browser may ask to use your microphone.
             </p>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Live transcript — real turns as the conversation flows. Un-boxed (UI debate
             spec (c)-1, Kaan feedback 1): the conversation fills the column the page
@@ -375,9 +382,10 @@ export function VoiceCall({
           </div>
         )}
 
-        {/* Controls — including the mid-call switch: same conversation, other door. */}
+        {/* Controls — including the mid-call switch: same conversation, other door.
+            mt-auto docks them to the bottom of the room column (Concept A). */}
         {live && (
-          <div className="mt-6 flex items-center justify-center gap-3">
+          <div className="mt-auto flex items-center justify-center gap-3 pt-6">
             <button
               onClick={toggleMute}
               className={
