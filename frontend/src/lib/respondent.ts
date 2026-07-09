@@ -39,6 +39,8 @@ export interface RespondentSession {
   // real respondents — their view stays chrome-free.
   test_mode?: boolean;
   test_back_path?: string;
+  // F7 BETA: this session is the Stage-3 context call with the client (BETA chip).
+  context_call?: boolean;
 }
 
 export interface TurnResult {
@@ -66,6 +68,7 @@ interface RawSession {
   transcript?: TranscriptTurn[];
   test_mode?: boolean;
   test_back_path?: string;
+  context_call?: boolean;
 }
 
 const clean = (v?: string | null) => (v == null ? undefined : v);
@@ -81,6 +84,7 @@ export async function getSession(token: string): Promise<RespondentSession> {
     transcript: raw.transcript ?? [],
     test_mode: raw.test_mode || undefined,
     test_back_path: raw.test_back_path || undefined,
+    context_call: raw.context_call || undefined,
     context: c
       ? {
           respondent_name: clean(c.respondent_first_name),

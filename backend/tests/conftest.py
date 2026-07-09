@@ -41,6 +41,7 @@ MIGRATIONS = [
     BACKEND / "db" / "migrations" / "0018_report_shares.sql",
     BACKEND / "db" / "migrations" / "0019_user_roles.sql",
     BACKEND / "db" / "migrations" / "0020_roleplay.sql",
+    BACKEND / "db" / "migrations" / "0021_context_call.sql",
 ]
 
 

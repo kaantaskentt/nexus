@@ -55,6 +55,8 @@ Copy a human reads (invite/consent, interviewer lines, snapshot cards, report + 
 - `prompts/rubrics/interview-quality.md` — quality note, headline, follow-ups
 - `prompts/agents/plan-generator.md` — mission, objective labels, handling notes, suggested-question wording
 - `prompts/agents/stage7-interviewer.md` — the interviewer's own text-modality replies
+- `prompts/agents/stage3-context-collector.md` — the BETA context-collector's replies to the client (F7)
+- `prompts/agents/roleplay-debrief.md` — debrief headline and observation prose the admin reads (F8)
 
 Static client-facing copy files (swept directly, guarded by `python -m evals.copy_em_dash_lint`): `prompts/personas/invite-email.md`, `consent-landing.md`, `pause-resume.md`, `reflect-back-close.md`. Seed-authored copy (taglines, handling notes) is fixed in the seed source; verbatim seeded transcript is exempt.
 

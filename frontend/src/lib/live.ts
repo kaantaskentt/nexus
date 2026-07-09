@@ -58,6 +58,8 @@ export interface NewCompany {
   industry?: string;
   website?: string;
   contact_person?: string;
+  // F7 BETA: opt in to "Conduct the context call with Nexus" at creation.
+  beta_context_call?: boolean;
 }
 export async function create_workspace(body: NewCompany): Promise<Workspace> {
   return api<Workspace>("/api/workspaces", {
@@ -925,4 +927,14 @@ export async function request_roleplay_debrief(
   session_id: string,
 ): Promise<{ status: "queued" | "ready"; job_id?: number }> {
   return api(`/api/simulations/roleplay/${session_id}/debrief`, { method: "POST" });
+}
+
+
+// ── F7 BETA: the context call ─────────────────────────────────────────────────
+// Mint the Stage-3 context-call session (kind 'context'); 403 unless the workspace
+// opted into the beta at creation. The founder/admin takes the call at invite_path.
+export async function start_context_call(
+  workspace_id: string,
+): Promise<{ token: string; invite_path: string }> {
+  return api(`/api/workspaces/${workspace_id}/context-call`, { method: "POST" });
 }
