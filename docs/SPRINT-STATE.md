@@ -3,14 +3,20 @@
 **Lanes:** F2>F3>F5>F6 (team-lead) · UI debate (2 teammates) · F7 persona (teammate) · F8.
 
 **SHIFT CLOSE (~00:50 PT July 9): every marathon order landed or honestly staged.**
-- F7 CEO context call (dbd1768): persona + eval suite BUILT AND CALIBRATED — final run
-  25 pass / 0 fail / 0 error across fixed (exit-condition coverage), adversarial
-  (seller / rambler / what-is-Nexus overclaim refusals) and calibration (stage-3 phase
-  design) suites. Teammate built + iterated; I closed the last case (belief walkthrough
-  must never read as "we'll check on you", one surgical persona line, re-run clean).
-  LIVE WIRING deliberately next-shift now the suite is green: docs/F7-WIRING.md has the
-  exact 3 binding points in pipeline/interview.py + beta toggle + compile notes. The
-  'context' session kind already exists in the constraint and compiles (by design).
+- F7 CEO context call (dbd1768): persona + eval suite BUILT AND CALIBRATED. Full honest
+  numbers (teammate lane, 5 consecutive runs on the calibrated state): 122/125 = 97.6%,
+  fixed/spine 50/50 clean, adversarial 38/40, calibration 34/35, zero runner errors;
+  2 of 5 runs fully clean. Loop fixed 5 real persona gaps (quarantine-promise reflex,
+  metric-flourish ban, sign-off checks, checkpoint playback, exception hunt) + 3
+  miscalibrated cases (fixed for the right reason, none weakened) + the runner JSON
+  parse (raw_decode). 3 residual 4/5 flakes are documented in the eval README and
+  deliberately NOT chased (overfitting-to-judge-strings guard, heldout precedent).
+  I then added one principled belief-phase rule (floor interviews are never framed as
+  checking up on the CEO) and the full suite ran 25/25 once after it. WIRE-TIME FLAGS:
+  add stage3-context-collector.md to the no-em-dash checklist in glossary-and-policies
+  when wired; LIVE WIRING next-shift per docs/F7-WIRING.md (3 binding points in
+  pipeline/interview.py + beta toggle + compile notes). The 'context' session kind
+  already exists in the constraint and compiles (by design).
 - NEXT SHIFT QUEUE: (1) F7 live wiring per F7-WIRING.md (flag-gated, Kaan+Emre test
   users, BETA label everywhere) · (2) Kaan reads UI-DEBATE.md convergence: 7 proposals
   wait on him (orb Concept A, fold Agent Skills into Workflows, density floor, preamble
