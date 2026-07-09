@@ -47,7 +47,14 @@ export function StepRail({
 
   const nudge = (dir: -1 | 1) => {
     const el = scroller.current;
-    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.7, behavior: "smooth" });
+    if (!el) return;
+    // Page by ONE step (Emre doc-2 P2 / Kaan ruling): measure the first step wrapper —
+    // a fixed fraction of the container felt arbitrary and read as broken when the
+    // container was near the content width. Fallback keeps the rail usable if the
+    // structure ever changes.
+    const firstStep = el.firstElementChild?.firstElementChild as HTMLElement | null;
+    const step = firstStep ? firstStep.getBoundingClientRect().width + 8 : el.clientWidth * 0.7;
+    el.scrollBy({ left: dir * step, behavior: "smooth" });
   };
 
   return (

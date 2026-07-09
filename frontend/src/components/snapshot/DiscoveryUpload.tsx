@@ -34,7 +34,7 @@ import brand from "@/lib/brand";
 
 // Pipeline stages in reveal order, with human labels. Kinds match the backend fan-out.
 const STAGES: { kind: string; label: string }[] = [
-  { kind: "compile_session", label: "Reading the transcript, extracting records" },
+  { kind: "compile_session", label: "Reading the transcript, extracting records (the longest step, a few minutes)" },
   { kind: "build_workflow_schema", label: "Mapping how the work actually flows" },
   { kind: "score_interview_quality", label: "Scoring what the call covered" },
   { kind: "rate_pain", label: "Rating where the pain is" },
@@ -539,9 +539,9 @@ function CompilingView({ status, done }: { status: DiscoveryStatus | null; done:
         </p>
 
         <div className="mt-6 flex items-center justify-center gap-6">
-          <Counter value={status?.claims ?? 0} label="records captured" />
+          <Counter value={status?.claims ?? 0} label="records captured" working={!done} />
           <div className="h-8 w-px bg-line" />
-          <Counter value={status?.cards ?? 0} label="snapshot cards" />
+          <Counter value={status?.cards ?? 0} label="snapshot cards" working={!done} />
         </div>
       </div>
 
@@ -603,10 +603,19 @@ function CompilingView({ status, done }: { status: DiscoveryStatus | null; done:
   );
 }
 
-function Counter({ value, label }: { value: number; label: string }) {
+function Counter({ value, label, working }: { value: number; label: string; working?: boolean }) {
   return (
     <div className="text-center">
-      <div className="tabular font-display text-3xl text-ink">{value}</div>
+      {/* A hard 0 for a minute reads as "stuck" (Emre doc-2 P2). While the pipeline is
+          working and nothing has landed yet, show an honest indeterminate mark — the
+          numbers appear the moment the compile commits them, never invented earlier. */}
+      {working && value === 0 ? (
+        <div className="font-display text-3xl text-ink-faint">
+          <Loader2 className="mx-auto h-7 w-7 animate-spin" strokeWidth={1.5} />
+        </div>
+      ) : (
+        <div className="tabular font-display text-3xl text-ink">{value}</div>
+      )}
       <div className="text-xs text-ink-faint">{label}</div>
     </div>
   );

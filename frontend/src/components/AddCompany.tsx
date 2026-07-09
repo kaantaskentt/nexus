@@ -75,7 +75,10 @@ export function AddCompany() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 12, scale: 0.98 }}
                 transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                className="glass pointer-events-auto w-full max-w-md rounded-xl border p-6 shadow-elev-3"
+                // Solid surface, not glass (Emre doc-2 P2: picker text bled through the
+                // 72%-alpha panel). Glass stays for edge drawers over a dark scrim;
+                // centered FORM dialogs read on solid — same treatment as Send Interview.
+                className="pointer-events-auto w-full max-w-md rounded-xl border border-line bg-canvas p-6 shadow-elev-3"
               >
               <div className="mb-5 flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">

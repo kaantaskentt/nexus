@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -64,27 +64,37 @@ export function WorkflowEditor({
   const [showHidden, setShowHidden] = useState(false);
   const [panel, setPanel] = useState<null | "sop" | "blueprint">(initialPanel);
   const backLink = back ?? { href: `/w/${workspace.slug}/workflows`, label: "Back to Workflows" };
+  // Same-tick re-entry guard + reconcile ordering (Emre doc-2 P2 "manual step title
+  // reverts"): a blur-rename and a click can BOTH pass a state-based busy check before
+  // React re-renders, and their responses can land out of order — the stale effective
+  // then overwrote the newer title on screen (server state stayed correct, so a reload
+  // "fixed" it). The ref closes the re-entry hole; the ticket drops stale responses.
+  const busyRef = useRef(false);
+  const editTicket = useRef(0);
 
   // One edit: optimistic-first, then reconcile against the server's folded truth. On
   // failure we restore the pre-edit snapshot and surface it inline (never a silent drop).
   const runEdit = useCallback(
     async (op: WorkflowEditOp, stepId: string | null, payload: Record<string, unknown>, optimistic?: (s: WorkflowEditStep[]) => WorkflowEditStep[]) => {
-      if (busy) return;
+      if (busyRef.current) return;
+      busyRef.current = true;
       setBusy(true);
       setError(null);
+      const ticket = ++editTicket.current;
       const snapshot = steps;
       if (optimistic) setSteps(optimistic(steps));
       try {
         const { effective } = await apply_workflow_edit(workflowId, op, stepId, payload);
-        setSteps(effective.steps);
+        if (ticket === editTicket.current) setSteps(effective.steps);
       } catch (e) {
-        setSteps(snapshot);
+        if (ticket === editTicket.current) setSteps(snapshot);
         setError(e instanceof Error ? e.message : "That edit didn't save. Try again.");
       } finally {
+        busyRef.current = false;
         setBusy(false);
       }
     },
-    [busy, steps, workflowId],
+    [steps, workflowId],
   );
 
   const rename = (s: WorkflowEditStep, value: string) => {

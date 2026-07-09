@@ -3,12 +3,14 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Rocket, Lock, ArrowRight, X } from "lucide-react";
+import Link from "next/link";
 import type {
   AreaContent,
   ClaimRecord,
   ClaimTopic,
   ConflictContent,
   LearnedContent,
+  PlanState,
   SnapshotCard,
   SuggestedPersonContent,
   Workspace,
@@ -18,6 +20,7 @@ import {
   EvidenceQuoteCard,
   PainBandChip,
   PersonRow,
+  PlanStateChip,
 } from "@/components";
 import { TOPIC_META, NEUTRAL_TOPIC } from "@/lib/topics";
 import { rise, staggerParent, drawerSpring, scrimFade, drawerSection } from "@/lib/variants";
@@ -57,10 +60,14 @@ export function SnapshotView({
   workspace,
   cards,
   claims,
+  personPlans = {},
 }: {
   workspace: Workspace;
   cards: SnapshotCard[];
   claims: ClaimRecord[];
+  // Latest plan per suggested person (folded name → {id, state}), resolved server-side
+  // so the row shows the REAL lifecycle instead of a stale "Generate plan" (Emre P2).
+  personPlans?: Record<string, { id: string; state: string }>;
 }) {
   const claimsById = useMemo(() => new Map(claims.map((c) => [c.id, c])), [claims]);
   const [openArea, setOpenArea] = useState<AreaContent | null>(null);
@@ -220,16 +227,29 @@ export function SnapshotView({
               <div className="card-hairline divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
                 {people.map((card) => {
                   const p = card.content as SuggestedPersonContent;
+                  const existing = personPlans[(p.name ?? "").trim().toLowerCase()];
                   return (
                     <PersonRow
                       key={card.id}
                       person={p}
                       action={
-                        <GeneratePlanButton
-                          workspaceId={workspace.id}
-                          slug={workspace.slug}
-                          person={p}
-                        />
+                        existing ? (
+                          // A plan already exists — show its real state, never a stale
+                          // "Generate plan" (a second plan is still possible from Plans).
+                          <Link
+                            href={`/w/${workspace.slug}/plans/${existing.id}`}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
+                          >
+                            <PlanStateChip state={existing.state as PlanState} />
+                            <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+                          </Link>
+                        ) : (
+                          <GeneratePlanButton
+                            workspaceId={workspace.id}
+                            slug={workspace.slug}
+                            person={p}
+                          />
+                        )
                       }
                     />
                   );
@@ -247,8 +267,11 @@ export function SnapshotView({
                   <div className="text-xs font-semibold uppercase tracking-[0.08em] text-accent-ink">
                     Next Recommended Action
                   </div>
+                  {/* "Start Active Run" promised orchestration that doesn't exist yet
+                      (Emre doc-2 P2, Kaan ruling July 8: rename until the machinery
+                      ships). The recommendation stands; the button says what it does. */}
                   <p className="text-sm leading-relaxed text-ink">
-                    Start Active Run: investigate {topTwo.join(" and ")}.
+                    Next: investigate {topTwo.join(" and ")}.
                     {firstPerson && ` First interview: ${firstPerson}.`}
                   </p>
                 </div>
@@ -256,7 +279,7 @@ export function SnapshotView({
                   href={`/w/${workspace.slug}/plans`}
                   className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
                 >
-                  Start Active Run <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                  View plans <ArrowRight className="h-4 w-4" strokeWidth={2} />
                 </a>
               </div>
             )}

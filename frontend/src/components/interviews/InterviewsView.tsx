@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Mic, MessageSquare, ArrowRight, Users, Eye, Plus } from "lucide-react";
@@ -33,8 +34,13 @@ export function InterviewsView({
   // Expired links are noise for a returning admin (premium audit P1-5): kept out of the
   // list, honestly counted below it. Nothing is deleted; an expired session with a
   // report would still show (reports never expire).
+  // Hidden by default, viewable on demand (Emre doc-2 P3: a count with no way to see
+  // the rows reads as a locked door). Nothing is deleted; the toggle just reveals them.
+  const [showExpired, setShowExpired] = useState(false);
   const expired = sessions.filter((s) => s.status === "expired" && !s.has_report);
-  const visible = sessions.filter((s) => !(s.status === "expired" && !s.has_report));
+  const visible = sessions.filter(
+    (s) => showExpired || !(s.status === "expired" && !s.has_report),
+  );
   const done = visible.filter((s) => s.status === "completed").length;
 
   return (
@@ -91,9 +97,14 @@ export function InterviewsView({
           </motion.div>
         )}
         {expired.length > 0 && (
-          <p className="mt-3 text-xs text-ink-faint">
-            {expired.length} expired invitation{expired.length === 1 ? "" : "s"} hidden.
-          </p>
+          <button
+            onClick={() => setShowExpired((v) => !v)}
+            className="mt-3 text-xs text-ink-faint underline-offset-2 hover:text-ink hover:underline"
+          >
+            {showExpired
+              ? "Hide expired invitations."
+              : `${expired.length} expired invitation${expired.length === 1 ? "" : "s"} hidden. Show them.`}
+          </button>
         )}
       </div>
     </>

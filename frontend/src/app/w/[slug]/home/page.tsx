@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { get_workspace, list_snapshot_cards, list_claims } from "@/lib/live-server";
+import { get_workspace, list_snapshot_cards, list_claims, list_plans } from "@/lib/live-server";
 import { SnapshotView } from "@/components/snapshot/SnapshotView";
 import { DiscoveryUpload } from "@/components/snapshot/DiscoveryUpload";
 import { AddTranscriptDoor } from "@/components/snapshot/AddTranscriptDoor";
@@ -15,10 +15,22 @@ export default async function HomePage({ params }: { params: { slug: string } })
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
 
-  const [cards, claims] = await Promise.all([
+  const [cards, claims, plans] = await Promise.all([
     list_snapshot_cards(workspace.id),
     list_claims(workspace.id),
+    // Plans keep the suggested-people rows honest (Emre doc-2 P2: Home still offered
+    // "Generate plan" for a person whose interview had already completed). Home is
+    // force-dynamic, so every visit reflects the real lifecycle.
+    list_plans(workspace.id).catch(() => []),
   ]);
+
+  // Latest plan per person (list is newest-first) — keyed by folded name because the
+  // card content carries name+entity_id but plans resolve people by entity.
+  const personPlans: Record<string, { id: string; state: string }> = {};
+  for (const p of plans) {
+    const key = p.interviewee_name?.trim().toLowerCase();
+    if (key && !personPlans[key]) personPlans[key] = { id: p.id, state: p.state };
+  }
 
   if (cards.length === 0) {
     const cfg = workspace.config ?? {};
@@ -42,7 +54,7 @@ export default async function HomePage({ params }: { params: { slug: string } })
   const cfg = workspace.config ?? {};
   return (
     <>
-      <SnapshotView workspace={workspace} cards={cards} claims={claims} />
+      <SnapshotView workspace={workspace} cards={cards} claims={claims} personPlans={personPlans} />
       <AddTranscriptDoor
         workspaceId={workspace.id}
         defaultSpeaker={cfg.contact_person ?? cfg.founder}
