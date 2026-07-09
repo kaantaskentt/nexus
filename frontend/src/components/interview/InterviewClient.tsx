@@ -268,7 +268,9 @@ export function InterviewClient({ token }: { token: string }) {
   return (
     <Shell testBackPath={session?.test_back_path}>
       <div className="flex h-[calc(100vh-4rem)] flex-col">
-        <div className="flex items-center justify-between border-b border-line pb-3">
+        {/* Wraps on narrow phones (mobile pass, July 8): the action row pushed 6px past
+            the viewport at 390px and the page wiggled sideways. */}
+        <div className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3">
           <div>
             <div className="font-display text-lg text-ink">About {topic}</div>
             <div className="text-xs text-ink-faint">
