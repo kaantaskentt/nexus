@@ -24,6 +24,12 @@
   picker+workspace routes scope only for flag-on client rows, /api/me live (admin),
   prod picker still 4 tenants, unauth still 401. Dormancy proven by test both ways
   (flag off ignores client rows; flag on + no row stays admin). Backend 173p/1s.
+- F8 role-play sims (0240489+5daba4d+104b6e6): BUILT+DEPLOYED+FULL LOOP PROVEN ON PROD —
+  played the bookkeeper over the live text engine (session 754ed96f, 11 turns), debrief
+  job 160 generated a real observation (honest verdict: quickie run left H1-H3 untouched,
+  per-objective outcomes render), firewall HELD (bee-goddess records 59 before and after,
+  compile skipped roleplay kind). 0020 applied live. Backend 178p/1s. Drive export of
+  the debrief: logged nice-to-have, not built.
 
 # NIGHT BLOCK — July 8 late — COMPLETE (night-2 shift finished item N3). PARKED CLEAN.
 
