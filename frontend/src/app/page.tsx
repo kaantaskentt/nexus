@@ -17,9 +17,11 @@ import { SignOutButton } from "@/components/SignOutButton";
 import { AddCompany } from "@/components/AddCompany";
 
 // Workspace picker + switcher (A17). After admin login this is the multi-company home:
-// the most-recently-created workspace leads as the hero, every other company is an
+// the most recent PREPARED workspace leads as the hero, every other company is an
 // openable row, and "Add company" mints a fresh real tenant. Counts render from real
-// records, not JSX. No workspace is special-cased by name or demo flag (Sprint2-A).
+// records, not JSX. Hero guardrail (Kaan-approved proposal 5, July 9): an empty or
+// demo tenant never takes the hero slot — a first-time viewer must never meet a junk
+// tenant as the face of the product. Rows still list every workspace, unranked.
 export default async function Home() {
   const workspaces = await list_workspaces();
 
@@ -43,8 +45,10 @@ export default async function Home() {
   // workspaces created_at ASC, so reverse. The newest workspace leads as the hero, so a
   // real client Kaan just added is never visually subordinate to the seeded demo.
   const ordered = [...withCounts].reverse();
-  const hero = ordered[0];
-  const others = ordered.slice(1);
+  // Hero = newest workspace that has real compiled content and is not the demo tenant.
+  // None qualifying -> no hero: every workspace renders as a row under neutral copy.
+  const hero = ordered.find((c) => c.prepared && !c.ws.is_demo) ?? null;
+  const others = ordered.filter((c) => c !== hero);
 
   return (
     <div className="min-h-screen bg-canvas">
@@ -59,7 +63,7 @@ export default async function Home() {
         </h1>
         <p className="mt-3 font-display text-2xl text-ink-soft">Choose your workspace</p>
         <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-ink-soft">
-          {hero
+          {hero || others.length > 0
             ? "Open a workspace to explore its snapshot, interview plans, and insights, or add a new company to begin."
             : "Add your first company to begin. Nexus creates a private workspace and walks you through the first CEO call."}
         </p>
@@ -73,7 +77,7 @@ export default async function Home() {
         {others.length > 0 && (
           <div className="mt-6 text-left">
             <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-faint">
-              Other workspaces
+              {hero ? "Other workspaces" : "Workspaces"}
             </div>
             <ul className="space-y-2">
               {others.map(({ ws, prepared }) => (
