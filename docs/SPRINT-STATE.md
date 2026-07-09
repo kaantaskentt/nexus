@@ -1,3 +1,14 @@
+# NIGHT MARATHON — July 8/9 (docs/MARATHON-ORDERS.md; A28 binds every change)
+
+**Lanes:** F2>F3>F5>F6 (team-lead) · UI debate (2 teammates) · F7 persona (teammate) · F8.
+
+**AUDIT VERDICTS (A23, one line each):**
+- F2 Company Report export (0018 + company_report.py + /r/[token], commits ..95c9fb0):
+  BUILT+DEPLOYED+VERIFIED LIVE — mint idempotent, payload company_report.v1 composed at
+  read (Bee Goddess: 7 cards/6 findings/3 workflows/8 gaps), role-only check PASS on the
+  real payload, prod page 200 with client-branded header + Powered-by footer; backend
+  166p/1s, frontend 56/56, tsc+lint clean. Migration 0018 hand-applied to live Supabase.
+
 # NIGHT BLOCK — July 8 late — COMPLETE (night-2 shift finished item N3). PARKED CLEAN.
 
 **NIGHT-2 SHIFT (July 8 ~10pm): N3 closed 4/4 — .txt file upload path verified on prod, no breaks.**
