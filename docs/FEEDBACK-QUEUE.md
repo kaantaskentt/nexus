@@ -8,6 +8,18 @@ Format per item: `- [ ] YYYY-MM-DD HH:MM · P1/P2/P3 · the feedback, verbatim-i
 Mark `[x]` with the commit hash when landed.
 
 ## Queue
+- [ ] 2026-07-09 01:15 · P2 · Kaan: add a way to DELETE interviews, in the UI, with a warning
+  dialog before it happens. His open question, answer it in the design: "if you delete, does it
+  also go from the KB?" — i.e. decide the cascade semantics for the claim records the interview
+  produced. Watchtower framing for the decision (not a verdict): deleting the source transcript
+  while keeping its derived records leaves orphan claims nobody can audit; full cascade is the
+  honest default, but it interacts with the ontology (corrections/supersede chains may reference
+  the deleted records, perception-gap findings may cite them). Whatever is chosen, the warning
+  dialog must state EXACTLY what will be removed (interview + N records + any findings that cite
+  them) — no silent partial deletes. A28 binds: this touches existing surfaces (Interviews list/
+  detail), so pre-review + isolated commits; destructive action = confirm dialog is the feature,
+  not a nicety. If the cascade question turns out genuinely contested, ship the UI with the
+  safest behavior and log the alternative as a proposal. · (source: chat, movie-night side note)
 - [x] (night block) 2026-07-08 20:45 · P2 · Simulations page shows identical global content in every workspace (new company "1% Session" shows the same cast/rounds as Bee Goddess) - reads as stuck/wrong in a workspace context. DESIGN RETHINK NEEDED, not just a fix: this is product-level trust content (how we test our interviewer), not company data. Options: (a) move it out of workspace nav to a product-level "How Nexus is tested" surface, (b) keep in nav but clearly framed as product-wide proving record with copy like "these tests apply to the interviewer that serves every company", (c) per-workspace sims someday. Also: the scores confuse CEOs/admins (14/16, 0/16 misleading cues) - reframe plain-language-first ("surfaced 14 of 16 hidden facts and took zero bait" as the headline, numbers secondary). Kaan wants a better think here, not a patch. · (source: screenshot)
 
 - [x] (79b726f) 2026-07-07 19:10 · P2 · New Company modal renders anchored bottom-right instead of centered over the picker (screenshot evidence in chat) · fix: center the dialog, dim backdrop evenly
