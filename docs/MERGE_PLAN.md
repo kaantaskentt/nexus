@@ -378,6 +378,14 @@ Context = only the admin's own words ("as you described it"). Custom interviews 
 ~20 min. Same dimensions enrich the SOP generator output where records support them.
 Suggested questions always draft; Approve stays disabled while a mission is empty.
 
+## A29 — Outward-share trust line, standing copy pattern (July 9, Kaan approved UI-debate (b)-7)
+
+Any surface that sends findings OUTWARD (share links, exports, digests) carries one plain
+trust sentence stating what is and is not included, in the export dialog's register:
+"Names are never included: findings in the shared report are attributed by role only."
+New copy on new outward surfaces still gets the Kaan/Emre wording pass; the PATTERN
+(state the boundary at the moment of sharing) is standing and unprompted.
+
 ## A28 — Pre-review + one-commit-per-behavior-change (July 8 night, Kaan standing reinforcement)
 
 Before touching ANY existing feature, the builder writes a two-line pre-review in the

@@ -31,13 +31,12 @@ export default async function SimulationsPage({ params }: { params: { slug: stri
   return (
     <div className="mx-auto max-w-4xl px-8 py-10">
       <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Simulations</h1>
+      {/* One-line lede (Kaan-approved proposal 4): the scoring detail lives where the
+          scores are (cast cards + proving rounds); the firewall promise stays up top. */}
       <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft">
         Practice interviews against simulated employees: realistic characters that
-        pressure-test the interviewer before a real person ever gets a link. Each
-        character knows things it was told <em>not</em> to volunteer, and each drops a few
-        misleading cues on purpose. A run is scored on both: did the interviewer earn the
-        hidden facts, and did it take any bait? Simulated runs are kept fully separate
-        from your company&apos;s real records: nothing said here enters your company context.
+        pressure-test the interviewer before a real person ever gets a link. Nothing said
+        in a simulation enters your company records.
       </p>
       {/* Global-vs-workspace framing (Kaan queue, July 8): the cast and rounds are the
           PRODUCT's proving record, not this company's data — say so before a new tenant
