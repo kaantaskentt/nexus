@@ -181,6 +181,14 @@ export function AppShell({
             </div>
           </div>
           <SignOutButton variant="row" className="mt-1" />
+          {/* F5 Trust Center: footer territory per Kaan (privacy/policy placement) —
+              a quiet link, deliberately outside the main nav. */}
+          <Link
+            href={`/w/${workspace.slug}/trust`}
+            className="mt-2 block px-3 text-xs text-ink-faint transition-colors hover:text-ink"
+          >
+            Trust Center: how your people&apos;s words are handled
+          </Link>
         </div>
       </aside>
 
