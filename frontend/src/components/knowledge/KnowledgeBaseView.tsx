@@ -12,6 +12,7 @@ import type {
 import { ConfidenceBadge, EvidenceQuoteCard } from "@/components";
 import { topicMeta } from "@/lib/topics";
 import { confidenceForTag } from "@/lib/trust";
+import { foldText } from "@/lib/fold";
 import { rise } from "@/lib/variants";
 import { cn } from "@/lib/cn";
 
@@ -56,8 +57,12 @@ const EMPTY: Filters = { q: "", topic: "all", trust: "all", person: "all", sourc
 // cleared, so the counts beside each option reflect real faceted results.
 function keep(r: KnowledgeRecord, f: Filters, skip?: keyof Filters): boolean {
   if (skip !== "q" && f.q) {
-    const hay = `${r.claim_text} ${r.evidence_quote ?? ""} ${r.speaker_name ?? ""} ${r.subject_name ?? ""}`.toLowerCase();
-    if (!hay.includes(f.q.toLowerCase().trim())) return false;
+    // Folded on both sides (Emre doc-2 P1): "yildirim" must find "yıldırım" and vice
+    // versa — Turkish text is the primary market; ASCII typing is the common keyboard.
+    const hay = foldText(
+      `${r.claim_text} ${r.evidence_quote ?? ""} ${r.speaker_name ?? ""} ${r.subject_name ?? ""}`,
+    );
+    if (!hay.includes(foldText(f.q.trim()))) return false;
   }
   if (skip !== "topic" && f.topic !== "all" && r.topic !== f.topic) return false;
   if (skip !== "trust" && f.trust !== "all" && trustTier(r) !== f.trust) return false;
