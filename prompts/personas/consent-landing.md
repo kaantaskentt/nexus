@@ -24,7 +24,8 @@ Hi {{RESPONDENT_NAME}}, thanks for being here. {{ADMIN_NAME}} at {{COMPANY_NAME}
 
 ### How your words are handled
 - The conversation is **recorded and summarized** so your account is captured accurately.
-- **Who sees it:** a short summary of how the work flows goes to the {{COMPANY_NAME}} team who asked for it. Pain points are shared by role, like "someone in packing," not by your name.
+- **Who sees it:** a short summary of how the work flows goes to the {{COMPANY_NAME}} team who asked for it. Pain points are shared by role, like "someone in operations," not by your name. <!-- role example vertical-neutral (July 8): "packing" read wrong at a PR agency -->
+
 - **Nothing is quoted with your name on it.** Your answers are combined with everyone else's before anyone sees conclusions. If there's something you want credited to you, say so, and you'll see exactly how it appears before it goes anywhere.
 - **You won't be asked to rate anyone.** If an opinion about a person comes up, it's kept out of what's shared unless you explicitly say otherwise.
 - **You can pause anytime** and pick up later on the same link.

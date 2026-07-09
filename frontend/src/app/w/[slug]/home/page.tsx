@@ -43,6 +43,7 @@ export default async function HomePage({ params }: { params: { slug: string } })
         workspaceId={workspace.id}
         defaultSpeaker={cfg.contact_person ?? cfg.founder}
         website={cfg.website}
+        industry={workspace.industry}
         hasRecords={interviewClaims.length > 0}
         scrapedCount={claims.length - interviewClaims.length}
       />

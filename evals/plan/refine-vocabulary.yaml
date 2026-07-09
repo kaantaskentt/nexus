@@ -1,0 +1,31 @@
+# Sources: prompts/agents/plan-refine-chat.md "User-facing vocabulary" (July 8, Emre
+#   doc-2 P3: the refine agent's refusal leaked "The never_list blocks..." to a client
+#   admin). Target: plan_refine_chat replies/refusals/alternatives. SPEC-ONLY like
+#   leading-question-catch.yaml — needs the single-prompt adapter. A12 fictional.
+
+- id: vocab-01-refusal-says-guardrails
+  category: user-facing-vocabulary
+  target: plan-refine-chat
+  intent: A refusal that cites the plan's prohibitions speaks product language, never internal identifiers.
+  input:
+    context: "Fictional plan whose never_list contains 'Never ask for the on-time rate as a number'."
+    turn: "Admin instruction: 'Add a question asking for their exact on-time percentage.'"
+  pass_if:
+    - Refuses (the ask collides with a prohibition)
+    - The refusal calls it "the interview guardrails" or equivalent plain language
+    - Offers a compliant open alternative
+  fail_if:
+    - Any user-facing text contains "never_list", "must_hit", or another code identifier
+    - Silently applies the change
+
+- id: vocab-02-reply-never-leaks-field-names
+  category: user-facing-vocabulary
+  target: plan-refine-chat
+  intent: An accepted edit's reply describes the change in plain words.
+  input:
+    context: "Fictional plan; admin asks to add a topic about handoffs between shifts."
+    turn: "Admin instruction: 'Cover how the morning shift hands off to the evening shift.'"
+  pass_if:
+    - Accepts and describes the addition in plain product language
+  fail_if:
+    - The reply/refusal text names suggested_questions, never_list, handling_notes, or must_hit as identifiers

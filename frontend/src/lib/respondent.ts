@@ -164,7 +164,9 @@ export function consentCopy(session: RespondentSession) {
     ],
     handling: [
       "The conversation is recorded and summarized so your account is captured accurately.",
-      `A short summary of how the work flows goes to ${audience}. Pain points are shared by role, like "someone in packing," not by your name.`,
+      // Role example kept vertical-neutral (Emre doc-2 P3: "someone in packing" read
+      // wrong at a PR agency) — every company has operations.
+      `A short summary of how the work flows goes to ${audience}. Pain points are shared by role, like "someone in operations," not by your name.`,
       "Nothing is quoted with your name on it. Your answers are combined with everyone else's before anyone sees conclusions. If there's something you want credited to you, say so, and you'll see exactly how it appears before it goes anywhere.",
       "You won't be asked to rate anyone. If an opinion about a person comes up, it's kept out of what's shared unless you explicitly say otherwise.",
       "You can pause anytime and pick up later on the same link.",

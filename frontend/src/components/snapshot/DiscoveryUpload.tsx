@@ -49,6 +49,7 @@ export function DiscoveryUpload({
   workspaceId,
   defaultSpeaker,
   website,
+  industry,
   hasRecords = false,
   append = false,
   scrapedCount = 0,
@@ -56,6 +57,8 @@ export function DiscoveryUpload({
   workspaceId: string;
   defaultSpeaker?: string;
   website?: string;
+  // Tunes the placeholder example's vertical (jewelry flavor only for jewelry — P3).
+  industry?: string | null;
   // True when the tenant already has raw records but no compiled snapshot cards (the
   // Aurora state): the heading must say that honestly instead of greeting a "fresh" start.
   hasRecords?: boolean;
@@ -294,14 +297,22 @@ export function DiscoveryUpload({
             placeholder={
               // Founder-voiced example on purpose (Kaan P1, July 7): this surface takes a
               // CEO call, so the example teaches CEO register — business-level narration
-              // with a pain, a name, and a belief. Fictional cast only (A12).
+              // with a pain, a name, and a belief. Fictional cast only (A12). The jewelry
+              // flavor shows only on jewelry tenants (Emre doc-2 P3: a PR agency saw
+              // "metal prices"); everyone else gets the same lesson vertical-neutral.
               "Paste the transcript here, or drop a .txt / .md file.\n\n" +
               "You: Tell me how the business actually runs, day to day.\n" +
-              "CEO: Honestly? Mornings are all about the metal prices, everything waits on those. " +
-              "Deniz reprices before the stores open, his own spreadsheet, takes him maybe two hours.\n" +
-              "You: And you'd like that to be faster?\n" +
-              "CEO: I think the whole thing could be automatic by nine. But I'm guessing, " +
-              "Deniz is the one who really knows."
+              (industry?.toLowerCase().includes("jewel")
+                ? "CEO: Honestly? Mornings are all about the metal prices, everything waits on those. " +
+                  "Deniz reprices before the stores open, his own spreadsheet, takes him maybe two hours.\n" +
+                  "You: And you'd like that to be faster?\n" +
+                  "CEO: I think the whole thing could be automatic by nine. But I'm guessing, " +
+                  "Deniz is the one who really knows."
+                : "CEO: Honestly? Everything starts with what came in overnight. Derya sorts it all " +
+                  "every morning, her own list, takes her a couple of hours before anyone can start.\n" +
+                  "You: And you'd like that to be faster?\n" +
+                  "CEO: I think most of it could be ready by nine. But I'm guessing, " +
+                  "Derya is the one who really knows.")
             }
             className="w-full resize-y rounded-md bg-transparent px-4 py-3 text-sm leading-relaxed text-ink outline-none placeholder:text-ink-faint/70"
           />
