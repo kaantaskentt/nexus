@@ -30,6 +30,26 @@
   per-objective outcomes render), firewall HELD (bee-goddess records 59 before and after,
   compile skipped roleplay kind). 0020 applied live. Backend 178p/1s. Drive export of
   the debrief: logged nice-to-have, not built.
+- UI DEBATE (2 teammates + build lane): docs/UI-DEBATE.md = full argued transcript +
+  convergence (7 proposals for Kaan with recommendations; voice-room Concept A = orb
+  shrinks to top-bar presence element, recommended after tonight's un-boxing). BUILT
+  safe wins (each its own commit): spoken-number parity in text room · observer orb
+  voice-only · Trust Center breadcrumb · Insights signal-tile accent wash · voice room
+  un-boxed transcript + drawerSpring arrivals + scroll-follow-only-at-bottom (dcc82d5).
+  DELIBERATE NO-OPS (evidence checked per A28): report step-rail "clip" is the working
+  Emre-#8 scroll affordance (a16 screenshot) · "Interviewee" fallback already resolves
+  via plan since #16, nameless rows have no plan to borrow from (labeling = Kaan taste)
+  · utterance grouping: live merge already assembles same-speaker finals, verified on
+  prod; 1500ms assembler stays specced in UI-DEBATE.md if Kaan still sees fragmentation
+  on a real call. B verified F2 export dialog + F5 Trust Center + footer link on prod;
+  nothing broken found. All deployed (Vercel ready, /health/deep ok).
+- VOICE INTERRUPTION TUNING (Kaan feedback 4): stopSpeakingPlan numWords 0→2,
+  voiceSeconds 0.2→0.4 (cough/"hmm" no longer interrupts; a real sentence-start does,
+  per VAPI-documented semantics), start side untouched (opener speed preserved). Both
+  live shared assistants PATCHed via provision script WITH the shared secret; verified
+  by GET: plan took, auth headers intact, ryan voice unchanged; 0 per-workspace
+  assistants exist so coverage is total. REMAINING HUMAN CHECK: Kaan's next real-mic
+  call confirms the feel (config verified, feel is his call).
 
 # NIGHT BLOCK — July 8 late — COMPLETE (night-2 shift finished item N3). PARKED CLEAN.
 
