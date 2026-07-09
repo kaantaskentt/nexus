@@ -70,3 +70,26 @@ app.include_router(artifacts.router, prefix="/api/artifacts", tags=["artifacts"]
 @app.get("/health")
 async def health():
     return {"ok": True, "product": brand["product_name"]}
+
+
+@app.get("/health/deep")
+async def health_deep():
+    """Deep health (Kaan queue item, July 8): honest queue vitals for the watchtower.
+    No vendor calls — one DB round trip. failed = jobs that exhausted retries;
+    last_error_age_s = seconds since the newest failure (null when none)."""
+    pool = await get_pool()
+    row = await pool.fetchrow(
+        """select
+             count(*) filter (where status = 'failed')  as failed,
+             count(*) filter (where status = 'queued')  as queued,
+             count(*) filter (where status = 'running') as running,
+             extract(epoch from (now() - max(coalesce(locked_at, created_at)) filter (where status = 'failed'))) as last_error_age_s
+           from jobs"""
+    )
+    return {
+        "ok": row["failed"] == 0,
+        "failed_jobs": row["failed"],
+        "queued_jobs": row["queued"],
+        "running_jobs": row["running"],
+        "last_error_age_s": int(row["last_error_age_s"]) if row["last_error_age_s"] is not None else None,
+    }
