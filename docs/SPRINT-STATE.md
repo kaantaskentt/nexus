@@ -14,6 +14,11 @@
   tested), toggle round-trip verified on prod and RESTORED TO OFF (zero behavior change
   for current tenants). Backend 169p/1s, frontend 56/56. Home card render = flag-gated,
   seen in component tree only (browser walk rides the UI-debate lane).
+- F5 Trust Center (7ee7ce4+924bc85): BUILT+DEPLOYED — content-only /w/[slug]/trust
+  (consent promise, quarantine, sealed flags, proving-record link, data boundaries,
+  approval gate; zero system coupling) + quiet sidebar-footer link. tsc/lint/56 green,
+  em-dash lint green (also fixed a pre-existing comment em-dash from E4, eb01a3b).
+  Browser render check on prod rides the UI-debate walk (SSR-auth needs a real login).
 
 # NIGHT BLOCK — July 8 late — COMPLETE (night-2 shift finished item N3). PARKED CLEAN.
 
