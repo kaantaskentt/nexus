@@ -214,6 +214,30 @@ async def get_insights(workspace_id: str):
     }
 
 
+@router.get("/{workspace_id}/automation")
+async def automation_opportunities(workspace_id: str):
+    """Automation Opportunities (Kaan F2+3): the latest assessor batch. Each row cites
+    the claim records it rests on (structurally guaranteed non-empty) and carries its
+    ROI as an is_estimate object — the UI renders it as an estimate, never as fact."""
+    pool = await get_pool()
+    rows = await pool.fetch(
+        """select id, title, summary, signals, claim_ids, workflow_id, step_ids, roi
+           from automation_opportunities
+           where workspace_id = $1
+             and render_batch = (select coalesce(max(render_batch), 0)
+                                 from automation_opportunities where workspace_id = $1)
+           order by created_at""",
+        workspace_id,
+    )
+    return [
+        {"id": str(r["id"]), "title": r["title"], "summary": r["summary"],
+         "signals": _loads(r["signals"]) or [], "claim_ids": _loads(r["claim_ids"]) or [],
+         "workflow_id": str(r["workflow_id"]) if r["workflow_id"] else None,
+         "step_ids": _loads(r["step_ids"]) or [], "roi": _loads(r["roi"])}
+        for r in rows
+    ]
+
+
 @router.get("/{workspace_id}/sessions")
 async def list_sessions(workspace_id: str, kind: str = "interview"):
     """Interview sessions for a workspace — powers the Interviews list and lets the report

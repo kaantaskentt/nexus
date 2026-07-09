@@ -35,6 +35,8 @@ export const list_claims = async (workspace_id: string, topic?: string) =>
   live.list_claims(workspace_id, topic, (await tok()) ?? undefined);
 export const list_knowledge = async (workspace_id: string) =>
   live.list_knowledge(workspace_id, (await tok()) ?? undefined);
+export const get_automation = async (workspace_id: string) =>
+  live.get_automation(workspace_id, (await tok()) ?? undefined);
 export const get_insights = async (workspace_id: string) =>
   live.get_insights(workspace_id, (await tok()) ?? undefined);
 export const list_sessions = async (workspace_id: string) =>

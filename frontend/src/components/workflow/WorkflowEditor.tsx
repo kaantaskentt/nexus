@@ -48,6 +48,7 @@ export function WorkflowEditor({
   workflow,
   back,
   initialPanel = null,
+  highlightStepIds = [],
 }: {
   workspace: Workspace;
   workflow: EffectiveWorkflow;
@@ -56,6 +57,8 @@ export function WorkflowEditor({
   back?: { href: string; label: string };
   // Deep-open a drawer on arrival (?panel=sop) — the report's Generate SOP lands here.
   initialPanel?: null | "sop" | "blueprint";
+  // Steps an automation opportunity flagged (Kaan F2+3) — rendered with an accent ring.
+  highlightStepIds?: string[];
 }) {
   const workflowId = workflow.workflow_id;
   const [steps, setSteps] = useState<WorkflowEditStep[]>(workflow.steps);
@@ -216,6 +219,7 @@ export function WorkflowEditor({
                   step={step}
                   position={i}
                   total={visible.length}
+                  highlighted={highlightStepIds.includes(step.step_id)}
                   onRename={rename}
                   onAnnotate={annotate}
                   onToggleHide={toggleHide}
@@ -255,6 +259,7 @@ function EditableStepCard({
   onToggleHide,
   onReorder,
   disabled,
+  highlighted = false,
 }: {
   step: WorkflowEditStep;
   position: number;
@@ -264,6 +269,7 @@ function EditableStepCard({
   onToggleHide: (s: WorkflowEditStep) => void;
   onReorder: (s: WorkflowEditStep, dir: -1 | 1) => void;
   disabled: boolean;
+  highlighted?: boolean;
 }) {
   const manual = step.source === "manual";
   const [editing, setEditing] = useState(false);
@@ -279,7 +285,8 @@ function EditableStepCard({
       className={
         "flex w-[16rem] shrink-0 flex-col rounded-card border bg-surface p-4 " +
         (step.hidden ? "opacity-55 " : "") +
-        (manual ? "card-hairline border-dashed border-line-strong" : "card-hairline border-line")
+        (manual ? "card-hairline border-dashed border-line-strong" : "card-hairline border-line") +
+        (highlighted ? " ring-2 ring-accent ring-offset-2 ring-offset-canvas" : "")
       }
     >
       <div className="mb-2 flex items-center justify-between">

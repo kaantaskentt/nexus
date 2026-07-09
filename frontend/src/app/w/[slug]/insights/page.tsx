@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { get_workspace, get_insights } from "@/lib/live-server";
+import { get_workspace, get_insights, get_automation } from "@/lib/live-server";
 import { InsightsView } from "@/components/insights/InsightsView";
 
 // Insights (cross-interview intelligence, MORNING-ORDERS priority 1). Server-fetches the
@@ -15,6 +15,9 @@ export default async function InsightsPage({
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
 
-  const data = await get_insights(workspace.id);
-  return <InsightsView data={data} />;
+  const [data, automation] = await Promise.all([
+    get_insights(workspace.id),
+    get_automation(workspace.id).catch(() => []),
+  ]);
+  return <InsightsView data={data} automation={automation} slug={params.slug} />;
 }

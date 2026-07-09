@@ -14,7 +14,7 @@ export default async function WorkflowEditorPage({
   searchParams,
 }: {
   params: { slug: string; id: string };
-  searchParams?: { from?: string; panel?: string };
+  searchParams?: { from?: string; panel?: string; highlight?: string };
 }) {
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
@@ -30,7 +30,12 @@ export default async function WorkflowEditorPage({
     ? { href: `/w/${params.slug}/report/${reportSession}`, label: "Back to report" }
     : from === "skills"
       ? { href: `/w/${params.slug}/skills`, label: "Back to Agent Skills" }
-      : { href: `/w/${params.slug}/workflows`, label: "Back to Workflows" };
+      : from === "insights"
+        ? { href: `/w/${params.slug}/insights`, label: "Back to Insights" }
+        : { href: `/w/${params.slug}/workflows`, label: "Back to Workflows" };
+  // Automation opportunity deep link (Kaan F2+3): ?highlight=stepA,stepB rings the
+  // automatable steps so the click from Insights lands on the exact toil.
+  const highlight = (searchParams?.highlight ?? "").split(",").map((x) => x.trim()).filter(Boolean);
 
   return (
     <WorkflowEditor
@@ -38,6 +43,7 @@ export default async function WorkflowEditorPage({
       workflow={workflow}
       back={back}
       initialPanel={searchParams?.panel === "sop" ? "sop" : null}
+      highlightStepIds={highlight}
     />
   );
 }

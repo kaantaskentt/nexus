@@ -37,6 +37,7 @@ MIGRATIONS = [
     BACKEND / "db" / "migrations" / "0014_demo_synthetic.sql",
     BACKEND / "db" / "migrations" / "0015_voice_test.sql",
     BACKEND / "db" / "migrations" / "0016_artifact_promises.sql",
+    BACKEND / "db" / "migrations" / "0017_automation_opportunities.sql",
 ]
 
 

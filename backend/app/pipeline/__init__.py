@@ -3,6 +3,7 @@ Importing this package registers every job handler with the queue."""
 
 from . import (  # noqa: F401  (importing registers each @handles job)
     artifacts,
+    automation,
     compiler,
     conflicts,
     disclosure,

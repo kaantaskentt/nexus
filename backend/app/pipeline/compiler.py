@@ -351,6 +351,8 @@ async def compile_session(payload: dict) -> None:
     # deterministic core, so it rides after the report-critical jobs.
     await enqueue("compute_yield", {"session_id": session_id}, priority=120)
     await enqueue("detect_conflicts", {"workspace_id": workspace_id, "session_id": session_id}, priority=150)
+    # Automation opportunities (Kaan F2+3): evidence-only assessor, rides after conflicts.
+    await enqueue("assess_automation", {"workspace_id": workspace_id}, priority=160)
 
     # Opt-in snapshot render (A17 discovery upload / #6): a single-call founder round
     # auto-completes and renders once its records land. Runs LAST (priority 200, after

@@ -453,6 +453,31 @@ export async function list_sessions(workspace_id: string, token?: string): Promi
 // Simulated interviews (session_kind='eval') — the Simulations surface. Same shape as
 // real sessions; the backend keeps the two classes firewalled (0007), so this list can
 // never leak into Interviews or vice versa.
+// ── Automation opportunities + honest ROI (Kaan F2+3, July 8) ────────────────
+export interface AutomationRoi {
+  assumption: string;
+  low_hours_month: number | null;
+  high_hours_month: number | null;
+  duration_claim_ids: string[]; // records that supplied REAL durations; empty = assumed
+  is_estimate: true;
+}
+export interface AutomationOpportunity {
+  id: string;
+  title: string;
+  summary: string;
+  signals: string[];
+  claim_ids: string[]; // never empty — structurally enforced server-side
+  workflow_id: string | null;
+  step_ids: string[];
+  roi: AutomationRoi | null;
+}
+export async function get_automation(
+  workspace_id: string,
+  token?: string,
+): Promise<AutomationOpportunity[]> {
+  return api<AutomationOpportunity[]>(`/api/workspaces/${workspace_id}/automation`, undefined, token);
+}
+
 // ── Artifact promises (Kaan F1, July 8) ──────────────────────────────────────
 // Respondent side is PUBLIC by-token (the done page lists what they offered and takes
 // the upload); admin side tracks promised-vs-delivered per session.

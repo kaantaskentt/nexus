@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { GitCompareArrows, Flame, Target } from "lucide-react";
+import { GitCompareArrows, Flame, Target, Zap, ArrowRight, Calculator } from "lucide-react";
+import type { AutomationOpportunity } from "@/lib/live";
 import type {
   Admission,
   ConflictSide,
@@ -32,7 +34,15 @@ function attributionLabel(
   return role;
 }
 
-export function InsightsView({ data }: { data: InsightsData }) {
+export function InsightsView({
+  data,
+  automation = [],
+  slug,
+}: {
+  data: InsightsData;
+  automation?: AutomationOpportunity[];
+  slug?: string;
+}) {
   const { conflicts, key_findings, admissions, stats } = data;
   const nothing = conflicts.length === 0 && key_findings.length === 0 && admissions.length === 0;
 
@@ -121,6 +131,71 @@ export function InsightsView({ data }: { data: InsightsData }) {
               </Section>
             )}
           </>
+        )}
+
+        {/* Automation Opportunities + honest ROI (Kaan F2+3). Derived ONLY from record
+            evidence — every card cites its records; ROI renders as a visually distinct
+            ESTIMATE (dashed, labeled, assumption shown), never like verified data. */}
+        {automation.length > 0 && (
+          <section className="mt-10">
+            <h2 className="flex items-center gap-2 font-display text-xl text-ink">
+              <Zap className="h-5 w-5 text-accent" strokeWidth={1.75} />
+              Automation Opportunities
+            </h2>
+            <p className="mt-1 max-w-2xl text-sm text-ink-soft">
+              Places the records show manual, repetitive, or tool-hopping work. Each one
+              cites the records it rests on; the time figures are estimates built from
+              stated assumptions, not measurements.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {automation.map((o) => (
+                <article key={o.id} className="card-hairline flex flex-col rounded-card border border-line bg-surface p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold leading-snug text-ink">{o.title}</h3>
+                    <span className="shrink-0 rounded-chip bg-surface-sunken px-2 py-0.5 text-[11px] text-ink-faint ring-1 ring-inset ring-ink/[0.04]">
+                      {o.claim_ids.length} record{o.claim_ids.length === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{o.summary}</p>
+                  {o.signals.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {o.signals.map((sg) => (
+                        <span key={sg} className="rounded-chip bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-ink">
+                          {sg.replace(/-/g, " ")}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {o.roi && (
+                    <div className="mt-3 rounded-lg border border-dashed border-line-strong bg-surface-sunken/40 p-2.5">
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-faint">
+                        <Calculator className="h-3.5 w-3.5" strokeWidth={1.75} /> Estimate, not a measurement
+                      </div>
+                      {o.roi.low_hours_month != null && o.roi.high_hours_month != null && (
+                        <div className="mt-1 text-sm font-semibold text-ink">
+                          About {o.roi.low_hours_month} to {o.roi.high_hours_month} hours a month
+                        </div>
+                      )}
+                      <p className="mt-1 text-xs leading-relaxed text-ink-soft">{o.roi.assumption}</p>
+                      <p className="mt-1 text-[11px] text-ink-faint">
+                        {o.roi.duration_claim_ids.length > 0
+                          ? `Durations come from ${o.roi.duration_claim_ids.length} captured record${o.roi.duration_claim_ids.length === 1 ? "" : "s"}.`
+                          : "The duration itself is an assumption, not captured data."}
+                      </p>
+                    </div>
+                  )}
+                  {o.workflow_id && slug && (
+                    <Link
+                      href={`/w/${slug}/workflow/${o.workflow_id}?from=insights${o.step_ids.length ? `&highlight=${o.step_ids.join(",")}` : ""}`}
+                      className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+                    >
+                      See it in the workflow <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+                    </Link>
+                  )}
+                </article>
+              ))}
+            </div>
+          </section>
         )}
       </div>
     </>
