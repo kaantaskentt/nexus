@@ -65,12 +65,26 @@ async def _next_index(session_id: str) -> int:
     )
 
 
+def _context_call_block(session, elapsed_min: float) -> str:
+    """Runtime block for the F7 context call: the collector's objectives live in its own
+    persona (the Stage-3 exit-condition table), so the per-session context is just who
+    the client is and how long the call has run. ~30 min is the stage-3 soft budget."""
+    return (
+        "## This context call (BETA)\n"
+        f"You are running the Stage-3 context call with the client. "
+        f"Company: {session['workspace_name']}. "
+        f"Runtime status: about {int(elapsed_min)} minute(s) elapsed of a roughly "
+        "30 minute call. The exit-condition table in your instructions is your whole "
+        "objective set."
+    )
+
+
 async def _prepare_turn(session_id: str, respondent_text: str | None):
     """Shared setup for both the streaming and non-streaming turn paths: validate the
     session, store the respondent's verbatim turn, and assemble the model context."""
     pool = await get_pool()
     session = await pool.fetchrow(
-        "select s.*, w.industry from interview_sessions s "
+        "select s.*, w.industry, w.name as workspace_name from interview_sessions s "
         "join workspaces w on w.id = s.workspace_id where s.id = $1",
         session_id,
     )
@@ -93,14 +107,22 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
     ]
     package = await _load_package(session["plan_id"])
     elapsed_min = (datetime.now(timezone.utc) - started_at).total_seconds() / 60
-    extra_system = (
-        "## Your handoff package for this interview\n"
-        "This package is your whole world — objectives, questions, vocabulary, handling "
-        "notes, and the NEVER list. You were never told what anyone else said.\n\n"
-        f"```json\n{json.dumps(package, ensure_ascii=False, indent=2)}\n```\n\n"
-        f"Runtime status: about {int(elapsed_min)} minute(s) elapsed. Time budget "
-        f"{package.get('time_budget_minutes', 30)} minutes."
-    )
+    # F7 BETA: a 'context' session is the Stage-3 CEO call run by the context-collector
+    # persona. It has no plan handoff — the persona carries the exit-condition table —
+    # so it gets a runtime block instead of the interviewer's package block. Every other
+    # kind takes the exact path it always did.
+    is_context_call = session["session_kind"] == "context"
+    if is_context_call:
+        extra_system = _context_call_block(session, elapsed_min)
+    else:
+        extra_system = (
+            "## Your handoff package for this interview\n"
+            "This package is your whole world — objectives, questions, vocabulary, handling "
+            "notes, and the NEVER list. You were never told what anyone else said.\n\n"
+            f"```json\n{json.dumps(package, ensure_ascii=False, indent=2)}\n```\n\n"
+            f"Runtime status: about {int(elapsed_min)} minute(s) elapsed. Time budget "
+            f"{package.get('time_budget_minutes', 30)} minutes."
+        )
 
     # Computed coverage (V3): audit the objectives against the transcript server-side and
     # hand the interviewer an authoritative satisfied/partial/untouched map, so a must-hit
@@ -138,6 +160,7 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
 
     return {
         "session": session,
+        "persona": "context_collector" if is_context_call else "interviewer",
         "messages": _messages_from(utterances),
         "extra_system": extra_system,
         "started_at": started_at,
@@ -198,7 +221,7 @@ async def _finalize_turn(ctx: dict, reply: str) -> dict:
 async def run_interview_turn(session_id: str, respondent_text: str | None = None) -> dict:
     ctx = await _prepare_turn(session_id, respondent_text)
     reply = await run_chat(
-        "interviewer",
+        ctx["persona"],
         ctx["messages"],
         extra_system=ctx["extra_system"],
         workspace_id=str(ctx["session"]["workspace_id"]),
@@ -221,20 +244,30 @@ async def build_voice_system(session_id: str) -> str:
     reconnect UI promises against."""
     pool = await get_pool()
     session = await pool.fetchrow(
-        "select s.plan_id, w.industry from interview_sessions s "
+        "select s.plan_id, s.session_kind, s.started_at, w.industry, "
+        "w.name as workspace_name from interview_sessions s "
         "join workspaces w on w.id = s.workspace_id where s.id = $1",
         session_id,
     )
     if session is None:
         raise RuntimeError(f"build_voice_system: no session {session_id}")
-    package = await _load_package(session["plan_id"])
-    cfg = await get_agent_config("interviewer")
-    system = load_prompt(cfg["prompt_path"], _industry_block(session["industry"]))
-    extra = (
-        "## Your handoff package for this interview\n"
-        "This package is your whole world. You were never told what anyone else said.\n\n"
-        f"```json\n{json.dumps(package, ensure_ascii=False, indent=2)}\n```"
-    )
+    # F7 BETA: a 'context' session binds the context-collector persona (no plan handoff;
+    # the persona carries the exit-condition table). All other kinds are unchanged.
+    if session["session_kind"] == "context":
+        cfg = await get_agent_config("context_collector")
+        system = load_prompt(cfg["prompt_path"], _industry_block(session["industry"]))
+        started = session["started_at"] or datetime.now(timezone.utc)
+        elapsed = (datetime.now(timezone.utc) - started).total_seconds() / 60
+        extra = _context_call_block(session, elapsed)
+    else:
+        package = await _load_package(session["plan_id"])
+        cfg = await get_agent_config("interviewer")
+        system = load_prompt(cfg["prompt_path"], _industry_block(session["industry"]))
+        extra = (
+            "## Your handoff package for this interview\n"
+            "This package is your whole world. You were never told what anyone else said.\n\n"
+            f"```json\n{json.dumps(package, ensure_ascii=False, indent=2)}\n```"
+        )
     prior = await pool.fetch(
         "select speaker, text from utterances where session_id = $1 order by turn_index",
         session_id,
@@ -260,7 +293,11 @@ async def stream_reply(session_id: str, messages: list[dict]):
     format conversation the VAPI endpoint assembled from its transcript. Yields reply
     text deltas as they arrive (sub-1.5s first-token target)."""
     system = await build_voice_system(session_id)
-    cfg = await get_agent_config("interviewer")
+    pool = await get_pool()
+    kind = await pool.fetchval(
+        "select session_kind from interview_sessions where id = $1", session_id
+    )
+    cfg = await get_agent_config("context_collector" if kind == "context" else "interviewer")
     async with client().messages.stream(
         model=cfg["model"], max_tokens=2048, system=system, messages=messages
     ) as stream:
