@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation";
 import { FlaskConical, Mic, MessageSquare, Users, History, ShieldCheck } from "lucide-react";
-import { get_workspace, list_simulations, get_simulation_history } from "@/lib/live-server";
+import {
+  get_workspace,
+  list_simulations,
+  get_simulation_history,
+  list_roleplay,
+} from "@/lib/live-server";
+import { RolePlaySection } from "@/components/simulations/RolePlaySection";
 import brand from "@/lib/brand";
 
 // Simulations (A21 IA / task #28): interviews run against SIMULATED respondents —
@@ -16,9 +22,10 @@ export default async function SimulationsPage({ params }: { params: { slug: stri
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
 
-  const [runs, history] = await Promise.all([
+  const [runs, history, roleplayRuns] = await Promise.all([
     list_simulations(workspace.id),
     get_simulation_history().catch(() => null),
+    list_roleplay(workspace.id).catch(() => []),
   ]);
 
   return (
@@ -58,6 +65,16 @@ export default async function SimulationsPage({ params }: { params: { slug: stri
             ))}
           </div>
         </section>
+      )}
+
+      {/* F8: the admin plays a cast character against the real interviewer, then reads
+          the observation debrief. Firewalled server-side (roleplay session kind). */}
+      {history && history.cast.length > 0 && (
+        <RolePlaySection
+          workspaceId={workspace.id}
+          cast={history.cast}
+          initialRuns={roleplayRuns}
+        />
       )}
 
       {history && history.rounds.length > 0 && (
