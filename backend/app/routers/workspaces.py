@@ -51,6 +51,8 @@ class NewWorkspaceIn(BaseModel):
     industry: str | None = None
     website: str | None = None
     contact_person: str | None = None
+    # F7 BETA: opt this workspace into "Conduct the context call with Nexus" at creation.
+    beta_context_call: bool = False
 
 
 @router.post("")
@@ -69,6 +71,8 @@ async def create_workspace(body: NewWorkspaceIn):
         "website": body.website or None,
         "source": "Manual entry",
     }
+    if body.beta_context_call:
+        config["beta_context_call"] = True
     row = await pool.fetchrow(
         "insert into workspaces (name, slug, industry, is_demo, is_internal, config) "
         "values ($1, $2, $3, false, false, $4) "
@@ -246,6 +250,42 @@ async def automation_opportunities(workspace_id: str):
          "step_ids": _loads(r["step_ids"]) or [], "roi": _loads(r["roi"])}
         for r in rows
     ]
+
+
+# ── F7 BETA: the context call (marathon shift 2, docs/F7-WIRING.md) ─────────
+# The founder/admin does the Stage-3 context call WITH the product instead of
+# uploading a transcript. Kind 'context' binds the context-collector persona in the
+# turn engine and is NOT skipped by compile — the transcript feeds the same pipeline
+# as an uploaded CEO call. Gated per workspace by the creation-time beta flag.
+
+
+@router.post("/{workspace_id}/context-call")
+async def start_context_call(workspace_id: str):
+    import secrets
+
+    pool = await get_pool()
+    row = await pool.fetchrow(
+        "select name, config from workspaces where id = $1", workspace_id
+    )
+    if row is None:
+        raise HTTPException(404, "workspace not found")
+    config = _loads(row["config"]) or {}
+    if not config.get("beta_context_call"):
+        raise HTTPException(403, "the context call beta is not enabled for this workspace")
+
+    # The CEO is the speaker of this call — resolve the founder entity exactly like the
+    # discovery upload does, so the compiled records attribute their words correctly.
+    speaker = (config.get("contact_person") or "Founder").strip()
+    ceo_id, _ = await entities.resolve_or_create(workspace_id, speaker, role="Founder")
+
+    token = secrets.token_urlsafe(24)
+    await pool.execute(
+        """insert into interview_sessions
+             (workspace_id, interviewee_id, modality, language, invite_token, status, session_kind)
+           values ($1, $2, 'voice', 'en', $3, 'pending', 'context')""",
+        workspace_id, ceo_id, token,
+    )
+    return {"token": token, "invite_path": f"/i/{token}"}
 
 
 # ── Weekly Pulse (F3, marathon July 8) ──────────────────────────────────────

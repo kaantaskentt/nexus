@@ -97,6 +97,10 @@ async def get_by_token(token: str):
         out["test_mode"] = True
         section = "settings" if session["session_kind"] == "voice_test" else "simulations"
         out["test_back_path"] = f"/w/{slug}/{section}"
+    # F7 BETA: the context call room labels itself (BETA chip in the client) — the
+    # caller is the client's founder/admin, so no admin chrome, just the honest label.
+    if session["session_kind"] == "context":
+        out["context_call"] = True
     return out
 
 
