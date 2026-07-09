@@ -29,7 +29,7 @@ It's a relaxed conversation, about {{EST_MINUTES}} minutes, and you can do it wh
 <!-- Consent line — not editable. Aligned July 8 to the Emre-primary promise (Kaan
      verdict 1, July 7): the interviewer, the consent landing, and this line must make
      the SAME promise. The old wording ("before anything is attributed to you by name,
-     you'll get to review it") implied a review step that does not exist — a broken
+     you'll get to review it") implied a review step that does not exist: a broken
      promise on a consent surface (Emre doc-2 P2). Whether to BUILD a review step
      instead is an open Kaan+Emre decision; until then the copy promises only what the
      product delivers. -->
