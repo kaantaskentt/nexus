@@ -116,3 +116,23 @@ async def test_compile_does_not_skip_context_kind(db, monkeypatch):
     monkeypatch.setattr("app.pipeline.compiler.run_agent", _boom)  # compiler binds it at import
     with pytest.raises(Engaged):
         await compiler.compile_session({"session_id": str(sid)})
+
+
+async def test_complete_context_call_requests_snapshot_render(db):
+    """Completing a context call enqueues the compile WITH render_snapshot (the
+    CEO/discovery-class auto-render) — a plain interview completion must not."""
+    async with _client() as c:
+        ws = await _beta_workspace(c)
+        token = (await c.post(f"/api/workspaces/{ws}/context-call")).json()["token"]
+        await db.execute(
+            "insert into utterances (session_id,turn_index,speaker,text) "
+            "select id, 0, 'respondent', 'x' from interview_sessions where invite_token = $1",
+            token)
+        done = await c.post(f"/api/sessions/by-token/{token}/complete")
+        assert done.json()["status"] == "completed"
+    payload = await db.fetchval(
+        """select payload from jobs where kind = 'compile_session'
+           order by id desc limit 1""")
+    import json as _json
+    payload = _json.loads(payload) if isinstance(payload, str) else payload
+    assert payload.get("render_snapshot") is True

@@ -165,8 +165,15 @@ async def webhook(request: Request, authorization: str | None = Header(default=N
                set status = 'completed', ended_at = $2, resumable_state = $3 where id = $1""",
             session_id, datetime.now(timezone.utc), json.dumps(state),
         )
-        # Hand the verbatim transcript to the Stage 4 compiler.
-        await enqueue("compile_session", {"session_id": str(session_id)})
+        # Hand the verbatim transcript to the Stage 4 compiler. F7: a context call
+        # auto-renders the snapshot (CEO/discovery-class; see sessions.py complete).
+        kind = await pool.fetchval(
+            "select session_kind from interview_sessions where id = $1", session_id
+        )
+        compile_payload = {"session_id": str(session_id)}
+        if kind == "context":
+            compile_payload["render_snapshot"] = True
+        await enqueue("compile_session", compile_payload)
         # Disclosure screen beside the compile (Emre stage-7 §7, A24) — see sessions.py.
         await enqueue("screen_disclosures", {"session_id": str(session_id)})
         await enqueue("scan_artifact_promises", {"session_id": str(session_id)})

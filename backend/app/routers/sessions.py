@@ -149,7 +149,13 @@ async def complete(token: str):
     # Advance the plan in lockstep so it can't read "Sent" while its interview is done
     # (YC-AUDIT #7). COMPILED lands when the compile job finishes, in compiler.py.
     await reconcile_plan_state(pool, plan_id, "COMPLETED", "interview completed")
-    await enqueue("compile_session", {"session_id": str(session["id"])})
+    # F7: a context call is the CEO/discovery-class call (plan-less by construction),
+    # so its compile auto-renders the snapshot exactly like the transcript upload does.
+    # The A3 guardrail in _should_render_snapshot still holds (flag + plan-less both).
+    compile_payload = {"session_id": str(session["id"])}
+    if session["session_kind"] == "context":
+        compile_payload["render_snapshot"] = True
+    await enqueue("compile_session", compile_payload)
     # Disclosure screen runs beside the compile, never inside it — a failed compile
     # must not skip the Tier-2 sealed-flag pass (Emre stage-7 §7, A24).
     await enqueue("screen_disclosures", {"session_id": str(session["id"])})
