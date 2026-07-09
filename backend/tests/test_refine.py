@@ -104,3 +104,56 @@ async def test_refine_structurally_rejects_attribution_never_list(db, monkeypatc
     log = await db.fetchval("select change_log from interview_plans where id=$1", plan_id)
     log = json.loads(log) if isinstance(log, str) else log
     assert log[0]["rejected"] and "attribution" in log[0]["rejected"][0]["reason"]
+
+async def test_refine_carries_conversation_memory_across_turns(db, monkeypatch):
+    """July 8 (Emre doc-2 P1): 'yes, add that version' must work. Turn 1 the agent
+    refuses and OFFERS a compliant rewrite; turn 2's request context must contain the
+    prior exchange — the admin instruction, the agent's reply, and above all its own
+    offered alternative — so the agent can apply what it itself proposed."""
+    ws = await make_workspace(db, industry="jewelry")
+    plan_id = await _plan(db, ws)
+
+    seen: list[str] = []
+
+    async def turn1(agent_name, user_content, **kw):
+        seen.append(user_content)
+        return json.dumps({
+            "accepted": False,
+            "refusal_reason": "leading question",
+            "alternative": "Walk me through the last repricing you did, step by step.",
+            "reply": "That wording leads. I can offer an open version instead.",
+            "changes": [],
+        })
+
+    monkeypatch.setattr(plans, "run_agent", turn1)
+    async with _client() as c:
+        r1 = await c.post(f"/api/plans/{plan_id}/refine-chat",
+                          json={"instruction": "ask him to admit the repricing is too slow"})
+    assert r1.status_code == 200 and not r1.json()["accepted"]
+    # Turn 1 has no history block.
+    assert "Conversation so far" not in seen[0]
+
+    async def turn2(agent_name, user_content, **kw):
+        seen.append(user_content)
+        return json.dumps({
+            "accepted": True,
+            "reply": "Added the open version.",
+            "changes": [{"target": "suggested_questions", "op": "add",
+                         "value": "Walk me through the last repricing you did, step by step."}],
+        })
+
+    monkeypatch.setattr(plans, "run_agent", turn2)
+    async with _client() as c:
+        r2 = await c.post(f"/api/plans/{plan_id}/refine-chat",
+                          json={"instruction": "Yes, add that version."})
+    assert r2.status_code == 200 and r2.json()["accepted"]
+
+    ctx = seen[1]
+    assert "Conversation so far" in ctx
+    assert "ask him to admit the repricing is too slow" in ctx           # prior instruction
+    assert "That wording leads" in ctx                                   # its own reply
+    assert "Walk me through the last repricing you did" in ctx           # its own offer
+    # And the applied question actually landed on the plan.
+    qs = await db.fetchval("select suggested_questions from interview_plans where id=$1", plan_id)
+    qs = json.loads(qs) if isinstance(qs, str) else qs
+    assert any("Walk me through the last repricing" in (q.get("text") or str(q)) for q in qs)

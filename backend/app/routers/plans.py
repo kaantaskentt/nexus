@@ -358,8 +358,29 @@ async def refine_chat(plan_id: str, body: RefineIn):
     never = _loads(plan["never_list"], [])
     change_log = _loads(plan["change_log"], [])
 
+    # Conversation memory (July 8, Emre doc-2 P1): the agent must be able to reference
+    # its OWN prior replies — above all the compliant alternative it just offered, so
+    # "yes, add that version" works. Rebuild the recent exchange from the audited
+    # change_log (last few admin turns; the log IS the transcript, no second store).
+    convo_lines: list[str] = []
+    for e in change_log[-6:]:
+        if e.get("actor") != "admin" or "instruction" not in e:
+            continue
+        convo_lines.append(f"Admin: {e['instruction']}")
+        if e.get("reply"):
+            convo_lines.append(f"You replied: {e['reply']}")
+        if e.get("alternative"):
+            convo_lines.append(f"You offered this compliant rewrite: {e['alternative']}")
+        if e.get("applied"):
+            convo_lines.append(f"(You applied {len(e['applied'])} change(s) that turn.)")
+    convo_block = (
+        "# Conversation so far (oldest first — 'that version' or 'yes' refers to YOUR "
+        "most recent offer below)\n" + "\n".join(convo_lines) + "\n\n"
+    ) if convo_lines else ""
+
     user_content = (
-        f"# Admin instruction\n{body.instruction}\n\n"
+        convo_block
+        + f"# Admin instruction (respond to THIS)\n{body.instruction}\n\n"
         f"# Current plan (edit only via the contract below)\n"
         f"mission: {json.dumps(mission, ensure_ascii=False)}\n"
         f"suggested_questions: {json.dumps(questions, ensure_ascii=False)}\n"
@@ -392,6 +413,10 @@ async def refine_chat(plan_id: str, body: RefineIn):
         "instruction": body.instruction,
         "accepted": bool(result.get("accepted")),
         "refusal_reason": result.get("refusal_reason"),
+        # The agent's own words persist too — they ARE the conversation the next turn
+        # references ("yes, add that version"). Without them the log was write-only.
+        "reply": result.get("reply", ""),
+        "alternative": result.get("alternative"),
         "applied": applied,
         "rejected": rejected,
         "proposed": result.get("changes") or [],
