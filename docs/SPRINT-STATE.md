@@ -8,6 +8,12 @@
   read (Bee Goddess: 7 cards/6 findings/3 workflows/8 gaps), role-only check PASS on the
   real payload, prod page 200 with client-branded header + Powered-by footer; backend
   166p/1s, frontend 56/56, tsc+lint clean. Migration 0018 hand-applied to live Supabase.
+- F3 Weekly Pulse (35dcf7b+648ce56+89703c7): BUILT+DEPLOYED+VERIFIED LIVE — GET /pulse
+  composes the 7-day delta deterministically (bee-goddess: 59 records/3 interviews/8
+  conflicts + honest next step), WhatsApp text server-built (role-only, no em-dashes,
+  tested), toggle round-trip verified on prod and RESTORED TO OFF (zero behavior change
+  for current tenants). Backend 169p/1s, frontend 56/56. Home card render = flag-gated,
+  seen in component tree only (browser walk rides the UI-debate lane).
 
 # NIGHT BLOCK — July 8 late — COMPLETE (night-2 shift finished item N3). PARKED CLEAN.
 
