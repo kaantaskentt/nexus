@@ -1,6 +1,6 @@
 "use client";
 
-import { mergeTurns } from "@/lib/transcript-display";
+import { displaySpokenText, mergeTurns } from "@/lib/transcript-display";
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -329,7 +329,9 @@ export function InterviewClient({ token }: { token: string }) {
                     : "rounded-tl-sm bg-surface text-ink")
                 }
               >
-                {m.text}
+                {/* Display-layer spoken-number parity with the voice room (UI debate
+                    safe win 1) — storage stays verbatim, same as LiveTranscript. */}
+                {displaySpokenText(m.text)}
               </div>
             </motion.div>
           ))}
