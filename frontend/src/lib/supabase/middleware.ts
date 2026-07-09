@@ -9,7 +9,9 @@ import { createServerClient } from "@supabase/ssr";
 
 // Prefixes that never require a session. Interview links are the load-bearing one:
 // respondents must reach /i/[token] without an admin account (non-negotiable, A17).
-const PUBLIC_PREFIXES = ["/login", "/i/", "/auth/"];
+// Company-report share links (/r/[token], F2) are public the same way: the token is
+// the key, and the backend only serves client-visible, role-only content for it.
+const PUBLIC_PREFIXES = ["/login", "/i/", "/r/", "/auth/"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
