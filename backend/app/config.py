@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     # sessions, and the route refuses entirely unless this is on).
     eval_mode: bool = False
 
+    # F6 client seats (marathon July 8) — DORMANT. When off (default), the seat layer
+    # short-circuits to admin with zero DB reads and the auth path is byte-for-byte
+    # today's. When on, user_roles rows scope 'client' seats to their own workspace.
+    client_seats: bool = False
+
     # Computed coverage-routing (task #12 / morning-packet §5). When on, the turn engine
     # audits objective coverage server-side each turn and hard-gates the close on any
     # untouched must-hit. Default OFF: the A/B (evals/e2e/proof-matrix.md) showed the

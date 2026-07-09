@@ -16,7 +16,7 @@ Fail closed: a missing config or an unverifiable token is a 401/500, never an al
 import time
 
 import httpx
-from fastapi import Header, HTTPException
+from fastapi import Depends, Header, HTTPException, Request
 
 from .config import get_settings
 
@@ -66,4 +66,46 @@ async def require_admin(authorization: str | None = Header(default=None)) -> str
 
     user_id = await _verify_with_gotrue(token)
     _CACHE[token] = (user_id, now + _TTL_SECONDS)
+    return user_id
+
+
+# ── F6 client seats (DORMANT) ─────────────────────────────────────────────────
+# A seat maps a verified user to a role. While CLIENT_SEATS is off (default), the
+# resolver returns admin with ZERO extra IO, so the auth path is exactly the one that
+# shipped before F6. When on: a 'client' row scopes that user to one workspace; a user
+# with no row stays an admin (we are the only users today — auth must not break).
+
+
+async def resolve_seat(user_id: str) -> dict:
+    """Return {"role": "admin"|"client", "workspace_id": str|None} for a verified user."""
+    settings = get_settings()
+    if not settings.client_seats:
+        return {"role": "admin", "workspace_id": None}
+    from .db import get_pool  # local import: auth must stay importable without a pool
+
+    pool = await get_pool()
+    row = await pool.fetchrow(
+        "select role, workspace_id from user_roles where user_id = $1", user_id
+    )
+    if row is None:
+        return {"role": "admin", "workspace_id": None}
+    return {
+        "role": row["role"],
+        "workspace_id": str(row["workspace_id"]) if row["workspace_id"] else None,
+    }
+
+
+async def require_workspace_seat(
+    request: Request, user_id: str = Depends(require_admin)
+) -> str:
+    """Router-level dependency for workspace-scoped admin routers: a client seat may
+    only touch its own workspace. Reads the {workspace_id} path param generically, so
+    one dependency serves every router. Detail routes keyed by other ids (plan_id,
+    workflow_id) pass through in this DORMANT v1 — full per-resource resolution is the
+    flag-on follow-up, documented in the F6 plan. No-op while CLIENT_SEATS is off."""
+    seat = await resolve_seat(user_id)
+    if seat["role"] == "client":
+        ws = request.path_params.get("workspace_id")
+        if ws and ws != seat["workspace_id"]:
+            raise HTTPException(403, "this seat is scoped to its own workspace")
     return user_id

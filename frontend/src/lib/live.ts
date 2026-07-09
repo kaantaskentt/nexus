@@ -868,3 +868,14 @@ export async function set_pulse_config(
     body: JSON.stringify({ enabled }),
   }, token);
 }
+
+// ── Seats (F6, dormant) ───────────────────────────────────────────────────────
+export interface Seat {
+  user_id: string;
+  role: "admin" | "client";
+  workspace_id: string | null;
+}
+
+export async function get_me(token?: string): Promise<Seat> {
+  return api<Seat>(`/api/me`, undefined, token);
+}
