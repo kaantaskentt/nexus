@@ -1,3 +1,41 @@
+# WEDNESDAY EVENING BATCH — July 8 (Emre doc-2 E1-E6 + Kaan features K1/K2+3) — COMPLETE
+
+All deployed (Railway api+worker + Vercel, HEAD 126b455; migrations 0016+0017 applied to
+live Supabase). Per-item verdicts for Emre: docs/emre-inbox/CRASH-REPORT-VERDICTS-jul8.md
+(doc-2 table). Suites at close: backend 160p/1s, frontend 56/56, tsc/lint clean.
+
+**AUDIT VERDICTS (one line each):**
+- E1 Melis (840eac7): renderer TRANSCRIBED entity uuids and flipped one hex digit —
+  ids now stitched mechanically by name; API heals stale ids; errors always shown. ✓ live
+  (Melis row shows Awaiting approval on Home).
+- E2 refine memory (46df494 side): change_log stores agent replies+alternatives; each
+  turn rebuilds the exchange — "yes, add that version" works. ✓ multi-turn test.
+- E3 folding (ca5acad side): foldText both sides; live: "yildirim" → 32 yıldırım hits. ✓
+- E4 consent drift: invite email/preview aligned to Emre-primary; DECISION LOGGED
+  (build review step vs softened copy) for Kaan+Emre. ✓
+- E5 P2 sweep (ca5acad): Home plan-state rows · View plans rename · card-width chevrons ·
+  indeterminate compile counters · solid add-company dialog · editor rename-race fix
+  (ref guard + response ticket) · expired-invites toggle. ✓
+- E6 P3 (d46b630): industry-aware placeholders · "interview guardrails" vocabulary rule
+  + SPEC-ONLY eval · back-link verified. ✓
+- K1 artifact promises (0173a29 + 8290b5a): fixed response 10 fired VERBATIM live on the
+  Kerem session; scan extracted both offered artifacts with objective context; done page
+  lists them with uploads (completed links now land there); upload → delivered verified
+  live (late-jobs CSV); admin panel on report = promised-vs-delivered + copyable reminder.
+  Auto-send reminders = PROPOSED (needs email/WhatsApp infra).
+- K2+3 automation (85d03f6): assessor ran on the real meridian compile — 4 opportunities,
+  every one record-cited (2-8 records), preflight one cites the REAL captured durations,
+  the rest say "no duration was captured" honestly; Insights renders dashed
+  "Estimate, not a measurement" blocks; click-through rings the automatable steps
+  (?highlight=) with Back to Insights. Zero-citation drop is structural + tested (Kaan e).
+  Tunç credit: FOR-TUNC #22.
+
+**OPEN (carried):** review-step-vs-copy decision (Kaan+Emre) · backend latency follow-up ·
+real-mic voice call (Kaan) · true streamed compile counts (compile-side incremental
+writes) · reminder auto-send infra (email/WhatsApp) if Kaan wants it.
+
+---
+
 # WEDNESDAY SHIFT — July 8 day (Emre crash report preempt + parked queue + stranger walk)
 
 **EMRE CRASH REPORT: 9/9 verdicts delivered** (docs/emre-inbox/CRASH-REPORT-VERDICTS-jul8.md
