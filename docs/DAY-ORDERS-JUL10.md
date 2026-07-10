@@ -579,6 +579,20 @@ UNCAVEATED; his one open adjudication = the hedged-ideation line (item 3b).
    ambiguous-soft bait, whichever way it's called. Shipped state is safe either way;
    this only decides whether hedges RELIABLY serve. 7.5's when-in-doubt boundary —
    Emre's clinical line to set, not ours.
+3c. ⚑ ROOM-PARITY UNBLOCK (#1 Kaan item): the 4 reference mockups never reached the
+   repo — docs/kaan-inbox/room-mockups/ is EMPTY. Re-commit the screenshots there or
+   send the Figma file/node. Lane proceeds on the orders' text + R1 + token system
+   meanwhile (rail mounted per R1's own wording; pixel-exact + welcome 3-box copy held).
+3d. ⚑ ANYTIME-CONTEXT deviations for your veto (recommendations shipped):
+   - Per-fact confirm-what-to-store gate DEFERRED to v2 (your order named it): v1 ships
+     call-based honesty (CLAIMED cap + quarantine + Company-Context chips); v2 design
+     note = post-call review screen reusing intake chips (in-room gate would collide
+     with R1 counts-only). Veto = we build the post-call gate now.
+   - "Add more context" modality: both offered, VOICE-primary (your "talk to Nexus"
+     line), text secondary. Taste flip is cheap.
+   - ONTOLOGY REVIEW (Kaan+Emre): first context call compiles a single founder account
+     up to CONFIRMED; additive/intake CEO paths cap at CLAIMED. Asymmetry now explicit
+     — should the first call cap too? Tested behavior NOT regressed pending your call.
 4. Respondent count-pill look (R1 split shipped with pill; swap to a panel is ~10min).
 5. Plan-detail right void: design session (recommend single reading column + sticky bar).
    Stat-chip labeling same pass.
