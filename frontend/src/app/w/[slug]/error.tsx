@@ -20,7 +20,7 @@ export default function WorkspaceError({
       </div>
       <h1 className="mt-4 font-display text-xl text-ink">This screen hit a snag</h1>
       <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-        The rest of the workspace is fine — your data is untouched. Try this screen again,
+        The rest of the workspace is fine. Your data is untouched. Try this screen again,
         or use the navigation to keep working.
       </p>
       <button

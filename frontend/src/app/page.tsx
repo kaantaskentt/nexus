@@ -179,7 +179,7 @@ function HeroCard({
             <Meta icon={Database} label="Context seeded from discovery call" />
           </>
         ) : (
-          <Meta icon={Compass} label="Awaiting first CEO call — start with the discovery transcript" />
+          <Meta icon={Compass} label="Awaiting first CEO call. Start with the discovery transcript" />
         )}
         <span className="ml-auto inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard group-hover:-translate-y-px group-hover:bg-accent-hover group-hover:shadow-elev-2">
           {prepared ? "Enter workspace" : "Set up workspace"}

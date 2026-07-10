@@ -20,7 +20,7 @@ export default function AppError({
       </div>
       <h1 className="mt-4 font-display text-xl text-ink">Something went wrong</h1>
       <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">
-        Nothing you shared has been lost. Try again — if this keeps happening, close the
+        Nothing you shared has been lost. Try again. If this keeps happening, close the
         tab and reopen your link.
       </p>
       <button
