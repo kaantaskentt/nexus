@@ -103,5 +103,32 @@ the latest batch is a snapshot/display question for lane-export/quality — not 
    second enqueue is a no-op (idempotent).
 Evidence (DB counts + screenshots) captured back into this log at seam A.
 
+## Test evidence (local, pre-deploy)
+- Commit A: test_voice.py 10/10 — new `test_webhook_status_ended_alone_compiles`
+  (abnormal hangup still compiles + context render flag) and
+  `test_webhook_both_end_events_compile_once` (idempotent, recording still stored).
+- Commit B: test_plan_generate.py 9/9 (new `test_generate_requires_compiled_records`) +
+  test_nexus_check.py green; endpoint tests seed a record to reflect the real precondition.
+- Commit C: test_reconcile.py 4/4 — render gap, compile gap, snapshot-exists skip, and the
+  A3 employee-interview skip, all with idempotency re-runs.
+- Full suite standard run: 264 passed, 1 skipped, 14 errors — ALL 14 are the pre-existing
+  `RuntimeError: Event loop is closed` teardown flake of conftest's module-global pool
+  (every one of the 14 files passes in isolation; deselecting MY files produced MORE such
+  errors, proving they are ordering-driven, not mine). No assertion failures.
+
+## Reconcile prod-preview (read-only, before any deploy)
+Ran the two backstop queries as SELECT COUNT against prod: compile_gap = 0, render_gap = 1.
+The single render-gap workspace is **Aurora Atelier** (1 client-visible claim, 0 cards) — a
+legitimately-stranded thin context call, exactly the class to heal. test-mest is NOT in the
+set (it self-healed to 20 cards). So the worker-startup sweep will enqueue exactly one
+render on deploy — a real heal, not a storm.
+
 ## Audit verdicts
-- (pending seam A)
+- Commit A (voice.py guaranteed idempotent compile): BUILD ok, tests green, no double-compile
+  by construction (single-row CAS). Verdict: SOLID pending seam-A driven-verify.
+- Commit B (plan precheck): BUILD ok, tests green, no behavior change when records exist.
+  Verdict: SOLID.
+- Commit C (reconcile backstop): BUILD ok, tests green, prod-preview well-scoped (1 heal).
+  Verdict: SOLID pending seam-A driven-verify.
+- Driven verify on test-mest (VAPI call → compile → snapshot → plan → paste): PENDING seam A
+  (team-lead deploys; I do not). Script above.
