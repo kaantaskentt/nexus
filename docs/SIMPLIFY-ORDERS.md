@@ -248,3 +248,10 @@ Same rule as everything else: adapt to the ONE cohesive Nexus system, never past
 off-system Canva template wholesale. Figma stays the source of truth for the component
 system; Canva is a supplementary asset/inspiration source. If Canva needs auth in-session,
 flag it rather than blocking.
+
+## ADDENDUM 5 note 2 — Canva CONFIRMED live (watchtower verified 22:45). Brand kit present:
+id kAFmcOCu180 (pull its colors/fonts to keep generated assets on-brand). Design lane can
+list-brand-kits, search-designs, generate-design, export-design. Verify the brand kit
+actually matches the Nexus system (cream/ink/serif) before trusting it; if it is an
+unrelated/old kit, treat Figma + the coded design tokens as source of truth and use Canva
+for one-off assets only. Do NOT auto-apply a brand kit wholesale to product UI.
