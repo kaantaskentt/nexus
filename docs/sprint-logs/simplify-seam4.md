@@ -34,5 +34,18 @@ marker persistent on every screen" — InterviewClient.tsx + LiveRoom.tsx + Voic
   flagged for the lead if cleanup is wanted.
 
 ## Result
-Mini-seam-4 GREEN — sim marker now persistent on consent + room, employee consent unregressed.
-Prod = b718074. Closes the last gap before Emre's voice test.
+Mini-seam-4 ROUND 1 GREEN — sim marker now persistent on consent + room, employee consent unregressed.
+Prod = b718074 (6199a06 live).
+
+## MIGRATION STATUS (do not re-apply)
+Migrations **0023_workflow_taxonomy** and **0024_live_captures** are ALREADY APPLIED + VERIFIED to
+live Supabase — done by hand in SEAM-2 (pooler, statement_cache_size=0; columns/table/agent_config
+confirmed). The 20:35 watchtower "migrations committed but not on live" flag in SIMPLIFY-ORDERS.md
+is **STALE** — do NOT re-apply. No migrations are pending.
+
+## ROUND 2 (pending — cargo grew, HOLD)
+Per lead (ADDENDUM 3, binding): a P1 voice-transcript freeze in the LiveRoom was found in Kaan's
+live testing; lane-e is fixing. Mini-seam-4 will RE-DEPLOY bundling THREE frontend fixes: 6199a06
+(marker, already live), bea9fac (sim consent copy), + the transcript-freeze fix (hash TBD from lane-e).
+Verify = the same 3 checks PLUS driving LIVE VOICE turns in the room to confirm the transcript renders
+(coordinate with lane-e on the safest repro/voice_test path). Holding for lane-e's fix hash.
