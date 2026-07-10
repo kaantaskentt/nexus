@@ -314,6 +314,43 @@ file's log section before NEXT.
   design, duplicates cannot render. lane-mest dispatched on its 4-step driven verify
   (backend steps first; reconcile drill on hidden tenant only). Vercel deploy #1 hit a
   network ETIMEDOUT, retry in flight.
+- SEAM A REPIN: mest's post-approval hardening (213cc97 race test, 94cc184 A12 demo
+  firewall) landed after pin b64375e → backend REDEPLOYED at 8a03c9e, /health/deep ok.
+  Vercel prod Ready (build from b64375e; delta since is backend/prompt-only). s7's gated
+  consent commit 56dce06 REVERTED-TO-HOLD on main (8a03c9e) — trunk deploys at seams, a
+  gated consent-copy change cannot sit live on main; re-land = revert the revert after
+  the Kaan+Emre nod. Quality's F1 (1b9c402) rode the repin (opener stage-direction cut,
+  eval-backed).
+- LANE-S7 COMPLETE (a-e + specs 5a740ce): A24 table logged (core=ADOPT, data layer=
+  CONVERGENT extended, tiers/retention/counsel=OPEN human-gated). a-d DEPLOYED at 8a03c9e;
+  0026 applied+verified by team-lead pre-deploy. Alo 143→Swiss-line bug fixed in
+  config/resource-packets.json (183+112 shipped; dedicated Turkey suicide line = Pending).
+  37 tests green. Driven verify queued behind browser slots.
+- LANE-RESIDUALS COMPLETE (read-only sweep, 50259c4+f418615): 0025 CONFIRMED live (my
+  earlier check agreed); 0026 was the only real pending migration (now applied); intake
+  coherence restored by seam A (2026f50 in deployed image + 0025 + flag). Item 2:
+  automation opportunities NOT orphaned (Home SnapshotView + report render them; absence
+  on pilot = test-mest's missing snapshot; NO two-signal bar exists on automation —
+  Emre's hypothesis conflated it with attention/fade). Item 4 deep-link correctly guarded;
+  ?highlight= landing needs a driven pass. Item 6 BLOCKED on CEO-consent locked copy
+  (human-gated).
+- MARMARA VERDICT (team-lead, read-only per pilot §8): 43 utterances → 1 claim_record →
+  1 visible claim, 3 cards, 0 failed jobs. A 43-turn conversation yielding one claim is
+  SUSPICIOUSLY THIN extraction (likely outage-era compile), not a short call. Do not show
+  a client; recommend manual transcript read + re-extraction decision after Emre's look.
+
+## KAAN ACTION LIST (consolidated, batched — nothing blocks the lanes)
+1. SENDGRID_API_KEY (ENVIRONMENT.md item 6, still outstanding) + new INCIDENT_NOTIFY_EMAILS
+   (Kaan + Emre addresses) in Railway → turns Section 7 reviewer notification from
+   'skipped'-fallback into real email (R2). Until then incidents persist + log loudly.
+2. Consent line nod (Kaan+Emre): S7 §7.8 one-liner — commit 56dce06 held via revert
+   8a03c9e; re-land = revert the revert.
+3. Report footer wording (honest correction shipped, taste pass invited).
+4. Respondent count-pill look (R1 split shipped with pill; swap to a panel is ~10min).
+5. Plan-detail right void: design session (recommend single reading column + sticky bar).
+   Stat-chip labeling same pass.
+6. Watchtower standing cadence for reconcile_snapshots (proposal in lane-mest log; not built).
+7. Standing: naming table (Emre veto) · delete-company §6-1 · Marmara manual read (above).
 
 ## Infra note (from lane-sec, binds all lanes)
 Concurrent full-suite runs against the shared test DB (localhost:55432) deadlock on the
