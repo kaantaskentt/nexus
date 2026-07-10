@@ -495,7 +495,6 @@ export function VoiceCall({
         }
         capturedCount={captures.items.length}
         hideCaptured={Boolean(simulation)}
-        simulationLabel={simulation?.label}
       >
         {/* The transcript owns the middle of the room (non-negotiable 5, un-boxed). It stays
             put through a reconnect — nothing shared is lost (SIMPLIFY F). */}

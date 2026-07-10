@@ -4,7 +4,7 @@ import { displaySpokenText, mergeTurns } from "@/lib/transcript-display";
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, Mic, MicOff, Pause, SendHorizontal, Check, RefreshCw, WifiOff, Flag } from "lucide-react";
+import { Lock, Mic, MicOff, Pause, SendHorizontal, Check, RefreshCw, WifiOff, Flag, FlaskConical } from "lucide-react";
 import brand from "@/lib/brand";
 import { BrandMark } from "@/components";
 import { VoiceCall } from "./VoiceCall";
@@ -202,7 +202,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "loading") {
     return (
-      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
+      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call} simulation={session?.simulation}>
         <div className="flex h-64 items-center justify-center text-ink-faint">Loading…</div>
       </Shell>
     );
@@ -210,7 +210,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "load_error" || !session) {
     return (
-      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
+      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call} simulation={session?.simulation}>
         <div className="mx-auto max-w-md py-16 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-surface-raised text-ink-faint">
             <WifiOff className="h-5 w-5" strokeWidth={1.75} />
@@ -233,7 +233,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "paused") {
     return (
-      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
+      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call} simulation={session?.simulation}>
         <div className="mx-auto max-w-md py-16 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
             <Check className="h-5 w-5" strokeWidth={2} />
@@ -273,7 +273,7 @@ export function InterviewClient({ token }: { token: string }) {
       ? "This adds what you just shared to your company snapshot: how the work flows, the systems in play, and the open questions worth digging into. It's yours to review first, and no one on your team is contacted without your approval."
       : "This becomes the first version of your company snapshot: how the work flows, the systems in play, and the open questions worth digging into. It's yours to review first, and no one on your team is contacted without your approval.";
     return (
-      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
+      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call} simulation={session?.simulation}>
         <div className="mx-auto max-w-md py-16 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success-soft text-tag-verified">
             <Check className="h-6 w-6" strokeWidth={2.5} />
@@ -321,7 +321,7 @@ export function InterviewClient({ token }: { token: string }) {
 
   if (phase === "consent") {
     return (
-      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
+      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call} simulation={session?.simulation}>
         <ConsentLanding session={session} onStart={start} />
       </Shell>
     );
@@ -331,7 +331,7 @@ export function InterviewClient({ token }: { token: string }) {
   // the server record first, so nothing said on the call is missing from the thread.
   if (mode === "voice") {
     return (
-      <Shell wide testBackPath={session?.test_back_path} contextCall={session?.context_call}>
+      <Shell wide testBackPath={session?.test_back_path} contextCall={session?.context_call} simulation={session?.simulation}>
         <VoiceCall
           token={token}
           respondentName={ctx?.respondent_name}
@@ -439,7 +439,7 @@ export function InterviewClient({ token }: { token: string }) {
   );
 
   return (
-    <Shell wide testBackPath={session?.test_back_path} contextCall={session?.context_call}>
+    <Shell wide testBackPath={session?.test_back_path} contextCall={session?.context_call} simulation={session?.simulation}>
       <LiveRoom
         header={header}
         controls={composer}
@@ -448,7 +448,6 @@ export function InterviewClient({ token }: { token: string }) {
         }
         capturedCount={captures.items.length}
         hideCaptured={Boolean(session?.simulation)}
-        simulationLabel={session?.simulation?.label}
       >
         <div ref={scroller} className="h-full space-y-4 overflow-y-auto px-1">
           {messages.map((m, i) => (
@@ -512,17 +511,21 @@ export function InterviewClient({ token }: { token: string }) {
 
 // Calm, standalone shell — the respondent is not inside the workspace app. `wide` opens
 // the container up for the live room (transcript + Captured-live aside side by side);
-// the calm consent/done/paused screens stay narrow.
+// the calm consent/done/paused screens stay narrow. `simulation` renders a PERSISTENT
+// practice-run marker on EVERY screen (consent, pre-call, room, done) — SIMPLIFY I trust
+// requirement: an admin must never mistake a simulation for a real interview, at any step.
 function Shell({
   children,
   testBackPath,
   contextCall,
   wide,
+  simulation,
 }: {
   children: React.ReactNode;
   testBackPath?: string;
   contextCall?: boolean;
   wide?: boolean;
+  simulation?: { label: string };
 }) {
   const inner = wide ? "max-w-6xl" : "max-w-2xl";
   return (
@@ -539,17 +542,31 @@ function Shell({
               Beta · Context call
             </span>
           )}
-          {/* Admin test mode ONLY (P0-C): a way back. Real respondents get no chrome. */}
+          {/* Admin test mode ONLY (P0-C): a way back. Real respondents get no chrome. The
+              label matches where it goes — a simulation exits to Simulations, not Settings. */}
           {testBackPath && (
             <a
               href={testBackPath}
               className="ml-auto inline-flex items-center gap-1 rounded-md border border-line px-2.5 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
             >
-              ← Test call · Back to Voice Settings
+              ← {simulation ? "Exit simulation" : "Test call · Back to Voice Settings"}
             </a>
           )}
         </div>
       </header>
+      {simulation && (
+        <div className="px-6">
+          <div className={`mx-auto ${inner}`}>
+            <div className="flex items-center gap-2 rounded-md border border-accent/30 bg-accent-soft px-3 py-2 text-xs text-accent-ink">
+              <FlaskConical className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+              <span>
+                <span className="font-semibold">Simulation · {simulation.label}</span> —
+                practice run. Nothing here reaches your company records.
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
       <main className={`mx-auto ${inner} px-6`}>{children}</main>
     </div>
   );
