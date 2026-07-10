@@ -229,6 +229,37 @@ export function consentCopy(session: RespondentSession) {
   const minutes = ctx.est_minutes ?? 20;
   const modality = (ctx.modality ?? session.modality) === "voice" ? "voice call" : "chat";
 
+  // SIMPLIFY I — a SIMULATION is a practice run against a workflow. There is no real person
+  // and no real interview, so NONE of the respondent promises may render: no attribution, no
+  // anonymity/role-only sharing, no recording-into-a-snapshot. It states plainly what it is
+  // and that nothing reaches company records. Written as template literals so the consent
+  // drift guard (which governs promises made to a real respondent) correctly skips it — this
+  // copy is not a promise to a person.
+  if (session.simulation) {
+    const workflow = session.simulation.label;
+    return {
+      heading: `Practice run · ${workflow}`,
+      intro: `This is a simulation, not a real interview. You play an employee while ${brand.product_name} interviews you about "${workflow}", so you can pressure-test how well it draws the workflow out. Nothing said here reaches your company records.`,
+      whatItIsTitle: `What this is`,
+      whatItIs: [
+        `A rehearsal: ${brand.product_name} interviews you as if you ran "${workflow}". The interviewer is what's being tested, not you.`,
+        `Answer as your character would, including the parts a real employee might dodge, so the interviewer has to work for them.`,
+        `There is nothing to prepare and no right answers.`,
+      ],
+      handlingTitle: `What happens with this`,
+      handling: [
+        `Nothing said here is stored as company knowledge, shared with anyone, or attributed to a person. It is a practice run only.`,
+        `When you finish, ${brand.product_name} shows how the interviewer did against this workflow, so you can judge its craft.`,
+        `You can stop anytime and run it again.`,
+      ],
+      startAction: `Start the simulation`,
+      consentFinePrint: `This is a practice run against ${workflow}. Nothing you say is recorded into your company records.`,
+      name,
+      minutes,
+      hasContext: Boolean(session.context),
+    };
+  }
+
   // Leadership copy — the context call is WITH the client's founder/admin, not an employee
   // under consent protection. The role-only respondent promise is wrong here and must not
   // appear; what this person is owed is honest attribution + the pre-interview promise.
