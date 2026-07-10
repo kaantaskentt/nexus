@@ -374,6 +374,14 @@ file's log section before NEXT.
   s7 got this rule; split did not (my miss) and SQL-deleted their throwaway — logged,
   not undone, rule now uniform.
 
+- LANE-MEST RE-VERIFY on FINAL pin 8a03c9e (log 8ff6c2d): 4/4 non-browser PASS, this
+  time through the REAL seat-gated HTTP API via the disposable admin — fix B 422 live,
+  paste-compile POST→200→7 records→5 cards (STEP-3 GAP CLOSED, split's redundant drive
+  canceled), is_demo firewall live-proven (demo skipped, control healed, repeat no-op),
+  fix A re-proven on test-mest (kept at baseline). Done-page browser visual pending
+  (browser freed after zombie kill). Mest's tenant teardowns predate the hidden-shell
+  rule — same message-race class, logged, rule applies forward.
+
 ## KAAN ACTION LIST (consolidated, batched — nothing blocks the lanes)
 1. SENDGRID_API_KEY (ENVIRONMENT.md item 6, still outstanding) + new INCIDENT_NOTIFY_EMAILS
    (Kaan + Emre addresses) in Railway → turns Section 7 reviewer notification from
