@@ -30,7 +30,7 @@ export default function WorkspaceNotFound() {
           <BookOpen className="h-4 w-4" strokeWidth={1.75} /> Add context
         </Link>
         <Link
-          href={`${base}/plans?new=1`}
+          href={`${base}/interviews/new`}
           className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover"
         >
           <CalendarPlus className="h-4 w-4" strokeWidth={2} /> Schedule an interview

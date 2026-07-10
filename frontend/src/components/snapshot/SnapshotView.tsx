@@ -286,10 +286,10 @@ export function SnapshotView({
                   </p>
                 </div>
                 <a
-                  href={`/w/${workspace.slug}/plans`}
+                  href={`/w/${workspace.slug}/interviews`}
                   className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
                 >
-                  View plans <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                  View interviews <ArrowRight className="h-4 w-4" strokeWidth={2} />
                 </a>
               </div>
             )}

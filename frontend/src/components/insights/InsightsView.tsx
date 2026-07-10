@@ -221,7 +221,7 @@ export function InsightsView({
                           No mapped workflow holds these steps yet.{" "}
                           <Link href={`/w/${slug}/context`} className="font-medium text-accent-ink hover:underline">Add context</Link>{" "}
                           or{" "}
-                          <Link href={`/w/${slug}/plans?new=1`} className="font-medium text-accent-ink hover:underline">schedule an interview</Link>{" "}
+                          <Link href={`/w/${slug}/interviews/new`} className="font-medium text-accent-ink hover:underline">schedule an interview</Link>{" "}
                           to map it.
                         </p>
                       )}

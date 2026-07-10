@@ -14,7 +14,8 @@ import type { PersonRef, PlanState } from "@/lib/types";
 // poll the real plan state and hold an honest "Generating" while the job runs, only
 // showing the done-state once the plan has genuinely left DRAFT. Per A4 the admin does
 // not see the plan until it clears Nexus's own review, so the done-copy says exactly that
-// and links to the Interview Plans page rather than pretending it is ready to send.
+// and links to the Interviews hub rather than pretending it is ready to send. (The old
+// /plans list folded into /interviews — SIMPLIFY K2 — so links point straight at the hub.)
 type Phase = "idle" | "generating" | "done" | "error";
 
 // Poll cadence and ceiling. Generation is a multi-step LLM job that takes the better part
@@ -83,11 +84,11 @@ export function GeneratePlanButton({
     const label = reachedState ? "In review" : "Preparing";
     const note = reachedState
       ? "Nexus is reviewing this plan before it reaches you."
-      : "Nexus is still preparing this plan. You can follow it on the Interview Plans page.";
+      : "Nexus is still preparing this plan. You can follow it on the Interviews page.";
     return (
       <div className="flex flex-col items-end gap-1 text-right">
         <Link
-          href={`/w/${slug}/plans`}
+          href={`/w/${slug}/interviews`}
           className="inline-flex items-center gap-1.5 rounded-md bg-success-soft px-3 py-1.5 text-sm font-medium text-tag-confirmed transition-colors hover:brightness-95"
         >
           {label}
