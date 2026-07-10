@@ -123,9 +123,25 @@ legitimately-stranded thin context call, exactly the class to heal. test-mest is
 set (it self-healed to 20 cards). So the worker-startup sweep will enqueue exactly one
 render on deploy — a real heal, not a storm.
 
+## PROPOSAL (not built — for Kaan's awareness, per team-lead)
+The reconcile backstop runs as a worker-startup sweep + on-demand `reconcile_snapshots` job.
+A STANDING TIMED CADENCE (watchtower enqueues `reconcile_snapshots` every N minutes) would
+close the window between deploys for continuous self-heal. Not built here — a timer changes
+prod behavior on a schedule, which wants Kaan's nod. Recommendation: watchtower runs it on
+its existing monitor cadence (cheap: two existence-guarded SELECTs, enqueues only real gaps
+— prod preview showed 1 legit gap, 0 spurious). Decision: Kaan.
+
+## Post-approval hardening (team-lead seam-A constraints)
+- A+ (commit 213cc97): reverse-order both-webhooks test (end-of-call-report then
+  status-update:ended) — exactly one compile in BOTH race orders.
+- C+ (commit 94cc184): reconcile joins workspaces + requires is_demo=false (A12 firewall);
+  documented that session_kind='context' already excludes the compiler skip-set and that
+  render/compile read only client_visible_claims/utterances (quarantine-safe); demo-skip test.
+- Cadence: worker-startup + on-demand only; standing cron left as the proposal above.
+
 ## Audit verdicts
-- Commit A (voice.py guaranteed idempotent compile): BUILD ok, tests green, no double-compile
-  by construction (single-row CAS). Verdict: SOLID pending seam-A driven-verify.
+- Commit A (voice.py guaranteed idempotent compile): BUILD ok, tests green (both race orders),
+  no double-compile by construction (single-row CAS). Verdict: SOLID pending seam-A driven-verify.
 - Commit B (plan precheck): BUILD ok, tests green, no behavior change when records exist.
   Verdict: SOLID.
 - Commit C (reconcile backstop): BUILD ok, tests green, prod-preview well-scoped (1 heal).
