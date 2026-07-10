@@ -158,3 +158,24 @@ in DB, screen stuck on opener). This round DRIVES the real flows. GATED on mini-
 - **(d) Beyond the doc:** propose-and-fix genuine improvements, A28 gating each (simpler-or-stop).
 
 Findings + fixes will be logged below this checklist as I drive each, once mini-seam-4 is live.
+
+### DRIVEN FINDINGS (prod 0fd1f3d)
+- **[✓ CLOSED] Sim marker + practice-run consent (my #10 / lane-e 6199a06+bea9fac).** Ran
+  "Daily Gold Repricing" on bee-goddess: consent reads "Practice run · Daily Gold Repricing"
+  (not employee copy), chrome "Exit simulation", in-room persistent marker "Simulation ·
+  Daily Gold Repricing — practice run. Nothing here reaches your company records." Verified
+  live; my seam-3 finding closed.
+- **[✓] E transcript FREEZE fix (ADD-3.1) holds.** Text mode: opener AND my typed turn both
+  RENDER (not frozen). Confirmed by driving, not measuring.
+- **[P0 NEW — driven, ESCALATED] Text-mode interviewer reply never renders (GENERAL).**
+  In BOTH a roleplay scenario AND a normal-interviewer voice-test ("Hear it live"): I submit
+  a text turn → my turn renders (optimistic echo) → the interviewer NEVER replies. State stuck
+  on "Listening" 48–60s, "Captured live · 0", page doesn't grow, ZERO console errors. Network:
+  `POST /api/sessions/by-token/<t>/turn/stream => 200` — server accepts the turn + opens the
+  stream, but the client does NOT consume/render the streamed reply in TEXT mode. Same CLASS
+  as the voice freeze ADD-3.1 fixed (lost stream subscription), on the still-unfixed TEXT path.
+  Two independent session kinds fail identically on the shared by-token turn path (the same a
+  real interview uses) → high confidence general; blocks text-mode interviews → blocks Emre if
+  he tests text. VOICE not drivable headless (needs mic), likely OK post ADD-3.1. Escalated to
+  team-lead → route to LiveRoom/E owner (text-mode SSE consumer for /turn/stream). Evidence:
+  REFINE-roleplay-text-noreply.png + the /turn/stream 200 with no rendered reply.
