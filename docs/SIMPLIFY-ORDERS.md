@@ -112,3 +112,24 @@ Better, not more complicated, is the bar — for every change: is this SIMPLER f
   Adapt with attribution (FOR-TUNC entry), never paste blind. The chat's plan edits
   respect the ontology: the plan is a draft artifact so live edits are fine, but
   anything the gate already approved never mutates silently.
+
+## ADDENDUM 2 — evals & rulebooks (Kaan, ~20:20 July 9, P2 coherence)
+"Update or write evals only if it makes sense" — as a forcing function for whole-codebase
+awareness. Do NOT add evals for eval's sake. The places this sprint genuinely touches
+tested behavior (update the eval WITH the change, same commit or adjacent):
+1. **D — CEO welcome / context-collector opener changes.** The fixed-response evals that
+   assert the opening line and consent framing (prompts/personas + evals/) must move with
+   the new leadership copy. Drift guard + no-em-dash lint stay green.
+2. **E — live-capture extractor is NET-NEW tested-worthy behavior.** Needs coverage before
+   it ships as "honest": (a) a single live source is Reported-at-most (A18/A19 ladder),
+   (b) sentiment about a named person is quarantined at the data layer even in live
+   capture, (c) a structural item (team/system/workflow) is captured but an opinion is not.
+   Anti-theater: assert the panel reflects real extraction, not a canned animation.
+3. **C — department classifier "never guess".** One eval: an ambiguous workflow stays
+   null/unclassified; a clearly-departmental one classifies. This is a trust rule, worth pinning.
+4. **K — plan-chat live edits respect the gate.** Assert chat edits a DRAFT plan's sections
+   but CANNOT mutate a gate-approved plan silently; change_log records every apply.
+5. **A — delete-company cascade (when built): a test proving the cascade removes exactly
+   the previewed counts and leaves other tenants byte-identical (interview-delete precedent).**
+Everything else: leave the eval suite alone. If a change doesn't touch tested behavior,
+it doesn't need an eval. Report in the Phase 4 sweep which evals moved and why.
