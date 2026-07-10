@@ -100,8 +100,14 @@ async def get_by_token(token: str):
         out["test_back_path"] = f"/w/{slug}/{section}"
     # F7 BETA: the context call room labels itself (BETA chip in the client) — the
     # caller is the client's founder/admin, so no admin chrome, just the honest label.
+    # The done page deep-links them to the snapshot their call just built, so expose the
+    # workspace slug — and ONLY the slug (SIMPLIFY G). Gated to the context kind: an
+    # employee respondent never learns a workspace route.
     if session["session_kind"] == "context":
         out["context_call"] = True
+        out["workspace_slug"] = await pool.fetchval(
+            "select slug from workspaces where id = $1", session["workspace_id"]
+        )
     return out
 
 

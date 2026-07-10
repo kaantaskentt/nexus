@@ -39,6 +39,10 @@ async def test_mint_gated_on_beta_flag(db):
         by_token = (await c.get(f"/api/sessions/by-token/{token}")).json()
     assert by_token["context_call"] is True
     assert "test_mode" not in by_token  # the client's room stays chrome-free
+    # SIMPLIFY G: the founder's done page deep-links to the snapshot their call built, so
+    # the payload carries the workspace slug (and only the slug — no other workspace data).
+    slug = await db.fetchval("select slug from workspaces where id = $1", ws)
+    assert by_token["workspace_slug"] == slug
 
     row = await db.fetchrow(
         "select s.session_kind, s.modality, e.canonical_name from interview_sessions s "

@@ -41,6 +41,9 @@ export interface RespondentSession {
   test_back_path?: string;
   // F7 BETA: this session is the Stage-3 context call with the client (BETA chip).
   context_call?: boolean;
+  // SIMPLIFY G: the workspace slug, present ONLY on a context call, so the done page can
+  // deep-link the founder to the snapshot their call just built. Never set for employees.
+  workspace_slug?: string;
 }
 
 export interface TurnResult {
@@ -69,6 +72,7 @@ interface RawSession {
   test_mode?: boolean;
   test_back_path?: string;
   context_call?: boolean;
+  workspace_slug?: string;
 }
 
 const clean = (v?: string | null) => (v == null ? undefined : v);
@@ -85,6 +89,7 @@ export async function getSession(token: string): Promise<RespondentSession> {
     test_mode: raw.test_mode || undefined,
     test_back_path: raw.test_back_path || undefined,
     context_call: raw.context_call || undefined,
+    workspace_slug: raw.workspace_slug || undefined,
     context: c
       ? {
           respondent_name: clean(c.respondent_first_name),

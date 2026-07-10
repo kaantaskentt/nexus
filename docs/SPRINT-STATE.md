@@ -112,6 +112,15 @@ matters, shown once.
   (MIDCALL_NOTE), so the opener edit is orthogonal — proven live (fixed slice 2/3 then 3/3;
   the one miss was the documented anti-sycophancy 4/5 flake class, cleared on re-run).
   VERDICT: approved, coherent, zero regression.
+- COMMIT 3 (G done page) LANDED. by-token payload exposes ONLY the workspace slug, gated to
+  session_kind='context' (employee respondents never learn a workspace route). Done phase
+  branches by kind: context founder gets leadership copy + "View company snapshot" deep link
+  (/w/[slug]/home) + "Return home" (/); employee page byte-identical; PromisedArtifacts kept
+  for both (context call asks for one artifact too). Frontend 69/69 (+2 done-page.test),
+  backend context_call 5/5 (+slug assertion), tsc + guards + em-dash clean. NOTE: shipped the
+  first-call CTA "View company snapshot" for all context calls; the "See what's new" later-call
+  wording needs a first/later signal the "only slug" constraint forbids, flagged to lead.
+  VERDICT: approved; later-call wording deferred as a nicety, correct label ships now.
 
 ## Lane EF — voice drops + text latency (Feedback F/E; findings docs/SIMPLIFY-EF-FINDINGS.md)
 

@@ -210,6 +210,12 @@ export function InterviewClient({ token }: { token: string }) {
   }
 
   if (phase === "done") {
+    // SIMPLIFY G: the done page branches by kind. A context-call founder built a snapshot,
+    // not an employee record — the role-only "shared by name" promise is wrong for them, and
+    // the honest next step is the snapshot their call just produced (deep-linked by slug).
+    // The employee interview done page is unchanged.
+    const contextDone = Boolean(session?.context_call);
+    const slug = session?.workspace_slug;
     return (
       <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
         <div className="mx-auto max-w-md py-16 text-center">
@@ -219,14 +225,42 @@ export function InterviewClient({ token }: { token: string }) {
           <h1 className="font-display text-2xl text-ink">
             Thank you{ctx?.respondent_name ? `, ${ctx.respondent_name}` : ""}
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-            This really helps. We&apos;re putting together a short summary of how the work
-            flows for {ctx?.company_name ? `the ${ctx.company_name} team` : "the team"} who
-            asked for it. It&apos;s shared by role, not your name, and anything with your name
-            on it is only what you okayed while we talked. You can close this page now.
-          </p>
+          {contextDone ? (
+            <>
+              <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                This becomes the first version of your company snapshot: how the work flows,
+                the systems in play, and the open questions worth digging into. You&apos;ll see
+                it before anyone on your team is interviewed.
+              </p>
+              {slug && (
+                <div className="mt-6 flex flex-col items-center gap-3">
+                  <a
+                    href={`/w/${slug}/home`}
+                    className="inline-flex w-full items-center justify-center rounded-md bg-accent px-6 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 sm:w-auto sm:px-8"
+                  >
+                    View company snapshot
+                  </a>
+                  <a
+                    href="/"
+                    className="text-sm font-medium text-ink-faint transition-colors hover:text-ink"
+                  >
+                    Return home
+                  </a>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+              This really helps. We&apos;re putting together a short summary of how the work
+              flows for {ctx?.company_name ? `the ${ctx.company_name} team` : "the team"} who
+              asked for it. It&apos;s shared by role, not your name, and anything with your name
+              on it is only what you okayed while we talked. You can close this page now.
+            </p>
+          )}
           {/* Kaan F1: whatever they offered to send during the conversation, the upload
-              is right here — the accepted offer gets honored on the very next screen. */}
+              is right here — the accepted offer gets honored on the very next screen. The
+              context call asks for one real artifact too (persona Phase 5), so the upload
+              affordance stays for both kinds. */}
           <PromisedArtifacts token={token} />
         </div>
       </Shell>
