@@ -126,6 +126,26 @@ Screenshots: scratchpad/parity-screens/. Teardown: workspace 6f824daf left is_in
 - Simpler/complex? Same info, slightly more finished; no interaction change. Pixel-exact
   flagged pending mockups.
 
+## Kaan welcome-copy fix (watchtower) — PREPPED, awaiting team-lead file routing
+Kaan finds the current welcome intro too verbose ("A working conversation about {company}…
+not a tidy version of it"). Crisp mockup-2 copy he wants:
+- eyebrow: "COMPANY CONTEXT CALL" · headline: "Company context call"
+- subtitle: "Build Nexus's first understanding of {company}."
+- one line: "A 20–30 minute conversation to capture how your company works, what matters, and
+  where Nexus can add the most value." · DROP the "tidy version of it" sentence.
+Blast radius: strings live in consentCopy() (frontend/src/lib/respondent.ts) synced to
+prompts/personas/consent-landing.md by evals/consent_copy_sync.py — BOTH are lane-s7's active
+files (they just shipped the S7.8 line, b04c659). I own only the ConsentLanding component layout.
+Sync-guard analysis: the guard checks plain double-quoted strings ≥25 chars; the subtitle is
+templated (${company}) → skipped, label/headline are short → skipped, but the one-line intro is
+FIXED copy ≥25 chars → it MUST be added to consent-landing.md (context-call section). So the edit
+needs both lane-s7 files. Requested team-lead routing: (a) grant me the header region (leave the
+S7.8 line + all box promises byte-untouched, run the guard green) or (b) route strings to lane-s7.
+I execute (a) on grant: change header framing only, keep the 2 compliance boxes + hero orb.
+Kaan feedback logged: use a REALISTIC demo workspace name (e.g. a hotel) in anything screenshot-
+visible, never "X (internal)".
+
 ## Verdicts
 - Surface 2 (welcome hero orb) 747fd27. Surface 1 (agent-state rail) 1dda84c, test-green.
-  Surface 3 (reconnect cards) this commit. All visual 1440/390 on prod post-seam-C.
+  Surface 3 (reconnect cards) 660db57. Seam-C1 gate walk PASS both widths (82befa4).
+  Kaan welcome-copy fix prepped, blocked on team-lead file routing.
