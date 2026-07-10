@@ -91,6 +91,13 @@ Figma file link (Kaan's file) in case the real mockups live there.
 Exact rail styling; captured-card + reconnect-pill sensible-default polish (building next per
 ruling 4); welcome 3-box + "Preview questions" button + locked-copy 3rd box.
 
+## A28 pre-review — Surface 3 (reconnect pills → cards) — LANDED
+- Today: ReconnectBanner is a flat rounded-md bordered strip (trying / recovered).
+- After: calm CARD treatment (rounded-card, card-hairline, shadow-elev-1, icon in a rounded
+  tile) per mockup 4. Copy, buttons, behaviour unchanged — display only. tsc clean.
+- Simpler/complex? Same info, slightly more finished; no interaction change. Pixel-exact
+  flagged pending mockups.
+
 ## Verdicts
-- Surface 2 (welcome hero orb) committed 747fd27. Surface 1 (agent-state rail) committed +
-  test-green. Both visual-verified on prod post-seam-C.
+- Surface 2 (welcome hero orb) 747fd27. Surface 1 (agent-state rail) 1dda84c, test-green.
+  Surface 3 (reconnect cards) this commit. All visual 1440/390 on prod post-seam-C.

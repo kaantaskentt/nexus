@@ -679,17 +679,24 @@ function ReconnectBanner({
   onRetry: () => void;
   onUseText: () => void;
 }) {
+  // ROOM-PARITY (mockup 4): the reconnect states read as calm CARDS (icon in a rounded tile,
+  // hairline + soft elevation) rather than a flat strip. Copy, buttons and behaviour are
+  // unchanged — display only. Pixel-exact styling pending the mockups.
   if (phase === "recovered") {
     return (
-      <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success-soft px-4 py-2.5 text-sm text-tag-verified">
-        <Check className="h-4 w-4 shrink-0" strokeWidth={2} />
+      <div className="card-hairline flex items-center gap-3 rounded-card border border-success/30 bg-success-soft px-4 py-3 text-sm text-tag-verified shadow-elev-1">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-success/15">
+          <Check className="h-4 w-4" strokeWidth={2} />
+        </span>
         <span>Reconnected. Back together, continuing our conversation.</span>
       </div>
     );
   }
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-line bg-surface-raised px-4 py-2.5 text-sm text-ink-soft">
-      <Loader2 className="h-4 w-4 shrink-0 animate-spin text-accent" strokeWidth={2} />
+    <div className="card-hairline flex flex-wrap items-center gap-x-3 gap-y-2 rounded-card border border-line bg-surface px-4 py-3 text-sm text-ink-soft shadow-elev-1">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-surface-sunken">
+        <Loader2 className="h-4 w-4 animate-spin text-accent" strokeWidth={2} />
+      </span>
       <span className="min-w-0 flex-1">
         Reconnecting… hang tight, we&apos;re back in a moment. Nothing you shared is lost.
       </span>
