@@ -401,6 +401,9 @@ export interface WorkflowEditStep {
 export interface EffectiveWorkflow {
   workflow_id: string;
   name: string;
+  // SIMPLIFY C: one-line summary + confident-only department (both may be null).
+  description?: string | null;
+  department?: string | null;
   steps: WorkflowEditStep[];
 }
 
