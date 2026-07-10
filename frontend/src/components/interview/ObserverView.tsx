@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Mic, MessageSquare, Plus, StickyNote } from "lucide-react";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
@@ -13,6 +13,7 @@ import {
   type CoverageObjective,
 } from "@/lib/live";
 import { ParticleOrb, type OrbState } from "./ParticleOrb";
+import { StageRail } from "@/components/interviews/StageRail";
 
 // The Observer view (A19): the admin's live window onto one interview — the SAME elements
 // as the respondent room (orb, transcript) inside the admin shell (correction #2), plus
@@ -52,10 +53,14 @@ const SESSION_STATUS: Record<string, { label: string; pill: string }> = {
 export function ObserverView({
   workspaceId,
   sessionId,
+  slug,
   initial,
 }: {
   workspaceId: string;
   sessionId: string;
+  // Optional so the badge-honesty tests can render without it; drives the StageRail Report
+  // deep link (/w/[slug]/report/[sessionId]) when present.
+  slug?: string;
   initial: ObserverState;
 }) {
   const [state, setState] = useState<ObserverState>(initial);
@@ -100,8 +105,19 @@ export function ObserverView({
   const orbState: OrbState = live ? "listening" : "connecting";
   const ModalityIcon = s.modality === "voice" ? Mic : MessageSquare;
 
+  // The interview is ONE staged flow (Feedback-K): the Report stage is reachable once the
+  // interview has completed (report route is keyed by session id). Plan/Follow-up ids aren't
+  // in the observer payload, so those stages render in the rail but aren't deep-linked here.
+  const stageHrefs =
+    slug && s.status === "completed"
+      ? { report: `/w/${slug}/report/${sessionId}` }
+      : undefined;
+
   return (
-    <div className="mx-auto max-w-6xl px-8 py-8">
+    <div className="mx-auto max-w-6xl px-8 py-6">
+      {/* The interview as one connected workflow — Observe is lit, Report links when ready. */}
+      <StageRail current="observe" hrefs={stageHrefs} className="mb-6" />
+
       {/* Header — initials chip (never a photo), role, honest status pill. */}
       <header className="flex flex-wrap items-center gap-4">
         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-ink ring-1 ring-inset ring-accent/15">
@@ -129,31 +145,41 @@ export function ObserverView({
         )}
       </header>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        {/* Left: the room — same elements as the respondent side, admin chrome around. */}
-        <div className="min-w-0">
-          {/* The orb is a VOICE presence element — on a text interview it reads as a
-              wrong-modality prop (UI debate safe win 4), so it renders for voice only. */}
-          {s.modality === "voice" && (
-            <div className="relative overflow-hidden rounded-card bg-[#1c1712] px-6 py-6 shadow-elev-2 ring-1 ring-inset ring-white/[0.06]">
-              <div className="mx-auto h-40 w-40">
+      {/* Topic coverage — a legible per-topic state strip, not an opaque ring. */}
+      <TopicCoverage
+        objectives={state.objectives}
+        coverage={state.coverage}
+        trackingEnabled={state.coverage_tracking_enabled}
+      />
+
+      {/* The room — transcript and Live notes share ONE bordered surface (two columns,
+          a hairline between), so it reads as one connected page, not two stacked ones.
+          Each column scrolls inside its own bounded height; the page barely scrolls. */}
+      <div className="mt-5 grid overflow-hidden rounded-card border border-line lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="flex min-w-0 flex-col bg-surface">
+          {/* Voice-presence strip (voice only): a slim version of the respondent orb —
+              real signal only, pulses as turns land. Far shorter than the old dark box. */}
+          {s.modality === "voice" ? (
+            <div className="flex items-center gap-3 border-b border-line bg-[#1c1712] px-4 py-2.5">
+              <div className="h-10 w-10 shrink-0">
                 <ParticleOrb volume={pulse} state={orbState} />
               </div>
-              <p className="mt-2 text-center text-xs text-white/40">
+              <p className="text-xs leading-snug text-white/50">
                 {live
-                  ? "Conversation in progress. The orb pulses as turns land"
+                  ? "Conversation in progress. The orb pulses as turns land."
                   : s.status === "completed"
-                    ? "Conversation ended"
-                    : "Waiting for the conversation to start"}
+                    ? "Conversation ended. Verbatim transcript below."
+                    : "Waiting for the conversation to start."}
               </p>
+            </div>
+          ) : (
+            <div className="border-b border-line px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+              Transcript
             </div>
           )}
 
           {/* Verbatim transcript, timestamped. */}
-          <div
-            ref={scroller}
-            className="card-hairline mt-4 max-h-[46vh] min-h-[10rem] overflow-y-auto rounded-card border border-line bg-surface p-4"
-          >
+          <div ref={scroller} className="max-h-[56vh] min-h-[16rem] flex-1 overflow-y-auto p-4">
             {state.utterances.length === 0 ? (
               <p className="py-8 text-center text-sm text-ink-faint">
                 No turns yet. The transcript appears here as the conversation happens.
@@ -183,31 +209,36 @@ export function ObserverView({
           </div>
         </div>
 
-        {/* Right rail: topics ring + insight cards + Add insight. */}
-        <aside className="space-y-5">
-          <TopicsCovered
-            objectives={state.objectives}
-            coverage={state.coverage}
-            trackingEnabled={state.coverage_tracking_enabled}
-          />
+        {/* Live notes — same surface, divided by a hairline (top on mobile, left on lg). */}
+        <div className="flex min-w-0 flex-col border-t border-line bg-surface-sunken/30 lg:border-l lg:border-t-0">
           <InsightRail
             workspaceId={workspaceId}
             sessionId={sessionId}
             state={state}
             onAdded={refresh}
           />
-        </aside>
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Topics-covered ring ────────────────────────────────────────────────────────
-// Renders the engine-computed coverage map when one exists. When tracking is off (the
-// coverage_routing flag) or no map has been computed, we show the planned topics WITHOUT
-// coverage claims and say so — an empty ring would silently read as "nothing covered",
-// and a full one would be a lie in the other direction.
-function TopicsCovered({
+// ── Topic coverage ─────────────────────────────────────────────────────────────
+// A legible per-topic state strip (the opaque ring is retired). Each planned objective is a
+// chip whose plain-language state comes ONLY from the coverage map the turn engine computed:
+// Covered / Partly / Not yet from a real map, or Planned when live tracking is off (nothing is
+// invented). An empty ring read as "nothing covered" and a full one lied the other way; a
+// worded chip cannot. Renders nothing when there are no objectives.
+const COVERAGE_STATE = {
+  satisfied: { label: "Covered", dot: "bg-success", chip: "border-success/30 bg-success-soft text-tag-confirmed" },
+  partial: { label: "Partly", dot: "bg-accent", chip: "border-accent/25 bg-accent-soft text-accent-ink" },
+  untouched: { label: "Not yet", dot: "bg-line-strong", chip: "border-line bg-surface text-ink-soft" },
+  planned: { label: "Planned", dot: "bg-line-strong", chip: "border-line bg-surface text-ink-soft" },
+} as const;
+
+type CoverageChipState = keyof typeof COVERAGE_STATE;
+
+function TopicCoverage({
   objectives,
   coverage,
   trackingEnabled,
@@ -217,108 +248,52 @@ function TopicsCovered({
   trackingEnabled: boolean;
 }) {
   const covered = coverage?.objectives ?? null;
-  const counts = useMemo(() => {
-    if (!covered) return null;
-    const c = { satisfied: 0, partial: 0, untouched: 0 };
-    for (const o of covered) c[o.status ?? "untouched"] += 1;
-    return c;
-  }, [covered]);
+  // Real states only: when the engine computed a map, each topic carries its true status;
+  // otherwise every topic is "Planned" (not yet measured). Nothing is invented.
+  const items: Array<{ label: string; state: CoverageChipState }> = covered
+    ? covered.map((o) => ({ label: o.label, state: (o.status ?? "untouched") as CoverageChipState }))
+    : objectives.map((o) => ({ label: typeof o === "string" ? o : o.label, state: "planned" as const }));
 
-  const labels: Array<{ label: string; status?: CoverageObjective["status"] }> = covered
-    ? covered.map((o) => ({ label: o.label, status: o.status ?? "untouched" }))
-    : objectives.map((o) => (typeof o === "string" ? { label: o } : { label: o.label }));
+  // No objectives on this session → show nothing, rather than a pile of negative sentences.
+  if (items.length === 0) return null;
+
+  const satisfied = items.filter((o) => o.state === "satisfied").length;
 
   return (
-    <section className="card-hairline rounded-card border border-line bg-surface p-4">
-      <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-ink-faint">
-        Topics covered
-      </h2>
-
-      {counts && covered ? (
-        <div className="mt-3 flex items-center gap-4">
-          <CoverageRing counts={counts} total={covered.length} />
-          <dl className="space-y-1 text-xs text-ink-soft">
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-success" /> {counts.satisfied} covered
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-accent" /> {counts.partial} partly
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-line-strong" /> {counts.untouched} not yet
-            </div>
-          </dl>
-        </div>
-      ) : (
-        <p className="mt-2 text-xs leading-relaxed text-ink-faint">
-          {trackingEnabled
-            ? "Coverage appears once the conversation starts."
-            : "Live coverage tracking is off. These are the planned topics."}
-        </p>
-      )}
-
-      {labels.length > 0 && (
-        <ul className="mt-3 space-y-1.5">
-          {labels.map((o, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm text-ink">
-              {o.status ? (
-                <span
-                  className={cn(
-                    "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-                    o.status === "satisfied"
-                      ? "bg-success"
-                      : o.status === "partial"
-                        ? "bg-accent"
-                        : "bg-line-strong",
-                  )}
-                />
-              ) : (
-                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full border border-line-strong" />
+    <section className="mt-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-ink-faint">
+          Topic coverage
+        </h2>
+        <span className="text-xs text-ink-faint">
+          {covered
+            ? `${satisfied} of ${items.length} covered`
+            : trackingEnabled
+              ? "Coverage appears once the conversation starts"
+              : "Live coverage tracking is off, these are the planned topics"}
+        </span>
+      </div>
+      <ul className="mt-2 flex flex-wrap gap-2">
+        {items.map((o, i) => {
+          const st = COVERAGE_STATE[o.state];
+          return (
+            <li
+              key={i}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-chip border px-2.5 py-1 text-sm",
+                st.chip,
               )}
+            >
+              <span className={cn("h-2 w-2 shrink-0 rounded-full", st.dot)} />
               <span className="min-w-0">{o.label}</span>
+              <span className="text-[11px] font-medium uppercase tracking-[0.06em] opacity-70">
+                {st.label}
+              </span>
             </li>
-          ))}
-        </ul>
-      )}
-      {labels.length === 0 && !counts && (
-        <p className="mt-2 text-xs text-ink-faint">No objectives on this session.</p>
-      )}
+          );
+        })}
+      </ul>
     </section>
-  );
-}
-
-function CoverageRing({
-  counts,
-  total,
-}: {
-  counts: { satisfied: number; partial: number; untouched: number };
-  total: number;
-}) {
-  const R = 26;
-  const C = 2 * Math.PI * R;
-  const seg = (n: number) => (total > 0 ? (n / total) * C : 0);
-  const satisfied = seg(counts.satisfied);
-  const partial = seg(counts.partial);
-  return (
-    <svg width="72" height="72" viewBox="0 0 72 72" role="img"
-         aria-label={`${counts.satisfied} of ${total} topics covered`}>
-      <circle cx="36" cy="36" r={R} fill="none" strokeWidth="7" className="stroke-line" />
-      {partial > 0 && (
-        <circle cx="36" cy="36" r={R} fill="none" strokeWidth="7" strokeLinecap="round"
-                className="stroke-accent"
-                strokeDasharray={`${satisfied + partial} ${C - satisfied - partial}`}
-                transform="rotate(-90 36 36)" />
-      )}
-      {satisfied > 0 && (
-        <circle cx="36" cy="36" r={R} fill="none" strokeWidth="7" strokeLinecap="round"
-                className="stroke-success"
-                strokeDasharray={`${satisfied} ${C - satisfied}`}
-                transform="rotate(-90 36 36)" />
-      )}
-      <text x="36" y="40" textAnchor="middle" className="fill-ink font-display" fontSize="15">
-        {counts.satisfied}/{total}
-      </text>
-    </svg>
   );
 }
 
@@ -378,21 +353,22 @@ function InsightRail({
   ].sort((a, b) => a.at.localeCompare(b.at));
 
   return (
-    <section className="card-hairline rounded-card border border-line bg-surface p-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-ink-faint">
-          Insights
+    <section className="flex min-h-0 flex-col">
+      {/* "Live notes" — renamed from "Insights" to kill the collision with the nav tab. */}
+      <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+          Live notes
         </h2>
         <button
           onClick={() => setComposerOpen((v) => !v)}
-          className="inline-flex items-center gap-1 rounded-md border border-line px-2 py-1 text-xs font-medium text-ink transition-colors hover:border-line-strong hover:bg-surface-raised"
+          className="inline-flex items-center gap-1 rounded-md border border-line bg-surface px-2 py-1 text-xs font-medium text-ink transition-colors hover:border-line-strong hover:bg-surface-raised"
         >
-          <Plus className="h-3.5 w-3.5" strokeWidth={2} /> Add insight
+          <Plus className="h-3.5 w-3.5" strokeWidth={2} /> Add note
         </button>
       </div>
 
       {composerOpen && (
-        <div className="mt-3">
+        <div className="border-b border-line px-4 py-3">
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -423,43 +399,45 @@ function InsightRail({
         </div>
       )}
 
-      {cards.length === 0 ? (
-        <div className="mt-4 flex flex-col items-center py-6 text-center">
-          <StickyNote className="h-6 w-6 text-ink-faint/60" strokeWidth={1.5} />
-          <p className="mt-2 max-w-[14rem] text-xs leading-relaxed text-ink-faint">
-            Nothing here yet. Notes you add live appear as{" "}
-            <span className="font-medium">Reported</span>; stronger tiers only come from the
-            compiled record.
-          </p>
-        </div>
-      ) : (
-        <ul className="mt-3 space-y-2.5">
-          {cards.map((c) => (
-            <motion.li
-              key={c.key}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.15 }}
-              className="rounded-lg border border-line bg-surface-sunken/60 p-3"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] tabular text-ink-faint">
-                  {timeOf(c.at)} · {c.kind}
-                </span>
-                {/* Claims can be untagged (tag=null pre-adjudication) — same guard as the
-                    Knowledge surfaces: no badge rather than a made-up tier. */}
-                {c.tag && <ConfidenceBadge confidence={confidenceForTag(c.tag)} />}
-              </div>
-              <p className="mt-1.5 text-sm leading-relaxed text-ink">{c.text}</p>
-              {c.quote && (
-                <p className="mt-1.5 border-l-2 border-line pl-2 text-xs italic leading-relaxed text-ink-soft">
-                  &ldquo;{c.quote}&rdquo;
-                </p>
-              )}
-            </motion.li>
-          ))}
-        </ul>
-      )}
+      <div className="max-h-[56vh] flex-1 overflow-y-auto px-4 py-3">
+        {cards.length === 0 ? (
+          <div className="flex flex-col items-center py-6 text-center">
+            <StickyNote className="h-6 w-6 text-ink-faint/60" strokeWidth={1.5} />
+            <p className="mt-2 max-w-[14rem] text-xs leading-relaxed text-ink-faint">
+              Nothing here yet. Notes you add live appear as{" "}
+              <span className="font-medium">Reported</span>; stronger tiers only come from the
+              compiled record.
+            </p>
+          </div>
+        ) : (
+          <ul className="space-y-2.5">
+            {cards.map((c) => (
+              <motion.li
+                key={c.key}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.15 }}
+                className="rounded-lg border border-line bg-surface p-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] tabular text-ink-faint">
+                    {timeOf(c.at)} · {c.kind}
+                  </span>
+                  {/* Claims can be untagged (tag=null pre-adjudication) — same guard as the
+                      Knowledge surfaces: no badge rather than a made-up tier. */}
+                  {c.tag && <ConfidenceBadge confidence={confidenceForTag(c.tag)} />}
+                </div>
+                <p className="mt-1.5 text-sm leading-relaxed text-ink">{c.text}</p>
+                {c.quote && (
+                  <p className="mt-1.5 border-l-2 border-line pl-2 text-xs italic leading-relaxed text-ink-soft">
+                    &ldquo;{c.quote}&rdquo;
+                  </p>
+                )}
+              </motion.li>
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }

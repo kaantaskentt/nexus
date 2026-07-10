@@ -78,3 +78,39 @@ swap (People up, Areas down) + four title renames, zero component/card_type/badg
 changes. `brand` import still used (AreaDrawer). No test pinned the old titles. My files
 tsc-clean (project tsc red only on lane-C WorkflowEditor), eslint clean on SnapshotView,
 frontend 87/87. Page width unchanged (max-w-6xl). Open for Kaan's veto on the four names.
+
+## PRE-REVIEW — K4 Observe view (task split from lane-K; Kaan Feedback K)
+
+Today (ObserverView.tsx, 465 lines): a 2-col page — left is a tall dark orb box (voice, ~220px)
+stacked over a 46vh transcript scroll box; right rail is a "Topics covered" CoverageRing +
+"Insights" note list. Kaan: "cluttered, too much scrolling, topic coverage difficult to
+understand, transcript feels disconnected." Audit P1/P2: the "Insights" rail name collides with
+the nav tab; the coverage ring is opaque; the off-state reads as three negative sentences.
+After (one behavior commit): (1) lane-K's StageRail at the very top (current=Observe, Report
+linked when the interview is completed) so Observe sits in the staged flow; (2) rename the rail
+"Insights" → "Live notes" (+ "Add insight" → "Add note") — kills the nav collision; (3) topic
+coverage becomes a legible horizontal chip strip with a plain-language state per topic
+(Covered / Partly / Not yet from the real map; Planned when tracking is off), a one-line honest
+header, and NOTHING when there are no objectives (no negative-sentence pile) — the opaque ring
+is retired; (4) transcript + Live notes join into ONE bordered "room" surface (two
+internally-scrolling columns divided by a hairline) instead of two stacked pages, and the big
+dark orb box shrinks to a slim voice-presence strip — bounding page scroll. A18/A19 honesty
+holds: badges still derive only from confidenceForTag (live note = Reported, compiled = real
+tag, untagged = no badge), orb reflects only real polled signal, coverage shows only real
+states. Data/poll logic unchanged; ObserverView gains an optional `slug` prop for the Report
+deep link (tests call without it — stays valid). Report-style width kept (max-w-6xl). Suites:
+observer-badges stays green on the honesty cases; its ring-specific case is updated to assert
+the new per-topic legible states (guarantee preserved, not weakened — the ring is deliberately
+removed per the assignment). Simpler? SIMPLER: one connected surface, coverage readable at a
+glance, no name collision, far less scroll.
+
+VERDICT (behavior commit): ObserverView rebuilt — StageRail at top (Report linked when
+completed), "Insights"→"Live notes" (+ "Add note"), TopicCoverage legible chip strip replaces
+the ring (honest per-topic states; nothing when no objectives), transcript + Live notes joined
+into one bordered room with a slim voice-presence strip. `slug` prop added (optional; page
+passes params.slug). observer-badges 5/5 (badge-honesty cases untouched; the ring case updated
+to assert the new per-topic states — guarantee preserved, not weakened). My files tsc-clean,
+eslint clean on ObserverView + the page. NOTE (not mine): src/test/generate-plan-button.test
+is RED at HEAD — commit 7569c84 (Phase 3 /plans→/interviews repoint) changed the button href
+to /w/[slug]/interviews but left the test asserting /w/acme/plans. Different lane/file; flagged
+to lead, excluded from this scoped commit.

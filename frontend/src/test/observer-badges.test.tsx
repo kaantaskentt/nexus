@@ -103,7 +103,7 @@ describe("ObserverView badge honesty (A19 correction #1)", () => {
     expect(screen.getByText("daily flow")).toBeInTheDocument();
   });
 
-  it("renders the engine-computed ring when a real coverage map exists", () => {
+  it("shows the engine-computed coverage as legible per-topic states (K4: no opaque ring)", () => {
     render(
       <ObserverView
         workspaceId="ws-1"
@@ -120,9 +120,14 @@ describe("ObserverView badge honesty (A19 correction #1)", () => {
         })}
       />,
     );
-    expect(screen.getByRole("img", { name: /1 of 3 topics covered/i })).toBeInTheDocument();
-    expect(screen.getByText(/1 covered/)).toBeInTheDocument();
-    expect(screen.getByText(/1 partly/)).toBeInTheDocument();
-    expect(screen.getByText(/1 not yet/)).toBeInTheDocument();
+    // Each topic renders with its real, plain-language state — the guarantee the ring
+    // used to (opaquely) carry, now readable at a glance. Honest states only.
+    expect(screen.getByText("daily flow")).toBeInTheDocument();
+    expect(screen.getByText("handoffs")).toBeInTheDocument();
+    expect(screen.getByText("deadline tracking")).toBeInTheDocument();
+    expect(screen.getByText("Covered")).toBeInTheDocument();
+    expect(screen.getByText("Partly")).toBeInTheDocument();
+    expect(screen.getByText("Not yet")).toBeInTheDocument();
+    expect(screen.getByText(/1 of 3 covered/i)).toBeInTheDocument();
   });
 });

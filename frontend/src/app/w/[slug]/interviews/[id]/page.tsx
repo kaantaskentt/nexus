@@ -16,5 +16,12 @@ export default async function ObserverPage({
   if (!workspace) notFound();
   const initial = await observe_session(workspace.id, params.id).catch(() => null);
   if (!initial) notFound();
-  return <ObserverView workspaceId={workspace.id} sessionId={params.id} initial={initial} />;
+  return (
+    <ObserverView
+      workspaceId={workspace.id}
+      sessionId={params.id}
+      slug={params.slug}
+      initial={initial}
+    />
+  );
 }
