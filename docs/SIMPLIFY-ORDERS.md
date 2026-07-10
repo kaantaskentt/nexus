@@ -240,3 +240,11 @@ extracted doc lands in emre-inbox, classify each point (ADOPT/CONVERGENT/CONFLIC
 A24), design the implementation, flag anything that touches the sealed-flag / disclosure /
 gate machinery to Kaan+Emre, and build the clear-adopt items tonight. Treat as the highest-
 care item in the queue - it concerns real people's safety.
+
+## ADDENDUM 5 note — Canva (Kaan, 22:40): the design lane also has Canva access. Use it
+alongside Figma as a design-asset / brand-reference / template source where it genuinely
+helps (icons, illustration, layout inspiration, export-quality graphics for the report).
+Same rule as everything else: adapt to the ONE cohesive Nexus system, never paste an
+off-system Canva template wholesale. Figma stays the source of truth for the component
+system; Canva is a supplementary asset/inspiration source. If Canva needs auth in-session,
+flag it rather than blocking.
