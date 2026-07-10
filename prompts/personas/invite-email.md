@@ -35,11 +35,6 @@ It's a relaxed conversation, about {{EST_MINUTES}} minutes, and you can do it wh
      product delivers. -->
 By starting, you agree to have this conversation recorded and summarized so your account of the work can be captured accurately. Nothing is quoted with your name on it, and your answers are combined with everyone else's before anyone sees conclusions. If there's something you want credited to you, say so, and you'll see exactly how it appears before it goes anywhere.
 
-<!-- GATED-AT-SEAM (lane-s7 commit e): Section 7.8 disclosure/escalation line, Emre-authored,
-     locked-compliance. DO NOT DEPLOY without the Kaan+Emre nod. Kept identical in substance to the
-     consent-landing line so the email, the landing page, and the interviewer make the SAME promise. -->
-If you disclose imminent harm or serious wrongdoing, we may stop the conversation and escalate to a human reviewer, and we cannot guarantee confidentiality over that disclosure.
-
 Thanks,
 {{SENDER_NAME}}
 
@@ -82,10 +77,6 @@ Rahat bir sohbet, yaklaşık {{EST_MINUTES}} dakika, size uygun olduğunda yapab
 
 <!-- Onay satırı — düzenlenemez -->
 Başlayarak, işe dair anlatımınızın doğru şekilde kaydedilip özetlenmesi için bu görüşmenin kaydedilmesini kabul etmiş olursunuz. Adınızla ilişkilendirilmeden önce her şeyi görebilir; değiştirebilir, adınızı kaldırabilir veya istediğinizi çıkarabilirsiniz.
-
-<!-- GATED-AT-SEAM (lane-s7 commit e): §7.8 disclosure/escalation line, TR draft untuned (A13.1) —
-     DO NOT DEPLOY without the Kaan+Emre nod. -->
-Yakın bir zarar veya ciddi bir suistimal paylaşırsanız, görüşmeyi durdurup konuyu bir insan incelemeciye iletebiliriz ve bu paylaşım için gizlilik garanti edemeyiz.
 
 Teşekkürler,
 {{SENDER_NAME}}
