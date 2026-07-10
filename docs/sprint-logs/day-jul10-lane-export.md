@@ -87,6 +87,11 @@ behavior, not our existing build re-derived) and not CONFLICT (nothing tested re
   Tests test_report_trust.py 4/4 green; tsc clean. FLAG to Kaan (via team-lead): footer copy
   is client-facing — I made the minimal honest correction the mandate requires; taste nod.
   AUDIT: SIMPLER (more honest) — the footer promise is now literally true.
+- **C3 test artifacts + numbering** — `_export_steps` drops empty manual placeholders
+  ("New manual step") and renumbers survivors contiguously; compose uses it for both the
+  rendered steps and the leak-2 claim-tag gather. No frontend change (render already prints
+  `index + 1`, now gap-free). Tests test_report_steps.py 3/3 green; lint clean.
+  AUDIT: SIMPLER — no phantom steps; numbering reads 1..n. Test-pinned.
 
 ---
 

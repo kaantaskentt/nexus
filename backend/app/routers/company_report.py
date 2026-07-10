@@ -50,6 +50,31 @@ def _records_unverified(tags: list) -> bool:
     return not any(_TAG_RANK.get(t, -1) >= _CONFIRMED_RANK for t in tags)
 
 
+# ── Test artifacts out of client output (pilot §3, leak 3) ─────────────────────
+# A reviewer can add a manual step and never fill it in — the "New manual step (still to
+# confirm)" placeholder. Those cards leaked into the export as real steps, and dropping
+# hidden steps left gaps in the numbering (it jumped 9 → 12 → 13). The export drops empty
+# manual placeholders and renumbers the survivors contiguously.
+_PLACEHOLDER_STEP_TITLES = {"", "step", "manual step", "new manual step", "new step", "untitled step"}
+
+
+def _is_empty_manual(step: dict) -> bool:
+    """A manual step with no real content — nothing but a placeholder title. A manual step a
+    reviewer actually wrote (real title or action/input/output) is kept."""
+    if step.get("source") != "manual":
+        return False
+    if " ".join(str(step.get(k) or "").strip() for k in ("action", "input", "output")).strip():
+        return False
+    return (step.get("title") or "").strip().casefold() in _PLACEHOLDER_STEP_TITLES
+
+
+def _export_steps(effective_steps: list[dict]) -> list[dict]:
+    """Drop hidden steps and empty manual placeholders, then renumber CONTIGUOUSLY so the
+    printed sequence reads 1..n with no gaps (leak 3 — 'numbering jumps 9 to 12 to 13')."""
+    kept = [s for s in effective_steps if not s.get("hidden") and not _is_empty_manual(s)]
+    return [{**s, "index": i} for i, s in enumerate(kept)]
+
+
 @router.post("/{workspace_id}/share", dependencies=[Depends(require_admin)])
 async def mint_share(workspace_id: str):
     """Mint (or return the existing) share link for this workspace's company report.
@@ -182,17 +207,17 @@ async def report_by_token(token: str):
     workflows = []
     for wf in wf_rows:
         effective = await workflow_edit.effective_workflow(pool, str(wf["id"]))
-        visible = [s for s in effective["steps"] if not s["hidden"]]
+        kept = _export_steps(effective["steps"])
         steps = [
             {"index": s["index"], "title": s["title"], "action": s["action"],
              "tool": s["tool"], "status": s["status"]}
-            for s in visible
+            for s in kept
         ]
         if steps:
             # A workflow inherits the confidence of the records it rests on: if none of its
             # backing claims reaches CONFIRMED (e.g. spawned from one CLAIMED record), the
             # export must qualify it, not present it as an established process (leak 2).
-            claim_ids = [cid for s in visible for cid in s.get("claim_ids", [])]
+            claim_ids = [cid for s in kept for cid in s.get("claim_ids", [])]
             tags = []
             if claim_ids:
                 tag_rows = await pool.fetch(
