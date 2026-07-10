@@ -68,6 +68,15 @@ export async function create_workspace(body: NewCompany): Promise<Workspace> {
   });
 }
 
+// Persist a drag-reordered picker (SIMPLIFY §4-A). Sends the full ordered id list; the
+// backend writes sort_order = position and GET /api/workspaces reads it back. Admin-only.
+export async function reorder_workspaces(ordered_ids: string[]): Promise<{ reordered: number }> {
+  return api("/api/workspaces/reorder", {
+    method: "PATCH",
+    body: JSON.stringify({ ordered_ids }),
+  });
+}
+
 // ── CEO discovery upload (A17 / #6) ──────────────────────────────────────────
 // Upload a transcript -> standard compile job -> poll status -> snapshot renders.
 export interface DiscoveryStart {

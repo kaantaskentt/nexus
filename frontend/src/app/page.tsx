@@ -15,6 +15,7 @@ import { list_workspaces, list_plans, list_snapshot_cards } from "@/lib/live-ser
 import { BrandMark } from "@/components/BrandMark";
 import { SignOutButton } from "@/components/SignOutButton";
 import { AddCompany } from "@/components/AddCompany";
+import { WorkspaceReorderList } from "@/components/WorkspaceReorderList";
 
 // Workspace picker + switcher (A17). After admin login this is the multi-company home:
 // the most recent PREPARED workspace leads as the hero, every other company is an
@@ -41,12 +42,12 @@ export default async function Home() {
     }),
   );
 
-  // Neutral ordering (Sprint2-A): most-recently-created first — the backend returns
-  // workspaces created_at ASC, so reverse. The newest workspace leads as the hero, so a
-  // real client Kaan just added is never visually subordinate to the seeded demo.
-  const ordered = [...withCounts].reverse();
-  // Hero = newest workspace that has real compiled content and is not the demo tenant.
-  // None qualifying -> no hero: every workspace renders as a row under neutral copy.
+  // Ordering now lives on the backend (sort_order nulls-last, then created_at desc — the
+  // admin's dragged arrangement, falling back to newest-first). No client reversal: order
+  // semantics live in ONE place (SIMPLIFY §4-A).
+  const ordered = withCounts;
+  // Hero = first workspace in that order that has real compiled content and is not the
+  // demo tenant. None qualifying -> no hero: every workspace renders as a row.
   const hero = ordered.find((c) => c.prepared && !c.ws.is_demo) ?? null;
   const others = ordered.filter((c) => c !== hero);
 
@@ -79,32 +80,16 @@ export default async function Home() {
             <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-faint">
               {hero ? "Other workspaces" : "Workspaces"}
             </div>
-            <ul className="space-y-2">
-              {others.map(({ ws, prepared }) => (
-                <li key={ws.id}>
-                  <Link
-                    href={`/w/${ws.slug}/home`}
-                    className="lift card-hairline flex items-center justify-between rounded-card border border-line bg-surface px-4 py-3 hover:border-line-strong"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised font-display text-sm text-ink-soft">
-                        {ws.name.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-ink">{ws.name}</div>
-                        {ws.industry && (
-                          <div className="text-xs capitalize text-ink-faint">{ws.industry}</div>
-                        )}
-                      </div>
-                    </div>
-                    <span className="inline-flex items-center gap-1.5 text-xs text-ink-faint">
-                      {prepared ? "Open" : "Awaiting first call"}
-                      <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <WorkspaceReorderList
+              heroId={hero?.ws.id ?? null}
+              rows={others.map(({ ws, prepared }) => ({
+                id: ws.id,
+                slug: ws.slug,
+                name: ws.name,
+                industry: ws.industry,
+                prepared,
+              }))}
+            />
           </div>
         )}
 

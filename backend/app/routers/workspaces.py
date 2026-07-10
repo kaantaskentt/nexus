@@ -96,11 +96,38 @@ async def list_workspaces(user_id: str = Depends(require_admin)):
             "where is_internal = false and id = $1", seat["workspace_id"]
         )
     else:
+        # Order semantics live HERE, in one place (the frontend used to `.reverse()`):
+        # rows the admin dragged carry a sort_order and lead in that order; everything
+        # untouched (sort_order null) falls to newest-first, so a picker nobody has
+        # reordered looks exactly as it did before this column existed.
         rows = await pool.fetch(
             "select id, name, slug, industry, is_demo, config from workspaces "
-            "where is_internal = false order by created_at"
+            "where is_internal = false "
+            "order by sort_order asc nulls last, created_at desc"
         )
     return [{**dict(r), "config": _loads(r["config"])} for r in rows]
+
+
+class ReorderIn(BaseModel):
+    ordered_ids: list[str]
+
+
+@router.patch("/reorder", dependencies=[Depends(require_admin)])
+async def reorder_workspaces(body: ReorderIn):
+    """Persist a drag-reordered picker (SIMPLIFY §4-A). Writes sort_order = position for
+    each id the admin arranged; ids not listed keep their null sort_order and stay in the
+    newest-first tail. One transaction so a half-written order can never render. The
+    is_internal picker filter is unaffected — internal tenants never reach this list, so
+    an id that isn't a real client workspace is simply ignored."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            for position, ws_id in enumerate(body.ordered_ids):
+                await conn.execute(
+                    "update workspaces set sort_order = $2 where id = $1 and is_internal = false",
+                    ws_id, position,
+                )
+    return {"reordered": len(body.ordered_ids)}
 
 
 @router.get("/{workspace_id}/snapshot")
