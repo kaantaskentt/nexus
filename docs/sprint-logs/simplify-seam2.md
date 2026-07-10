@@ -23,11 +23,15 @@ voice fallback (2b69513), migrations 0023/0024, design-only Simulations doc (8c4
 - bee-goddess-demo APPLIED: confident-only + sound — 'Weekly Boutique Stock Count' → Operations;
   'Daily Gold Repricing' + 'Daily Repricing & Online Order Fulfilment' → dept null (under "All");
   all three with accurate descriptions. Persisted state confirmed. (Intended PERMANENT write.)
-- time-pr HELD (not applied): questionable call — two identically-named 'Morning Media Digest'
-  rows, one → null, one → 'Marketing' ('Marketing' is a shaky internal bucket for a PR agency).
-  Surfaced to lead; left dept=null/no-desc pending decision.
-- Non-determinism flagged → lead opened task #14 (plan/apply split so the reviewed pre-image
-  is what gets written).
+- time-pr — initially HELD on a questionable call (two identically-named 'Morning Media Digest'
+  rows, one → null, one → 'Marketing', a shaky internal bucket for a PR agency). RESOLVED via
+  lane-a's new plan/apply split (post-pin, script-only pull): `--plan` reran the classifier
+  (Marketing reappeared, confirming the non-determinism), edited the plan to null EVERY
+  department while keeping descriptions per lead ruling, `--apply` wrote exactly those rows
+  (zero new LLM calls). Final: all 3 time-pr workflows dept=null (under "All") + accurate
+  descriptions. workflow_ids 049014eb / 8ad4bc87 / 2deacfb9. Intended PERMANENT write.
+- Non-determinism flagged → lead assigned the plan/apply split (landed as 0e9d1e3); used here
+  for time-pr so the reviewed pre-image is byte-for-byte what lands.
 
 ## Deploy (clean worktree @ 49fde3f)
 - Railway nexus-api SUCCESS (df54c909), nexus-worker SUCCESS (e7af9344).
