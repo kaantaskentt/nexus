@@ -2,19 +2,21 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Rocket, Lock, ArrowRight, X, Quote, ClipboardCheck } from "lucide-react";
+import { Rocket, Lock, ArrowRight, X, Quote, ClipboardCheck, Flame, Calculator } from "lucide-react";
 import Link from "next/link";
 import type {
   AreaContent,
   ClaimRecord,
   ClaimTopic,
   ConflictContent,
+  KeyFinding,
   LearnedContent,
   PlanState,
   SnapshotCard,
   SuggestedPersonContent,
   Workspace,
 } from "@/lib/types";
+import type { AutomationOpportunity } from "@/lib/live";
 import {
   ConfidenceBadge,
   EvidenceQuoteCard,
@@ -57,12 +59,28 @@ function dedupeEvidenceByContainment(claims: ClaimRecord[]): ClaimRecord[] {
     .map(({ c }) => c);
 }
 
+// Findings attribute by ROLE by default (reflect-back-close Beat 3, hard-rule 8): the
+// respondent's name is quarantined at this render surface unless they explicitly released
+// it. Returns the label to show, or null when there's nothing safe to render. Ported with
+// the fold from InsightsView so the quarantine rule travels with the finding card.
+function attributionLabel(
+  speaker: string | null,
+  role: string | null,
+  released?: boolean,
+): string | null {
+  if (released && speaker) return role ? `${speaker} · ${role}` : speaker;
+  return role;
+}
+
 export function SnapshotView({
   workspace,
   cards,
   claims,
   personPlans = {},
   workflowCount = 0,
+  keyFindings = [],
+  automation = [],
+  workflowIds = [],
 }: {
   workspace: Workspace;
   cards: SnapshotCard[];
@@ -73,6 +91,13 @@ export function SnapshotView({
   // Real workflow count for the story-so-far glance (3.2). The page already fetches it for
   // the intro; a count only, never a fabricated number.
   workflowCount?: number;
+  // Folded from the retired Insights tab (ADD-3.3, Kaan-confirmed): the cross-interview
+  // key findings (ranked pains) and automation opportunities now live on Home, their one
+  // canonical surface. `workflowIds` gates the "see it in the workflow" deep-link so an
+  // opportunity whose workflow is gone falls back to inline evidence, never a 404.
+  keyFindings?: KeyFinding[];
+  automation?: AutomationOpportunity[];
+  workflowIds?: string[];
 }) {
   const claimsById = useMemo(() => new Map(claims.map((c) => [c.id, c])), [claims]);
   const [openArea, setOpenArea] = useState<AreaContent | null>(null);
@@ -272,6 +297,50 @@ export function SnapshotView({
                   </article>
                 );
               })}
+            </div>
+          </Section>
+        )}
+
+        {/* Key findings — the pains the interviews weigh most (folded from the retired
+            Insights tab, ADD-3.3). Cross-interview intelligence lives on Home now. */}
+        {keyFindings.length > 0 && (
+          <Section title="Key findings" count={keyFindings.length}>
+            <p className="mb-5 max-w-2xl text-sm text-ink-soft">
+              The pains the interviews put weight on, ranked by how much they hurt.
+            </p>
+            <motion.div
+              variants={staggerParent}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+            >
+              {keyFindings.map((f) => (
+                <FindingCard key={f.id} finding={f} />
+              ))}
+            </motion.div>
+          </Section>
+        )}
+
+        {/* Automation opportunities — where the records show manual/repetitive work
+            (folded from Insights). Each deep-links to its workflow (?highlight=) when one
+            resolves; otherwise it shows its evidence inline, never a link into the void. */}
+        {automation.length > 0 && (
+          <Section title="Automation opportunities" count={automation.length}>
+            <p className="mb-5 max-w-2xl text-sm text-ink-soft">
+              Places the records show manual, repetitive, or tool-hopping work. Each cites the
+              records it rests on; the time figures are estimates built from stated
+              assumptions, not measurements.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {automation.map((o) => (
+                <OpportunityCard
+                  key={o.id}
+                  o={o}
+                  slug={workspace.slug}
+                  workflowIds={workflowIds}
+                  claimsById={claimsById}
+                />
+              ))}
             </div>
           </Section>
         )}
@@ -672,5 +741,121 @@ function DrawerBlock({ title, children }: { title: string; children: React.React
       </h3>
       {children}
     </div>
+  );
+}
+
+// Key finding card (folded from InsightsView, ADD-3.3): a pain the interviews weigh, with
+// its band, role-quarantined attribution, and mention count. Rendering only — the record
+// is never touched (tags never upgrade).
+function FindingCard({ finding: f }: { finding: KeyFinding }) {
+  return (
+    <motion.article
+      variants={rise}
+      className="lift flex flex-col rounded-card border border-line bg-surface p-4 hover:border-line-strong"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-faint">
+          <Flame className="h-3.5 w-3.5 text-accent/70" strokeWidth={1.75} />
+          Pain point
+        </span>
+        {f.band && <PainBandChip band={f.band} />}
+      </div>
+      <p className="mt-3 flex-1 text-[0.95rem] leading-relaxed text-ink">{f.text}</p>
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-faint">
+        {(() => {
+          const who = attributionLabel(f.speaker, f.role, f.name_released);
+          return who ? <span className="font-medium text-ink-soft">{who}</span> : null;
+        })()}
+        {f.mention_count > 1 && <span className="tabular">mentioned {f.mention_count} times</span>}
+      </div>
+    </motion.article>
+  );
+}
+
+// Automation opportunity card (folded from InsightsView, ADD-3.3): manual/repetitive work
+// the records show, with an honest ROI ESTIMATE (dashed, labeled — never like verified
+// data) and a deep-link to its workflow when one resolves (?highlight= the steps); else it
+// shows its evidence inline, never a link into the void (Kaan P1). The workflow guard rides
+// in via workflowIds so the behavior is identical to the retired Insights tab.
+function OpportunityCard({
+  o,
+  slug,
+  workflowIds,
+  claimsById,
+}: {
+  o: AutomationOpportunity;
+  slug: string;
+  workflowIds: string[];
+  claimsById: Map<string, ClaimRecord>;
+}) {
+  return (
+    <article className="card-hairline flex flex-col rounded-card border border-line bg-surface p-4">
+      <div className="flex items-start justify-between gap-2">
+        <h3 className="font-semibold leading-snug text-ink">{o.title}</h3>
+        <span className="shrink-0 rounded-chip bg-surface-sunken px-2 py-0.5 text-[11px] text-ink-faint ring-1 ring-inset ring-ink/[0.04]">
+          {o.claim_ids.length} record{o.claim_ids.length === 1 ? "" : "s"}
+        </span>
+      </div>
+      <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{o.summary}</p>
+      {o.signals.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {o.signals.map((sg) => (
+            <span key={sg} className="rounded-chip bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-ink">
+              {sg.replace(/-/g, " ")}
+            </span>
+          ))}
+        </div>
+      )}
+      {o.roi && (
+        <div className="mt-3 rounded-lg border border-dashed border-line-strong bg-surface-sunken/40 p-2.5">
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-faint">
+            <Calculator className="h-3.5 w-3.5" strokeWidth={1.75} /> Estimate, not a measurement
+          </div>
+          {o.roi.low_hours_month != null && o.roi.high_hours_month != null && (
+            <div className="mt-1 text-sm font-semibold text-ink">
+              About {o.roi.low_hours_month} to {o.roi.high_hours_month} hours a month
+            </div>
+          )}
+          <p className="mt-1 text-xs leading-relaxed text-ink-soft">{o.roi.assumption}</p>
+          <p className="mt-1 text-[11px] text-ink-faint">
+            {o.roi.duration_claim_ids.length > 0
+              ? `Durations come from ${o.roi.duration_claim_ids.length} captured record${o.roi.duration_claim_ids.length === 1 ? "" : "s"}.`
+              : "The duration itself is an assumption, not captured data."}
+          </p>
+        </div>
+      )}
+      {o.workflow_id && workflowIds.includes(o.workflow_id) ? (
+        <Link
+          href={`/w/${slug}/workflow/${o.workflow_id}?from=home${o.step_ids.length ? `&highlight=${o.step_ids.join(",")}` : ""}`}
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover"
+        >
+          See it in the workflow <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+        </Link>
+      ) : (
+        <details className="mt-3">
+          <summary className="cursor-pointer text-sm font-medium text-accent hover:text-accent-hover">
+            See the evidence ({o.claim_ids.length} record{o.claim_ids.length === 1 ? "" : "s"})
+          </summary>
+          <ul className="mt-2 space-y-1.5">
+            {o.claim_ids.map((cid) => {
+              const c = claimsById.get(cid);
+              if (!c) return null;
+              return (
+                <li key={cid} className="rounded-md border border-line bg-surface-sunken/40 px-2.5 py-1.5 text-xs leading-relaxed text-ink-soft">
+                  {c.claim_text}
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-2 text-xs leading-relaxed text-ink-faint">
+            No mapped workflow holds these steps yet.{" "}
+            <Link href={`/w/${slug}/context`} className="font-medium text-accent-ink hover:underline">Add context</Link>{" "}
+            or{" "}
+            <Link href={`/w/${slug}/interviews/new`} className="font-medium text-accent-ink hover:underline">schedule an interview</Link>{" "}
+            to map it.
+          </p>
+        </details>
+      )}
+    </article>
   );
 }

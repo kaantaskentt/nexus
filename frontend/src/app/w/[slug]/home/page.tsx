@@ -6,6 +6,8 @@ import {
   list_claims,
   list_plans,
   get_workflows,
+  get_insights,
+  get_automation,
 } from "@/lib/live-server";
 import { SnapshotView } from "@/components/snapshot/SnapshotView";
 import { DiscoveryUpload } from "@/components/snapshot/DiscoveryUpload";
@@ -28,7 +30,7 @@ export default async function HomePage({ params }: { params: { slug: string } })
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
 
-  const [cards, claims, plans, workflows] = await Promise.all([
+  const [cards, claims, plans, workflows, insights, automation] = await Promise.all([
     list_snapshot_cards(workspace.id),
     list_claims(workspace.id),
     // Plans keep the suggested-people rows honest (Emre doc-2 P2: Home still offered
@@ -37,6 +39,11 @@ export default async function HomePage({ params }: { params: { slug: string } })
     list_plans(workspace.id).catch(() => []),
     // A real workflow count for the snapshot intro's "Workflows detected" stat (B).
     get_workflows(workspace.id).catch(() => []),
+    // Folded from the retired Insights tab (ADD-3.3): key findings + automation
+    // opportunities now render on Home, their one canonical surface. Non-critical to the
+    // page, so a fetch hiccup degrades to no section, never a broken Home.
+    get_insights(workspace.id).catch(() => null),
+    get_automation(workspace.id).catch(() => []),
   ]);
 
   // Latest plan per person (list is newest-first) — keyed by folded name because the
@@ -83,6 +90,9 @@ export default async function HomePage({ params }: { params: { slug: string } })
         claims={claims}
         personPlans={personPlans}
         workflowCount={workflows.length}
+        keyFindings={insights?.key_findings ?? []}
+        automation={automation}
+        workflowIds={workflows.map((w) => w.workflow_id)}
       />
       {pulse?.enabled && <WeeklyPulseCard pulse={pulse} />}
       <AddTranscriptDoor
