@@ -229,8 +229,8 @@ export function InterviewClient({ token }: { token: string }) {
             <>
               <p className="mt-2 text-sm leading-relaxed text-ink-soft">
                 This becomes the first version of your company snapshot: how the work flows,
-                the systems in play, and the open questions worth digging into. You&apos;ll see
-                it before anyone on your team is interviewed.
+                the systems in play, and the open questions worth digging into. It&apos;s yours
+                to review first, and no one on your team is contacted without your approval.
               </p>
               {slug && (
                 <div className="mt-6 flex flex-col items-center gap-3">

@@ -43,7 +43,9 @@ describe("InterviewClient done page", () => {
     const snapshot = await screen.findByRole("link", { name: /view company snapshot/i });
     expect(snapshot).toHaveAttribute("href", "/w/marmara-hotel/home");
     expect(screen.getByRole("link", { name: /return home/i })).toHaveAttribute("href", "/");
-    expect(screen.getByText(/before anyone on your team is interviewed/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/no one on your team is contacted without your approval/i),
+    ).toBeInTheDocument();
     // The employee role-only promise must never appear on the founder's page.
     expect(screen.queryByText(/shared by role, not your name/i)).toBeNull();
   });

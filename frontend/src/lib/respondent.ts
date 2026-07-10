@@ -180,7 +180,7 @@ export function consentCopy(session: RespondentSession) {
         "This call is recorded and turned into the first version of your company snapshot: how the work flows, the systems in play, and the open questions worth digging into.",
         "What you share builds your company's snapshot and is attributed to you as its source.",
         `${brand.product_name} may gather relevant public information about the company after the call to round out the picture. Public information is reference only, never treated as verified fact.`,
-        "You will see the snapshot before anyone on your team is interviewed. Nothing you say here is ever repeated to an employee.",
+        "The snapshot is yours to review first, and no one on your team is contacted without your explicit approval. Nothing you say here is ever repeated to an employee.",
         "You can pause anytime and pick up later on the same link.",
       ],
       startAction: "Begin the context call",
