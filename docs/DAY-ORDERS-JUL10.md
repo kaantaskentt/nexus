@@ -387,6 +387,11 @@ file's log section before NEXT.
   commit with evals riding. New persona 31/31 (baseline 24/25, known flake); bites
   proven on old for f3/f4/f5/f10; f2/f6 honest regression-guards. F7 diff + textbox
   proceeding under granted boundaries.
+- LANE-QUALITY COMPLETE on autonomous scope (12 commits): full F-package + A30 + identity
+  defense + all handed-off bait specs landed. context_collector 31/31; interviewer fixed
+  13/13, tuning 41/44 with the 3 fails PROVEN pre-existing (fail on parent commit too /
+  flip on re-run). Seam-C persona green bar: GREEN. Remaining on them: RED/YELLOW re-run
+  (the A.5 gate, top priority) → F7 (hardened scope) → composer.
 - ⚠ RED-182 SAFETY ESCALATION (open, P0-class): quality's RED bait caught the DEPLOYED
   in-room persona hallucinating "182" (MHRS appointments) as the Turkish crisis line
   instead of serving the packet's 112/Alo 183 verbatim (2/2 samples). s7 REACTIVATED to
