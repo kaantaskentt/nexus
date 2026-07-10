@@ -4,11 +4,14 @@ import { displaySpokenText, mergeTurns } from "@/lib/transcript-display";
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, Mic, Pause, SendHorizontal, Check, RefreshCw, WifiOff, Flag } from "lucide-react";
+import { Lock, Mic, MicOff, Pause, SendHorizontal, Check, RefreshCw, WifiOff, Flag } from "lucide-react";
 import brand from "@/lib/brand";
 import { BrandMark } from "@/components";
 import { VoiceCall } from "./VoiceCall";
 import { PromisedArtifacts } from "./PromisedArtifacts";
+import { LiveRoom } from "./LiveRoom";
+import { CapturedLivePanel } from "./CapturedLivePanel";
+import { AgentStateIndicator, type RoomAgentState } from "./AgentStateIndicator";
 import {
   getSession,
   takeTurn,
@@ -19,6 +22,7 @@ import {
   consentCopy,
   type RespondentSession,
 } from "@/lib/respondent";
+import { getLiveCapturesByToken, useLiveCaptures } from "@/lib/liveCaptures";
 
 type Phase = "loading" | "load_error" | "consent" | "chat" | "paused" | "done";
 type Msg = { role: "interviewer" | "respondent"; text: string };
@@ -36,11 +40,18 @@ export function InterviewClient({ token }: { token: string }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
+  const [streaming, setStreaming] = useState(false); // tokens actively arriving (real SSE state)
   const [offerPause, setOfferPause] = useState(false);
   const [turnError, setTurnError] = useState(false);
   const [mode, setMode] = useState<"voice" | "text">("text"); // set from session on load
   const lastMessage = useRef<string | null>(null); // for honest retry, not a fallback
   const scroller = useRef<HTMLDivElement>(null);
+
+  // Captured-live panel data for the text room — real polling while the text chat is open.
+  // (The voice room does its own polling inside VoiceCall.)
+  const captures = useLiveCaptures(() => getLiveCapturesByToken(token), {
+    enabled: phase === "chat" && mode === "text",
+  });
 
   function seedFromTranscript(s: RespondentSession) {
     // The server transcript is the one truth — reloads, drops, and modality switches
@@ -108,6 +119,7 @@ export function InterviewClient({ token }: { token: string }) {
       if (!streamed) {
         streamed = true;
         setTyping(false); // first token in — dots give way to real words
+        setStreaming(true); // agent state reads "Speaking" while tokens arrive
         setMessages((m) => [...m, { role: "interviewer", text: acc }]);
       } else {
         setMessages((m) => {
@@ -138,6 +150,7 @@ export function InterviewClient({ token }: { token: string }) {
       }
     } finally {
       setTyping(false);
+      setStreaming(false);
     }
   }
 
@@ -253,6 +266,11 @@ export function InterviewClient({ token }: { token: string }) {
     const snapshotCta = session?.snapshot_exists
       ? "See what's new in your snapshot"
       : "View company snapshot";
+    // Body copy branches the same way (Phase 3): a later context call must not claim to be
+    // the "first version" — it adds to a snapshot that already exists.
+    const snapshotBody = session?.snapshot_exists
+      ? "This adds what you just shared to your company snapshot: how the work flows, the systems in play, and the open questions worth digging into. It's yours to review first, and no one on your team is contacted without your approval."
+      : "This becomes the first version of your company snapshot: how the work flows, the systems in play, and the open questions worth digging into. It's yours to review first, and no one on your team is contacted without your approval.";
     return (
       <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
         <div className="mx-auto max-w-md py-16 text-center">
@@ -264,11 +282,7 @@ export function InterviewClient({ token }: { token: string }) {
           </h1>
           {contextDone ? (
             <>
-              <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-                This becomes the first version of your company snapshot: how the work flows,
-                the systems in play, and the open questions worth digging into. It&apos;s yours
-                to review first, and no one on your team is contacted without your approval.
-              </p>
+              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{snapshotBody}</p>
               {slug && (
                 <div className="mt-6 flex flex-col items-center gap-3">
                   <a
@@ -316,7 +330,7 @@ export function InterviewClient({ token }: { token: string }) {
   // the server record first, so nothing said on the call is missing from the thread.
   if (mode === "voice") {
     return (
-      <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
+      <Shell wide testBackPath={session?.test_back_path} contextCall={session?.context_call}>
         <VoiceCall
           token={token}
           respondentName={ctx?.respondent_name}
@@ -332,55 +346,107 @@ export function InterviewClient({ token }: { token: string }) {
     );
   }
 
-  // chat
+  // chat (text mode) — same live room as voice, in "Voice off" state.
   const topic = ctx?.interview_topic ?? "your work";
   const minutes = ctx?.est_minutes ?? 20;
 
-  return (
-    <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
-      <div className="flex h-[calc(100vh-4rem)] flex-col">
-        {/* Wraps on narrow phones (mobile pass, July 8): the action row pushed 6px past
-            the viewport at 390px and the page wiggled sideways. */}
-        <div className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3">
-          <div>
-            <div className="font-display text-lg text-ink">About {topic}</div>
-            <div className="text-xs text-ink-faint">
-              A relaxed chat · you&apos;re in control · pause anytime
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Voice and text are the same session — switching direction loses nothing. */}
-            <button
-              onClick={() => setMode("voice")}
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-faint transition-colors hover:bg-surface-raised hover:text-ink"
-              title="Continue this same conversation by voice"
-            >
-              <Mic className="h-4 w-4" strokeWidth={1.75} /> Switch to voice
-            </button>
-            <button
-              onClick={pause}
-              className={
-                "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors " +
-                (offerPause
-                  ? "bg-accent-soft text-accent-ink hover:bg-accent hover:text-on-accent"
-                  : "text-ink-faint hover:bg-surface-raised hover:text-ink")
-              }
-            >
-              <Pause className="h-4 w-4" strokeWidth={1.75} /> Pause
-            </button>
-            <button
-              onClick={finish}
-              disabled={finishing || messages.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-faint transition-colors hover:bg-surface-raised hover:text-ink disabled:opacity-40"
-              title="Finish the conversation and send it for summary"
-            >
-              <Flag className="h-4 w-4" strokeWidth={1.75} />
-              {finishing ? "Finishing…" : "Finish"}
-            </button>
-          </div>
-        </div>
+  // Real agent state for the text room, all from real signal: tokens arriving = Speaking;
+  // waiting on the first token = Thinking; a live extraction job = Saving; else Listening.
+  const roomState: RoomAgentState = streaming
+    ? "speaking"
+    : typing
+      ? "thinking"
+      : captures.extracting
+        ? "saving"
+        : "listening";
 
-        <div ref={scroller} className="flex-1 space-y-4 overflow-y-auto py-6">
+  const header = (
+    // Wraps on narrow phones (mobile pass): the action row pushed past the viewport at 390px.
+    <div className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3">
+      <div className="min-w-0">
+        <div className="font-display text-lg text-ink">About {topic}</div>
+        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+          <span className="inline-flex items-center gap-1 rounded-chip bg-surface-sunken px-2 py-0.5 font-medium text-ink-faint">
+            <MicOff className="h-3 w-3" strokeWidth={1.75} /> Voice off · Text mode
+          </span>
+          <AgentStateIndicator state={roomState} />
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        {/* Voice and text are the same session — switching direction loses nothing. */}
+        <button
+          onClick={() => setMode("voice")}
+          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-faint transition-colors hover:bg-surface-raised hover:text-ink"
+          title="Continue this same conversation by voice"
+        >
+          <Mic className="h-4 w-4" strokeWidth={1.75} /> Switch to voice
+        </button>
+        <button
+          onClick={pause}
+          className={
+            "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors " +
+            (offerPause
+              ? "bg-accent-soft text-accent-ink hover:bg-accent hover:text-on-accent"
+              : "text-ink-faint hover:bg-surface-raised hover:text-ink")
+          }
+        >
+          <Pause className="h-4 w-4" strokeWidth={1.75} /> Pause
+        </button>
+        <button
+          onClick={finish}
+          disabled={finishing || messages.length === 0}
+          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-faint transition-colors hover:bg-surface-raised hover:text-ink disabled:opacity-40"
+          title="Finish the conversation and send it for summary"
+        >
+          <Flag className="h-4 w-4" strokeWidth={1.75} />
+          {finishing ? "Finishing…" : "Finish"}
+        </button>
+      </div>
+    </div>
+  );
+
+  const composer = (
+    <>
+      <div className="flex items-end gap-2 rounded-2xl border border-line bg-surface px-3 py-2">
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              send();
+            }
+          }}
+          rows={1}
+          placeholder="Type your answer… take your time"
+          className="max-h-32 min-w-0 flex-1 resize-none bg-transparent py-1.5 text-sm text-ink outline-none placeholder:text-ink-faint"
+        />
+        <button
+          onClick={send}
+          disabled={!draft.trim() || typing}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:bg-accent-hover disabled:opacity-40 disabled:shadow-none"
+          aria-label="Send"
+        >
+          <SendHorizontal className="h-4 w-4" strokeWidth={2} />
+        </button>
+      </div>
+      <p className="mt-2 text-center text-[11px] text-ink-faint">
+        Your words are kept as you say them. Nothing is shared under your name without your okay.
+      </p>
+    </>
+  );
+
+  return (
+    <Shell wide testBackPath={session?.test_back_path} contextCall={session?.context_call}>
+      <LiveRoom
+        header={header}
+        controls={composer}
+        capturedPanel={
+          <CapturedLivePanel items={captures.items} extracting={captures.extracting} />
+        }
+        capturedCount={captures.items.length}
+      >
+        <div ref={scroller} className="h-full space-y-4 overflow-y-auto px-1">
           {messages.map((m, i) => (
             <motion.div
               key={i}
@@ -435,55 +501,30 @@ export function InterviewClient({ token }: { token: string }) {
             </p>
           )}
         </div>
-
-        <div className="border-t border-line pt-3">
-          <div className="flex items-end gap-2 rounded-2xl border border-line bg-surface px-3 py-2">
-            <textarea
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  send();
-                }
-              }}
-              rows={1}
-              placeholder="Type your answer… take your time"
-              className="max-h-32 min-w-0 flex-1 resize-none bg-transparent py-1.5 text-sm text-ink outline-none placeholder:text-ink-faint"
-            />
-            <button
-              onClick={send}
-              disabled={!draft.trim() || typing}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:bg-accent-hover disabled:opacity-40 disabled:shadow-none"
-              aria-label="Send"
-            >
-              <SendHorizontal className="h-4 w-4" strokeWidth={2} />
-            </button>
-          </div>
-          <p className="mt-2 text-center text-[11px] text-ink-faint">
-            Your words are kept as you say them. Nothing is shared under your name without
-            your okay.
-          </p>
-        </div>
-      </div>
+      </LiveRoom>
     </Shell>
   );
 }
 
-// Calm, standalone shell — the respondent is not inside the workspace app.
+// Calm, standalone shell — the respondent is not inside the workspace app. `wide` opens
+// the container up for the live room (transcript + Captured-live aside side by side);
+// the calm consent/done/paused screens stay narrow.
 function Shell({
   children,
   testBackPath,
   contextCall,
+  wide,
 }: {
   children: React.ReactNode;
   testBackPath?: string;
   contextCall?: boolean;
+  wide?: boolean;
 }) {
+  const inner = wide ? "max-w-6xl" : "max-w-2xl";
   return (
     <div className="min-h-screen bg-canvas">
       <header className="flex h-16 items-center px-6">
-        <div className="mx-auto flex w-full max-w-2xl items-center gap-1.5">
+        <div className={`mx-auto flex w-full ${inner} items-center gap-1.5`}>
           <span className="font-display text-xl tracking-tight text-ink">
             {brand.product_name}
           </span>
@@ -505,7 +546,7 @@ function Shell({
           )}
         </div>
       </header>
-      <main className="mx-auto max-w-2xl px-6">{children}</main>
+      <main className={`mx-auto ${inner} px-6`}>{children}</main>
     </div>
   );
 }

@@ -148,9 +148,16 @@ function CaptureCard({
         <div className="flex items-baseline justify-between gap-2">
           <span className="truncate font-medium text-ink">{item.label}</span>
           {settled ? (
-            <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-tag-verified">
-              <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> Saved
-            </span>
+            // Quiet confirmation, not celebration (Kaan taste note): a small check that
+            // just fades in — no scale, no bounce.
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
+              className="flex shrink-0 items-center gap-1 text-xs font-medium text-tag-verified"
+            >
+              <Check className="h-3.5 w-3.5" strokeWidth={2} /> Saved
+            </motion.span>
           ) : (
             <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-accent">
               <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> Just added
