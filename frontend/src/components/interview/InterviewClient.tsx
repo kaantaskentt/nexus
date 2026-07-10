@@ -93,13 +93,21 @@ export function InterviewClient({ token }: { token: string }) {
   // Voice → text switch: re-pull the authoritative transcript (voice turns land via
   // server webhooks), then open the text door on the same session.
   async function switchToText() {
+    let empty = messages.length === 0;
     try {
       const s = await getSession(token);
       seedFromTranscript(s);
+      empty = s.transcript.length === 0;
     } catch {
       /* keep whatever we have — the server still holds the record */
     }
     setMode("text");
+    // ADD-3.1: if we land in an EMPTY text room (a fresh voice-modality session — e.g. a
+    // roleplay/simulation — opened then switched to text before any turn), the interviewer
+    // must OPEN first, exactly like start() does for a text-first session. Without this the
+    // respondent types into an empty room and the interviewer replies with its opening
+    // greeting instead of engaging with what was said, which reads as "no reply".
+    if (empty) await interviewerTurn(null);
   }
 
   useEffect(() => {
