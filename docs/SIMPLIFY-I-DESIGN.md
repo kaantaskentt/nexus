@@ -68,6 +68,9 @@ scenario objectives} and opens the **new LiveRoom** (lane-e) adapted to the scen
   enters client records; only `roleplay_debriefs` is written. No new firewall code.
 - The room's Captured-live panel is suppressed for roleplay (existing backstop) — a
   simulation shows the interviewer's performance, not "captured context".
+- **The room header must clearly mark it a SIMULATION** (team-lead requirement / trust
+  surface): a persistent banner or chip so no admin could mistake a roleplay for a real
+  interview. Copy e.g. "Simulation — practice run, nothing here reaches your company records."
 - After the run: the observation debrief (existing roleplay_debriefs → the J-lane overview
   card pattern) says how the interviewer did against this workflow's traps.
 
@@ -84,11 +87,16 @@ NEVER rendered as this tenant's content.
 - Confident-only / never-guess ranking (no scenario invented from thin data).
 - Demo/real firewall unaffected (is_demo untouched).
 
-## Open for team-lead / Kaan before build
-1. **Confirm #3**: OK to move the global cast + proving rounds behind "How Nexus is tested"?
-   (This design assumes yes.)
-2. **Persona binding**: archetype-match (recommended, no fabrication) vs a future
-   real-employee persona — recommend archetype for v1, note real-employee as a later option.
-3. **Where "How Nexus is tested" lives**: product-level route (e.g. `/how-we-test`) vs a
-   picker-level page. Recommend a simple authenticated route reusing `simulation_history`.
+## Resolved (team-lead review, msg approving this doc) — LOCKED
+1. **Persona binding = archetype-match, LOCKED.** Fabricating a playable persona from real
+   claim records would put invented words in a real person's mouth (ontology breach). Real
+   workflows supply WHAT to probe; proven archetypes supply WHO. No real-employee persona.
+2. **"How Nexus is tested" lives ON the Simulations page** as the quiet link (the in-context
+   trust moment holds; a picker/product-level page would orphan it). Reuses
+   `simulation_history` for the linked record — no new route needed.
+3. **Confirm #3 stays Kaan's veto.** Per proceed-after-commit doctrine, BUILD is allowed once
+   E's room lands AND seam-2 verifies it live, provided the pre-review commit **clearly states
+   the proving-record relocation** so Kaan has one more visible veto point before it ships.
+4. **Build order: after seam-2 proves the room on prod.** Run must point at a LiveRoom seen
+   working live, not merely merged. Held until then.
 4. Build order: after E's LiveRoom is real (Run depends on it) and confirm #3 clears.
