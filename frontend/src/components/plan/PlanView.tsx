@@ -37,6 +37,7 @@ import brand from "@/lib/brand";
 import { transition_plan, refine_plan, redraft_plan } from "@/lib/live";
 import { PlanStateChip, MustHitDot, DiscoveryTag, BrandMark } from "@/components";
 import { cn } from "@/lib/cn";
+import { StageRail } from "../interviews/StageRail";
 import { SendInterviewFlow } from "./SendInterviewFlow";
 
 // The tracker ends at a single terminal node "Completed" (YC-AUDIT #13): COMPILED is the
@@ -225,6 +226,21 @@ export function PlanView({
             <PlanStateChip state={state} />
           </div>
         </div>
+
+        {/* The interview as one connected workflow: this is the Plan stage; Observe/Report
+            link once the interview has run (Follow-up arrives with the report). */}
+        <StageRail
+          current="plan"
+          className="mt-5"
+          hrefs={
+            reportSessionId
+              ? {
+                  observe: `/w/${workspace.slug}/interviews/${reportSessionId}`,
+                  report: `/w/${workspace.slug}/report/${reportSessionId}`,
+                }
+              : {}
+          }
+        />
 
         {showTracker && (
           <div className="card-hairline mt-5 rounded-card border border-line bg-surface p-4">
