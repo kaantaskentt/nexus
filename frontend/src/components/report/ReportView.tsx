@@ -234,9 +234,9 @@ export function ReportView({
 
           {/* ── Right: follow-ups / artifacts / quality ────────────── */}
           <aside className="space-y-6">
-            <Panel icon={UserPlus} title="Follow up on">
+            <Panel icon={UserPlus} title="Open questions">
               {report.follow_ups.length === 0 ? (
-                <p className="text-sm text-ink-soft">Nothing flagged to follow up on.</p>
+                <p className="text-sm text-ink-soft">No open questions flagged.</p>
               ) : (
                 <>
                   <p className="mb-3 text-xs leading-relaxed text-ink-faint">
