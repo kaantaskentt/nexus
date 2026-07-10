@@ -138,7 +138,9 @@ def _present(steps: list[dict]) -> list[dict]:
 
 
 async def effective_workflow(pool, workflow_id: str) -> dict:
-    wf = await pool.fetchrow("select id, name from workflows where id = $1", workflow_id)
+    wf = await pool.fetchrow(
+        "select id, name, description, department from workflows where id = $1", workflow_id
+    )
     if wf is None:
         raise LookupError("workflow not found")
     base = await _base_steps(pool, workflow_id)
@@ -148,7 +150,11 @@ async def effective_workflow(pool, workflow_id: str) -> dict:
         workflow_id,
     )
     folded = _fold(base, [dict(o) for o in overlays])
-    return {"workflow_id": str(wf["id"]), "name": wf["name"], "steps": _present(folded)}
+    return {
+        "workflow_id": str(wf["id"]), "name": wf["name"],
+        "description": wf["description"], "department": wf["department"],
+        "steps": _present(folded),
+    }
 
 
 async def apply_op(pool, workflow_id: str, op: str, step_id: str | None,

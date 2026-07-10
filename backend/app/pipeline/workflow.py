@@ -15,8 +15,26 @@ from ..queue import handles
 
 _UUID = re.compile(r"^[0-9a-f-]{36}$", re.I)
 
+# Coarse function buckets the list can group by. Domain-neutral (A14 — industry context is
+# runtime-injected, never baked into the taxonomy). The builder assigns ONE only when the
+# evidence clearly places the workflow there; anything ambiguous stays null and renders
+# under "All" — Nexus classifies only when confident, it never guesses.
+DEPARTMENTS = (
+    "Operations", "Sales", "Marketing", "Finance",
+    "Customer Service", "People", "Product",
+)
+_DEPT_SET = {d.lower(): d for d in DEPARTMENTS}
+
+_TAXONOMY = (
+    ' "description":"one plain-language sentence a manager would recognise, saying what this'
+    ' workflow does — client vocabulary, no jargon",'
+    ' "department":"exactly one of ' + "|".join(DEPARTMENTS) + ' when the evidence clearly'
+    ' places it there, else null — never guess; when unsure, null",'
+)
+
 _SCHEMA = (
     'Return ONE json object: {"name":"short workflow name",'
+    + _TAXONOMY +
     '"steps":[{"action":"what happens","tool":"tool or null","input":"or null",'
     '"output":"or null","verified":"verified|partial|unverified",'
     '"spine_slots":{"task":"","trigger":"","steps":"","rules":"","exceptions":"",'
@@ -26,6 +44,21 @@ _SCHEMA = (
     "Steps in real execution order. verified=corroborated across sources; partial=single-source "
     "or incomplete. slot scores 0=empty 1=partial 2=clear. Every step cites the claim ids it came from."
 )
+
+
+def _clean_department(raw) -> str | None:
+    """Normalise the model's department to the controlled vocabulary, else null. Anything
+    off-list, empty, or hedged ('unclear', 'n/a') becomes null — unclassified, never guessed."""
+    if not isinstance(raw, str):
+        return None
+    return _DEPT_SET.get(raw.strip().lower())
+
+
+def _clean_description(raw) -> str | None:
+    if not isinstance(raw, str):
+        return None
+    text = raw.strip()
+    return text or None
 
 
 async def build_workflow_schema(payload: dict) -> None:
@@ -60,8 +93,10 @@ async def build_workflow_schema(payload: dict) -> None:
     if not steps:
         return
     workflow_id = await pool.fetchval(
-        "insert into workflows (workspace_id, session_id, name) values ($1,$2,$3) returning id",
+        """insert into workflows (workspace_id, session_id, name, description, department)
+           values ($1,$2,$3,$4,$5) returning id""",
         workspace_id, session_id, schema.get("name") or "Workflow",
+        _clean_description(schema.get("description")), _clean_department(schema.get("department")),
     )
     for i, s in enumerate(steps):
         claim_ids = [c for c in (s.get("claim_ids") or []) if c in valid_ids and _UUID.match(c)]
@@ -75,6 +110,34 @@ async def build_workflow_schema(payload: dict) -> None:
             json.dumps(s.get("spine_slots") or {}), json.dumps(s.get("slot_scores") or {}),
             claim_ids,
         )
+
+
+async def classify_workflow_taxonomy(name: str, steps: list[dict], *, workspace_id: str) -> dict:
+    """Derive {description, department} for a workflow that predates the taxonomy columns,
+    from its name + steps. Same confident-only rule as build time: department is null unless
+    the evidence clearly places it. Used by the one-off backfill; new workflows get this
+    inline in build_workflow_schema (no extra call). Returns {} on any model failure so the
+    backfill can skip a row rather than write a guess."""
+    lines = "\n".join(
+        f"- {s.get('action') or s.get('title') or ''}"
+        + (f" (tool: {s['tool']})" if s.get("tool") else "")
+        + (f" -> {s['output']}" if s.get("output") else "")
+        for s in steps
+    )
+    prompt = (
+        f'Workflow name: "{name}"\nSteps:\n{lines}\n\n'
+        'Return ONE json object with exactly these keys: {' + _TAXONOMY.rstrip(", ") + "}. "
+        "Base both fields ONLY on the steps above. If the steps do not clearly place the "
+        "workflow in one department, department MUST be null."
+    )
+    try:
+        out = await run_agent_json("report_sop_generator", prompt, workspace_id=workspace_id)
+    except Exception:
+        return {}
+    return {
+        "description": _clean_description(out.get("description")),
+        "department": _clean_department(out.get("department")),
+    }
 
 
 @handles("build_workflow_schema")

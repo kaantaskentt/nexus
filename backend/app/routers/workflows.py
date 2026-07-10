@@ -26,17 +26,40 @@ async def _workflow_id_for_session(session_id: str) -> str:
     return str(wid)
 
 
+def _derive_confidence(total: int, verified: int) -> str | None:
+    """Workflow-level evidence rollup from the share of steps corroborated across sources
+    (the existing step `verified` value). NOT a claim trust tag — a derived completeness
+    read that maps through the same ladder vocabulary: High >=0.7, Medium >=0.35, else Low.
+    Null when there are no steps to measure (an empty workflow claims no confidence)."""
+    if total <= 0:
+        return None
+    ratio = verified / total
+    if ratio >= 0.7:
+        return "high"
+    if ratio >= 0.35:
+        return "medium"
+    return "low"
+
+
 @router.get("/{workspace_id}")
 async def list_workflows(workspace_id: str):
     """Workflows in a workspace — mirrors the /api/claims/{workspace_id} and
     /api/plans/{workspace_id} convention so a workspace-scoped caller can discover a
-    workflow_id. Each row carries its step count; the editable view is
-    /{workflow_id}/effective. (Different path depth from /{workflow_id}/effective, so
-    the two never collide.)"""
+    workflow_id. Each row carries its step count, one-line description, department (null =
+    unclassified → renders under All), derived confidence, and an updated_at that reflects
+    the latest edit overlay so "Updated Xh ago" is truthful. The editable view is
+    /{workflow_id}/effective. (Different path depth, so the two never collide.)"""
     pool = await get_pool()
     rows = await pool.fetch(
-        """select w.id, w.name, w.session_id, w.created_at,
-                  (select count(*) from workflow_steps s where s.workflow_id = w.id) as step_count
+        """select w.id, w.name, w.session_id, w.created_at, w.description, w.department,
+                  (select count(*) from workflow_steps s where s.workflow_id = w.id) as step_count,
+                  (select count(*) from workflow_steps s
+                     where s.workflow_id = w.id and s.verified = 'verified') as verified_count,
+                  greatest(
+                    w.created_at,
+                    coalesce((select max(o.created_at) from workflow_step_overlays o
+                                where o.workflow_id = w.id), w.created_at)
+                  ) as updated_at
            from workflows w where w.workspace_id = $1 order by w.created_at desc""",
         workspace_id,
     )
@@ -44,6 +67,9 @@ async def list_workflows(workspace_id: str):
         "workflow_id": str(r["id"]), "name": r["name"],
         "session_id": str(r["session_id"]) if r["session_id"] else None,
         "step_count": r["step_count"], "created_at": r["created_at"].isoformat(),
+        "updated_at": r["updated_at"].isoformat(),
+        "description": r["description"], "department": r["department"],
+        "confidence": _derive_confidence(r["step_count"], r["verified_count"]),
     } for r in rows]
 
 

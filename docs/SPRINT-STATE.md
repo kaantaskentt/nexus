@@ -1,5 +1,24 @@
 # SIMPLIFY SPRINT — July 9 (docs/SIMPLIFY-PLAN.md; A28 binds every change)
 
+## Lane C — Workflows chips + detail (task #5, audit-walk)
+
+**A28 pre-review.**
+- Commit 1 (schema+backend). Today: workflows carry only name+step_count; the list is a
+  flat unclassified rail (my audit finding #6). After: `workflows.department` (null unless
+  the builder is confident — never guessed) + `workflows.description` (one-line, always) +
+  `list_workflows` returns those + derived confidence (share of steps verified) + updated_at.
+  Simpler for the user: filter by department, read "what is this" without opening each. No
+  capability removed; classification is additive and null-safe.
+- Commit 2 (list): chips (All default + only departments that exist) + card rows per
+  image12. Replaces a bare name+count row; removes nothing.
+- Commit 3 (detail): rebuild WorkflowEditor presentation per image13 + finding #6 — the
+  x3350 horizontal StepRail strip becomes a responsive wrapping grid (one scroll, not two)
+  + right details panel + exceptions/hidden/recent-edits strips. ALL edit ops, SOP drawer,
+  Blueprint export KEPT. Simpler: a 9-step workflow reads without sideways scrolling.
+- Open flag: ConfidenceBadge has no Medium/Low tier (graded scale dropped per
+  non-negotiable #1). Reconciliation settled at the commit-2 boundary; backend returns the
+  raw tier regardless, so this does not block commit 1.
+
 ## Lane A — company reorder + delete (task #3)
 
 **A28 pre-review — COMMIT 1 (picker reorder).**
@@ -29,6 +48,16 @@ and stays 403 until the lead relays Kaan's nod.
 
 Note: plan/task say "migration 0021" but 0021_context_call.sql already exists — using the
 next free number 0022 for `workspaces.sort_order`. Flagged to lead.
+
+**AUDIT VERDICT (all 3 commits landed).** COMMIT 1 reorder 223e8b0, COMMIT 2 preview
+1009b30, COMMIT 3 cascade (inert, 403-gated) fb44c54. Lane-A suite 20/20 green in
+isolation (reorder 5 + preview 4 + cascade 4 + delete-interview 4 + workspaces 3); tsc +
+lint clean. Full backend suite shows shared-test-DB contention errors when another lane
+runs pytest against the same nexus-test container concurrently (per-test `drop schema
+cascade` collides) — NOT a code failure; each file passes alone and as a lane set.
+Migration 0022 is NOT applied to live yet (deploy seam held for lead). COMMIT 3 stays
+inert until Kaan's confirm of §6-1 cascade semantics is relayed (sealed-flag ruling still
+open with Emre). Approved to proceed.
 
 ## Lane Shell — responsive AppShell (task #13, PLAN §8 Amendment 1)
 
@@ -149,6 +178,31 @@ thought for a second. Could you say that again?", no em-dash) before stop + `[DO
 partial content is untouched (no fallback appended). 3 new tests pin all three cases; test_voice
 8/8 green. Simpler or more complex for the user? SIMPLER: a hiccup becomes one human sentence
 instead of dead air, and hiccups now show up in the logs.
+
+## Lane K — interview hub Plan/Observe/Report/Follow-up (task #9, HARDEST)
+
+**A28 pre-review — COMMIT 1 (K1 plan-page relayout, PlanView.tsx).**
+Today: the plan detail is one page mixing THREE content widths (audit finding 3): Interview
+Mission wall (~530px, every section expanded at once), a Refine card (532px) with the
+Suggested-Questions column crammed to 254px x 1614px beneath it, then a full-width flag
+block — Kaan's "just so messy" page. After (image21): a calm two-column layout. LEFT =
+collapsible cards Goal / Known context (chips) / Topics to cover / Definition of done (check
+rows) / Handling notes — each a section that opens and closes, nothing hidden, everything
+gets a place. RIGHT = the Refine-plan box (unchanged endpoint/semantics) + Suggested
+questions GROUPED BY the question's real `topic` field (ClaimTopic, honest per-question data
+— NO fabricated mapping) as accordions with per-group counts + Expand all / Collapse all;
+when questions carry one topic or none, a single "Suggested questions" group renders (no fake
+subdivision). The footer becomes a calm bar: Est. time + breakdown on the left, the EXACT
+existing state action bar on the right (Approve / Send back for check / Draft again / Send
+Interview / Revoke / tracker / NEXUS_CHECK spinner / NO_RESPONSE + REVOKED banners / check-
+flags — every gate semantic byte-identical, restyled only) + a "Back to interviews" return.
+Verified at 1440 AND 390 before commit (the embarrassment clause). Simpler or more complex
+for the user? SIMPLER: the messiest page in the product becomes one readable column of calm
+sections and one grouped, countable question list; the gate is untouched. Judgment flag to
+lead: I KEEP "Topics to cover" (the must-hit objectives) as a left section — image21's 4-item
+list drops it, but hiding the objectives would regress comprehension; it stays as a calm
+collapsible. No "Save draft" button (the plan already persists server-side via refine-chat; a
+save-draft affordance would be dead — omitted rather than faked).
 
 ---
 
