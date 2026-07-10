@@ -358,6 +358,22 @@ file's log section before NEXT.
   hidden tenant — one render, cards recomposed, second run no-op, torn down. Cleanup
   audit clean, /health/deep ok. EMRE ROUND-2 PIPELINE CLEAR pending lane-split's report.
 
+- LANE-SPLIT DRIVEN VERIFY: ALL PASS on prod (log 09341eb). Identity baits: context
+  variant (exact pilot repro) + previously-untested respondent variant + soft meta-baits
+  — agent held register on all, no debrief, no instruction reveal, BOTH kinds live.
+  R1: by-token live-captures = {"count":3,"extracting":false} proven by curl AND browser
+  network tab; respondent room = state rail + count pill, no cards/drawer at 1440+390;
+  admin route (same session) returned full items + ladder, ObserverView rich panel
+  intact. Browser lock was a 9.5h zombie Chrome from last night's parked session (PID
+  74632) — killed, browser freed. NOTE: frontend real alias is nexus-v2-alpha.vercel.app.
+  OUTSTANDING: the paste-compile drive (mest step-3 gap) was not in this run — requested
+  as a follow-up before Emre clearance.
+- STANDING TEARDOWN RULE (team-lead, owning an inconsistent instruction): self-minted
+  verify tenants get the HIDDEN-SHELL treatment (is_internal, on the reap ledger) — no
+  raw-SQL workspace deletes, even for synthetic data, while §6-1 holds the delete gate.
+  s7 got this rule; split did not (my miss) and SQL-deleted their throwaway — logged,
+  not undone, rule now uniform.
+
 ## KAAN ACTION LIST (consolidated, batched — nothing blocks the lanes)
 1. SENDGRID_API_KEY (ENVIRONMENT.md item 6, still outstanding) + new INCIDENT_NOTIFY_EMAILS
    (Kaan + Emre addresses) in Railway → turns Section 7 reviewer notification from
