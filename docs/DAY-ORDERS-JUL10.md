@@ -543,6 +543,17 @@ UNCAVEATED; his one open adjudication = the hedged-ideation line (item 3b).
   defects), identity defense, F7, composer, ANYTIME. Only open thread = Emre's
   hedged-ideation ruling → held ambiguous-soft bait lands.
 
+- ROOM-PARITY GATE WALK: PASS both widths, zero fix rounds (82befa4). Welcome orb +
+  agent-state rail verified on live prod (R1 visibly held: counts-only rail 1440,
+  compact line 390, no overflow anywhere); reconnect cards code-verified (styling-only;
+  a voice drop isn't forcible on demand — honest note). One pixel-pending note: rail
+  count-footer composition reads sparse with 4 rows — waits on Kaan's mockup. Lane
+  PARKS pending mockups + the two welcome decisions. New reap-ledger shell:
+  "Room Parity Walk (internal)" 6f824daf.
+- SEAM C2 FIRING: backend-only delta (cap mint + compiler line + pins) deploying at
+  82befa4; 0028 already live. Team-lead's knowledge-engine driven walk next on
+  atlas-courier-beta-test (additive case: 7 claims + 1 prior ctx session).
+
 ## RULINGS R2 (Kaan via watchtower, ~15:30) — LANE ASSIGNMENTS
 - R6 NO SendGrid: build IN-APP ADMIN INCIDENT INBOX for harm_incidents (Emre+Kaan see
   them in-app; email optional-if-key-ever-exists; email DROPPED from the done-bar).
