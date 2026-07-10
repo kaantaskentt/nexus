@@ -102,6 +102,12 @@ behavior, not our existing build re-derived) and not CONFLICT (nothing tested re
   `bg-scrim` (rgb 31 26 19 / 0.32, "drawer/modal backdrop"), matching the ratified July-8
   add-company backdrop fix; background no longer bleeds through. tsc clean.
   AUDIT: SIMPLER — the dialog reads as a dialog.
+- **C4a header citation (follow-up per team-lead)** — perception-gap.md rule 7 landed without
+  a source citation; repo convention is every artifact cites its source docs. Added a header
+  comment citing patch #29 + pilot §3 ratification, with the tags-never-upgrade framing
+  team-lead asked for: a same-speaker correction SUPERSEDES the old claim, it does not edit
+  history (old record + tag unchanged; non-negotiable #1). Prompt-only, own commit.
+  AUDIT: no behavior change — documentation-convention fix on the ratified rule.
 
 ## Definition of done
 Five leak fixes + bug landed as five scoped, revertable commits (a7cf9f2, b48386c, 7b6d87c,

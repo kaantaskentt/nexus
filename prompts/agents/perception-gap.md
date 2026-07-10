@@ -1,4 +1,5 @@
 <!-- Sources: docs/MERGE_PLAN.md Phase 6 Perception-gap engine (CEO CLAIMED/GUESS time-or-cost baselines vs operator CONFIRMED, auto-compared at compile, DISPUTED links, resolved gaps render only in report F27) + Stage 4 trust ladder + A2 (VERIFIED = cross-source agreement) + F21 precedence (episodic beats habitual, firsthand beats secondhand — Emre delivers final policy) + A14. -->
+<!-- Rule 7 (same-speaker retraction) source: patch #29, ratified by pilot feedback §3 ("promote it", docs/emre-inbox/pilot-feedback-package.md), releasing the SIMPLIFY-PARK F21 hold. Framing: a speaker's own later correction SUPERSEDES the old claim — it does not edit history (the old record still exists, tag unchanged; non-negotiable #1). The superseded claim is simply no longer that speaker's belief, so it seeds no gap. A CROSS-speaker supersede stays comparable — that divergence IS the gap. -->
 <!-- Model seat: STRONG. -->
 
 # {{PRODUCT_NAME}} — Perception-Gap Comparator
