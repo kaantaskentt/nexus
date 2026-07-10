@@ -214,6 +214,24 @@ full-width, tap targets sized for touch. Lands BEFORE the E room and K hub build
 their 390px acceptance is testable. Own lane, own commit (A28: strictly simpler for the
 user — the pages become usable on a phone).
 
+**AMENDMENT 3 (IA, Kaan-confirm #7) — the four-tab claim duplication.** The audit found
+the same claim data rendered on FOUR surfaces (Home snapshot, Company Context, Insights,
+Report) with three different names for next-round questions, and Insights adding little
+over Home+Report. Proposal for Kaan (NOT built without a nod, it removes a nav surface):
+fold Insights' unique content (conflicts, perception gaps, automation opportunities)
+into the restructured snapshot's Priorities/Open-questions sections + the report, and
+retire the Insights nav item; alternatively keep the tab but dedupe (each fact renders
+on exactly one primary surface, others link). Either way, ONE name for next-round
+questions everywhere. Recommendation: fold — 7 nav items becomes 6, and the audit shows
+the tab is mostly duplication (#4, #8, #10). Waits for Kaan.
+
+**AMENDMENT 4 (folds into existing lanes):** Home + Interviews render content in the
+left ~625-730px of 1440 with a dead right half (inconsistent with Report/Context) — the
+B lane (Home intro) and K lane (hub) own their pages' width discipline. The
+Observe-view claims sidebar stops being called "Insights" (collides with the nav tab);
+K lane picks the label (e.g. "Live notes"). Settings' opener preview shows only the
+employee opener — after D lands, it labels which opener it shows (D lane, one line).
+
 **AMENDMENT 2 (folds into K scope, task #9):** /interviews and /plans are two separate
 pages listing the same people with overlapping status pills and report links, and /plans
 has no nav item despite being central — confirms the plan's K3 hub combine; the K lane
