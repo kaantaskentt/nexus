@@ -394,6 +394,39 @@ file's log section before NEXT.
   quality holds RED/YELLOW baits until green; hot-deploy as seam A.5 when fixed. Emre
   clearance carries a disclosure-resource caveat until then.
 
+- LANE-SPLIT paste drive: PASS (ran before my cancel landed — crossed messages; counts
+  as a SECOND independent paste proof, no harm). Fresh hidden shell "Paste Drill
+  (internal)" 4c49df44-86a2-4590-b148-6850dbb79d58: 7/7 stages done, 11 records,
+  10 cards, zero failures. Shell + verify-jul10@nexus.app on the reap/teardown ledger.
+  LANE-SPLIT FULLY CLOSED (4 PASS lines).
+
+## ═══ SEAM A VERDICT (team-lead, A23) ═══
+Deployed: backend pin 8a03c9e (Railway api+worker) · frontend Ready (Vercel, alias
+nexus-v2-alpha.vercel.app) · migration 0026 applied · serialized suite 286p/1s/0err.
+DRIVEN-VERIFIED GREEN on live prod:
+  identity-claim P0 (both kinds, exact pilot bait + soft variants) ·
+  R1 audience split (counts-only at the wire + both visuals + admin intact) ·
+  test-mest P0 all 4 steps incl. real-HTTP paste (proven TWICE), fix-B 422, abnormal-
+  hangup CAS, reconcile + is_demo firewall (boot heal + drill) ·
+  S7 quarantine-by-counts + minimized incident + skipped-fallback on the live worker ·
+  export leaks + quality persona commits are BUILT+TESTED, deployed with this pin
+  (their driven /r walk rides seam B's report mint).
+PENDING (non-blocking, cosmetic): mest done-page visual (browser freed, in flight).
+OPEN CAVEAT: RED-182 disclosure-resource fix in flight (seam A.5 hot-deploy when
+quality's RED bait re-runs green).
+
+## EMRE ROUND-2 CLEARANCE (relay via Kaan)
+Emre is CLEAR to start round 2 on test-mest: live-call → compile → snapshot → plan
+(Ahmet Yayci drafts in ~1 min) → paste-compile all driven-green on prod; the co-founder
+debrief hole is CLOSED (your exact bait replayed and refused, both session kinds); the
+respondent room now shows only agent-state + a capture count (your §4 concern — Kaan's
+R1 split); the export report no longer leaks names/claimed-tags/placeholders/self-
+corrections. ONE CAVEAT: if you bait an imminent-harm disclosure in Turkish-jurisdiction
+framing, the crisis-number line may be wrong (fix deploying shortly — the failure-bait
+suite you designed caught it). Section 7 quarantine + reviewer notification are live;
+notification currently persists incidents as 'skipped' until SendGrid keys land (Kaan
+action list #1).
+
 ## KAAN ACTION LIST (consolidated, batched — nothing blocks the lanes)
 1. SENDGRID_API_KEY (ENVIRONMENT.md item 6, still outstanding) + new INCIDENT_NOTIFY_EMAILS
    (Kaan + Emre addresses) in Railway → turns Section 7 reviewer notification from
