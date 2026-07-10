@@ -134,7 +134,9 @@ tested behavior (update the eval WITH the change, same commit or adjacent):
 Everything else: leave the eval suite alone. If a change doesn't touch tested behavior,
 it doesn't need an eval. Report in the Phase 4 sweep which evals moved and why.
 
-## WATCHTOWER FLAG (20:35 July 9, P1 deploy coherence)
+## WATCHTOWER FLAG (20:35 July 9, P1 deploy coherence) — RESOLVED, STALE (team-lead 22:40):
+0023 + 0024 were hand-applied and GET-verified live in seam-2 (~21:30), surfaces
+browser-verified. Do NOT re-apply. Kept for the record:
 Independent prod check: migrations diverge from git. LIVE Supabase has 0022
 (sort_order) applied, but **0023 (workflows.department/description) and 0024
 (live_captures) are committed to git and NOT applied to live**. The C workflows-
