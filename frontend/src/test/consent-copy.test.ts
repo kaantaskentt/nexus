@@ -54,8 +54,12 @@ describe("consentCopy — employee interview branch (locked, byte-identical)", (
 describe("consentCopy — context call branch (leadership copy)", () => {
   const c = consentCopy(session({ context_call: true }));
 
-  it("uses the working-conversation headline and context-call CTA", () => {
-    expect(c.heading).toBe("A working conversation about Marmara Hotel");
+  it("uses Kaan's crisp context-call header (mockup 2) + context-call CTA", () => {
+    // Kaan's July-10 rewrite: fixed headline, company moves into the subtitle.
+    expect(c.heading).toBe("Company context call");
+    expect((c as { subtitle?: string }).subtitle).toBe(
+      "Build Nexus's first understanding of Marmara Hotel.",
+    );
     expect(c.whatItIsTitle).toBe("What this is");
     expect(c.startAction).toBe("Begin the context call");
   });
@@ -78,8 +82,11 @@ describe("consentCopy — context call branch (leadership copy)", () => {
     expect(all).not.toMatch(/you won't be asked to rate anyone/i);
   });
 
-  it("falls back to a neutral headline when the company name is absent", () => {
+  it("falls back to a neutral company in the subtitle when the name is absent", () => {
     const c2 = consentCopy(session({ context_call: true, context: { est_minutes: 30 } }));
-    expect(c2.heading).toBe("A working conversation about your company");
+    expect(c2.heading).toBe("Company context call");
+    expect((c2 as { subtitle?: string }).subtitle).toBe(
+      "Build Nexus's first understanding of your company.",
+    );
   });
 });

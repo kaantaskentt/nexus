@@ -617,6 +617,9 @@ function ConsentLanding({
   onStart: () => void;
 }) {
   const c = consentCopy(session);
+  // The context branch of consentCopy() carries a subtitle (Kaan's mockup-2 header); the other
+  // kinds don't, so read it only for a context call.
+  const subtitle = session.context_call ? (c as { subtitle?: string }).subtitle : undefined;
   return (
     <div className="py-10">
       {/* ROOM-PARITY: the context-call welcome opens on the same calm presence orb the room
@@ -630,8 +633,21 @@ function ConsentLanding({
           </div>
         </div>
       )}
-      <h1 className="font-display text-3xl leading-tight text-ink">{c.heading}</h1>
-      <p className="mt-4 leading-relaxed text-ink-soft">{c.intro}</p>
+      {session.context_call ? (
+        // Kaan's crisp mockup-2 hero: uppercase kicker + headline + subtitle + one calm line,
+        // centered under the orb. Copy is Kaan's verbatim (via consentCopy).
+        <div className="text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">{c.heading}</p>
+          <h1 className="mt-2 font-display text-3xl leading-tight text-ink">{c.heading}</h1>
+          {subtitle && <p className="mt-2 text-lg text-ink-soft">{subtitle}</p>}
+          <p className="mx-auto mt-3 max-w-xl leading-relaxed text-ink-faint">{c.intro}</p>
+        </div>
+      ) : (
+        <>
+          <h1 className="font-display text-3xl leading-tight text-ink">{c.heading}</h1>
+          <p className="mt-4 leading-relaxed text-ink-soft">{c.intro}</p>
+        </>
+      )}
 
       <Block title={c.whatItIsTitle}>
         <ul className="space-y-2">

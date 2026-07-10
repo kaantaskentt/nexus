@@ -145,6 +145,20 @@ I execute (a) on grant: change header framing only, keep the 2 compliance boxes 
 Kaan feedback logged: use a REALISTIC demo workspace name (e.g. a hotel) in anything screenshot-
 visible, never "X (internal)".
 
+### LANDED (path (a) granted) — header framing only
+consentCopy() context branch: heading → "Company context call"; NEW subtitle "Build {product}'s
+first understanding of {company}."; intro → Kaan's one line (dropped "not a tidy version of it").
+ConsentLanding renders the mockup-2 hero for context calls: uppercase kicker + headline +
+subtitle + one calm line, centered under the orb; employee/simulation welcome unchanged.
+consent-landing.md context-call Heading/Intro updated to match (source of truth + provenance).
+- BOUNDARY HELD: the S7.8 escalation line + every compliance box promise are BYTE-UNCHANGED —
+  proof: consent_copy_sync GREEN (19 lines in sync). tsc clean; frontend 122/122 (consent-copy
+  test updated to the new header + subtitle fallback).
+- COHERENCE FLAG for Kaan (team-lead to batch): "not a tidy version of it" ALSO lives in the
+  SPOKEN opener (prompts/agents/stage3-context-collector.md, lane-quality's, Kaan-approved
+  July 9). Page drops it; the agent still says it → small divergence. NOT touched. Match it?
+- Visual verify pending next deploy; will re-walk welcome 1440/390 with a realistic demo name.
+
 ## Verdicts
 - Surface 2 (welcome hero orb) 747fd27. Surface 1 (agent-state rail) 1dda84c, test-green.
   Surface 3 (reconnect cards) 660db57. Seam-C1 gate walk PASS both widths (82befa4).

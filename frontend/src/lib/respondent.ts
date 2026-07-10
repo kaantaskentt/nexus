@@ -265,10 +265,12 @@ export function consentCopy(session: RespondentSession) {
   // appear; what this person is owed is honest attribution + the pre-interview promise.
   if (session.context_call) {
     return {
-      heading: company
-        ? `A working conversation about ${company}`
-        : "A working conversation about your company",
-      intro: `Hi ${name}, thanks for making the time. This is the context call, where ${brand.product_name} learns how ${company ?? "the company"} actually works, so everything built after this fits the real thing and not a tidy version of it. It takes about ${minutes} minutes, and you can pause anytime.`,
+      // Context-call header — Kaan's crisp mockup-2 framing (strings verbatim via watchtower
+      // relay, July 10), replacing the earlier verbose working-conversation / not-a-tidy-version
+      // intro. FRAMING ONLY: every compliance promise below is byte-unchanged.
+      heading: "Company context call",
+      subtitle: `Build ${brand.product_name}'s first understanding of ${company ?? "your company"}.`,
+      intro: `A 20–30 minute conversation to capture how your company works, what matters, and where ${brand.product_name} can add the most value.`,
       whatItIsTitle: "What this is",
       whatItIs: [
         `${brand.product_name} is here to understand the company, its goals, and how the work actually gets done. It does not pitch, advise, or solve.`,

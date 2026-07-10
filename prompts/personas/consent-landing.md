@@ -49,11 +49,17 @@ Hi {{RESPONDENT_NAME}}, thanks for being here. {{ADMIN_NAME}} at {{COMPANY_NAME}
 The senior stakeholder who arranged this runs the context call directly with {{PRODUCT_NAME}}. They are the **client**, not an employee under consent protection, so the promise is the opposite of the interview page: their words BUILD the snapshot and are **attributed to them as its source** (Non-negotiable 2: nothing said here ever reaches an interviewee). The role-only respondent promise must never appear here. Kept in sync with the `context` branch of `consentCopy()` (see evals consent-copy-sync). Sensitive line flagged to Kaan+Emre for a wording pass (confirm #2); the clearly-better version ships now.
 
 ### Heading
-A working conversation about {{COMPANY_NAME}}
-<!-- fallback when company is unknown: --> A working conversation about your company
+<!-- Reworded per Kaan (July 10, strings verbatim via watchtower relay): crisp mockup-2 framing,
+     replaces the earlier "A working conversation about … not a tidy version of it". Shown as an
+     uppercase kicker + headline + subtitle. COHERENCE FLAG for Kaan: the SPOKEN opener in
+     stage3-context-collector.md still says "not a tidy version of it" (July 9 D-coherence) — page
+     and agent now diverge on that phrase; matched only on Kaan's nod (that persona file is
+     lane-quality's, Kaan-approved, untouched here). -->
+Company context call
+<!-- subtitle: --> Build {{PRODUCT_NAME}}'s first understanding of {{COMPANY_NAME}}.
 
 ### Intro
-Hi {{RESPONDENT_NAME}}, thanks for making the time. This is the context call, where {{PRODUCT_NAME}} learns how {{COMPANY_NAME}} actually works, so everything built after this fits the real thing and not a tidy version of it. It takes about {{EST_MINUTES}} minutes, and you can pause anytime.
+A 20–30 minute conversation to capture how your company works, what matters, and where {{PRODUCT_NAME}} can add the most value.
 
 ### What this is
 - **{{PRODUCT_NAME}} is here to understand the company**, its goals, and how the work actually gets done. It does not pitch, advise, or solve.
