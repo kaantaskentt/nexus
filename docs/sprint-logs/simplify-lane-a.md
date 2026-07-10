@@ -74,3 +74,28 @@ SAFER — what you review is byte-for-byte what gets written; a drifted DB abort
 instead of silently writing stale guesses. Not run against live (seam-2 owns live writes).
 Tests cover the apply-from-file path with the classifier monkeypatched to raise, proving
 apply makes no LLM call, plus the two drift-refusal cases.
+
+## A28 pre-review — ROBUSTNESS 1 (cascade cancels queued jobs, folded into 5.3)
+
+Found live (watchtower): deleting a session left its post-call jobs (compute_yield,
+screen_disclosures, the compile fan-out) still `queued`; when a worker later ran one it
+found no session, raised, and crash-retry-failed into dead `failed` rows. Today: the delete
+cascade removes the session + its rows but leaves the jobs referencing it. After:
+`delete_interview` (and the inert `delete_workspace`) also delete every not-yet-terminal
+job (`status in ('queued','running')`) whose `payload->>'session_id'` is a doomed session,
+inside the SAME transaction — so no orphaned work survives the delete. delete_workspace
+also clears jobs referencing the workspace_id (whole tenant is gone). The post-cascade
+render_snapshot enqueue in delete_interview happens AFTER the transaction, so it is not
+cancelled. Simpler for the user? Invisible to them, but removes a class of silent dead
+rows an operator would otherwise find in the queue. Test: cascade removes the queued job.
+
+## A28 pre-review — ROBUSTNESS 2 (handler session-gone guard, folded into 5.3)
+
+Today: `compute_session_yield` and `screen_session` both `raise RuntimeError` when their
+session is missing — a retryable crash that burns all attempts and lands in `failed`. After:
+they log and return cleanly (no-op complete), copying the EXISTING pattern in
+`generate_roleplay_debrief` (session is None -> log.info + return), not a new one. Defense in
+depth with robustness-1: even a job that slips past the cascade cancel (or a legitimately
+vanished session) completes as a no-op instead of a dead retry loop. Simpler/safer: a gone
+session is a normal terminal state, not an error. Tests: each handler no-ops on a missing
+session and does not raise.

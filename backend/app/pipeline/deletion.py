@@ -209,6 +209,14 @@ async def delete_interview(session_id: str) -> dict | None:
                 "update sealed_flags set session_id = null where session_id = $1", session_id)
             await conn.execute(
                 "update agent_runs set session_id = null where session_id = $1", session_id)
+            # Cancel this session's not-yet-run post-call jobs (compute_yield,
+            # screen_disclosures, compile fan-out). Left queued, they would run against a
+            # gone session and crash-retry into dead 'failed' rows. Same transaction so the
+            # delete and the cancel commit together. The render_snapshot enqueue below runs
+            # AFTER this transaction, so it is deliberately not cancelled here.
+            await conn.execute(
+                "delete from jobs where payload->>'session_id' = $1 and status in ('queued','running')",
+                session_id)
             await conn.execute("delete from utterances where session_id = $1", session_id)
             # artifact_promises + roleplay_debriefs cascade via FK on the session delete.
 
@@ -310,6 +318,17 @@ async def delete_workspace(workspace_id: str) -> dict | None:
                     await conn.execute(
                         f"delete from {table} where workflow_id = any($1::uuid[])", workflow_ids)
             await conn.execute("delete from workflows where workspace_id = $1", ws)
+
+            # Cancel not-yet-run jobs referencing any doomed session OR the tenant itself —
+            # the whole workspace is gone, so nothing queued against it can succeed. Same
+            # transaction; payload->>'...' is text, so session ids are compared as strings.
+            if session_ids:
+                await conn.execute(
+                    "delete from jobs where payload->>'session_id' = any($1::text[]) "
+                    "and status in ('queued','running')",
+                    [str(s) for s in session_ids])
+            await conn.execute(
+                "delete from jobs where payload->>'workspace_id' = $1 and status in ('queued','running')", ws)
 
             # Session subtree (before sessions themselves).
             if session_ids:
