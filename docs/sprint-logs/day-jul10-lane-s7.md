@@ -223,8 +223,38 @@ independently confirmed via Supabase MCP (read-only):
   guarantee, proven live.
 - Check constraints present: bucket (red/amber/yellow), category (7 allowed), notify_status
   (pending/sent/failed/skipped). row_count = 0 (clean).
-REMAINING (PART 2, queued behind the browser per team-lead): the driven live-session disclosure
-→ in-room response → quarantine-by-counts → notify_status='skipped' fallback → teardown.
+## Seam-B verify — PART 2 done: DRIVEN on deployed prod code — PASS
+Greenlit by team-lead to run headless (the text/data path doesn't contend for the shared browser).
+Ran the disclosure quarantine+notify flow against the LIVE prod worker (deployed backend pin
+8a03c9e, which includes persona commit 434e349 + data-layer c/d), on a disposable is_internal
+A12-safe tenant. Method: minted tenant+session+a synthetic 2-turn disclosure ("manager forging
+safety inspection reports... threatened to fire me if I reported it") via Supabase, enqueued a real
+`screen_disclosures` job; the prod worker (worker-1) claimed + ran it (job 379 done, attempts=1, no
+error) against the deployed disclosure_screen model.
+
+RESULT — all safety guarantees proven on DEPLOYED code:
+- Detection: deployed screen flagged it → 1 sealed_flag.
+- Minimized incident: 1 harm_incidents row, category=illegality, bucket=**amber** (tier-2 map
+  correct), session_ref set, created_at stamped. No verbatim (schema-enforced, part 1).
+- Notify fallback: notify_status=**skipped** (no SENDGRID_API_KEY / INCIDENT_NOTIFY_EMAILS on
+  prod) — incident persisted, session/job never failed. Exactly the ordered fallback.
+- QUARANTINE proven by counts: claim_records = **0**, snapshot_cards = **0**. The disclosure never
+  entered the KB or snapshot.
+
+INCIDENT ROW LIFECYCLE (per team-lead's ask): created (amber/illegality, notify_status='pending')
+→ notify attempted → 'skipped' (config absent) → would survive a session delete by design →
+teardown REMOVED it explicitly. Teardown rationale (logged): synthetic disclosure in a disposable
+is_internal tenant; leaving a fabricated 'illegality' incident would put false noise in Emre's
+reviewer queue, so it was cleaned. Teardown deleted agent_runs(1)+harm_incidents(1)+sealed_flags(1)
++jobs(1)+utterances(2)+session(1)+workspace(1); post-check: zero residue, whole harm_incidents
+table back to empty. (agent_runs FK has no cascade — the product's own delete_workspace nulls it; I
+deleted my synthetic audit row instead.)
+
+IN-ROOM persona live-turn: NOT driven this pass — the turn engine + by-token routing is lane-sec's
+owned surface, and a raw-minted session drive there risks a misleading result in code I don't own.
+The deployed persona (434e349, live at pin 8a03c9e) was verified by prompt-load to carry the full
+protocol + never-list + resolved {{RESOURCE_PACKET}}. The behavioral in-room check is covered by
+lane-quality's eval baits (specs above) + Emre's live round-2 founder call. Flagged, not faked.
 
 ## Test-infra caveat (for team-lead's seam-B suite)
 The full backend suite is file-order/loop flaky (module-global asyncpg pool + pytest-asyncio loop
