@@ -81,3 +81,13 @@ roleplay, interview, context_call, simulations, turn_stream, live_capture = 35);
 tsc 0 / eslint clean / vitest 100.
 Simpler for the user: yes — one honest "pressure-test the interviewer against YOUR workflow"
 action that reuses the room they already know, clearly marked as practice.
+
+## #10 FIX — persistent SIMULATION marker (audit-walk #12 prod finding)
+Gap: the marker only rendered inside the live room, so the consent + pre-call screens looked
+like a real interview (admin couldn't tell it was practice). Fix (6199a06): lifted the marker
+from LiveRoom to the Shell — it now shows on consent, pre-call, room, and done alike; roleplay
+back-chrome reads "Exit simulation". Regression test pins it on the consent screen + its
+absence for a normal interview. Frontend tsc 0 / vitest 102. Open (minor, flagged): the
+consent BODY copy is still the generic employee-interview wording; the persistent marker now
+disambiguates it, so this is polish, not a trust gap — and it touches the drift-guarded
+consentCopy + F8, so it's a separate change.
