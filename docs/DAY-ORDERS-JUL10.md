@@ -443,6 +443,15 @@ suite you designed caught it). Section 7 quarantine + reviewer notification are 
 notification currently persists incidents as 'skipped' until SendGrid keys land (Kaan
 action list #1).
 
+- COMPOSER LANDED (quality, 8d8ea50): transcript box auto-grows, 29/29 interview tests
+  green. F7 A28 pre-review APPROVED with amendment: generator must cite
+  evidence_record_id; plan.py validates the record EXISTS before authorized:true
+  (hallucinated authorization structurally impossible); {authorized, source_session_id,
+  evidence_record_id} jsonb, fail-closed + forced-false-on-invalid-citation test pin.
+  handoff.py granted (announced). Records confirmed to carry the [F7] authorization on
+  test-mest, so records-based is not a no-op; capture-side scan = follow-up only if
+  per-plan variance appears.
+
 ## RULINGS R2 (Kaan via watchtower, ~15:30) — LANE ASSIGNMENTS
 - R6 NO SendGrid: build IN-APP ADMIN INCIDENT INBOX for harm_incidents (Emre+Kaan see
   them in-app; email optional-if-key-ever-exists; email DROPPED from the done-bar).
