@@ -117,6 +117,65 @@ export async function takeTurn(token: string, message: string | null): Promise<T
   });
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+// Where a streaming turn failed — the caller needs this to fall back SAFELY:
+//   "connect"  — the request never reached the server, so the respondent turn was NOT
+//                stored; fall back by re-sending the message.
+//   "generate" — the server accepted the turn and stored the respondent's message, but
+//                generation failed; fall back with message=null so the reply is produced
+//                from the stored transcript WITHOUT storing the message twice.
+export class StreamTurnError extends Error {
+  constructor(public stage: "connect" | "generate") {
+    super(`stream turn failed at ${stage}`);
+  }
+}
+
+// Stream the interviewer's reply token-by-token (SIMPLIFY E). onDelta fires per token as
+// it generates; onDone carries the same TurnResult the non-streaming endpoint returns.
+// Throws StreamTurnError so the caller can fall back to takeTurn safely (see stages above).
+// Public route (no bearer) — the respondent has no JWT, same as takeTurn.
+export async function streamTurn(
+  token: string,
+  message: string | null,
+  handlers: { onDelta: (text: string) => void; onDone: (result: TurnResult) => void },
+): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch(
+      `${API_BASE}/api/sessions/by-token/${encodeURIComponent(token)}/turn/stream`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      },
+    );
+  } catch {
+    throw new StreamTurnError("connect");
+  }
+  if (!res.ok || !res.body) throw new StreamTurnError("connect");
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    // SSE frames are separated by a blank line; keep the trailing partial in the buffer.
+    const frames = buf.split("\n\n");
+    buf = frames.pop() ?? "";
+    for (const frame of frames) {
+      const line = frame.split("\n").find((l) => l.startsWith("data: "));
+      if (!line) continue;
+      const ev = JSON.parse(line.slice(6));
+      if (ev.type === "delta") handlers.onDelta(ev.text as string);
+      else if (ev.type === "done") handlers.onDone(ev as TurnResult);
+      else if (ev.type === "error") throw new StreamTurnError("generate");
+    }
+  }
+}
+
 export async function pauseSession(
   token: string,
 ): Promise<{ status: string; resumes_on: string }> {

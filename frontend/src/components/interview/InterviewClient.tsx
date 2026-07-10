@@ -12,6 +12,8 @@ import { PromisedArtifacts } from "./PromisedArtifacts";
 import {
   getSession,
   takeTurn,
+  streamTurn,
+  StreamTurnError,
   pauseSession,
   completeSession,
   consentCopy,
@@ -92,18 +94,48 @@ export function InterviewClient({ token }: { token: string }) {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
   }, [messages, typing, turnError]);
 
-  // One turn against the real engine. On failure: surface the error, keep the message
-  // for retry, and NEVER synthesize a reply.
+  // One turn against the real engine. STREAMS the reply token-by-token (SIMPLIFY E) so
+  // words appear immediately — the dots show only until the first token. On failure:
+  // surface the error, keep the message for retry, and NEVER synthesize a reply.
   async function interviewerTurn(message: string | null) {
     lastMessage.current = message;
     setTurnError(false);
     setTyping(true);
+    let streamed = false; // did we add a growing interviewer bubble?
+    let acc = "";
+    const grow = (text: string) => {
+      acc += text;
+      if (!streamed) {
+        streamed = true;
+        setTyping(false); // first token in — dots give way to real words
+        setMessages((m) => [...m, { role: "interviewer", text: acc }]);
+      } else {
+        setMessages((m) => {
+          const copy = m.slice();
+          copy[copy.length - 1] = { role: "interviewer", text: acc };
+          return copy;
+        });
+      }
+    };
     try {
-      const result = await takeTurn(token, message);
-      setMessages((m) => [...m, { role: "interviewer", text: result.reply }]);
-      setOfferPause(result.should_offer_pause);
-    } catch {
-      setTurnError(true);
+      await streamTurn(token, message, {
+        onDelta: grow,
+        onDone: (res) => setOfferPause(res.should_offer_pause),
+      });
+    } catch (e) {
+      // Streaming failed. Drop the partial (incomplete) bubble, then fall back to the
+      // non-streaming turn. If the server already stored the respondent turn (generate
+      // stage), re-request with null so the reply is produced from the stored transcript
+      // WITHOUT storing the message twice; otherwise re-send the message.
+      if (streamed) setMessages((m) => m.slice(0, -1));
+      const stage = e instanceof StreamTurnError ? e.stage : "connect";
+      try {
+        const result = await takeTurn(token, stage === "generate" ? null : message);
+        setMessages((m) => [...m, { role: "interviewer", text: result.reply }]);
+        setOfferPause(result.should_offer_pause);
+      } catch {
+        setTurnError(true);
+      }
     } finally {
       setTyping(false);
     }
