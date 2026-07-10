@@ -997,6 +997,36 @@ export async function list_roleplay(workspace_id: string, token?: string): Promi
   return api<RolePlayRun[]>(`/api/simulations/${workspace_id}/roleplay`, undefined, token);
 }
 
+// ── SIMPLIFY I: workspace simulation scenarios (derived from this company's workflows) ──
+export interface SimulationScenario {
+  workflow_id: string;
+  label: string;
+  step_count: number;
+  tests_summary: string;
+  signals: {
+    has_exceptions: boolean;
+    has_decisions: boolean;
+    confidence: "high" | "medium" | "low" | null;
+  };
+}
+
+export async function get_scenarios(workspace_id: string, token?: string): Promise<SimulationScenario[]> {
+  return api<SimulationScenario[]>(`/api/simulations/${workspace_id}/scenarios`, undefined, token);
+}
+
+// Run a scenario: mints a roleplay-kind session for {workflow_id}. The mint (lane-e) derives
+// the archetype + interviewer objectives SERVER-SIDE — only workflow_id crosses the wire
+// (locked contract; client-supplied objectives must never steer the agent). Returns the room link.
+export async function run_scenario(
+  workspace_id: string,
+  workflow_id: string,
+): Promise<{ token: string; invite_path: string }> {
+  return api(`/api/simulations/${workspace_id}/scenario-run`, {
+    method: "POST",
+    body: JSON.stringify({ workflow_id }),
+  });
+}
+
 export async function get_roleplay_brief(
   key: string,
 ): Promise<{ key: string; cast: SimulationCastMember | null; sheet: string }> {
