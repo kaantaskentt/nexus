@@ -419,7 +419,12 @@ shredded. Reap ledger (Kaan, when §6-1 arms): "S7 Drill (internal)" 2fb919fa +
 "Paste Drill (internal)" 4c49df44 — kept per standing rule, purge offer declined
 (rule consistency beats tidiness).
 OPEN CAVEAT: RED-182 disclosure-resource fix in flight (seam A.5 hot-deploy when
-quality's RED bait re-runs green).
+quality's RED bait re-runs green). UPDATE: fix committed (31434d8, prompt-only) —
+verbatim-only rule above {{RESOURCE_PACKET}} (no number priming) + BAN on the acuity-
+assessment probe (the bait also caught a forbidden "are you thinking about ending your
+life?" clarifier, 2/3 — second real defect, same commit). Eval adapter fixed to inject
+the packet so interviewer RED baits actually test (ffac175). Holding for quality's
+RED/YELLOW green → team-lead deploys A.5.
 
 ## EMRE ROUND-2 CLEARANCE (relay via Kaan)
 Emre is CLEAR to start round 2 on test-mest: live-call → compile → snapshot → plan
