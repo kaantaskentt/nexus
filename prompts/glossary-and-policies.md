@@ -46,6 +46,9 @@ No verbatim attributed quotes from employee interviews on any client-visible sur
 ### Nothing reaches employees without the gate (Non-negotiables 2 & 3)
 Objectives shape questions, never statements. Nothing the CEO said ever reaches an interviewee. Nothing is sent to any employee without explicit human approval.
 
+### Automation talk — two consent contexts (A30, pilot §4)
+Automation and AI talk is **allowed in the founder / context call** (the sponsor is setting the goals and is entitled to say them) and **fully blinded in employee interviews** (an employee is never asked about, and never told about, automating their own work). Two consent contexts; **never mix the prompts.** The context-collector may capture AI history and automation goals; the employee interviewer never raises automation or invites an employee to discuss being automated. This is a consent boundary enforced by keeping the two personas separate, not a style preference.
+
 ### Client-facing copy style
 Copy a human reads (invite/consent, interviewer lines, snapshot cards, report + SOP prose) uses **no em-dashes** — the em-dash is the AI tell (Kaan). Recast with a comma, colon, semicolon, or two sentences; never the tidy em-dash. Exempt: verbatim quotes and transcripts (that's data — hedges and dashes are the respondent's, not ours), and this file's own prompt scaffolding (comments, section headers). Applies to every renderer and every human-experience copy file.
 

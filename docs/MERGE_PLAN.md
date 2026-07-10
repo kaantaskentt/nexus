@@ -426,3 +426,16 @@ invitation. Timing recipe untouched (assistant-speaks-first, turbo v2.5, 0.4s li
 Both shared assistants PATCHed + fetch-verified. EMRE-SEAM: the exact wording is Emre's to
 refine — replace the text in vapi_assistant.DEFAULT_FIRST_MESSAGE (and provision script +
 Voice Settings placeholder), keep the arc.
+
+## A30 — Standing ruling: automation talk is founder-allowed, employee-blinded (July 10, Kaan/Emre pilot §4, R3; lane-quality)
+
+Emre's standing ruling from the founder-call pilot, made permanent. **Automation and AI talk
+is allowed in the founder / context call** (the sponsor is setting goals) and **fully blinded
+in employee interviews.** Two consent contexts; never mix the prompts. The context-collector
+may capture AI history + automation goals; the employee interviewer never raises automation
+or invites an employee to discuss being automated. Recorded as frozen policy in
+`prompts/glossary-and-policies.md` ("Automation talk — two consent contexts"). This is a
+consent boundary enforced by keeping the two personas separate, not a style preference.
+Related pilot fixes shipped the same day (lane-quality F1-F6 + boundary must-hits): F2 moves
+the founder-call automation question behind the workflow skeleton; the employee interviewer
+already blinds automation (it never carries anything the sponsor said, non-negotiable 2).
