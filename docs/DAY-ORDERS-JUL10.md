@@ -513,6 +513,26 @@ action list #1).
   two drill incidents · consent-line render on a live consent page · F7 mission-
   authorization on a real test-mest plan · export /r leak walk (lane-export's script).
 
+## ═══ SEAM B VERDICT (team-lead, A23) — GREEN ═══
+Deployed: backend + frontend at pin fa7a3b3 (carries R6 inbox, R7 consent line, RED/
+YELLOW baits, quality's 12 + F7 + composer already at A.6). Migration 0027 applied
+pre-deploy. Serialized suite 301p/1s/0err. Rollout race caught + fixed in method:
+health-green ≠ new-image — polled the NEW route's 401 as the activation signal.
+DRIVEN CHECKS (all on live prod, disposable admin minted + deleted, 0 verify residue):
+- R6 inbox: GET lists exactly the 2 drill incidents (minimized fields, no verbatim,
+  workspace joined) · Acknowledge persists actor+time · ?status filter correct.
+  (UI page component-tested + tsc; API driven — Emre/Kaan will see /incidents live.)
+- R7 consent line: RENDERS on a real /i consent page (browser-verified, correct list
+  position, context-call wording). Seed session deleted.
+- F7 chain: real plan on test-mest → AWAITING_APPROVAL with authorized:true +
+  source_session_id + evidence_record_id; cited record verified to EXIST in-workspace
+  and IS the genuine pilot [F7] moment. Verify plan deleted (mest's cleanup pattern).
+- Export walk (real test-mest payload): all 7 pilot names ABSENT · zero placeholder
+  steps · confidence + unverified/claimed qualifiers present. (Leak 4 eval-pinned;
+  modal backdrop is visual — rides next human look.)
+Section 7 = BUILT + DEPLOYED + DRIVEN end-to-end. Emre round-2 clearance stands
+UNCAVEATED; his one open adjudication = the hedged-ideation line (item 3b).
+
 ## RULINGS R2 (Kaan via watchtower, ~15:30) — LANE ASSIGNMENTS
 - R6 NO SendGrid: build IN-APP ADMIN INCIDENT INBOX for harm_incidents (Emre+Kaan see
   them in-app; email optional-if-key-ever-exists; email DROPPED from the done-bar).
