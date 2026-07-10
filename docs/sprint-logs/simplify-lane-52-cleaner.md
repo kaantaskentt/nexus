@@ -14,6 +14,23 @@ dynamic reference — only two descriptive comments naming the flow it replaced 
 design rationale). Deleted. Behavior identical (nothing rendered it). Verified: frontend
 vitest 107/107, tsc --noEmit clean.
 
+## CLEANUP 2 — remove unused `json` import (backend/app/routers/chat.py)
+ruff F401 flagged the only unused import in the whole backend (`json`, chat.py); the module
+decodes nothing itself (jsonb comes back decoded from the pool codec). Removed. ruff clean,
+chat/context tests 15 passed.
+
+## PROPOSALS (real duplication, deferred — multi-file + subtle behavior, not silent rewrites)
+- **`_loads` shim in 5 files** (routers/plans, reports, workspaces; pipeline/plan, workflow_edit):
+  three different signatures (1-arg vs 2-arg-with-default) and largely vestigial now that the
+  pool codec decodes jsonb (see workflow_edit's own comment). A single
+  `loads(v, default=None)` in app/db.py preserves every call site's behavior, but it's a
+  data-layer change across 5 files — proposing rather than churning silently late in the sprint.
+- **`initials()` in 4 files** (AppShell, PersonRow, ObserverView, InterviewsView): two variants
+  differ only in the empty-name fallback (`|| "?"` vs `""`). A shared `initials(name, fallback="")`
+  in lib/ dedupes them behavior-identically. Low-risk but 4-file churn; proposing for a batch.
+Both are the kind of "one shared helper" cleanup worth doing at Phase 4 merge when the tree is
+frozen, not racing other lanes now.
+
 ## Notes / not-touched
 - `evals/adjudication/staged/29-perception-gap-same-speaker-retraction.patch` — LEGIT F21
   comparator artifact awaiting Emre's ratification (team-lead). OFF-LIMITS.

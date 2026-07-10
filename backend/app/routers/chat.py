@@ -8,8 +8,6 @@ at CLAIMED-at-best (one person's account, never CONFIRMED/VERIFIED). Plan change
 only ever surface as suggestions the admin applies; nothing here mutates a plan.
 """
 
-import json
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
