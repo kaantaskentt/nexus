@@ -1,5 +1,18 @@
 # LANE-MEST — test-mest live-compile P0 (July 10 DAY ATTACK)
 
+## ADD-ON (seam D / ANYTIME-CONTEXT) — compiler CLAIMED-cap one-liner for lane-quality
+A28 pre-review (team-lead approved in D1; lane-quality landed the mint side 79275a7 —
+migration 0028 adds interview_sessions.compile_max_tag, mint sets 'CLAIMED' for an ADDITIVE
+context call / null for the first):
+- Today → compiler.py:195 caps only from payload.get("max_tag"); an additive founder context
+  call has no payload cap, so it compiles at CONFIRMED like the first call.
+- After → `max_tag = payload.get("max_tag") or session["compile_max_tag"]`. Fully additive:
+  null (first call / interviews) = no cap (unchanged CONFIRMED); intake still passes max_tag
+  in payload so `or` never triggers; 'CLAIMED' (additive call) applies the cap. Simpler for
+  the user — a second+ founder account renders honestly qualified. Own commit; compiler +
+  context + immutability suites green.
+
+
 Owner: lane-mest. Files: backend/app/routers/voice.py · backend/app/pipeline/compiler.py ·
 backend/app/routers/sessions.py complete() (~L241-273). Plus (announced, unowned, net-new):
 backend/app/pipeline/reconcile.py, a 2-line enqueue in backend/app/worker.py, and the

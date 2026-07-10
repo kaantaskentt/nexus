@@ -191,8 +191,11 @@ async def compile_session(payload: dict) -> None:
     workspace_id = str(session["workspace_id"])
     default_speaker_id = session["interviewee_id"]
     # Unverified sources cap here: admin "add as context" compiles CLAIMED-at-best,
-    # never CONFIRMED/VERIFIED (V2-PLAN #20). None = the normal transcript path.
-    max_tag = payload.get("max_tag")
+    # never CONFIRMED/VERIFIED (V2-PLAN #20). None = the normal transcript path. An ADDITIVE
+    # founder context call (a second+ context call — a founder's own single account, per the
+    # ADD-4 intake precedent) carries its cap on the session row (compile_max_tag, mint side);
+    # the first context call and employee interviews leave it null → uncapped, unchanged.
+    max_tag = payload.get("max_tag") or session["compile_max_tag"]
 
     utterances = await pool.fetch(
         "select turn_index, speaker, text from utterances "
