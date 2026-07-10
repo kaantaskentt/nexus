@@ -183,3 +183,29 @@ Kaan is testing prod RIGHT NOW and these supersede the wrap-up. Work continues u
 
 5. Keep seam discipline: batch fixes into deploy seams, browser-verify each seam at both
    widths, honest verdicts in SPRINT-STATE. Evals move with any behavior change (add. 2).
+
+## ADDENDUM 4 — New-interview intake agent (Kaan, 22:40 July 9. SEPARATE build, due tonight.)
+Screenshot ref: the New interview form (name / role-optional / focus-optional).
+1. **Required, not optional.** ROLE and "what should this interview find out" stop being
+   optional. Plain inputs, clear helper copy; role can offer known-role suggestions from
+   existing entities but stays free-text.
+2. **Intake agent mode ("chat with Nexus") after the fields.** On submit, before the
+   draft plan appears: the intake agent asks 2-3 SHORP follow-up questions, one at a time,
+   in chat - and it is AWARE of how interview plans are put together (it reads the
+   records, the plan skeleton, coverage gaps for this person/role). Same philosophy as
+   the product itself: ask the right questions - e.g. surface what Nexus does NOT yet
+   know about this person's area, confirm boundaries, ask what winning looks like for
+   this interview. Answers visibly update the draft plan (reuse the K plan-chat live-diff
+   machinery + Tunc patterns; this is the second consumer of the same primitives, keep
+   them shared).
+3. **Context-storage decision (the sensitive part).** When the admin's answers contain
+   company FACTS (names, processes, tools), the agent must explicitly decide: plan-only
+   shaping vs stored as company context. Rules: stored facts become claim records
+   attributed to the admin, tagged CLAIMED, quarantine applies to people-sentiment,
+   and the UI SHOWS the decision ("Saved to Company Context" chip vs "Used for this
+   plan only") - nothing silently becomes a record. Non-negotiable 2 holds: nothing the
+   admin says is ever spoken to the interviewee as a statement; it only shapes questions.
+   Evals: intake agent asks-not-tells (no leaking admin claims into questions), storage
+   decision honest (fact stored+chip shown; opinion about a person quarantined; vague
+   input plan-only).
+4. This is a tonight deliverable alongside the refine round - lane it accordingly.
