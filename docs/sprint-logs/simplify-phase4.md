@@ -179,3 +179,26 @@ Findings + fixes will be logged below this checklist as I drive each, once mini-
   he tests text. VOICE not drivable headless (needs mic), likely OK post ADD-3.1. Escalated to
   team-lead → route to LiveRoom/E owner (text-mode SSE consumer for /turn/stream). Evidence:
   REFINE-roleplay-text-noreply.png + the /turn/stream 200 with no rendered reply.
+- **[✓ A · Company mgmt — verified driven]** Picker: every row has a "Drag to reorder" handle
+  AND a per-company "Delete" button (Feedback-A both features present). Opened the delete
+  dialog (preview only, did NOT confirm): "Delete company — This will permanently remove Test
+  Mest and all of its associated data. This action cannot be undone", EXACT cascade counts
+  ("1 interview or call and every recorded turn", "1 mapped person, team or system"),
+  type-to-confirm input ("Type Test Mest to confirm"), and the "Delete company" action is
+  ENV-GATED off on prod ("Awaiting final confirmation of delete semantics") — exactly the
+  preview/disabled state expected. Cascade itself is local-only per orders. Screenshot:
+  REFINE-delete-company-dialog.png.
+- **[✓ AddCompany + B empty state]** "Add company" opens the form (name/industry/website/
+  contact + beta context-call opt-in); created "QA Refine (internal)" → landed on "Start with
+  the CEO call" onboarding (Feedback-B pre-first-call state). is_internal flipped true (hidden
+  from picker, confirmed). QA mutate playground ready (but empty — intake-agent driving needs
+  a records-rich tenant).
+- **[✓ ADD-3.2 Snapshot v2 + ADD-3.3 IA consolidation]** Home heading order is reader-first:
+  "The story so far" → "Needs your attention" (the pain areas) → Key findings → People to
+  interview → What Nexus learned. Insights is folded OUT of nav (IA consolidation). Content
+  uses the width (right edge 1286/1440). MINOR: couldn't distinctly identify the ONE prominent
+  "next recommended action" the ADD-3.2 spec calls for in a quick pass — worth a Kaan eyeball.
+- **GATED (awaiting P0 fix):** K interview hub Observe/Report end-to-end, ADD-4 intake live-
+  diff, call-to-completion, G call-completed screen — all need the interviewer to reply, which
+  the text-reply P0 blocks. Re-drive after the fix. Also still to drive: C chip filtering, D
+  CEO welcome, J play-character card, picker drag-reorder persistence, remaining button pass.
