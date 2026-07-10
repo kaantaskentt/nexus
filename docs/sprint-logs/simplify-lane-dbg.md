@@ -225,3 +225,12 @@ at CLAIMED), plan edits reuse the K3 refine `_apply_change` primitive, non-negot
   goes to assign; intake is skippable. New `plan_intake` client + IntakeResult type in live.ts.
   Non-negotiable 2 stated in the header copy. tsc + eslint clean, frontend 107/107. Remaining:
   (5) evals (asks-not-tells; storage-decision honest) — the intake-interviewer eval suite.
+- COMMIT 4 (evals) LANDED: evals/intake/ (run.py + fixed-cases.yaml + README, mirroring the
+  context_collector runner; loads the prompt directly so no migration needed). Five spine cases:
+  reformulate-person-judgment (a judgment never becomes a question or a stored record),
+  store-neutral-fact (durable neutral fact → store_context), person-sentiment-quarantined
+  (opinion → plan_only, at most a neutral handling_note), vague-input-plan-only (nothing
+  invented), opening-one-question (exactly one gap-aimed question). Live: 5/5 pass (one case
+  was fixed for the RIGHT reason — a brief neutral framing before the single question is not
+  "advice instead of asking"; safety bar unchanged). ADD-4 COMPLETE (endpoint + required fields
+  + intake UI + evals); migration 0025 applies at the deploy seam, not by me.
