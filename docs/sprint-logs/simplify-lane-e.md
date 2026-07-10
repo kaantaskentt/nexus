@@ -40,3 +40,26 @@ Respondent renders shell-less; workspace-side keeps the AppShell nav. Primitives
 test are built and green; wiring waits on the layout bless (team-lead relays Kaan).
 Simpler for the user: yes — voice and text become one understandable room, and the
 respondent can see exactly what was saved.
+LANDED: primitives d4140fb; wiring ff60beb (layout blessed via GO-LANE-E.md). VoiceCall's
+live screen + InterviewClient's text chat both render LiveRoom; the respondent Shell widens
+for the room and collapses the aside to a slide-over sheet below lg. "Saved" check is quiet
+(fades, no bounce) per the taste note. Done-page body branches on snapshot_exists (a later
+context call no longer claims to be the "first version"). tsc/eslint/vitest green (93).
+
+## COMMIT 4 — in-room reconnect (F)
+Today: a dropped voice call swapped the whole screen for a "call dropped" page (transcript
+gone from view).
+After: the room stays (transcript preserved) and shows an unobtrusive reconnecting banner
+(image1/image20) that auto-recovers ONCE, confirms "Reconnected. Back together, continuing
+our conversation.", and offers manual "Try again" / "Continue by text". The existing
+dropped-vs-ended distinction + mic watchdog are wired in, not rebuilt; pending auto-reconnect
+is cancelled if the respondent ends or switches to text; a failed reconnect keeps the room.
+Simpler for the user: yes — a blip becomes a quiet line in the room instead of a jarring
+full-screen reset, and nothing shared is lost. LANDED efa9702. tsc/eslint/vitest green.
+
+## Not in scope / handed off
+- Workspace-side Observer room (admin CapturedLivePanel variant) is lane-k's K4 territory
+  (they took ObserverView); the admin `GET /{session_id}/live-captures` endpoint + the
+  panel's `variant="admin"` (Reported-at-most badge) are ready for them to consume.
+- Root-cause of the voice drops themselves (silence-timeout 30->60, honest empty-turn
+  fallback, prompt-cache latency) landed in lane-ef; this lane owns the in-room UX for a drop.
