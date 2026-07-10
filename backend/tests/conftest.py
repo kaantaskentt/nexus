@@ -48,6 +48,7 @@ MIGRATIONS = [
     # 0025_intake_agent.sql stays parked (SIMPLIFY-PARK); 0026 is independent of it.
     BACKEND / "db" / "migrations" / "0026_harm_incidents.sql",
     BACKEND / "db" / "migrations" / "0027_harm_incident_review.sql",
+    BACKEND / "db" / "migrations" / "0028_session_compile_max_tag.sql",
 ]
 
 

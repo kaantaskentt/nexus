@@ -49,7 +49,31 @@ Law: A28 per change, own revertable commits, evals ride behavior, push each.
   → supersedes (both survive, tags never upgrade). Mirrors test_intake.py's plan_only/store_context
   + quarantine asserts, on the additive-context path. Own commit, rides the behavior it pins.
 
-## DECISIONS FLAGGED TO TEAM-LEAD (before I finalize compile-cap + gate)
+## TEAM-LEAD RULINGS (received) + how they landed
+- **D1 CLAIMED cap — APPROVED.** Mechanism (mine + one line lane-mest): migration 0028 adds
+  `interview_sessions.compile_max_tag`; the mint sets it to 'CLAIMED' when a prior context call
+  exists (additive), null on the first call (its CONFIRMED behavior unchanged, A24). The compiler
+  already selects `s.*` and resolves `max_tag = payload.get("max_tag")` (compiler.py:195), so the
+  ONLY lane-mest change is a one-line fallback `... or session["compile_max_tag"]` — covers BOTH
+  completion paths (text + voice) at once. Announced to lane-mest. The ontology asymmetry (first
+  CONFIRMED vs additive CLAIMED) is team-lead's Kaan+Emre review item — I did NOT touch the first call.
+- **D2 confirm-what-to-store — APPROVED phased.** Shipping the call-based honesty now (CLAIMED +
+  quarantine + records rendering in Company Context). v2 gate note below. Deferral is on Kaan's list.
+- **D3 modality — MODIFIED: voice primary, text secondary.** Landed (Mic button + "or type it").
+
+## v2 confirm-what-to-store gate (design note for later, per D2 — NOT built now)
+A post-call REVIEW SCREEN (not an in-room gate — an in-room keep/discard would collide with R1's
+respondent-facing counts-only rule, since the founder self-serve call is a respondent surface).
+After an additive call compiles, show the newly-added facts as the ADD-4 "Saved to Company Context"
+chips and let the CEO discard any before they're kept — reusing the intake chip component + the
+supersede/soft-delete the ontology already supports. Deferred to v2; flagged to Kaan verbatim by team-lead.
+
+## FOR-TUNC (chassis reuse)
+ANYTIME-CONTEXT is almost entirely ride-don't-rebuild on vendored chassis: the additive compile rides
+the queue + compile seam (Tunç's queue chassis), and the mint reuses the existing context-call session
+creation. Net-new is only the entry button + a per-session compile cap. (Logged to docs/FOR-TUNC.md.)
+
+## (superseded) decisions originally flagged
 1. **CLAIMED cap.** ADD-4 (and the orders) say additive context is "attributed to the CEO as
    CLAIMED". But the FIRST context call compiles up to CONFIRMED (verified: test-mest records
    carry CONFIRMED tags). A CEO's own single account arguably should cap at CLAIMED
@@ -79,3 +103,8 @@ Law: A28 per change, own revertable commits, evals ride behavior, push each.
   threads it. test_context_call.py 7/7 incl. a new additive-mint test (two clicks → two distinct
   context sessions, no once-only gate) + voice-default/text/invalid-422. A28 own commit. NOTE:
   touched the context-call endpoint in workspaces.py (the granted mint path) — announced.
+- **Change 3 (CLAIMED cap, my parts) — GREEN.** migration 0028 (`compile_max_tag` column) +
+  mint sets it 'CLAIMED' for additive calls / null for the first (A24) + conftest 0028 registered.
+  test_context_call.py 8/8 incl. the cap test (first→null, additive→CLAIMED). ONE line remains in
+  lane-mest's compiler.py:195 (`or session["compile_max_tag"]`) to make the cap end-to-end — announced
+  to lane-mest with the exact diff. Mint-layer verified now; end-to-end cap lands with their one-liner.

@@ -356,12 +356,24 @@ async def start_context_call(workspace_id: str, modality: str = "voice"):
     speaker = (config.get("contact_person") or "Founder").strip()
     ceo_id, _ = await entities.resolve_or_create(workspace_id, speaker, role="Founder")
 
+    # ANYTIME-CONTEXT: an ADDITIVE context call (a prior context call already exists on this
+    # workspace) caps its compile at CLAIMED — a founder's own single account is CLAIMED, matching
+    # the ADD-4 intake precedent and the non-negotiable (one account never above CLAIMED). The
+    # FIRST context call stays uncapped (null → its tested CONFIRMED behavior, A24). The compile
+    # reads compile_max_tag from the session row.
+    prior_context = await pool.fetchval(
+        "select count(*) from interview_sessions where workspace_id = $1 and session_kind = 'context'",
+        workspace_id,
+    )
+    compile_max_tag = "CLAIMED" if prior_context else None
+
     token = secrets.token_urlsafe(24)
     await pool.execute(
         """insert into interview_sessions
-             (workspace_id, interviewee_id, modality, language, invite_token, status, session_kind)
-           values ($1, $2, $4, 'en', $3, 'pending', 'context')""",
-        workspace_id, ceo_id, token, modality,
+             (workspace_id, interviewee_id, modality, language, invite_token, status, session_kind,
+              compile_max_tag)
+           values ($1, $2, $4, 'en', $3, 'pending', 'context', $5)""",
+        workspace_id, ceo_id, token, modality, compile_max_tag,
     )
     return {"token": token, "invite_path": f"/i/{token}"}
 

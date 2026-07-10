@@ -194,3 +194,22 @@ async def test_mint_is_additive_and_honors_modality(db):
         # Invalid modality is rejected.
         bad = await c.post(f"/api/workspaces/{ws}/context-call?modality=carrier-pigeon")
         assert bad.status_code == 422
+
+
+async def test_additive_context_call_caps_compile_at_claimed(db):
+    """ANYTIME-CONTEXT (team-lead decision 1): the FIRST context call is uncapped (null →
+    its tested CONFIRMED behavior, A24); an ADDITIVE call (a prior context call exists) caps
+    its compile at CLAIMED — a founder's own single account, matching the ADD-4 precedent.
+    The compiler reads compile_max_tag from the session row (payload.max_tag or the column)."""
+    async with _client() as c:
+        ws = await _beta_workspace(c)
+
+        first = (await c.post(f"/api/workspaces/{ws}/context-call")).json()["token"]
+        first_cap = await db.fetchval(
+            "select compile_max_tag from interview_sessions where invite_token=$1", first)
+        assert first_cap is None  # first call uncapped — CONFIRMED behavior unchanged
+
+        additive = (await c.post(f"/api/workspaces/{ws}/context-call")).json()["token"]
+        add_cap = await db.fetchval(
+            "select compile_max_tag from interview_sessions where invite_token=$1", additive)
+        assert add_cap == "CLAIMED"  # additive call capped at CLAIMED
