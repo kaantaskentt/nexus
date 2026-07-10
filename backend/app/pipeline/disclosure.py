@@ -15,12 +15,15 @@ Tier-3 protocol is OPEN (Emre's dedicated pass + Kaan confirmation) — this mod
 records the flag; the interviewer-side stub stops-and-routes, it never handles."""
 
 import json
+import logging
 import re
 
 from ..db import get_pool
 from ..llm import AgentParseError, run_agent
 from ..queue import handles
 from .compiler import _transcript_block
+
+log = logging.getLogger("nexus.disclosure")
 
 _ALLOWED_CATEGORIES = {
     "harassment", "discrimination", "safety", "illegality",
@@ -59,7 +62,10 @@ async def screen_session(payload: dict) -> None:
         "select id, workspace_id, session_kind from interview_sessions where id = $1", session_id
     )
     if session is None:
-        raise RuntimeError(f"screen_disclosures: no session {session_id}")
+        # Session deleted before this queued job ran (admin delete). A gone session is a
+        # terminal no-op, not a retryable crash — same stance as generate_roleplay_debrief.
+        log.info("screen_disclosures: session %s is gone — skipping", session_id)
+        return
     if session["session_kind"] in ("voice_test", "roleplay"):
         return  # admin auditioning a voice / playing a character (F8) — nothing to screen
     # Idempotent: a session is screened once; a re-complete never duplicates flags.

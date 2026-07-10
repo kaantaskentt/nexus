@@ -13,12 +13,15 @@ the per-turn coverage_routing flag, which stays OFF (A/B baseline). Fail-open: a
 coverage error costs the audit field, never the yield stats or the compile fan-out."""
 
 import json
+import logging
 import re
 from datetime import datetime, timezone
 
 from ..db import get_pool
 from ..queue import handles
 from . import coverage as coverage_mod
+
+log = logging.getLogger("nexus.yield")
 
 _WS = re.compile(r"\s+")
 
@@ -80,7 +83,10 @@ async def compute_session_yield(payload: dict) -> None:
         "select id, workspace_id, plan_id from interview_sessions where id = $1", session_id
     )
     if session is None:
-        raise RuntimeError(f"compute_yield: no session {session_id}")
+        # Session deleted before this queued job ran (admin delete). A gone session is a
+        # terminal no-op, not a retryable crash — same stance as generate_roleplay_debrief.
+        log.info("compute_yield: session %s is gone — skipping", session_id)
+        return
     utterances = [
         dict(u) for u in await pool.fetch(
             "select turn_index, speaker, text from utterances "
