@@ -46,3 +46,28 @@ snapshot_exists (false on a fresh ws), and an interview-kind by-token payload ca
 context_call/workspace_slug/snapshot_exists (employee learns no workspace state). Frontend
 done-page 3/3, backend context_call 6/6, my files tsc-clean. Simpler? SIMPLER: the label now
 tells the founder what they'll find. VERDICT: approved, landed.
+
+## PRE-REVIEW (VETO WINDOW) — SnapshotView category regroup (§6-5, Kaan Feedback B)
+
+Kaan: "the snapshot UI feels cluttered and needs to be reorganized." This is the two-line
+pre-review; it lands as its own commit FIRST so Kaan can veto on GitHub before the build.
+
+Today (SnapshotView.tsx): a flat run of differently-named sections — "What Nexus Learned",
+"Areas to Investigate", "Conflict Points", "Suggested People to Interview" — each its own
+heading, no shared vocabulary with the new SnapshotIntro. After: the SAME sections regrouped
+under the intro's category vocabulary so intro and snapshot speak one language, in one order:
+**Overview** (learned) → **Teams & People** (suggested_person) → **Perception gaps**
+(conflict_point, only when >0; glossary term for conflicts) → **Open questions**
+(area_to_investigate; plan §3 maps areas → open questions). REGROUP, NOT REWRITE: identical
+card components (learned grid, PersonRow list + GeneratePlanButton, conflict cards, area cards
++ AreaDrawer), every card_type preserved, append-only render untouched, trust/confidence
+badges untouched, Evidence rail + Next-Recommended-Action CTA + Trust-Center link + header +
+ExportReportButton all unchanged, page width kept (max-w-6xl, per amendment 4). Systems /
+Workflows / Priorities from the §4-B list are NOT rendered: no snapshot card_type backs them,
+so an honest regroup omits them (Systems has no data; Workflows live on their own page and the
+intro already routes there; Priorities has no distinct card_type — the pain-ranked areas ARE
+the actionable set, surfaced as Open questions + the Next-action CTA). Nothing dropped.
+Simpler or more complex for the user? SIMPLER: one consistent vocabulary intro↔snapshot, a
+sensible order, no renamed/duplicated concepts. VETO TARGETS for Kaan: the four section names
+(esp. areas as "Open questions" vs "Priorities") and the deliberate non-render of
+Systems/Workflows (adding Workflows here would be a separate rewrite with a new data fetch).
