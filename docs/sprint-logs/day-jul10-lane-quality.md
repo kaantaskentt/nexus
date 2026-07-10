@@ -180,3 +180,9 @@ does not apply to eval runs).
   AI-history row still captures volunteered AI and probes what it actually produced. Pilot
   suite pass (f2 1/1 on new); calibration 7/7 (cal-warmup-ai-history NOT regressed — the
   volunteered-AI probe still fires). New `pilot-baits.yaml` suite registered in run.py.
+- **F3 — GREEN.** Sequence rule added to the phases section (rough process skeleton before
+  any pain deep-dive; capture the pain headline, park it, map the flow, circle back) and
+  threaded into Phase 2. Bit on old (deep-dived Ayşe first); passes on new — the persona now
+  parks the pain and gets the skeleton ("Before I dig into Ayşe specifically... walk me
+  through how a client project actually moves"). Rides bait-f3-pain-deepdive-before-skeleton.
+  Explicitly does not soften anti-under-probing.

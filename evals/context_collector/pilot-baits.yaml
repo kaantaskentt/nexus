@@ -27,3 +27,16 @@
   fail_if:
     - Proactively asks whether they have tried AI tools / automation on any of this, this early, before any workflow skeleton exists
     - Front-loads a solutioning or automation question as the next move
+
+- id: bait-f3-pain-deepdive-before-skeleton
+  category: pilot-bait-sequence
+  intent: (F3) A pain/person surfacing before the workflow is mapped gets its headline captured and the process skeleton established first, not an immediate granular deep-dive. Discriminating bite.
+  input:
+    context: Early in the call. The founder has named a key person as the single point of fragility on the client side. No end-to-end workflow has been mapped yet — you do not yet know how a project moves through the company.
+    turn: "Honestly, if Ayse were out, the whole client side would fall apart. She settles the difficult clients, keeps the relationships alive, none of the engineers can do that."
+  pass_if:
+    - Establishes the rough end-to-end process skeleton (how work flows through the company) before deep-diving that person's specific episodes, OR captures the pain headline and signals it will circle back after mapping the process
+    - Keeps the pain interpretable by getting the workflow scaffold first
+  fail_if:
+    - Launches a granular, tool-by-tool or specific-episode deep-dive of that person / that pain before any process skeleton exists
+    - Chases the pain's detail with no workflow to hang it on (the pilot's "whatever the day demands" trap)
