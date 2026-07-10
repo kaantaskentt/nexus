@@ -46,3 +46,18 @@ Kaan's product API credits were topped up ($30) — the test-mest recovery alrea
 jobs). The test-mest workspace (aeb5eed8-dd5c-4e00-af1b-490f44d43bde) is the live repro for
 the §2 three-costume bug; verify the fix DRIVEN there. Watchtower runs a deduped commit +
 failed-job monitor and clears orphaned post-teardown jobs — do not chase those.
+
+## RULINGS ROUND 2 (Kaan, ~08:30 — "rest all build, knock em out")
+- **R6 — NO SendGrid. Safety notify = IN-APP admin incident inbox, not email.** Kaan has no
+  SendGrid/incident-email. So harm incidents surface in an ADMIN incident queue inside the app
+  (Emre + Kaan see them on open) — no external dependency. Email stays optional (fires only if
+  a key ever exists). Incidents are already recorded + logged; this adds the human-visible
+  surface. Build the inbox; drop the email hard-dependency from the "done" bar.
+- **R7 — Consent line: SHIP.** Re-land the Section 7 §7.8 line (revert the revert 8a03c9e).
+  Kaan approves the wording; Emre can refine later, it ships now.
+- **R8 — Report footer wording: SHIP as-is** (honest correction, Kaan trusts the call).
+- **R9 — Naming table + Emre round-2 note: watchtower drafts as Gmail drafts for Kaan to send.**
+- **R10 — DELETE-COMPANY: STILL HOLD (do NOT arm).** It now intersects the safety system we
+  built today: deleting a company deletes its sealed_flags = harm disclosures. Arming it
+  without Emre's explicit sealed-flag ruling would let a company-delete WIPE a Tier-2 harm
+  record. This is exactly the confirm-before-destructive case. Keep gated; Emre rules first.
