@@ -8,21 +8,24 @@ import { cn } from "@/lib/cn";
 // in the same visual grammar — three honest tiers, no trust-tag semantics implied.
 export type WorkflowConfidence = "high" | "medium" | "low";
 
+// Tooltips lead with WHAT this measures — the share of steps verified across interviews —
+// so the chip can never be misread as a per-claim trust tag (team-lead requirement on the
+// approved divergence from ConfidenceBadge).
 const MAP: Record<WorkflowConfidence, { label: string; pill: string; title: string }> = {
   high: {
     label: "High confidence",
     pill: "bg-success-soft text-tag-confirmed",
-    title: "Most steps are corroborated across interviews",
+    title: "Based on how many steps are verified across interviews — here, most are",
   },
   medium: {
     label: "Medium confidence",
     pill: "bg-pain-moderate text-tag-guess",
-    title: "Some steps are corroborated; others rest on a single account",
+    title: "Based on how many steps are verified across interviews — here, some are",
   },
   low: {
     label: "Low confidence",
     pill: "bg-surface-raised text-ink-faint",
-    title: "Most steps rest on a single, not-yet-corroborated account",
+    title: "Based on how many steps are verified across interviews — here, few are yet",
   },
 };
 
