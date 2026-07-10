@@ -130,6 +130,17 @@ only silence changes. Post-check: GET both assistants, confirm silence=60, auth 
 voice unchanged, stopSpeakingPlan numWords still 2. Simpler or more complex for the user? SIMPLER:
 the call stops hanging up on people who are thinking; nothing else about the call changes.
 
+**A28 pre-review — COMMIT 2 (voice.py honest fallback for a silent empty turn).**
+Today: `custom_llm` SSE opens the assistant frame, streams `stream_reply` deltas, then always
+emits stop + `[DONE]`; if the stream yields nothing (model hiccup) or raises mid-stream, VAPI
+gets an empty assistant turn and the call stalls into silence (reads as a drop). After: the loop
+counts emitted chars and catches a mid-stream exception (logged at WARNING, not propagated); when
+zero content was produced it emits one short honest recovery line ("Sorry, I lost my train of
+thought for a second. Could you say that again?", no em-dash) before stop + `[DONE]`. Genuine
+partial content is untouched (no fallback appended). 3 new tests pin all three cases; test_voice
+8/8 green. Simpler or more complex for the user? SIMPLER: a hiccup becomes one human sentence
+instead of dead air, and hiccups now show up in the logs.
+
 ---
 
 # NIGHT MARATHON — July 8/9 (docs/MARATHON-ORDERS.md; A28 binds every change)

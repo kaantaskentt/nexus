@@ -48,6 +48,70 @@ async def test_custom_llm_streams_openai_chunks(db, monkeypatch):
     assert body.rstrip().endswith("data: [DONE]")
 
 
+async def test_custom_llm_empty_stream_sends_fallback(db, monkeypatch):
+    """A turn that yields no content must not end silent — VAPI would speak nothing and
+    the call stalls. The endpoint injects an honest recovery line and still closes cleanly."""
+    ws = await make_workspace(db, industry="jewelry")
+    await _session(db, ws, "voiceempty")
+
+    async def empty_stream(session_id, messages):
+        return
+        yield  # pragma: no cover — makes this an async generator that yields nothing
+
+    monkeypatch.setattr(voice, "stream_reply", empty_stream)
+    async with _client() as c:
+        r = await c.post(
+            "/api/voice/chat/completions",
+            json={"metadata": {"session_token": "voiceempty"}, "messages": []},
+        )
+    body = r.text
+    assert voice._EMPTY_TURN_FALLBACK in body
+    assert '"finish_reason": "stop"' in body
+    assert body.rstrip().endswith("data: [DONE]")
+
+
+async def test_custom_llm_stream_error_sends_fallback(db, monkeypatch):
+    """A mid-stream failure is caught, not propagated: the respondent hears the recovery
+    line instead of a torn stream, and the frame sequence still terminates with [DONE]."""
+    ws = await make_workspace(db, industry="jewelry")
+    await _session(db, ws, "voiceerr")
+
+    async def boom_stream(session_id, messages):
+        raise RuntimeError("model hiccup")
+        yield  # pragma: no cover — unreachable; marks this as an async generator
+
+    monkeypatch.setattr(voice, "stream_reply", boom_stream)
+    async with _client() as c:
+        r = await c.post(
+            "/api/voice/chat/completions",
+            json={"metadata": {"session_token": "voiceerr"}, "messages": []},
+        )
+    assert r.status_code == 200
+    body = r.text
+    assert voice._EMPTY_TURN_FALLBACK in body
+    assert body.rstrip().endswith("data: [DONE]")
+
+
+async def test_custom_llm_partial_stream_no_fallback(db, monkeypatch):
+    """When real content did stream, the fallback line must NOT appear (only genuine
+    empties get it)."""
+    ws = await make_workspace(db, industry="jewelry")
+    await _session(db, ws, "voicepartial")
+
+    async def some_stream(session_id, messages):
+        yield "Got it."
+
+    monkeypatch.setattr(voice, "stream_reply", some_stream)
+    async with _client() as c:
+        r = await c.post(
+            "/api/voice/chat/completions",
+            json={"metadata": {"session_token": "voicepartial"}, "messages": []},
+        )
+    body = r.text
+    assert "Got it." in body
+    assert voice._EMPTY_TURN_FALLBACK not in body
+
+
 async def test_custom_llm_unknown_token_404(db, monkeypatch):
     async def fake_stream(session_id, messages):
         yield "x"

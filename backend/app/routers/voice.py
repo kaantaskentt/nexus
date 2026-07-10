@@ -17,6 +17,7 @@ VAPI is pure transport: nothing here re-derives interview logic — it all funne
 the same run engine (non-negotiable: the turn engine is transport-agnostic)."""
 
 import json
+import logging
 import time
 from datetime import datetime, timezone
 
@@ -29,6 +30,14 @@ from ..pipeline.interview import _START_NUDGE, stream_reply
 from ..queue import enqueue
 
 router = APIRouter()
+log = logging.getLogger("nexus.voice")
+
+# Spoken when a turn produces no content — a model hiccup or a mid-stream error. Without
+# this VAPI receives an empty assistant turn and the call stalls into silence (which reads
+# as a drop). A short, warm recovery line keeps the call alive and honest. No em-dash.
+_EMPTY_TURN_FALLBACK = (
+    "Sorry, I lost my train of thought for a second. Could you say that again?"
+)
 
 
 def _check_secret(supplied: str | None) -> None:
@@ -105,12 +114,23 @@ async def custom_llm(request: Request, authorization: str | None = Header(defaul
 
     async def sse():
         yield _chunk({"role": "assistant"}, None)
+        chars = 0
         try:
             async for delta in stream_reply(session_id, messages):
+                chars += len(delta)
                 yield _chunk({"content": delta}, None)
-        finally:
-            yield _chunk({}, "stop")
-            yield "data: [DONE]\n\n"
+        except Exception:
+            # A mid-stream failure must not tear the SSE into a silent empty turn — VAPI
+            # would speak nothing and the call stalls. Log it (hiccups become visible) and
+            # fall through to the honest recovery line below.
+            log.warning("voice custom_llm stream failed for session %s", session_id, exc_info=True)
+        if chars == 0:
+            # No content produced (empty stream or the caught error): say something honest
+            # rather than end the turn silent.
+            log.warning("voice custom_llm produced no content for session %s; sending fallback", session_id)
+            yield _chunk({"content": _EMPTY_TURN_FALLBACK}, None)
+        yield _chunk({}, "stop")
+        yield "data: [DONE]\n\n"
 
     return StreamingResponse(sse(), media_type="text/event-stream")
 
