@@ -574,8 +574,13 @@ beta tenant — the data is the living proof). PROCESS LESSONS: health-green ≠
 probe used the mutating mint endpoint and created 21 stray sessions, all cleaned,
 existence-guarded — never probe with a write) · picker API hides is_internal tenants
 (resolve walk-tenant ids from DB, not the API).
-PENDING in seam C scope: lane-sec's welcome-copy visual walk (frontend Ready, walking
-now) — cosmetic confirm, not a gate.
+WELCOME WALK: PASS both widths (434c0e9, realistic tenant name per Kaan's note — test
+shell renamed "Grand Harbor Hotel"). Kaan's copy renders correctly, compliance boxes +
+S7.8 intact, no overflow. CONFIRMED taste item for Kaan (screenshots in
+scratchpad/parity-screens/): kicker + headline read as the same three words stacked —
+lane recommendation: kicker stays category label, HEADLINE becomes the company name,
+subtitle drops the name ("Build Nexus's first understanding of how your company really
+works."). Alternative: drop the kicker. 30-second call. SEAM C FULLY CLOSED.
 
 ## RULINGS R2 (Kaan via watchtower, ~15:30) — LANE ASSIGNMENTS
 - R6 NO SendGrid: build IN-APP ADMIN INCIDENT INBOX for harm_incidents (Emre+Kaan see
