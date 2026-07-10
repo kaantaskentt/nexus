@@ -82,6 +82,20 @@ async def test_reconcile_reenqueues_compile_when_captured_but_not_compiled(db):
     assert n == 1
 
 
+async def test_reconcile_skips_demo_tenant(db):
+    """A12 firewall: the self-heal sweep never re-animates a demo tenant, even one stranded
+    with records but no snapshot (or captured but uncompiled)."""
+    ws = await make_workspace(db, industry="jewelry", is_demo=True)
+    sess = await _context_session(db, ws)
+    await _record(db, ws, sess)
+    assert await reconcile_stuck_snapshots(str(ws)) == {"compiles": 0, "renders": 0}
+
+    ws2 = await make_workspace(db, industry="jewelry", is_demo=True)
+    sess2 = await _context_session(db, ws2)
+    await _utterance(db, sess2)
+    assert await reconcile_stuck_snapshots(str(ws2)) == {"compiles": 0, "renders": 0}
+
+
 async def test_reconcile_ignores_employee_interview_workspace(db):
     """A28/A3: a workspace whose only session is an employee interview is never auto-rendered
     or auto-compiled by the backstop — the trigger is a context (discovery) call."""

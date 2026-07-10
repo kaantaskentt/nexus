@@ -15,10 +15,17 @@ symptom:
      and no render already in flight → enqueue one render_snapshot.
 
 Every branch is an existence check, so a re-run — or a race with the live pipeline — is a
-no-op. It only ever acts on a completed session_kind='context' discovery call, so an
-employee-interview-only workspace is never auto-rendered (A3). It is enqueued once at worker
-startup (self-heals on every deploy) and registered as a job kind so watchtower can run it
-on a cadence."""
+no-op. Scope guards (team-lead seam-A constraints):
+  - session_kind = 'context' ONLY, so employee interviews never auto-render (A3) and the
+    non-compiling kinds compiler.py skips (voice_test / roleplay, ~L188) are excluded by
+    construction — a context call is always a real, compilable discovery call;
+  - is_demo = false, so the sweep never re-animates a demo tenant (A12 firewall);
+  - the render reads through client_visible_claims and the compile through utterances —
+    never the base claim_records content — so quarantined / sealed material is never
+    surfaced (non-negotiable #4); the only claim_records touch is an existence COUNT.
+Every enqueue is logged (watchtower reads those). It is enqueued once at worker startup
+(self-heals on every deploy) and registered as the reconcile_snapshots job kind to run on
+demand; a standing timed cadence is a proposal for the log, not built here."""
 
 import logging
 
@@ -39,8 +46,10 @@ async def reconcile_stuck_snapshots(workspace_id: str | None = None) -> dict:
     stuck_compiles = await pool.fetch(
         """select s.id, s.workspace_id
              from interview_sessions s
+             join workspaces w on w.id = s.workspace_id
             where s.status = 'completed'
               and s.session_kind = 'context'
+              and w.is_demo = false
               and ($1::uuid is null or s.workspace_id = $1::uuid)
               and exists (select 1 from utterances u where u.session_id = s.id)
               and not exists (select 1 from claim_records c where c.session_id = s.id)
@@ -66,8 +75,10 @@ async def reconcile_stuck_snapshots(workspace_id: str | None = None) -> dict:
     stuck_renders = await pool.fetch(
         """select distinct on (s.workspace_id) s.workspace_id, s.id as session_id, s.round_id
              from interview_sessions s
+             join workspaces w on w.id = s.workspace_id
             where s.status = 'completed'
               and s.session_kind = 'context'
+              and w.is_demo = false
               and ($1::uuid is null or s.workspace_id = $1::uuid)
               and exists (
                     select 1 from client_visible_claims c
