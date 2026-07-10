@@ -213,6 +213,19 @@ atlas mint/teardown per memory nexus-voice-verify-headless) — never a real cli
 - **e (56dce06)** — consent line: GATED, pushed not deployed. consent-copy-sync + em-dash lint both
   green. Flagged to team-lead + Kaan+Emre. GREEN (held at seam).
 
+## Seam-B verify — PART 1 done (prod schema, read-only, no browser needed)
+After team-lead deployed a-d + applied 0026 to prod (project `nexus` kfauvrvigxxctrnuegoo),
+independently confirmed via Supabase MCP (read-only):
+- `harm_incidents` columns EXACTLY match the migration — 9 cols, MINIMIZED (no reviewer_summary /
+  text / turn_refs / verbatim column exists). notify_status default 'pending', created_at now().
+- FK on-delete rules correct: `session_id` SET NULL + `sealed_flag_id` SET NULL (interview delete
+  retains the safety layer), `workspace_id` CASCADE (company delete removes). Deletion-safety
+  guarantee, proven live.
+- Check constraints present: bucket (red/amber/yellow), category (7 allowed), notify_status
+  (pending/sent/failed/skipped). row_count = 0 (clean).
+REMAINING (PART 2, queued behind the browser per team-lead): the driven live-session disclosure
+→ in-room response → quarantine-by-counts → notify_status='skipped' fallback → teardown.
+
 ## Test-infra caveat (for team-lead's seam-B suite)
 The full backend suite is file-order/loop flaky (module-global asyncpg pool + pytest-asyncio loop
 rebinding) and degrades the longer one process runs — NOT introduced by this lane. Reliable signal:
