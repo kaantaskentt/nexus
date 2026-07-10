@@ -216,6 +216,11 @@ export function InterviewClient({ token }: { token: string }) {
     // The employee interview done page is unchanged.
     const contextDone = Boolean(session?.context_call);
     const slug = session?.workspace_slug;
+    // First context call (no snapshot yet) vs a later one (snapshot already exists) — same
+    // destination, honest label about what they'll find there (SIMPLIFY G, Kaan's spec).
+    const snapshotCta = session?.snapshot_exists
+      ? "See what's new in your snapshot"
+      : "View company snapshot";
     return (
       <Shell testBackPath={session?.test_back_path} contextCall={session?.context_call}>
         <div className="mx-auto max-w-md py-16 text-center">
@@ -238,7 +243,7 @@ export function InterviewClient({ token }: { token: string }) {
                     href={`/w/${slug}/home`}
                     className="inline-flex w-full items-center justify-center rounded-md bg-accent px-6 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 sm:w-auto sm:px-8"
                   >
-                    View company snapshot
+                    {snapshotCta}
                   </a>
                   <a
                     href="/"

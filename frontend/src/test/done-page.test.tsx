@@ -50,6 +50,17 @@ describe("InterviewClient done page", () => {
     expect(screen.queryByText(/shared by role, not your name/i)).toBeNull();
   });
 
+  it("later context call (snapshot exists) → 'See what's new' label, same destination", async () => {
+    getMock.mockResolvedValue(
+      completed({ context_call: true, workspace_slug: "marmara-hotel", snapshot_exists: true }),
+    );
+    render(<InterviewClient token="t" />);
+
+    const cta = await screen.findByRole("link", { name: /see what's new in your snapshot/i });
+    expect(cta).toHaveAttribute("href", "/w/marmara-hotel/home");
+    expect(screen.queryByRole("link", { name: /view company snapshot/i })).toBeNull();
+  });
+
   it("employee interview → unchanged role-only thank-you, no workspace deep link", async () => {
     getMock.mockResolvedValue(completed());
     render(<InterviewClient token="t" />);

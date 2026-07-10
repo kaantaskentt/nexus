@@ -12,6 +12,7 @@ from ..config import get_settings
 from ..db import get_pool
 from ..pipeline import deletion
 from ..pipeline.interview import run_interview_turn
+from ..pipeline.live_capture import extraction_in_flight
 from ..queue import enqueue
 from .plans import reconcile_plan_state
 
@@ -108,6 +109,14 @@ async def get_by_token(token: str):
         out["workspace_slug"] = await pool.fetchval(
             "select slug from workspaces where id = $1", session["workspace_id"]
         )
+        # Does this workspace already have a rendered snapshot? Distinguishes a FIRST context
+        # call (no cards yet — done page says "View company snapshot") from a LATER one (cards
+        # exist — "See what's new in your snapshot"). A boolean only: no counts, names, or
+        # config reach the respondent, and it is context-kind gated like the slug.
+        out["snapshot_exists"] = await pool.fetchval(
+            "select exists(select 1 from snapshot_cards where workspace_id = $1)",
+            session["workspace_id"],
+        )
     return out
 
 
@@ -124,6 +133,62 @@ async def take_turn(token: str, body: TurnIn):
         raise HTTPException(409, f"interview already {session['status']}")
     result = await run_interview_turn(str(session["id"]), body.message)
     return result
+
+
+# ── Live captures (SIMPLIFY E) — the "Captured live" panel's data ───────────────
+# STRUCTURAL session-scoped display items (teams/systems/workflows/decision rules/goals/
+# open questions), written by the per-turn extractor. NOT claim records — never the KB.
+
+
+async def _live_captures(pool, session_id) -> list[dict]:
+    rows = await pool.fetch(
+        """select id, kind, label, detail, status, created_at
+           from live_captures where session_id = $1 order by created_at, id""",
+        session_id,
+    )
+    return [
+        {
+            "id": str(r["id"]),
+            "kind": r["kind"],
+            "label": r["label"],
+            "detail": r["detail"],
+            "status": r["status"],
+            "created_at": r["created_at"].isoformat(),
+        }
+        for r in rows
+    ]
+
+
+@router.get("/by-token/{token}/live-captures")
+async def live_captures_by_token(token: str):
+    """Respondent view of what Nexus has SAVED so far (the consent promise: you see what is
+    captured). Structural items only, NO confidence badge — badges are admin vocabulary and
+    a respondent-facing surface stays neutral about judgments (A18). `extracting` is a REAL
+    signal (an in-flight extraction job), never a faked 'Saving' state."""
+    session = await _session_for_token(token)
+    pool = await get_pool()
+    return {
+        "items": await _live_captures(pool, session["id"]),
+        "extracting": await extraction_in_flight(pool, session["id"]),
+    }
+
+
+@router.get("/{session_id}/live-captures", dependencies=[Depends(require_admin)])
+async def live_captures_admin(session_id: str):
+    """Admin/Observer view of the same items. A live capture is single-source, so it maps
+    through the real trust ladder to Reported at most (A18/A19) — a fixed, derived badge,
+    never a stored tag. Same items, same honesty, one extra column of vocabulary the admin
+    is allowed to see."""
+    pool = await get_pool()
+    if not await pool.fetchval("select 1 from interview_sessions where id = $1", session_id):
+        raise HTTPException(404, "no such session")
+    items = await _live_captures(pool, session_id)
+    for it in items:
+        it["ladder"] = "reported"  # live single-source floor — never higher (A18)
+    return {
+        "items": items,
+        "extracting": await extraction_in_flight(pool, session_id),
+    }
 
 
 @router.post("/by-token/{token}/pause")

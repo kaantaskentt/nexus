@@ -44,6 +44,9 @@ export interface RespondentSession {
   // SIMPLIFY G: the workspace slug, present ONLY on a context call, so the done page can
   // deep-link the founder to the snapshot their call just built. Never set for employees.
   workspace_slug?: string;
+  // SIMPLIFY G: whether the workspace already has a rendered snapshot — first context call
+  // (false/absent) vs a later one (true). Context-kind only; a boolean, nothing else.
+  snapshot_exists?: boolean;
 }
 
 export interface TurnResult {
@@ -73,6 +76,7 @@ interface RawSession {
   test_back_path?: string;
   context_call?: boolean;
   workspace_slug?: string;
+  snapshot_exists?: boolean;
 }
 
 const clean = (v?: string | null) => (v == null ? undefined : v);
@@ -90,6 +94,7 @@ export async function getSession(token: string): Promise<RespondentSession> {
     test_back_path: raw.test_back_path || undefined,
     context_call: raw.context_call || undefined,
     workspace_slug: raw.workspace_slug || undefined,
+    snapshot_exists: raw.snapshot_exists ?? undefined,
     context: c
       ? {
           respondent_name: clean(c.respondent_first_name),

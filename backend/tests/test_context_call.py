@@ -43,6 +43,8 @@ async def test_mint_gated_on_beta_flag(db):
     # the payload carries the workspace slug (and only the slug — no other workspace data).
     slug = await db.fetchval("select slug from workspaces where id = $1", ws)
     assert by_token["workspace_slug"] == slug
+    # snapshot_exists distinguishes first vs later call — false on a fresh workspace (no cards).
+    assert by_token["snapshot_exists"] is False
 
     row = await db.fetchrow(
         "select s.session_kind, s.modality, e.canonical_name from interview_sessions s "
@@ -52,6 +54,23 @@ async def test_mint_gated_on_beta_flag(db):
     assert row["session_kind"] == "context"
     assert row["modality"] == "voice"
     assert row["canonical_name"] == "Kerem"  # the CEO entity attributes the compile
+
+
+async def test_interview_by_token_omits_context_only_fields(db):
+    """The context-only fields (context_call, workspace_slug, snapshot_exists) never appear
+    on an employee interview payload — an employee respondent learns no workspace route and
+    no snapshot state."""
+    ws = await make_workspace(db)
+    token = "plain-interview-token-abc"
+    await db.execute(
+        "insert into interview_sessions (workspace_id, invite_token) values ($1, $2)",
+        ws, token,
+    )
+    async with _client() as c:
+        payload = (await c.get(f"/api/sessions/by-token/{token}")).json()
+    assert "context_call" not in payload
+    assert "workspace_slug" not in payload
+    assert "snapshot_exists" not in payload
 
 
 async def test_turn_engine_binds_collector_for_context_kind(db, monkeypatch):
@@ -64,14 +83,17 @@ async def test_turn_engine_binds_collector_for_context_kind(db, monkeypatch):
     seen = {}
     async def _chat(agent_name, messages, **kw):
         seen["agent"] = agent_name
-        seen["extra"] = kw.get("extra_system", "")
+        # System is now split into a cached stable prefix (extra_system) + a volatile tail
+        # (volatile_system) for prompt caching; the model sees them concatenated, so assert
+        # on the combination — the split is an internal caching detail.
+        seen["system"] = f"{kw.get('extra_system', '')}\n{kw.get('volatile_system', '')}"
         return "Thanks for making the time. Where does the day usually start?"
     monkeypatch.setattr("app.pipeline.interview.run_chat", _chat)
 
     out = await interview.run_interview_turn(str(sid), None)
     assert seen["agent"] == "context_collector"
-    assert "This context call (BETA)" in seen["extra"]
-    assert "handoff package" not in seen["extra"]
+    assert "This context call (BETA)" in seen["system"]
+    assert "handoff package" not in seen["system"]
     assert out["reply"].startswith("Thanks")
 
     # A plain interview session keeps the interviewer + the handoff block, unchanged.
@@ -79,7 +101,7 @@ async def test_turn_engine_binds_collector_for_context_kind(db, monkeypatch):
     plain_sid = await make_session(db, plain_ws)
     await interview.run_interview_turn(str(plain_sid), None)
     assert seen["agent"] == "interviewer"
-    assert "handoff package" in seen["extra"]
+    assert "handoff package" in seen["system"]
 
 
 async def test_voice_system_binds_collector_for_context_kind(db):
@@ -89,13 +111,15 @@ async def test_voice_system_binds_collector_for_context_kind(db):
     sid = await db.fetchval(
         "select id from interview_sessions where invite_token = $1", token)
 
-    system = await interview.build_voice_system(str(sid))
+    # build_voice_system now returns prompt-cache content blocks; the model sees their
+    # text concatenated, so join before asserting.
+    system = "".join(b["text"] for b in await interview.build_voice_system(str(sid)))
     assert "Context Collector" in system  # the persona's own heading
     assert "This context call (BETA)" in system
 
     plain_ws = await make_workspace(db)
     plain_sid = await make_session(db, plain_ws)
-    plain_system = await interview.build_voice_system(str(plain_sid))
+    plain_system = "".join(b["text"] for b in await interview.build_voice_system(str(plain_sid)))
     assert "Context Collector" not in plain_system
     assert "handoff package" in plain_system
 

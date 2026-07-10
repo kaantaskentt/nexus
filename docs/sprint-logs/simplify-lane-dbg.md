@@ -33,3 +33,16 @@ employee one, it is just labeled. voice-settings suite 7/7. Simpler? SIMPLER: re
 "which opener is this?" ambiguity. VERDICT: approved, landed.
 (tsc project-wide currently red on WorkflowEditor.tsx — lane-C uncommitted WIP, not this
 lane; my commit is path-scoped and excludes it.)
+
+## FOLLOW-UP — snapshot_exists boolean + later-call done wording (lead-approved)
+
+Today: the context done page always said "View company snapshot"; Kaan's G spec distinguishes
+first vs later calls but the payload only carried the slug, so there was no signal. After: the
+by-token payload carries a context-kind-only `snapshot_exists` boolean (exists(snapshot_cards
+for the ws)) — no counts/names/config, gated exactly like the slug. Done page: first call
+(no snapshot yet) → "View company snapshot"; later call (snapshot exists) → "See what's new in
+your snapshot", SAME destination /w/[slug]/home. Test-pinned: context payload carries
+snapshot_exists (false on a fresh ws), and an interview-kind by-token payload carries NONE of
+context_call/workspace_slug/snapshot_exists (employee learns no workspace state). Frontend
+done-page 3/3, backend context_call 6/6, my files tsc-clean. Simpler? SIMPLER: the label now
+tells the founder what they'll find. VERDICT: approved, landed.
