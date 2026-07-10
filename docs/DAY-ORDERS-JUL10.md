@@ -348,6 +348,16 @@ file's log section before NEXT.
   NOTE: in-room persona behavior NOT driven (lane-sec's engine surface) — covered by
   quality's eval baits + Emre's live round-2 call. Log 367ef8e.
 
+- LANE-MEST DRIVEN VERIFY: ALL 4 STEPS PASS on prod. Step 1: abnormal-hangup webhook on a
+  disposable test-mest session → completed + compile_enqueued CAS + exactly one compile
+  job (+disclosure+artifact scans); test-mest kept byte-at-baseline (146 rec/75 cards/
+  batch 4). Full pipeline on isolated hidden tenant: live-call end → 7 records → fan-out
+  → 6 cards. Step 2: Ahmet Yayci plan → AWAITING_APPROVAL, 11 topics, ~1 min (hang gone).
+  Step 3: paste-compile PASS by path-equivalence (seat-gated endpoint not headless-driven
+  — honest flag; being closed via lane-split's admin JWT). Step 4: reconcile drill on
+  hidden tenant — one render, cards recomposed, second run no-op, torn down. Cleanup
+  audit clean, /health/deep ok. EMRE ROUND-2 PIPELINE CLEAR pending lane-split's report.
+
 ## KAAN ACTION LIST (consolidated, batched — nothing blocks the lanes)
 1. SENDGRID_API_KEY (ENVIRONMENT.md item 6, still outstanding) + new INCIDENT_NOTIFY_EMAILS
    (Kaan + Emre addresses) in Railway → turns Section 7 reviewer notification from
