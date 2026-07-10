@@ -411,7 +411,13 @@ DRIVEN-VERIFIED GREEN on live prod:
   S7 quarantine-by-counts + minimized incident + skipped-fallback on the live worker ·
   export leaks + quality persona commits are BUILT+TESTED, deployed with this pin
   (their driven /r walk rides seam B's report mint).
-PENDING (non-blocking, cosmetic): mest done-page visual (browser freed, in flight).
+SEAM A COMPLETE: mest's browser proof PASS (f4a25eb) — picker distinguishes composed
+("Context seeded from discovery call") vs awaiting ("1% Session" control correct);
+test-mest Home "Company snapshot ready" + full snapshot renders. Disposable admin
+verify-jul10@nexus.app DELETED from live auth (verified 0 rows) + local pw file
+shredded. Reap ledger (Kaan, when §6-1 arms): "S7 Drill (internal)" 2fb919fa +
+"Paste Drill (internal)" 4c49df44 — kept per standing rule, purge offer declined
+(rule consistency beats tidiness).
 OPEN CAVEAT: RED-182 disclosure-resource fix in flight (seam A.5 hot-deploy when
 quality's RED bait re-runs green).
 
