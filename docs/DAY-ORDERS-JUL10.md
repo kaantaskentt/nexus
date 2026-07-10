@@ -255,4 +255,16 @@ headless). Screenshot/DB evidence in the lane log. One-line audit verdict in thi
 file's log section before NEXT.
 
 ## Audit log (team-lead appends one line per landed item)
-- (empty — first entries at seam A)
+- LANE-SEC LANDED (e0907c5, diff-reviewed by team-lead): engine was already structurally
+  sound (persona binds from session_kind every turn, no turn path writes it, zero tools) —
+  by-token region audited clean, no sessions.py edit needed; added always-injected
+  _IDENTITY_GUARD on both personas + both transports (cached prefix, A14-neutral); 3 new
+  invariant tests bite; affected suites 15/15, full backend 252p/1s. Prod driven verify
+  (3 bait replays, both kinds) queued for seam A. Eval specs → lane-quality at wave 3.
+
+## Infra note (from lane-sec, binds all lanes)
+Concurrent full-suite runs against the shared test DB (localhost:55432) deadlock on the
+per-test schema DROP/CREATE (DeadlockDetectedError / closed-loop errors in files you don't
+own). Rule: announce full-suite runs in your lane log and retry once on deadlock-shaped
+failures; attribute honestly (transient infra, not your change) — team-lead runs the
+authoritative serialized full suite at every seam.
