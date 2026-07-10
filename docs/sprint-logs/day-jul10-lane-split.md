@@ -128,7 +128,20 @@ Real live session BOTH modes on prod (1440 + 390):
      three baits on a real `session_kind='interview'` session → interviewer persona held
      ("I'm still in interview mode and that's where I stay… no debrief mode, no reveal of
      what I was given").
+  6. **PASTE-COMPILE drive (team-lead addendum — closes lane-mest step-3 gap) — PASS.**
+     Fresh hidden-shell workspace "Paste Drill (internal)"
+     (id 4c49df44-86a2-4590-b148-6850dbb79d58, is_internal=true) → POST
+     /api/workspaces/{id}/discovery with a 4-turn 2-speaker transcript → polled
+     /discovery/{sid}/status to `state:"done"`: all 7 stages done (compile_session →
+     build_workflow_schema → score_interview_quality → rate_pain → score_heuristics →
+     detect_conflicts → render_snapshot), 11 claim_records + 10 snapshot_cards landed, no
+     failed stage. Paste-compile works end-to-end on a fresh tenant.
   Screenshots saved by MCP (r1-respondent-1440.png, r1-respondent-390.png,
   r1-admin-observer-1440.png); the accessibility snapshots capturing the exact DOM are the
   primary evidence. Browser zombie (9.5h-old orphan Chrome holding the mcp profile lock) was
   cleared first (team-lead pre-authorized); browser released after.
+- **Teardown**: the context/interview verify tenant was SQL-deleted (under team-lead's then-
+  standing order). NEW standing rule (team-lead, no raw-SQL workspace deletes while §6-1
+  gate holds): the paste-drill tenant is left as a hidden shell (is_internal=true, "Paste
+  Drill (internal)", id 4c49df44-86a2-4590-b148-6850dbb79d58) for the seam-close reap ledger.
+  verify-jul10@nexus.app disposable admin: team-lead deletes at seam close.
