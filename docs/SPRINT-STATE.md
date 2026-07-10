@@ -19,6 +19,21 @@
   non-negotiable #1). Reconciliation settled at the commit-2 boundary; backend returns the
   raw tier regardless, so this does not block commit 1.
 
+**AUDIT VERDICT — all 3 commits landed.** C1 backend bfe7c11, C2 list a30fede, C3 detail
+7ac8d8b. 17 backend workflow tests green (isolation); frontend 87 green incl. new
+workflows-list chip-filter test (4); tsc 0 errors, eslint clean, per commit. Every change
+simpler for the user: list gains department chips + one-line descriptions + confidence;
+detail's horizontal x3350 strip is gone (steps wrap into a grid, one scroll at all widths)
+with a details panel + exceptions/hidden/recent-edits strips; ALL edit ops + SOP + Blueprint
+kept. DEPLOY SEAM — two ordering facts for the deploy lane: (1) **migration 0023 MUST be
+applied to live BEFORE this backend deploys** — list_workflows now selects w.description /
+w.department, so an un-migrated live DB would 500 the Workflows page. (2) The taxonomy
+backfill is NOT run; existing live workflows keep null department/description and degrade
+gracefully (no chips/desc, confidence still derives from steps) until
+`python -m scripts.backfill_workflow_taxonomy <slug> --apply` is run per tenant.
+Prod browser-verify pending deploy+migration (could not verify undeployed). Confidence badge
+divergence (dedicated WorkflowConfidenceChip, not ConfidenceBadge) shipped + flagged to lead.
+
 ## Lane A — company reorder + delete (task #3)
 
 **A28 pre-review — COMMIT 1 (picker reorder).**
@@ -48,16 +63,8 @@ and stays 403 until the lead relays Kaan's nod.
 
 Note: plan/task say "migration 0021" but 0021_context_call.sql already exists — using the
 next free number 0022 for `workspaces.sort_order`. Flagged to lead.
-
-**AUDIT VERDICT (all 3 commits landed).** COMMIT 1 reorder 223e8b0, COMMIT 2 preview
-1009b30, COMMIT 3 cascade (inert, 403-gated) fb44c54. Lane-A suite 20/20 green in
-isolation (reorder 5 + preview 4 + cascade 4 + delete-interview 4 + workspaces 3); tsc +
-lint clean. Full backend suite shows shared-test-DB contention errors when another lane
-runs pytest against the same nexus-test container concurrently (per-test `drop schema
-cascade` collides) — NOT a code failure; each file passes alone and as a lane set.
-Migration 0022 is NOT applied to live yet (deploy seam held for lead). COMMIT 3 stays
-inert until Kaan's confirm of §6-1 cascade semantics is relayed (sealed-flag ruling still
-open with Emre). Approved to proceed.
+Lane-A log (pre-reviews + audit verdict) continues in docs/sprint-logs/simplify-lane-a.md
+(per-lane rule, July 10).
 
 ## Lane Shell — responsive AppShell (task #13, PLAN §8 Amendment 1)
 
@@ -213,6 +220,24 @@ lead: I KEEP "Topics to cover" (the must-hit objectives) as a left section — i
 list drops it, but hiding the objectives would regress comprehension; it stays as a calm
 collapsible. No "Save draft" button (the plan already persists server-side via refine-chat; a
 save-draft affordance would be dead — omitted rather than faked).
+
+**A28 pre-review — COMMIT 2 (K2 StageRail + merge /plans into the /interviews hub).**
+Today: /interviews (session runs) and /plans (interview plans) are two separate pages listing
+the SAME people with overlapping pills (audit finding 2, P0); /plans has no nav item. After:
+a small `StageRail` component (Plan → Observe → Report → Follow-up, current lit, earlier
+reached stages linked when they exist, future stages dim — never a dead link) + a compact
+`StageDots` for cards. The Interviews page becomes ONE hub: each interview is a stage card
+(person, role, a stage indicator, ONE next-action verb). Plans still in a pre-send state
+(DRAFT/NEXUS_CHECK/AWAITING_APPROVAL/APPROVED) render as Plan-stage cards; SENT+ interviews
+render as their session (Observe/Report) — a person appears ONCE, keyed by stage, never
+double-listed. Plan↔run link stays name-based (SessionSummary carries no plan_id — the
+existing heuristic, no backend change). /plans (the list) redirects to /interviews carrying
+?new=1; /plans/[id] detail is UNTOUCHED (deep links keep working). The custom-interview door
+relocates onto the hub (K3 replaces it with the assign flow at the same entry). StageRail also
+lands on the plan detail header. Nav count unchanged; "New interview" primary stays. Simpler
+or more complex? SIMPLER: one place to find any interview and its next step, not two lists of
+the same people. Gate untouched — a plan card's action just opens PlanView where approve/send
+already live.
 
 ---
 
