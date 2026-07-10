@@ -6,6 +6,7 @@ import { Loader2, Mic, MessageSquare, Plus, StickyNote } from "lucide-react";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { confidenceForTag } from "@/lib/trust";
 import { cn } from "@/lib/cn";
+import { initials } from "@/lib/initials";
 import {
   observe_session,
   add_observer_insight,
@@ -37,9 +38,6 @@ import { getLiveCapturesForSession, useLiveCaptures } from "@/lib/liveCaptures";
 
 const POLL_MS = 4000;
 
-function initials(name: string): string {
-  return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("") || "?";
-}
 
 function timeOf(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -130,7 +128,7 @@ export function ObserverView({
       {/* Header — initials chip (never a photo), role, honest status pill. */}
       <header className="flex flex-wrap items-center gap-4">
         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-ink ring-1 ring-inset ring-accent/15">
-          {initials(name)}
+          {initials(name, "?")}
         </div>
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-2xl text-ink">{name}</h1>

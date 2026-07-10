@@ -8,6 +8,7 @@ import type { InterviewPlan, PlanState, Workspace } from "@/lib/types";
 import type { SessionSummary } from "@/lib/live";
 import { rise, staggerParent } from "@/lib/variants";
 import { cn } from "@/lib/cn";
+import { initials } from "@/lib/initials";
 import { PlanStateChip } from "@/components";
 import { DeleteInterviewDialog } from "./DeleteInterviewDialog";
 import { StageDots, stageLabel, type Stage } from "./StageRail";
@@ -29,9 +30,6 @@ const STATUS: Record<string, { label: string; pill: string }> = {
 // the same person (audit finding 2). Deep links /plans/[id] keep working.
 const PLANNING_STATES = new Set<PlanState>(["DRAFT", "NEXUS_CHECK", "AWAITING_APPROVAL", "APPROVED"]);
 
-function initials(name: string): string {
-  return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
-}
 
 // One merged, staged hub item — either an interview run (a session) or an interview still
 // in planning (a pre-send plan). Sorted so what needs the human sits at the top.

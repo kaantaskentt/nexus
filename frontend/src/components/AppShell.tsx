@@ -18,6 +18,7 @@ import {
 import brand from "@/lib/brand";
 import type { Workspace } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { initials } from "@/lib/initials";
 import { drawerSpring, scrimFade } from "@/lib/variants";
 import { useEscapeClose } from "@/lib/useEscapeClose";
 import { BrandMark } from "./BrandMark";
@@ -83,9 +84,6 @@ const LEAF_LABEL: Record<string, string> = {
   trust: "Trust Center", // footer-linked page (F5) — crumb matches every other page
 };
 
-function initials(name: string): string {
-  return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("") || "?";
-}
 
 export interface ShellUser {
   name: string;
@@ -259,7 +257,7 @@ export function AppShell({
             title={userDetail ? `${userName} · ${userDetail}` : userName}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-ink ring-1 ring-inset ring-accent/20"
           >
-            {initials(userName)}
+            {initials(userName, "?")}
           </div>
         </header>
         <main className="min-w-0 flex-1">{children}</main>
@@ -345,7 +343,7 @@ function SidebarBody({
       <div className="mt-auto p-3">
         <div className="flex items-center gap-3 rounded-md border border-line bg-surface-raised p-2.5 shadow-elev-1">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-ink ring-1 ring-inset ring-accent/20">
-            {initials(userName)}
+            {initials(userName, "?")}
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-medium text-ink">{userName}</div>
@@ -406,7 +404,7 @@ function WorkspaceSwitcher({ current, all }: { current: Workspace; all: Workspac
         className="flex w-full items-center gap-2.5 rounded-md border border-line bg-surface-raised px-2.5 py-2 text-left shadow-elev-1 transition-colors hover:border-line-strong"
       >
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent-soft text-[11px] font-semibold text-accent-ink ring-1 ring-inset ring-accent/15">
-          {initials(current.name)}
+          {initials(current.name, "?")}
         </span>
         <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
           {current.name}

@@ -44,6 +44,11 @@ frozen, not racing other lanes now.
   get default=None (identical to the old 1-arg), 2-arg calls get their default — behavior
   preserved at every call site; reports.py's now-unused `import json` removed too. Verified:
   backend 253 passed/1 skipped, zero new ruff findings (per-file counts identical to HEAD).
+- **CLEANUP 5 — `initials()` → shared `frontend/src/lib/initials.ts`.** Removed the 4 duplicate
+  copies (AppShell, PersonRow, ObserverView, InterviewsView) for one `initials(name, fallback="")`.
+  The two variants differed only in the empty-name fallback, so the two files that returned
+  `|| "?"` (AppShell, ObserverView) pass `"?"` at their call sites; PersonRow/InterviewsView keep
+  the default `""` — behavior identical. Verified: tsc clean, eslint clean, vitest 111/111.
 
 ## Notes / not-touched
 - `evals/adjudication/staged/29-perception-gap-same-speaker-retraction.patch` — LEGIT F21

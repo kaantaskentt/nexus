@@ -2,10 +2,8 @@ import type { ReactNode } from "react";
 import type { PersonRef } from "@/lib/types";
 import { DiscoveryTag } from "./DiscoveryTag";
 import { cn } from "@/lib/cn";
+import { initials } from "@/lib/initials";
 
-function initials(name: string): string {
-  return name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
-}
 
 // A person as a table-style row (stage5 "Suggested People to Interview"). The
 // why-line carries RESPONSIBILITY FACTS ONLY (F34) — the caller passes an
