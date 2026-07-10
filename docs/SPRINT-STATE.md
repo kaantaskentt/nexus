@@ -1,4 +1,35 @@
-# SIMPLIFY SPRINT — July 9/10 — CLOSE-OUT (verdicts through round-3; walk/cleaner appended below when they land)
+# SIMPLIFY SPRINT — July 9/10 — FINAL CLOSE (~02:05 PDT; prod = 0150dbf, round-4)
+
+**REFINE-ROUND TAIL (appended after the through-round-3 block below):**
+- ROUND-4 (wrap seam) deployed + smoke green: P0 opener fix, honest-buttons drawer,
+  design tokens, picker N+1 (2N+1 calls -> 1), handler sweep (6/6 session-gone class),
+  dedups. docs/sprint-logs/simplify-round4.md.
+- **P0 CONFIRMED FIXED ON PROD (driven)**: text-from-start now opener -> answer ->
+  ENGAGED reply, DOM-rendered. Root cause was opener-ordering on the switchToText door
+  (55af788); the "general SSE bug" framing was honestly retracted; the damning trace
+  proved STALE (captured pre-deploy); lane-e refused a no-op edit to start() and locked
+  BOTH doors with an invariant test (df2d418) instead. Done-frame fallback (5744777) +
+  masking-guard warn make the silent-no-reply class structurally impossible.
+- **EMRE IS CLEAR FOR BOTH MODES.** Voice: driven-call-proven (rounds 2/4). Text:
+  driven-proven (round-4). Kaan's mic call = feel check only.
+- Design lane verdict: system already coherent — 21 surfaces, no visual backlog, no
+  manufactured churn; tokens live-confirmed by computed style. 4 structural proposals +
+  2 cleanups logged for next session (plan-detail right void = the real one).
+- Cleaner verdict: tree already tidy; orphan door deleted, 2 dedups, 1 stray temp file.
+- Bug-detector wins: fold back-link fixed; drawer made honest (1 wired, 2 removed);
+  stat-chip labeling -> lane-k next session.
+- WALK RESIDUALS (seam-verified but not walk-re-driven; next session's first list):
+  roleplay text-from-start re-check · fold surfaces detail pass · K hub end-to-end ·
+  intake live-diff re-confirm · D welcome/J card driven pass · QA Refine DiscoveryUpload
+  seed + Feedback-B re-verify · opportunity->workflow deep-link on a data-bearing tenant.
+- STILL OPEN FOR HUMANS: Kaan decision list (delete-company §6-1 enable · naming table ·
+  hero drag · J goals/premium · CEO-copy polish · 1440 width taste · Figma/Canva auth) ·
+  **Emre Section 7 imminent-harm doc NEVER ARRIVED (ADD-6 stands, highest care)** ·
+  Kaan real-mic feel check · context-call transcript route before un-hiding
+  "View full transcript".
+
+---
+## (original through-round-3 close-out follows)
 
 **HEADLINE: Kaan's Feedback A-K + refine-round addenda 3.1-3.3 + 4 are ALL built,
 deployed, and seam-verified on prod (0fd1f3d).** Four seams + three refine rounds, each
