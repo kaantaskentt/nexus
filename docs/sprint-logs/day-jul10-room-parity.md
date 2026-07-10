@@ -60,14 +60,37 @@ Figma file link (Kaan's file) in case the real mockups live there.
   interaction change. tsc clean. Orb SIZE (h-36→sm:h-44) is a sensible default — confirm in the
   browser 1440/390 pass; flagged pending mockup.
 
-## HELD for the reference (flag-don't-guess — awaiting mockups/Figma from team-lead)
-These surfaces have taste + R1-interaction decisions the text spec can't resolve; guessing on
-Kaan's frustration item risks making it worse, so they wait for the actual mockups:
-- StateTimeline rail PLACEMENT: the vertical rail is built; WHERE it mounts (respondent
-  presence area — which I made calm/count-only in R1 — vs admin/observer vs both) is a taste +
-  R1-calm decision the mockup would resolve.
-- Captured-card exact polish, reconnect-pill card styling, welcome 3-box layout + "Preview
-  questions" button + the locked-copy 3rd box.
+## Team-lead rulings (UNBLOCKED the holds)
+1. StateTimeline placement is NOT a taste guess — KAAN-RULINGS R1 specifies the respondent
+   room shows the vertical agent-state rail, REPLACING the compact one-liner. Admin/observer
+   may also mount it. Only pixel styling waits for mockups.
+2. Welcome 3rd-box copy: visual-only, reuse existing consentCopy re-grouped; 2 boxes + flag if
+   it can't be honestly filled. Net-new sentence = Kaan+Emre locked.
+3. Never fabricate the % — "N items captured" only.
+4. Reconnect pills + captured-card polish: build sensible-default token styling NOW, flag
+   pixel-exact per surface.
+5. Mockups confirmed missing (#1 on Kaan's unblock list). Pixel-reconcile when they land.
+6. Browser FREE.
+
+## A28 pre-review — Surface 1 (respondent agent-state rail) — LANDED
+- Today: respondent room shows a compact one-line AgentStateIndicator + a count pill; the built
+  StateTimeline vertical rail renders nowhere.
+- After: LiveRoom gains a DESKTOP right rail = vertical StateTimeline (current highlighted,
+  reconnect events appended) + the count in its footer. Below lg the room stays single-column
+  with the compact line + count above controls. Both text (roomState) and voice
+  (orbState→rail mapping) wired. Counts-only — states + number, NEVER content; R1 data layer
+  untouched; sim suppresses it.
+- Simpler/complex? Richer on desktop but the specified R1 design (rail replaces the one-liner).
+  Rail width/placement/labels are a sensible default, flagged pending mockups.
+- Verify: tsc clean; 8/8 live-room.test.tsx incl. 4 NEW rail tests (renders on agentState,
+  appends reconnect events, absent without agentState, suppressed in sim). VISUAL 1440/390
+  deferred to prod post-seam-C (build not deployed; local frontend can't reach the prod backend
+  — CORS locks it to nexus-v2-alpha), same as R1's driven pattern.
+
+## HELD only for the reference (pixel-exact reconcile when mockups land)
+Exact rail styling; captured-card + reconnect-pill sensible-default polish (building next per
+ruling 4); welcome 3-box + "Preview questions" button + locked-copy 3rd box.
 
 ## Verdicts
-- Surface 2 committed; visual verify pending browser (held by lane-mest) + mockup confirm.
+- Surface 2 (welcome hero orb) committed 747fd27. Surface 1 (agent-state rail) committed +
+  test-green. Both visual-verified on prod post-seam-C.

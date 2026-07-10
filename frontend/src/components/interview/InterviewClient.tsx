@@ -404,7 +404,11 @@ export function InterviewClient({ token }: { token: string }) {
           <span className="inline-flex items-center gap-1 rounded-chip bg-surface-sunken px-2 py-0.5 font-medium text-ink-faint">
             <MicOff className="h-3 w-3" strokeWidth={1.75} /> Voice off · Text mode
           </span>
-          <AgentStateIndicator state={roomState} />
+          {/* Compact state line for mobile; the desktop rail (LiveRoom) shows the vertical
+              timeline instead, so hide this at lg to avoid showing the state twice. */}
+          <div className="lg:hidden">
+            <AgentStateIndicator state={roomState} />
+          </div>
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -479,6 +483,7 @@ export function InterviewClient({ token }: { token: string }) {
         controls={composer}
         capturedCount={captures.count}
         capturing={captures.extracting}
+        agentState={roomState}
         hideCaptured={Boolean(session?.simulation)}
       >
         <div ref={scroller} className="h-full space-y-4 overflow-y-auto px-1">

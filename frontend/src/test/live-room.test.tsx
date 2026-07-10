@@ -44,3 +44,34 @@ describe("LiveRoom — respondent capture readout (R1)", () => {
     expect(screen.getByText("controls")).toBeInTheDocument();
   });
 });
+
+// ROOM-PARITY: the agent-state rail (vertical StateTimeline) is the respondent-side spec
+// (KAAN-RULINGS R1). It renders when an agentState is provided, stays counts-only (states +
+// count, never item content), and is suppressed in a simulation.
+describe("LiveRoom — agent-state rail (ROOM-PARITY / R1)", () => {
+  it("renders the vertical state timeline when an agentState is given", () => {
+    render(room({ agentState: "listening" }));
+    // The rail shows the base spine labels; the count still rides in the rail footer.
+    expect(screen.getByText("Listening")).toBeInTheDocument();
+    expect(screen.getByText("Thinking")).toBeInTheDocument();
+    expect(screen.getByText("Speaking")).toBeInTheDocument();
+    expect(screen.getAllByText(/21 items captured/i).length).toBeGreaterThan(0);
+  });
+
+  it("appends reconnect events to the rail in order", () => {
+    render(room({ agentState: "reconnected", connectionEvents: ["reconnecting", "reconnected"] }));
+    expect(screen.getByText("Reconnecting")).toBeInTheDocument();
+    expect(screen.getByText("Reconnected")).toBeInTheDocument();
+  });
+
+  it("does not render the rail without an agentState", () => {
+    render(room());
+    expect(screen.queryByText("Listening")).toBeNull();
+  });
+
+  it("suppresses the rail in a simulation even with an agentState", () => {
+    render(room({ agentState: "listening", hideCaptured: true }));
+    expect(screen.queryByText("Listening")).toBeNull();
+    expect(screen.queryByText(/captured/i)).toBeNull();
+  });
+});

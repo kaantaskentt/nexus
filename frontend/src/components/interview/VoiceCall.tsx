@@ -10,6 +10,7 @@ import { LiveTranscript, type Turn } from "./LiveTranscript";
 import { mergeTurns } from "@/lib/transcript-display";
 import { InterviewProgress } from "./InterviewProgress";
 import { LiveRoom } from "./LiveRoom";
+import { type RoomAgentState } from "./AgentStateIndicator";
 import { getCallVoice, getSession } from "@/lib/respondent";
 import { getLiveCapturesByToken, useLiveCaptures } from "@/lib/liveCaptures";
 
@@ -523,6 +524,23 @@ export function VoiceCall({
       </div>
     );
 
+    // Map the voice room's orb/connection state onto the shared agent-state rail (ROOM-PARITY).
+    // The orb's "connecting" has no rail row, so it reads as Listening until the line is live.
+    const railState: RoomAgentState =
+      reconnecting === "trying"
+        ? "reconnecting"
+        : reconnecting === "recovered"
+          ? "reconnected"
+          : orbState === "connecting"
+            ? "listening"
+            : orbState;
+    const railEvents: ("reconnecting" | "reconnected")[] =
+      reconnecting === "recovered"
+        ? ["reconnecting", "reconnected"]
+        : reconnecting === "trying"
+          ? ["reconnecting"]
+          : [];
+
     return (
       <LiveRoom
         header={presence}
@@ -538,6 +556,8 @@ export function VoiceCall({
         }
         capturedCount={captures.count}
         capturing={captures.extracting}
+        agentState={railState}
+        connectionEvents={railEvents}
         hideCaptured={Boolean(simulation)}
       >
         {/* The transcript owns the middle of the room (non-negotiable 5, un-boxed). It stays
