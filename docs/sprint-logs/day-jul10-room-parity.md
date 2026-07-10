@@ -87,9 +87,26 @@ Figma file link (Kaan's file) in case the real mockups live there.
   deferred to prod post-seam-C (build not deployed; local frontend can't reach the prod backend
   — CORS locks it to nexus-v2-alpha), same as R1's driven pattern.
 
-## HELD only for the reference (pixel-exact reconcile when mockups land)
-Exact rail styling; captured-card + reconnect-pill sensible-default polish (building next per
-ruling 4); welcome 3-box + "Preview questions" button + locked-copy 3rd box.
+## Sensible-default pass — outcome per surface (all buildable wins landed)
+- **Surface 4 captured-cards** — AT BAR: the admin CapturedLivePanel already has icon tiles +
+  Just-added/Saved + count footer (built to standard in SIMPLIFY E). The mockup's "waveform"
+  footer is a respondent-mic element that doesn't apply to the admin observer (no mic; R1 keeps
+  the respondent counts-only). No honest sensible-default change; exact polish pending mockup.
+- **Welcome 3-box = 2 boxes + FLAG (ruling 2):** the context-call consentCopy is two honest,
+  LOCKED + sync-guarded groups (whatItIs / handling-6-sentences). A 3rd "After the call" box
+  needs NEW locked copy (Kaan+Emre) or splitting the locked array at a guessed point — neither
+  fills it honestly, so it stays 2 boxes. **"Preview questions" button = FLAG:** an unbuilt
+  FEATURE, not display polish (a dead button would be dishonest). Both need Kaan.
+- **Presence-orb audit** — no bare-disc path: connecting screen, live voice presence, and the
+  welcome all use ParticleOrb. TEXT mode has the rail, no orb; whether the text rail carries a
+  small orb is a taste/size call = FLAG for the mockup.
+- **Sim parity** — the sim room uses the same family (hideCaptured suppresses rail + count;
+  practice-run marker stays). Verify at the seam-C gate.
+
+## Seam-C GATE walk (team-lead condition — not a viewing; one fix round budgeted)
+1440 + 390 on prod post-deploy: fix any composition/overflow/legibility issue on ALL surfaces
+(orb sizing, rail layout at 390, reconnect card wrap, welcome spacing, sim room) before seam C
+closes. Only pixel-exactness vs Kaan's mockup is deferred (reconcile when Figma lands).
 
 ## A28 pre-review — Surface 3 (reconnect pills → cards) — LANDED
 - Today: ReconnectBanner is a flat rounded-md bordered strip (trying / recovered).
