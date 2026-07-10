@@ -8,6 +8,23 @@ detect, stop, do-not-repeat, resource, quarantine+notify. The agent never grades
 investigates, never probes, never contacts anyone, never makes the legal/clinical call. Probing is
 the failure, not the fix.
 
+## ROUND 2 (Kaan RULINGS R2 + lane-quality safety findings) — quick index
+- **RED/YELLOW calibration** (A.6 gate): lane-quality's disclosure baits caught the deployed persona
+  (a) serving 182 (MHRS appointment line) from memory, (b) gauging acuity on ambiguous disclosures,
+  (c) over-escalating (crisis line for a plain vent). Iterated to commit e588ea1: 182 guard is
+  INTERNAL (not in served text — reciting it was a failure mode) + slot-fill; ambiguous tiers up
+  without a gauge; YELLOW = zero phone numbers for an ordinary vent. Verify (faithful gate path, 50
+  samples): 49/50, 0/50 emit 182, 20/20 YELLOW clean. Residual: 1/50 acuity probe on TR-unambig
+  (still served + handed off). VOICE stays prompt-only (VAPI). Awaiting lane-quality's gate green →
+  team-lead A.6 deploy.
+- **R6 in-app incident inbox** (email dropped from done-bar; notify.py already optional-if-key):
+  backend d03e736 (migration 0027 review-state + /api/incidents admin router, minimized, no
+  verbatim, tests 19 green), frontend 30c4bae (/incidents quiet reviewer page + Acknowledge/Dismiss).
+  MIGRATIONS-FIRST: apply 0027 before the R6 backend deploy. Seam-B verify: /incidents shows the two
+  amber drill incidents in tenant 2fb919fa; Acknowledge persists.
+- **R7 ship consent line** (Kaan approved): b04c659 — reverted the hold + wired consentCopy
+  (respondent.ts) as ONE unit; guards green (consent_copy_sync 20/20, em-dash clean, tsc 0).
+
 Existing surfaces (extend, never duplicate): `backend/app/pipeline/disclosure.py` +
 `prompts/agents/disclosure-screen.md` (POST-HOC screen beside compile) + `sealed_flags` (0011).
 Section 7 adds the IN-ROOM persona layer + a minimized incident record + reviewer notification.
