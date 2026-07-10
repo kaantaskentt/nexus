@@ -143,3 +143,43 @@ hand-applied per deploy protocol. This MUST land (apply + GET-verify columns/tab
 exist + browser-walk the surface) before those features count as "done" and before
 Emre voice-tests tonight. Track every new migration to live before marking its lane
 green. Do not let git-green masquerade as prod-green.
+
+## ADDENDUM 3 — REFINE ROUND (Kaan live-testing, 22:20 July 9. Binding. Runs until 03:00 PDT.)
+Kaan is testing prod RIGHT NOW and these supersede the wrap-up. Work continues until
+03:00 PDT (park at 95% with live todo, resume on window reset - watchtower kicks resumes).
+
+1. **P1 BUG (already routed): LiveRoom voice transcript frozen.** Roleplay session
+   5716e93e: 29 utterances in DB, screen stuck on opener. Voice-mode transcript
+   subscription lost in the E merge. Fix, deploy, verify live turns render. Blocks Emre.
+
+2. **Company Snapshot v2 - "best version for a CEO/admin" (Kaan: still confusing).**
+   Design from the reader's seat: a CEO opens this page and should get, in order:
+   (a) the story so far in one glance - what Nexus now understands about the company;
+   (b) what needs MY attention (open questions / awaiting approvals) with obvious actions;
+   (c) ONE next recommended action, prominent;
+   (d) everything else (evidence rail, trust chips, teams detail) demoted to drill-down.
+   Today's page reads as a records dump: three near-equal sections, trust-chip noise on
+   every card, an evidence rail competing with the main column, next-action buried at the
+   bottom. Fewer things, bigger hierarchy, plain-language headers. The append-only render
+   model and honesty rules (real counts, trust ladder, quarantine) are untouchable - this
+   is presentation. Commit a short pre-review with the new section order before building.
+
+3. **IA consolidation - Kaan CONFIRMS amendment 3.** His words: "Interviews, Insights,
+   Company Context all show the same thing." Design + implement the consolidation:
+   ONE canonical home per data kind, cross-links instead of re-renders. Propose in one
+   committed pre-review: what each nav item uniquely shows after the change (e.g. Home =
+   snapshot story, Company Context = the record store/KB, Insights = findings/conflicts/
+   opportunities ONLY, Interviews = the staged hub). If a tab has no unique job left,
+   fold it (nav shrink OK). Deep-link everything else.
+
+4. **Full bug check + UI/UX doc re-walk.** With fresh eyes: (a) re-read
+   docs/kaan-inbox/feedback-jul9/FEEDBACK.md + all 21 screenshots and verify EVERY item
+   actually landed as intended on prod (not just per-lane claims); (b) click-every-button
+   pass at 1440 + 390 (the addendum-1 order - some buttons were still dead per Kaan);
+   (c) hunt regressions of good old behavior lost in rewrites (the transcript freeze is
+   the proven class - check merged bubbles, scroll discipline, observer polling, report
+   links, export, delete dialogs); (d) then think beyond the doc: propose-and-fix what
+   makes the experience genuinely better (A28 gates each: simpler-or-stop).
+
+5. Keep seam discipline: batch fixes into deploy seams, browser-verify each seam at both
+   widths, honest verdicts in SPRINT-STATE. Evals move with any behavior change (add. 2).
