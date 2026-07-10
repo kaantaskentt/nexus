@@ -42,6 +42,7 @@ commit boundary · scope commits `git commit -- <paths>`.
 | pipeline/conflicts.py + prompts/agents/perception-gap.md + test_perception_gap_retraction.py (patch-29 surfaces) | lane-export (granted by team-lead, announced) |
 | frontend/src/components/snapshot/ExportReportButton.tsx (backdrop bug only) | lane-export (granted; NOT components/interview/**) |
 | pipeline plan-generation (plan.py/plan_generator) + prompts/agents/plan-generator.md + pipeline/artifacts.py capture side (F7 authorization-state fix) | lane-quality (granted; routers/plans.py stays lane-mest — announce if the fix needs it) |
+| respondent.ts consentCopy CONTEXT-CALL HEADER region + consent-landing.md heading lines (Kaan welcome-copy fix, strings his verbatim) | lane-sec (granted; S7.8 line + all compliance promises byte-untouched, sync guard is the proof; spoken-opener divergence flagged to Kaan) |
 | pipeline/disclosure.py, incident/notify code, resource-packet config, prompts/agents/disclosure-screen.md | lane-s7 |
 | prompts/agents/stage3-context-collector.md | lane-s7 FIRST (disclosure/never-list section only), then lane-quality (everything else). Quality does not start this file until s7's persona commit is pushed. |
 | prompts/agents/stage7-interviewer.md | lane-s7 (disclosure section) then lane-quality if needed |
