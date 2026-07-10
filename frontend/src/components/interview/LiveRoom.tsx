@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { PanelRightOpen, X } from "lucide-react";
+import { PanelRightOpen, X, FlaskConical } from "lucide-react";
 import { drawerSpring, scrimFade } from "@/lib/variants";
 
 // The live room frame (SIMPLIFY E, image20/19). ONE layout for both modes and both
@@ -27,6 +27,8 @@ export function LiveRoom({
   capturedPanel,
   capturedCount,
   banner,
+  hideCaptured = false,
+  simulationLabel,
 }: {
   header: React.ReactNode; // presence bar (voice) or mode header (text)
   children: React.ReactNode; // the transcript / message thread — owns the column
@@ -34,6 +36,10 @@ export function LiveRoom({
   capturedPanel: React.ReactNode; // <CapturedLivePanel />
   capturedCount: number;
   banner?: React.ReactNode; // the reconnecting pill (F, COMMIT 4) — unobtrusive, in-room
+  // SIMPLIFY I: a simulation suppresses the Captured-live panel entirely (a practice run
+  // shows the interviewer's performance, not "captured context") and marks itself clearly.
+  hideCaptured?: boolean;
+  simulationLabel?: string;
 }) {
   const [panelOpen, setPanelOpen] = useState(false); // mobile drawer
 
@@ -41,6 +47,16 @@ export function LiveRoom({
     <div className="flex h-[calc(100vh-4rem)] gap-0 lg:gap-6">
       {/* Main column — the conversation. */}
       <div className="flex min-w-0 flex-1 flex-col">
+        {/* SIMPLIFY I: a persistent, unmissable practice-run marker (trust surface). */}
+        {simulationLabel && (
+          <div className="mb-3 flex shrink-0 items-center gap-2 rounded-md border border-accent/30 bg-accent-soft px-3 py-2 text-xs text-accent-ink">
+            <FlaskConical className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+            <span>
+              <span className="font-semibold">Simulation · {simulationLabel}</span> — practice
+              run. Nothing here reaches your company records.
+            </span>
+          </div>
+        )}
         <div className="shrink-0">{header}</div>
 
         {banner && <div className="shrink-0 pt-3">{banner}</div>}
@@ -48,25 +64,29 @@ export function LiveRoom({
         {/* Transcript owns the space between header and controls. */}
         <div className="min-h-0 flex-1 overflow-hidden py-4">{children}</div>
 
-        {/* Docked controls, plus the mobile "Captured live" toggle. */}
+        {/* Docked controls, plus the mobile "Captured live" toggle (hidden in a simulation). */}
         <div className="shrink-0 border-t border-line pt-3">
-          <div className="mb-2 flex justify-end lg:hidden">
-            <button
-              onClick={() => setPanelOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:bg-surface-raised"
-            >
-              <PanelRightOpen className="h-3.5 w-3.5" strokeWidth={1.75} />
-              Captured live · {capturedCount}
-            </button>
-          </div>
+          {!hideCaptured && (
+            <div className="mb-2 flex justify-end lg:hidden">
+              <button
+                onClick={() => setPanelOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:bg-surface-raised"
+              >
+                <PanelRightOpen className="h-3.5 w-3.5" strokeWidth={1.75} />
+                Captured live · {capturedCount}
+              </button>
+            </div>
+          )}
           {controls}
         </div>
       </div>
 
-      {/* Aside — docked on lg, a slide-over on mobile. */}
-      <aside className="hidden w-[340px] shrink-0 border-l border-line pl-6 lg:block">
-        {capturedPanel}
-      </aside>
+      {/* Aside — docked on lg, a slide-over on mobile. Suppressed for a simulation. */}
+      {!hideCaptured && (
+        <aside className="hidden w-[340px] shrink-0 border-l border-line pl-6 lg:block">
+          {capturedPanel}
+        </aside>
+      )}
 
       <AnimatePresence>
         {panelOpen && (

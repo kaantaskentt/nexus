@@ -47,6 +47,9 @@ export interface RespondentSession {
   // SIMPLIFY G: whether the workspace already has a rendered snapshot — first context call
   // (false/absent) vs a later one (true). Context-kind only; a boolean, nothing else.
   snapshot_exists?: boolean;
+  // SIMPLIFY I: present ONLY on a roleplay session minted from a workflow (a SIMULATION) —
+  // the room shows a persistent "practice run" marker and suppresses the Captured-live panel.
+  simulation?: { label: string };
 }
 
 export interface TurnResult {
@@ -77,6 +80,7 @@ interface RawSession {
   context_call?: boolean;
   workspace_slug?: string;
   snapshot_exists?: boolean;
+  simulation?: { label: string };
 }
 
 const clean = (v?: string | null) => (v == null ? undefined : v);
@@ -95,6 +99,7 @@ export async function getSession(token: string): Promise<RespondentSession> {
     context_call: raw.context_call || undefined,
     workspace_slug: raw.workspace_slug || undefined,
     snapshot_exists: raw.snapshot_exists ?? undefined,
+    simulation: raw.simulation || undefined,
     context: c
       ? {
           respondent_name: clean(c.respondent_first_name),

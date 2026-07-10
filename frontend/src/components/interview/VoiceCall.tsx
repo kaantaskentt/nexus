@@ -81,6 +81,7 @@ export function VoiceCall({
   respondentName,
   estMinutes,
   priorTurns = [],
+  simulation,
   onUseText,
   onFinish,
 }: {
@@ -90,6 +91,8 @@ export function VoiceCall({
   // The conversation so far (server transcript) — a resumed or switched-in call renders
   // and continues the same thread instead of starting a fresh-looking one.
   priorTurns?: Turn[];
+  // SIMPLIFY I: set for a simulation run — marks the room and suppresses the captured panel.
+  simulation?: { label: string };
   onUseText: () => void;
   onFinish: () => void;
 }) {
@@ -126,9 +129,10 @@ export function VoiceCall({
   const pubKey = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY;
   const estSec = Math.max(60, (estMinutes ?? 20) * 60);
 
-  // Captured-live panel data — real polling, only while the call is live (SIMPLIFY E).
+  // Captured-live panel data — real polling, only while the call is live (SIMPLIFY E), and
+  // never in a simulation (the panel is suppressed there — SIMPLIFY I).
   const captures = useLiveCaptures(() => getLiveCapturesByToken(token), {
-    enabled: state === "live",
+    enabled: state === "live" && !simulation,
   });
 
   // Always tear the call down if the component unmounts mid-conversation.
@@ -490,6 +494,8 @@ export function VoiceCall({
           <CapturedLivePanel items={captures.items} extracting={captures.extracting} />
         }
         capturedCount={captures.items.length}
+        hideCaptured={Boolean(simulation)}
+        simulationLabel={simulation?.label}
       >
         {/* The transcript owns the middle of the room (non-negotiable 5, un-boxed). It stays
             put through a reconnect — nothing shared is lost (SIMPLIFY F). */}

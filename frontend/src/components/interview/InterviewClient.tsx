@@ -47,10 +47,11 @@ export function InterviewClient({ token }: { token: string }) {
   const lastMessage = useRef<string | null>(null); // for honest retry, not a fallback
   const scroller = useRef<HTMLDivElement>(null);
 
-  // Captured-live panel data for the text room — real polling while the text chat is open.
-  // (The voice room does its own polling inside VoiceCall.)
+  // Captured-live panel data for the text room — real polling while the text chat is open,
+  // never in a simulation (the panel is suppressed there — SIMPLIFY I). (The voice room does
+  // its own polling inside VoiceCall.)
   const captures = useLiveCaptures(() => getLiveCapturesByToken(token), {
-    enabled: phase === "chat" && mode === "text",
+    enabled: phase === "chat" && mode === "text" && !session?.simulation,
   });
 
   function seedFromTranscript(s: RespondentSession) {
@@ -339,6 +340,7 @@ export function InterviewClient({ token }: { token: string }) {
             role: m.role === "interviewer" ? ("assistant" as const) : ("user" as const),
             text: m.text,
           }))}
+          simulation={session?.simulation}
           onUseText={switchToText}
           onFinish={finish}
         />
@@ -445,6 +447,8 @@ export function InterviewClient({ token }: { token: string }) {
           <CapturedLivePanel items={captures.items} extracting={captures.extracting} />
         }
         capturedCount={captures.items.length}
+        hideCaptured={Boolean(session?.simulation)}
+        simulationLabel={session?.simulation?.label}
       >
         <div ref={scroller} className="h-full space-y-4 overflow-y-auto px-1">
           {messages.map((m, i) => (
