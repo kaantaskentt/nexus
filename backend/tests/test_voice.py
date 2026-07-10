@@ -163,6 +163,72 @@ async def test_webhook_end_of_call_completes_and_compiles(db):
     assert jobs == 1
 
 
+async def _context_session(db, ws, token):
+    return await db.fetchval(
+        "insert into interview_sessions (workspace_id, modality, invite_token, status, session_kind) "
+        "values ($1, 'voice', $2, 'active', 'context') returning id",
+        ws, token,
+    )
+
+
+async def test_webhook_status_ended_alone_compiles(db):
+    """Abnormal hangup: status-update:ended arrives with NO end-of-call-report to follow.
+    The call must still complete AND compile — a live call is never captured-but-never-
+    compiled (the test-mest §2 costume). A context call also flags the snapshot render."""
+    ws = await make_workspace(db, industry="jewelry")
+    sess = await _context_session(db, ws, "voiceended")
+    async with _client() as c:
+        await c.post("/api/voice/webhook", json={"message": {
+            "type": "status-update", "status": "ended",
+            "call": {"metadata": {"session_token": "voiceended"}},
+        }})
+    row = await db.fetchrow("select status from interview_sessions where id=$1", sess)
+    assert row["status"] == "completed"
+    job = await db.fetchrow(
+        "select payload from jobs where kind='compile_session' and payload->>'session_id'=$1",
+        str(sess),
+    )
+    assert job is not None                                  # compile guaranteed
+    import json
+    payload = job["payload"]
+    payload = json.loads(payload) if isinstance(payload, str) else payload
+    assert payload.get("render_snapshot") is True           # context → render
+    for kind in ("screen_disclosures", "scan_artifact_promises"):
+        n = await db.fetchval(
+            "select count(*) from jobs where kind=$1 and payload->>'session_id'=$2",
+            kind, str(sess),
+        )
+        assert n == 1
+
+
+async def test_webhook_both_end_events_compile_once(db):
+    """status-update:ended AND end-of-call-report for the same call (either order) must
+    enqueue compile EXACTLY once — double compile would duplicate every record. The report's
+    recording evidence is still stored regardless of which event won the compile flag."""
+    ws = await make_workspace(db, industry="jewelry")
+    sess = await _context_session(db, ws, "voiceboth")
+    async with _client() as c:
+        await c.post("/api/voice/webhook", json={"message": {
+            "type": "status-update", "status": "ended",
+            "call": {"metadata": {"session_token": "voiceboth"}},
+        }})
+        await c.post("/api/voice/webhook", json={"message": {
+            "type": "end-of-call-report",
+            "call": {"metadata": {"session_token": "voiceboth"}},
+            "artifact": {"recording": {"stereoUrl": "https://rec/y.wav"},
+                         "transcript": "N: hi\nUser: hello"},
+        }})
+    n = await db.fetchval(
+        "select count(*) from jobs where kind='compile_session' and payload->>'session_id'=$1",
+        str(sess),
+    )
+    assert n == 1                                           # idempotent across both events
+    row = await db.fetchrow("select resumable_state from interview_sessions where id=$1", sess)
+    import json
+    state = json.loads(row["resumable_state"]) if isinstance(row["resumable_state"], str) else row["resumable_state"]
+    assert state["recording_url"] == "https://rec/y.wav"   # report evidence still stored
+
+
 async def test_voice_secret_gate(monkeypatch):
     monkeypatch.setattr(voice, "get_settings", lambda: SimpleNamespace(voice_shared_secret="s3cret"))
     with pytest.raises(HTTPException) as e:

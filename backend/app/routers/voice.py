@@ -19,7 +19,6 @@ the same run engine (non-negotiable: the turn engine is transport-agnostic)."""
 import json
 import logging
 import time
-from datetime import datetime, timezone
 
 from fastapi import APIRouter, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -93,6 +92,48 @@ def _to_anthropic_messages(oai_messages: list[dict]) -> list[dict]:
         if role in ("user", "assistant") and m.get("content"):
             msgs.append({"role": role, "content": m["content"]})
     return msgs
+
+
+async def _ensure_compile_enqueued(pool, session_id) -> bool:
+    """Guarantee the Stage-4 compile (+ disclosure + artifact-promise scan) fires exactly
+    once for a finished live call, no matter which VAPI end-event arrives or in what order.
+
+    VAPI may send `status-update: ended`, `end-of-call-report`, both, or — on an abnormal
+    hangup — only the status-update. Before this, only the report path enqueued, so a call
+    that never produced a report was captured-but-never-compiled: records/utterances saved,
+    snapshot never composes (the test-mest §2 costume). The compile flag is compare-and-set
+    on the session row in the SAME statement that marks it completed, so two near-simultaneous
+    webhooks can never double-compile (which would duplicate every record). Returns True only
+    for the caller that won the flag — the one that actually enqueued.
+    """
+    won = await pool.fetchval(
+        """update interview_sessions
+             set status = 'completed',
+                 ended_at = coalesce(ended_at, now()),
+                 resumable_state = jsonb_set(
+                     coalesce(resumable_state, '{}'::jsonb), '{compile_enqueued}', 'true')
+           where id = $1
+             and coalesce((resumable_state ->> 'compile_enqueued')::boolean, false) = false
+           returning 1""",
+        session_id,
+    )
+    if not won:
+        return False
+    kind = await pool.fetchval(
+        "select session_kind from interview_sessions where id = $1", session_id
+    )
+    # F7: a context call is the plan-less CEO/discovery class — its compile auto-renders the
+    # snapshot (same flag the text complete() and paste paths set; derived from the session
+    # kind here, never from which webhook fired).
+    compile_payload = {"session_id": str(session_id)}
+    if kind == "context":
+        compile_payload["render_snapshot"] = True
+    await enqueue("compile_session", compile_payload)
+    # Disclosure screen + artifact-promise scan ride the same seam (Emre stage-7 §7 / Kaan
+    # F1) — see sessions.py complete().
+    await enqueue("screen_disclosures", {"session_id": str(session_id)})
+    await enqueue("scan_artifact_promises", {"session_id": str(session_id)})
+    return True
 
 
 def _chunk(delta: dict, finish: str | None) -> str:
@@ -182,34 +223,27 @@ async def webhook(request: Request, authorization: str | None = Header(default=N
         artifact = message.get("artifact") or {}
         recording = artifact.get("recording") or {}
         recording_url = recording.get("stereoUrl") or recording.get("url") or artifact.get("recordingUrl")
-        prior = await pool.fetchval(
-            "select resumable_state from interview_sessions where id = $1", session_id
-        )
-        state = json.loads(prior) if isinstance(prior, str) else (prior or {})
-        state["recording_url"] = recording_url
-        state["final_transcript"] = artifact.get("transcript")
+        # Store this event's unique evidence (recording + final transcript) with a MERGE, not
+        # a full-object overwrite, so it can't clobber the compile_enqueued flag a racing
+        # status-update:ended may already have set.
         await pool.execute(
             """update interview_sessions
-               set status = 'completed', ended_at = $2, resumable_state = $3 where id = $1""",
-            session_id, datetime.now(timezone.utc), json.dumps(state),
+               set resumable_state = jsonb_set(
+                     jsonb_set(coalesce(resumable_state, '{}'::jsonb),
+                               '{recording_url}', $2::jsonb),
+                     '{final_transcript}', $3::jsonb)
+               where id = $1""",
+            session_id, json.dumps(recording_url), json.dumps(artifact.get("transcript")),
         )
-        # Hand the verbatim transcript to the Stage 4 compiler. F7: a context call
-        # auto-renders the snapshot (CEO/discovery-class; see sessions.py complete).
-        kind = await pool.fetchval(
-            "select session_kind from interview_sessions where id = $1", session_id
-        )
-        compile_payload = {"session_id": str(session_id)}
-        if kind == "context":
-            compile_payload["render_snapshot"] = True
-        await enqueue("compile_session", compile_payload)
-        # Disclosure screen beside the compile (Emre stage-7 §7, A24) — see sessions.py.
-        await enqueue("screen_disclosures", {"session_id": str(session_id)})
-        await enqueue("scan_artifact_promises", {"session_id": str(session_id)})
+        # Then guarantee the compile once (idempotent across both end-events). F7 snapshot
+        # render is decided inside the helper from the session kind.
+        await _ensure_compile_enqueued(pool, session_id)
 
     elif mtype == "status-update" and message.get("status") == "ended":
-        await pool.execute(
-            "update interview_sessions set status = 'completed' where id = $1 and status <> 'completed'",
-            session_id,
-        )
+        # An abnormal hangup can send this with no end-of-call-report to follow. Mark
+        # completed AND guarantee the compile so the call is never captured-but-never-compiled
+        # (records saved, snapshot never composes). Idempotent: if the report path already
+        # won the compile flag, this is a no-op mark.
+        await _ensure_compile_enqueued(pool, session_id)
 
     return {"ok": True}
