@@ -15,6 +15,7 @@ Two deliberate rules:
 Mixed auth gate like `sessions`: the mint route requires admin, by-token stays public.
 """
 
+import re
 import secrets
 from datetime import datetime, timezone
 
@@ -57,6 +58,82 @@ def _role_only(side: dict) -> dict:
     return {"text": side.get("text"), "tag": side.get("tag"), "role": side.get("role")}
 
 
+# ── Re-identification pass (pilot §3, leak 1) ──────────────────────────────────
+# The report already attributes findings by ROLE only. But a role mask is transparent
+# in a ten-person company the moment the SAME forwardable page also names a person in a
+# finding body, a next step ("owner: Burak"), or a workflow step ("route returns
+# questions to Selin"). The rule: role-consistent naming or no names, never both on one
+# page. This is a consent-promise enforcement, so it runs at compose time over the whole
+# payload — not in the React layer where a name would still travel in the JSON.
+#
+# We redact every KNOWN person-entity name (and its individual name tokens) for this
+# workspace, replacing it with that person's role ("the operations lead") or a neutral
+# "a colleague". In a forwardable privacy document it is safer to over-redact a word that
+# happens to coincide with a name part than to leak a real name, so the match is
+# case-insensitive and covers bare first/last tokens (length ≥ 3) as well as full names.
+
+_NAME_TOKEN = re.compile(r"[^\W\d_]{3,}", re.UNICODE)  # alphabetic runs, ≥3 chars
+
+
+def _name_variants(canonical: str, aliases: list[str]) -> list[str]:
+    """Full names plus their individual name tokens, longest first so a full name is
+    redacted before a bare first name could leave a fragment behind."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for full in [canonical, *(aliases or [])]:
+        full = (full or "").strip()
+        if not full:
+            continue
+        for candidate in [full, *_NAME_TOKEN.findall(full)]:
+            key = candidate.casefold()
+            if len(candidate) >= 3 and key not in seen:
+                seen.add(key)
+                out.append(candidate)
+    out.sort(key=len, reverse=True)
+    return out
+
+
+def _redactions(people: list[dict]) -> list[tuple[re.Pattern, str]]:
+    """Compile (name-pattern → role-phrase) pairs for every person entity, longest name
+    first. Each person's occurrences become their role, or 'a colleague' if role-less."""
+    pairs: list[tuple[str, str]] = []
+    for e in people:
+        role = (e.get("role") or "").strip()
+        repl = f"the {role}" if role else "a colleague"
+        for variant in _name_variants(e.get("canonical_name") or "", list(e.get("aliases") or [])):
+            pairs.append((variant, repl))
+    pairs.sort(key=lambda p: len(p[0]), reverse=True)
+    return [(re.compile(rf"\b{re.escape(v)}\b", re.IGNORECASE), repl) for v, repl in pairs]
+
+
+def _scrub(text, redactions: list[tuple[re.Pattern, str]]):
+    if not isinstance(text, str) or not text:
+        return text
+    for pat, repl in redactions:
+        text = pat.sub(repl, text)
+    return text
+
+
+def _deidentify(obj, redactions: list[tuple[re.Pattern, str]]):
+    """Recursively redact person names from every string in a payload section."""
+    if isinstance(obj, str):
+        return _scrub(obj, redactions)
+    if isinstance(obj, list):
+        return [_deidentify(x, redactions) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _deidentify(v, redactions) for k, v in obj.items()}
+    return obj
+
+
+async def _person_entities(pool, workspace_id: str) -> list[dict]:
+    rows = await pool.fetch(
+        "select canonical_name, aliases, role from entities "
+        "where workspace_id = $1 and entity_type = 'person'",
+        workspace_id,
+    )
+    return [dict(r) for r in rows]
+
+
 @router.get("/by-token/{token}")
 async def report_by_token(token: str):
     """Compose the shareable Company Report. Public: the bearer of the link is the
@@ -75,6 +152,7 @@ async def report_by_token(token: str):
     snapshot = await get_snapshot(workspace_id)
     insights = await get_insights(workspace_id)
     opportunities = await automation_opportunities(workspace_id)
+    redactions = _redactions(await _person_entities(pool, workspace_id))
 
     wf_rows = await pool.fetch(
         "select id, name from workflows where workspace_id = $1 order by created_at",
@@ -117,16 +195,21 @@ async def report_by_token(token: str):
     for adm in insights["admissions"]:
         if adm.get("objective"):
             next_steps.append({"kind": "follow_up", "text": adm["objective"]})
-    pending_people = [
-        (card["content"] or {}).get("name")
-        for card in snapshot if card["card_type"] == "suggested_person"
-    ]
-    pending_people = [p for p in pending_people if p]
-    if pending_people:
-        next_steps.append({
-            "kind": "interview",
-            "text": "Schedule interviews with " + ", ".join(pending_people[:5]),
-        })
+    # Who to talk to next — by ROLE, never by name (leak 1). If a suggested person has no
+    # role to stand in for the name, fall back to a bare count so no name ever ships.
+    suggested = [(card["content"] or {}) for card in snapshot
+                 if card["card_type"] == "suggested_person"]
+    roles = [(c.get("role") or "").strip() for c in suggested]
+    if suggested:
+        if all(roles):
+            who = ", ".join(f"the {r}" for r in roles[:5])
+            next_steps.append({"kind": "interview", "text": f"Schedule interviews with {who}"})
+        else:
+            n = len(suggested)
+            next_steps.append({
+                "kind": "interview",
+                "text": f"Schedule the {n} suggested interview{'s' if n != 1 else ''}",
+            })
 
     findings = [
         {"text": f["text"], "band": f["band"], "tag": f["tag"],
@@ -142,10 +225,12 @@ async def report_by_token(token: str):
             "industry": row["industry"],
         },
         "stats": insights["stats"],
-        "snapshot": snapshot,
-        "key_findings": findings,
-        "workflows": workflows,
-        "gaps": gaps,
-        "opportunities": opps,
-        "next_steps": next_steps,
+        # Every content section is de-identified as the last compose step: role-consistent
+        # naming or no names, never both on one forwardable page (pilot §3, leak 1).
+        "snapshot": _deidentify(snapshot, redactions),
+        "key_findings": _deidentify(findings, redactions),
+        "workflows": _deidentify(workflows, redactions),
+        "gaps": _deidentify(gaps, redactions),
+        "opportunities": _deidentify(opps, redactions),
+        "next_steps": _deidentify(next_steps, redactions),
     }
