@@ -63,3 +63,21 @@ full-screen reset, and nothing shared is lost. LANDED efa9702. tsc/eslint/vitest
   panel's `variant="admin"` (Reported-at-most badge) are ready for them to consume.
 - Root-cause of the voice drops themselves (silence-timeout 30->60, honest empty-turn
   fallback, prompt-cache latency) landed in lane-ef; this lane owns the in-room UX for a drop.
+
+## Task #10 — Simulations Run wiring (lane-e half; page = audit-walk)
+Today: /simulations had no runnable scenario; the room had no simulation mode.
+After: POST /scenario-run { workflow_id } derives archetype (dept→CAST_KEYS) + interviewer
+objectives SERVER-SIDE (injection guard — client-supplied objectives never cross the wire;
+a test proves stray body fields are dropped), mints a roleplay-kind session steered to probe
+that workflow, and opens the LiveRoom with a persistent "Simulation — practice run, nothing
+reaches your company records" marker + suppressed Captured-live panel. The interviewer is
+steered but never told it's a drill (the behaviour under test is unchanged). Debrief judges
+objective coverage. Firewall unchanged and asserted (compiler skips roleplay). Isolation
+(404 foreign workflow) + >=3-step gate. LANDED 3a972a5 (backend, pipeline/scenario.py +
+tests) + a75b853 (frontend room adaptation). Contract with audit-walk (workflow_id-only)
+committed at 5a1eb6e; their GET /scenarios + page are the other half. Held-then-built after
+seam-2 verified the room live, per team-lead. Backend affected suites green (scenario_run,
+roleplay, interview, context_call, simulations, turn_stream, live_capture = 35); frontend
+tsc 0 / eslint clean / vitest 100.
+Simpler for the user: yes — one honest "pressure-test the interviewer against YOUR workflow"
+action that reuses the room they already know, clearly marked as practice.
