@@ -10,6 +10,7 @@ import { BrandMark } from "@/components";
 import { VoiceCall } from "./VoiceCall";
 import { PromisedArtifacts } from "./PromisedArtifacts";
 import { LiveRoom } from "./LiveRoom";
+import { ParticleOrb } from "./ParticleOrb";
 import { AgentStateIndicator, type RoomAgentState } from "./AgentStateIndicator";
 import {
   getSession,
@@ -613,6 +614,17 @@ function ConsentLanding({
   const c = consentCopy(session);
   return (
     <div className="py-10">
+      {/* ROOM-PARITY: the context-call welcome opens on the same calm presence orb the room
+          uses (mockup 2 hero), so the founder meets Nexus before the line opens. Context call
+          only — an employee interview keeps the plain welcome. Calm 'listening' breath, no
+          audio yet (volume 0); one family with the connecting screen + live presence bar. */}
+      {session.context_call && (
+        <div className="mb-8 flex justify-center">
+          <div className="relative h-36 w-36 overflow-hidden rounded-full bg-surface-dark ring-1 ring-inset ring-white/[0.08] sm:h-44 sm:w-44">
+            <ParticleOrb volume={0} state="listening" />
+          </div>
+        </div>
+      )}
       <h1 className="font-display text-3xl leading-tight text-ink">{c.heading}</h1>
       <p className="mt-4 leading-relaxed text-ink-soft">{c.intro}</p>
 

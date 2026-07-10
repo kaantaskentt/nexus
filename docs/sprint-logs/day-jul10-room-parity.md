@@ -52,7 +52,22 @@ Figma file link (Kaan's file) in case the real mockups live there.
 6. Sim-room parity pass + both-width verify.
 
 ## A28 pre-reviews
-- (added per surface before each change)
+- **Surface 2 (context-call welcome hero orb) — LANDED.** Today: ConsentLanding is text-only
+  (heading + intro + 2 cards), a cold open. After: a calm hero ParticleOrb (state="listening",
+  volume 0) sits above the heading on the CONTEXT-CALL welcome only (session.context_call);
+  employee-interview welcome unchanged. Reuses the exact dark-tile orb pattern proven on the
+  connecting screen. Simpler/complex? Slightly richer, calmer, on-brand; additive, no
+  interaction change. tsc clean. Orb SIZE (h-36→sm:h-44) is a sensible default — confirm in the
+  browser 1440/390 pass; flagged pending mockup.
+
+## HELD for the reference (flag-don't-guess — awaiting mockups/Figma from team-lead)
+These surfaces have taste + R1-interaction decisions the text spec can't resolve; guessing on
+Kaan's frustration item risks making it worse, so they wait for the actual mockups:
+- StateTimeline rail PLACEMENT: the vertical rail is built; WHERE it mounts (respondent
+  presence area — which I made calm/count-only in R1 — vs admin/observer vs both) is a taste +
+  R1-calm decision the mockup would resolve.
+- Captured-card exact polish, reconnect-pill card styling, welcome 3-box layout + "Preview
+  questions" button + the locked-copy 3rd box.
 
 ## Verdicts
-- (added as surfaces land)
+- Surface 2 committed; visual verify pending browser (held by lane-mest) + mockup confirm.
