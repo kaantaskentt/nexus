@@ -239,6 +239,24 @@ Findings + fixes will be logged below this checklist as I drive each, once mini-
   - Then: with the P0 fixed, drive the K interview hub end-to-end (Plan→Observe→Report→Follow-up)
     + the ADD-4 intake-agent live-diff + call-to-completion + G call-completed screen.
   #19 completes only after this batch runs green post-seam.
+
+## ROUND-4 RE-VERIFY (prod 0150dbf, wrap seam) — partial, context-limited
+Deploy-confirm gate PASSED (lane-shell AreaDrawer marker live = build is post-0fd1f3d).
+- **[✓ P0 FIXED — the blocker is dead]** Drove a fresh normal voice-test text-from-start
+  ("Start by text instead"). /turn/stream done-frame for my first answer is now
+  `turn_index: 2` with an ENGAGED reply ("Got it. Walk me through what that actually looks
+  like… What's the very first thing you do when you sit down?") — opener fired as turn 0,
+  my answer turn 1, agent engaged turn 2. RENDERS in the UI (DOM-confirmed). 55af788 works
+  end-to-end. (My first UI poll false-negatived; the DOM + response body settle it fixed.)
+- **[✓ AreaDrawer 51d3692/155ee50]** "Add to Interview Plan" = live link to /interviews/new
+  with focus PRE-SEEDED (the open questions) + name=Burak&role=Operations pre-filled; "View
+  full transcript" gone; "Add context" no-op gone.
+- Handed browser to lane-design for their design-token render confirm (my context high).
+- STILL TODO on 0150dbf (next turn): roleplay text-from-start P0 re-check; lane-shell
+  3b7be95 (Home key-findings/automation-opps) / b89114b (Insights 307→Home) / 2fd4881
+  (Report "Open questions") / fd6559b (workflow Back-to-Home round-trip); K hub end-to-end
+  (now unblocked); ADD-4 intake live-diff; C chips; D welcome; J card; QA Refine
+  DiscoveryUpload + Feedback-B.
 - **[✓ A · Company mgmt — verified driven]** Picker: every row has a "Drag to reorder" handle
   AND a per-company "Delete" button (Feedback-A both features present). Opened the delete
   dialog (preview only, did NOT confirm): "Delete company — This will permanently remove Test
