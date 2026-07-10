@@ -71,3 +71,10 @@ Simpler or more complex for the user? SIMPLER: one consistent vocabulary intro�
 sensible order, no renamed/duplicated concepts. VETO TARGETS for Kaan: the four section names
 (esp. areas as "Open questions" vs "Priorities") and the deliberate non-render of
 Systems/Workflows (adding Workflows here would be a separate rewrite with a new data fetch).
+
+VERDICT (behavior commit landed after the pre-review commit e9ce311): SnapshotView regrouped
+to Overview → Teams & People → Perception gaps (>0 only) → Open questions, one contiguous
+swap (People up, Areas down) + four title renames, zero component/card_type/badge/render
+changes. `brand` import still used (AreaDrawer). No test pinned the old titles. My files
+tsc-clean (project tsc red only on lane-C WorkflowEditor), eslint clean on SnapshotView,
+frontend 87/87. Page width unchanged (max-w-6xl). Open for Kaan's veto on the four names.

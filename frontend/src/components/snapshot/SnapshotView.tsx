@@ -128,8 +128,9 @@ export function SnapshotView({
               </div>
             </motion.div>
 
-            {/* What {brand} Learned */}
-            <Section title={`What ${brand.product_name} Learned`} count={learned.length}>
+            {/* Overview — what the context call established (learned cards). Category
+                vocabulary shared with SnapshotIntro so intro and snapshot speak one language. */}
+            <Section title="Overview" count={learned.length}>
               <motion.div
                 variants={staggerParent}
                 initial="hidden"
@@ -165,8 +166,69 @@ export function SnapshotView({
               </motion.div>
             </Section>
 
-            {/* Areas to Investigate */}
-            <Section title="Areas to Investigate" count={areas.length}>
+            {/* Teams & People — who actually does the work, and who to interview next
+                (suggested_person cards). Regrouped up under Overview to match the intro order. */}
+            <Section title="Teams & People" count={people.length}>
+              <div className="card-hairline divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
+                {people.map((card) => {
+                  const p = card.content as SuggestedPersonContent;
+                  const existing = personPlans[(p.name ?? "").trim().toLowerCase()];
+                  return (
+                    <PersonRow
+                      key={card.id}
+                      person={p}
+                      action={
+                        existing ? (
+                          // A plan already exists — show its real state, never a stale
+                          // "Generate plan" (a second plan is still possible from Plans).
+                          <Link
+                            href={`/w/${workspace.slug}/plans/${existing.id}`}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
+                          >
+                            <PlanStateChip state={existing.state as PlanState} />
+                            <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
+                          </Link>
+                        ) : (
+                          <GeneratePlanButton
+                            workspaceId={workspace.id}
+                            slug={workspace.slug}
+                            person={p}
+                          />
+                        )
+                      }
+                    />
+                  );
+                })}
+              </div>
+            </Section>
+
+            {/* Perception gaps — first-class (A3), shown once contradictions exist. Same
+                conflict_point cards, under the glossary term for conflicts. */}
+            {conflicts.length > 0 && (
+              <Section title="Perception gaps" count={conflicts.length} accent>
+                <div className="space-y-3">
+                  {conflicts.map((card) => {
+                    const cf = card.content as ConflictContent;
+                    return (
+                      <article
+                        key={card.id}
+                        className="card-hairline rounded-card border border-accent/25 bg-accent-soft p-5"
+                      >
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                          <h3 className="font-display text-lg text-ink">{cf.title}</h3>
+                          <ConfidenceBadge confidence={card.confidence} context="Trust" />
+                        </div>
+                        <p className="text-sm leading-relaxed text-ink-soft">{cf.note}</p>
+                      </article>
+                    );
+                  })}
+                </div>
+              </Section>
+            )}
+
+            {/* Open questions — the areas worth digging into next (area_to_investigate cards;
+                plan §3 maps areas to open questions). Same clickable cards + AreaDrawer. */}
+            <Section title="Open questions" count={areas.length}>
               <motion.div
                 variants={staggerParent}
                 initial="hidden"
@@ -203,64 +265,6 @@ export function SnapshotView({
                   );
                 })}
               </motion.div>
-            </Section>
-
-            {/* Conflict Points — first-class (A3), shown once contradictions exist */}
-            {conflicts.length > 0 && (
-              <Section title="Conflict Points" count={conflicts.length} accent>
-                <div className="space-y-3">
-                  {conflicts.map((card) => {
-                    const cf = card.content as ConflictContent;
-                    return (
-                      <article
-                        key={card.id}
-                        className="card-hairline rounded-card border border-accent/25 bg-accent-soft p-5"
-                      >
-                        <div className="mb-3 flex items-center justify-between gap-3">
-                          <h3 className="font-display text-lg text-ink">{cf.title}</h3>
-                          <ConfidenceBadge confidence={card.confidence} context="Trust" />
-                        </div>
-                        <p className="text-sm leading-relaxed text-ink-soft">{cf.note}</p>
-                      </article>
-                    );
-                  })}
-                </div>
-              </Section>
-            )}
-
-            {/* Suggested People to Interview */}
-            <Section title="Suggested People to Interview" count={people.length}>
-              <div className="card-hairline divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
-                {people.map((card) => {
-                  const p = card.content as SuggestedPersonContent;
-                  const existing = personPlans[(p.name ?? "").trim().toLowerCase()];
-                  return (
-                    <PersonRow
-                      key={card.id}
-                      person={p}
-                      action={
-                        existing ? (
-                          // A plan already exists — show its real state, never a stale
-                          // "Generate plan" (a second plan is still possible from Plans).
-                          <Link
-                            href={`/w/${workspace.slug}/plans/${existing.id}`}
-                            className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
-                          >
-                            <PlanStateChip state={existing.state as PlanState} />
-                            <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-                          </Link>
-                        ) : (
-                          <GeneratePlanButton
-                            workspaceId={workspace.id}
-                            slug={workspace.slug}
-                            person={p}
-                          />
-                        )
-                      }
-                    />
-                  );
-                })}
-              </div>
             </Section>
 
             {/* Next Recommended Action */}
