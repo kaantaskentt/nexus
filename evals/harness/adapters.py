@@ -56,6 +56,8 @@ def _render_resource_packets() -> str:
             hours = f" ({r['hours']})" if r.get("hours") else ""
             lines.append(f"- {r['name']}: {r['contact']}{hours}. For {r['for']}.")
         lines.append("")
+    # Mirror backend.app.config.render_resource_packets: numbers only. `do_not_give` is NOT
+    # rendered (reciting it to the respondent was the failure); the guard is in the persona.
     return "\n".join(lines).strip()
 
 

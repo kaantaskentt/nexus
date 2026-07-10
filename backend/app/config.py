@@ -104,4 +104,8 @@ def render_resource_packets() -> str:
             hours = f" ({r['hours']})" if r.get("hours") else ""
             lines.append(f"- {r['name']}: {r['contact']}{hours}. For {r['for']}.")
         lines.append("")
+    # `do_not_give` is deliberately NOT rendered here. When it was, the model — told to
+    # serve the packet verbatim — sometimes recited the exclusion to the respondent
+    # ("Alo 182, no, don't give this"). This block renders ONLY numbers to serve; the
+    # excluded-number guard lives in the persona as internal guidance instead.
     return "\n".join(lines).strip()

@@ -41,7 +41,8 @@
           "hours": "7/24, free and confidential"
         }
       ],
-      "_reviewer_note": "Fixes the prior erroneous 'Alo 143' row, which pointed at the Swiss line 143.ch. A dedicated Turkish suicide / mental-health crisis line is reviewer-maintained and PENDING verification: 182 is officially the MHRS health-appointment system (@MHRS_182, mhrs.gov.tr), NOT a crisis line, so it is deliberately excluded to avoid routing a person in danger to an appointment system. Reviewer/counsel confirms the correct line before adding it here."
+      "do_not_give": "182 (it is the MHRS medical-appointment line, not a crisis line)",
+      "_reviewer_note": "Fixes the prior erroneous 'Alo 143' row, which pointed at the Swiss line 143.ch. A dedicated Turkish suicide / mental-health crisis line is reviewer-maintained and PENDING verification: 182 is officially the MHRS health-appointment system (@MHRS_182, mhrs.gov.tr), NOT a crisis line, so it is deliberately excluded to avoid routing a person in danger to an appointment system. The `do_not_give` field is rendered into the agent-served packet (an agent-visible negative) because the model was observed substituting 182 from memory (lane-quality RED bait, jul10); it is the config-level, A14-correct home for the jurisdiction's excluded number. Reviewer/counsel confirms the correct crisis line before adding it as a resource."
     }
   }
 }
