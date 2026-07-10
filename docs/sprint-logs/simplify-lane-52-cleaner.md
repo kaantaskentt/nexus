@@ -19,6 +19,12 @@ ruff F401 flagged the only unused import in the whole backend (`json`, chat.py);
 decodes nothing itself (jsonb comes back decoded from the pool codec). Removed. ruff clean,
 chat/context tests 15 passed.
 
+## CLEANUP 3 — remove stray committed temp file docs/SPRINT-STATE.md.tmp
+A zero-byte `.tmp` of SPRINT-STATE accidentally committed on July 8 (1e3a34e), referenced
+nowhere — the "stray scratch got committed" check the lead flagged. Deleted. (Swept the whole
+tracked tree: this was the only stray temp; all tracked images are legit audit/reference
+evidence, and the `@/components` barrel has no dead re-exports — 10/10 used.)
+
 ## PROPOSALS (real duplication, deferred — multi-file + subtle behavior, not silent rewrites)
 - **`_loads` shim in 5 files** (routers/plans, reports, workspaces; pipeline/plan, workflow_edit):
   three different signatures (1-arg vs 2-arg-with-default) and largely vestigial now that the
