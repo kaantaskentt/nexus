@@ -9,8 +9,7 @@ import {
   Users,
   Network,
   BookOpen,
-  BarChart3,
-    FlaskConical,
+  FlaskConical,
   Settings2,
   ChevronsUpDown,
   Check,
@@ -29,16 +28,16 @@ type NavKey =
   | "interviews"
   | "workflows"
   | "context"
-  | "insights"
   | "skills"
   | "simulations"
   | "settings";
 
-// The adopted sidebar IA (A21 — Kaan, July 7, from the taste-approved A19 reference set):
-// Home / Interviews / Workflows / Company Context / Insights / Agent Skills / Simulations /
-// Settings, plus a workspace switcher. Every item routes to a live screen (every-button-
-// works); surfaces without data yet render designed, honest empty states, never bare
-// headings and never fake content.
+// The adopted sidebar IA (A21 — Kaan, July 7, from the taste-approved A19 reference set),
+// after the ADD-3.3 Insights fold: Home / Interviews / Workflows / Company Context / Agent
+// Skills / Simulations / Settings, plus a workspace switcher. Insights folded into Home
+// (its findings/conflicts/opportunities live on the Company Snapshot now). Every item
+// routes to a live screen (every-button-works); surfaces without data yet render designed,
+// honest empty states, never bare headings and never fake content.
 const NAV: {
   key: NavKey;
   label: string;
@@ -49,7 +48,6 @@ const NAV: {
   { key: "interviews", label: "Interviews", icon: Users, href: (s) => `/w/${s}/interviews` },
   { key: "workflows", label: "Workflows", icon: Network, href: (s) => `/w/${s}/workflows` },
   { key: "context", label: "Company Context", icon: BookOpen, href: (s) => `/w/${s}/context` },
-  { key: "insights", label: "Insights", icon: BarChart3, href: (s) => `/w/${s}/insights` },
   { key: "simulations", label: "Simulations", icon: FlaskConical, href: (s) => `/w/${s}/simulations` },
   { key: "settings", label: "Settings", icon: Settings2, href: (s) => `/w/${s}/settings` },
 ];
@@ -67,7 +65,7 @@ const SEG_TO_NAV: Record<string, NavKey> = {
   workflow: "workflows",
   context: "context",
   knowledge: "context",
-  insights: "insights",
+  insights: "home", // Insights folded into Home (ADD-3.3) — a stale /insights link lights Home
   skills: "workflows", // Agent Skills folded into Workflows (Kaan-approved proposal 2)
   simulations: "simulations",
   settings: "settings",
