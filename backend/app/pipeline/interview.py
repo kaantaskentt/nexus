@@ -17,6 +17,7 @@ from ..db import get_pool
 from ..llm import cache_block, client, get_agent_config, load_prompt, run_chat
 from ..queue import handles
 from . import attention, coverage, handoff
+from .live_capture import enqueue_extraction
 
 PAUSE_OFFER_MINUTES = 20
 _START_NUDGE = "(The respondent has joined and is ready to begin.)"
@@ -94,10 +95,12 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
         raise RuntimeError(f"session {session_id} is {session['status']}")
 
     started_at = session["started_at"] or datetime.now(timezone.utc)
+    respondent_turn_index = None
     if respondent_text is not None:
+        respondent_turn_index = await _next_index(session_id)
         await pool.execute(
             "insert into utterances (session_id, turn_index, speaker, text) values ($1,$2,'respondent',$3)",
-            session_id, await _next_index(session_id), respondent_text,
+            session_id, respondent_turn_index, respondent_text,
         )
     utterances = [
         dict(r) for r in await pool.fetch(
@@ -180,6 +183,7 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
         "package": package,
         "coverage": cov,
         "fade_offered": bool(fade),
+        "respondent_turn_index": respondent_turn_index,
     }
 
 
@@ -222,6 +226,12 @@ async def _finalize_turn(ctx: dict, reply: str) -> dict:
            where id = $1""",
         session_id, ctx["started_at"], json.dumps(new_state),
     )
+    # SIMPLIFY E: fire the live-capture extractor off the just-committed RESPONDENT turn
+    # (the delta). Fire-and-forget display data — gated to real interview/context kinds so
+    # eval/voice_test/roleplay never spawn it. Never in the request's critical path.
+    resp_idx = ctx.get("respondent_turn_index")
+    if resp_idx is not None and session["session_kind"] in ("interview", "context"):
+        await enqueue_extraction(session_id, resp_idx)
     return {
         "reply": reply,
         "turn_index": agent_index,

@@ -11,7 +11,7 @@ not the model's judgment.
 from httpx import ASGITransport, AsyncClient
 
 from app.main import app
-from app.pipeline import live_capture
+from app.pipeline import interview, live_capture
 from tests.conftest import make_workspace
 
 
@@ -127,6 +127,29 @@ async def test_firewall_skips_non_capture_kind(db, monkeypatch):
     ])
     await live_capture.extract_live_captures({"session_id": str(sid), "turn_index": 1})
     assert await db.fetchval("select count(*) from live_captures where session_id = $1", sid) == 0
+
+
+async def test_finalize_enqueues_only_for_capture_kinds(db, monkeypatch):
+    """The turn engine fires extraction off a real interview turn, but not off an eval turn
+    (eval harness drives the engine hard; it must not spawn extraction jobs)."""
+    async def _chat(*a, **k):
+        return "Thanks. And what happens next?"
+    monkeypatch.setattr("app.pipeline.interview.run_chat", _chat)
+
+    ws = await make_workspace(db)
+    interview_sid = await db.fetchval(
+        "insert into interview_sessions (workspace_id, session_kind) values ($1,'interview') returning id", ws)
+    eval_sid = await db.fetchval(
+        "insert into interview_sessions (workspace_id, session_kind) values ($1,'eval') returning id", ws)
+
+    await interview.run_interview_turn(str(interview_sid), "We use Stripe for payments.")
+    await interview.run_interview_turn(str(eval_sid), "We use Stripe for payments.")
+
+    jobs = await db.fetch(
+        "select payload->>'session_id' as sid from jobs where kind = 'extract_live_captures'")
+    sids = {j["sid"] for j in jobs}
+    assert str(interview_sid) in sids
+    assert str(eval_sid) not in sids
 
 
 async def test_endpoint_shapes_respondent_vs_admin(db, monkeypatch):
