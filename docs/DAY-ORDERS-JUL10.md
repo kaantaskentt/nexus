@@ -264,6 +264,18 @@ file's log section before NEXT.
 - REASSIGNMENT: the lane-sec teammate now runs LANE-SPLIT (R1), pulled forward from
   wave 3 (no dependency on mest/s7/export; interview/** components unowned). Backend
   live-captures endpoint ownership to be announced in day-jul10-lane-split.md.
+- LANE-MEST DIAGNOSIS (log pushed; corrects team-lead recon): voice.py L209
+  status-update:ended path is a REAL latent bug but NOT the pilot cause — pilot session
+  bcd1385e (voice) DID compile (job 296). Root cause of all three costumes: renderer
+  parse hiccup + Anthropic credit outage exhausted the queue's 3-attempt/30s budget;
+  jobs died 'failed' with no recovery → records-without-snapshot until a human requeues.
+  Workspace has since self-healed (watchtower recovery + top-up; snapshot_cards=20).
+  Fix plan approved: (A) idempotent compile on any live-call end (CAS flag, covers the
+  latent route), (B) fast honest 422 precheck on plan drafting, (C) idempotent reconcile
+  backstop at worker startup + runnable job kind.
+- SEAM-A CHECKLIST ADDITION (team-lead): duplicate render_batches likely on test-mest
+  (recovery ran render 3x: jobs 319/344/352) — verify the snapshot UI resolves to the
+  latest batch / no duplicate cards, read-only check during seam-A driven verification.
 
 ## Infra note (from lane-sec, binds all lanes)
 Concurrent full-suite runs against the shared test DB (localhost:55432) deadlock on the
