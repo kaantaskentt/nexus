@@ -297,6 +297,23 @@ file's log section before NEXT.
   not yet verified across interviews is labelled as such". Taste nod wanted before
   seam B; the correction itself is mandate-required (honest display), only wording is
   Kaan's.
+- SEAM A FIRING (team-lead): pinned worktree at b64375e (carries sec P0 + mest A/B/C +
+  export 6 + split R1 + s7 a-d; s7 (e) consent line NOT landed = still gated; quality
+  persona commits not yet landed — they ride seam B/C). Migration 0026_harm_incidents
+  APPLIED to live Supabase + verified (0025 confirmed already applied — park doc was
+  stale, SPRINT-STATE right). AUTHORITATIVE serialized suite in isolated worktree+DB:
+  286 passed / 1 skipped / 0 errors — the 14 "Event loop is closed" teardown errors are
+  confirmed infra flake (absent when serialized; matches memory note). Railway api+worker
+  up-loaded (detached), Vercel building. Driven verification next: mest 4-step test-mest
+  script, sec 3 bait replays, split network-tab counts-only, export /r leak classes,
+  dup-batch UI check.
+- SEAM A progress: Railway LIVE + /health/deep ok (0 failed). Fix C proved on first boot:
+  reconcile_snapshots ran once → exactly ONE render (aurora-atelier, as predicted) →
+  1 card composed, no storm (jobs table verified). Dup-batch check PASS: test-mest holds
+  4 batches (20/20/17/18) but every read path selects max(render_batch) — history by
+  design, duplicates cannot render. lane-mest dispatched on its 4-step driven verify
+  (backend steps first; reconcile drill on hidden tenant only). Vercel deploy #1 hit a
+  network ETIMEDOUT, retry in flight.
 
 ## Infra note (from lane-sec, binds all lanes)
 Concurrent full-suite runs against the shared test DB (localhost:55432) deadlock on the
