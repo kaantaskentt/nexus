@@ -140,3 +140,41 @@ live-only, height-shared with the notes; useLiveCaptures(enabled=active) via
 getLiveCapturesForSession; InsightRail gains a listMaxHClass prop to shrink when the panel
 shares the column. Frontend 95/95 (+2 new), my files tsc-clean, eslint clean. No respondent-side
 or backend change. Open for review.
+
+## PRE-REVIEW (VETO WINDOW) — ADDENDUM 3.2: Company Snapshot v2, reader-first
+
+Kaan (live testing): the snapshot "still reads as a records dump" — three near-equal sections,
+trust-chip noise on every card, an evidence rail competing with the main column, next-action
+buried at the bottom. This pre-review lands FIRST as its own commit (Kaan's GitHub veto window);
+the build follows. Presentation only: append-only render, real counts, trust ladder, and
+sentiment quarantine are UNTOUCHED — no data, tag, or ordering logic changes.
+
+New reader-first order (single column, big hierarchy, plain-language headers), top → bottom:
+1. HEADER — company identity (name · founder · source); Export report demoted to a small
+   secondary button. Plain subhead: "What {Nexus} understands about {company} so far."
+2. THE STORY SO FAR (a) — a one-glance real-count strip (records · people · workflows · open
+   questions · perception gaps; only counts that are real/>0). No invented narrative sentence.
+3. YOUR NEXT MOVE (c) — the single recommended action, moved from the bottom to here and made
+   the one prominent accent card (investigate the top open questions; start with the first
+   suggested person) → primary "View interview plans".
+4. NEEDS YOUR ATTENTION (b) — Open questions (area_to_investigate, pain-ranked, each a row that
+   opens the existing AreaDrawer for full detail + evidence + trust) + an "awaiting your
+   approval" line when any plan sits at NEXUS_CHECK (from personPlans), each with an obvious
+   action. This is the only place that competes for the eye after the next move.
+5. PERCEPTION GAPS — kept (leadership belief vs floor, report-only) but compact; low count, high
+   signal, so it keeps a single confidence badge.
+6. PEOPLE TO INTERVIEW (d, demoted) — the suggested_person roster with its real per-person
+   action (Generate plan / plan-state chip → review), below the urgent items.
+7. WHAT NEXUS LEARNED (d, demoted) — the learned statements as a clean list with NO per-card
+   trust chip (the noise Kaan named). Trust + evidence stay reachable via ONE "Sources &
+   evidence" drill-down that opens a drawer of the CEO-call quotes (the old right-rail content,
+   now on demand, reusing EvidenceQuoteCard) — evidence demoted behind drill-down, not deleted.
+8. Trust Center link — kept, quiet.
+REMOVED as competing chrome: the right-side Evidence rail column (content relocated to the
+drill-down) and the per-learned-card ConfidenceBadge (trust reachable on drill-down; the tag
+still governs the data). AreaDrawer unchanged (still shows per-question evidence + trust).
+Honesty preserved: real counts only, trust ladder still maps every badge shown, quarantine
+untouched, append-only render order kept within each section. Report-style single-column width.
+VETO TARGETS for Kaan: (1) the section order + which items count as "attention"; (2) demoting
+the evidence rail to a drill-down; (3) dropping the per-card trust chip on the learned cards
+(kept on perception gaps). Suites + tsc + lint before the behavior commit; rides the next seam.
