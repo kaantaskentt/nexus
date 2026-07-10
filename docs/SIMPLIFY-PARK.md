@@ -10,6 +10,18 @@ resumes lanes after. This file is the exact resume state.
 transcript won't render live (the call itself works; the record is intact server-side).
 Text mode is unaffected. Resume step 1 below fixes it.
 
+**UPDATE (post-park, two lanes survived): ROOT CAUSE DIAGNOSED (lane-shell, high
+confidence).** The VAPI assistants declare `serverMessages` (webhook → DB, works) but NO
+`clientMessages` allow-list, so the browser SDK receives zero transcript events; the
+July 9 silence-timeout re-provision (16a2614) is when it broke. Fix owned by seam-1
+end-to-end: add `"clientMessages": ["transcript","status-update","speech-update"]` in
+vapi_assistant.py + provision_vapi.py, re-provision BOTH shared assistants with the
+shared-secret guard (GET-verify clientMessages + auth + silence=60 + ryan/stopSpeaking
+untouched), verify via headless call (assistant-speaks-first → its opener must render
+as on-screen turns), then round-2 bundle deploy (+ bea9fac; Railway included since
+vapi_assistant.py is backend). lane-shell's poll-backfill defense = follow-up proposal
+for lane-e, NOT in this seam (dedupe unverifiable without a driven call).
+
 ## Where prod is RIGHT NOW (all verified green at seams 1-4)
 - Prod = b718074 (Vercel) / c92ba85 (Railway). Migrations 0022/0023/0024 applied.
 - LIVE + verified: reorder, delete preview (destructive gated OFF pending Kaan §6-1),
