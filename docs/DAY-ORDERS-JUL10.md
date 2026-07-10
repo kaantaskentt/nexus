@@ -276,6 +276,12 @@ file's log section before NEXT.
 - SEAM-A CHECKLIST ADDITION (team-lead): duplicate render_batches likely on test-mest
   (recovery ran render 3x: jobs 319/344/352) — verify the snapshot UI resolves to the
   latest batch / no duplicate cards, read-only check during seam-A driven verification.
+- LANE-S7 persona commit LANDED (434e349, after resource-packet config 5e1c361): in-room
+  protocol sections live in both personas via {{RESOURCE_PACKET}} load-time token.
+  LANE-QUALITY SPAWNED (wave 3 complete): owns both persona files EXCEPT s7's disclosure
+  sections, all eval suites (lands sec's + s7's bait specs), glossary standing ruling +
+  MERGE_PLAN entry, F7 authorization-state check. Interview-room composer file (text-box
+  grow) requires pre-announcement — lane-split holds components/interview/** today.
 
 ## Infra note (from lane-sec, binds all lanes)
 Concurrent full-suite runs against the shared test DB (localhost:55432) deadlock on the
