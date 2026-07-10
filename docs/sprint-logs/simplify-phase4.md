@@ -204,6 +204,17 @@ Findings + fixes will be logged below this checklist as I drive each, once mini-
   Proposing to lane-k (owns InterviewsView); P2, not blocking.
 - **[✓ IA consolidation confirmed]** /insights → /home and /knowledge → /context redirect
   (ADD-3.3), Insights dropped from nav — deliberate, not dead links (lane-design confirmed).
+- **[⚠ META — git/prod gap, affects #19 completion]** My entire re-drive runs against prod
+  **0fd1f3d**. Confirmed live: lane-shell's AreaDrawer changes (51d3692) are NOT deployed —
+  the Home open-question drawer still shows the OLD state ("Add to Interview Plan" DISABLED,
+  "View full transcript" still PRESENT), i.e. their live-button + placeholder-removal aren't
+  on prod yet. So git-green ≠ prod-green (recurring theme; watchtower flagged the same for
+  migrations earlier). CONSEQUENCE: everything pushed after 0fd1f3d — lane-e's incoming
+  opener-ordering fix, lane-shell 51d3692, P2 relabels — needs a POST-NEXT-SEAM RE-VERIFY
+  BATCH before #19 counts complete. Do NOT mark those verified off the commit alone. Queued:
+  (a) opener-ordering fix → re-drive text-from-start reply, both kinds; (b) AreaDrawer → live
+  Add-to-plan lands on /interviews/new focus-pre-seeded + transcript button gone; (c)
+  interviews-hub stat relabel. Batch at the next seam.
 - **[✓ A · Company mgmt — verified driven]** Picker: every row has a "Drag to reorder" handle
   AND a per-company "Delete" button (Feedback-A both features present). Opened the delete
   dialog (preview only, did NOT confirm): "Delete company — This will permanently remove Test
