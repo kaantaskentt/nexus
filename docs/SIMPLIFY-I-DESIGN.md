@@ -74,6 +74,33 @@ scenario objectives} and opens the **new LiveRoom** (lane-e) adapted to the scen
 - After the run: the observation debrief (existing roleplay_debriefs → the J-lane overview
   card pattern) says how the interviewer did against this workflow's traps.
 
+## Build split (team-lead) + scenario payload contract
+- **My half (page):** scenario derivation + the page UI (value statement, scenario cards,
+  "How Nexus is tested" link with the Kaan-veto pre-review, zero-workflow empty state).
+  Derivation is a NEW backend endpoint `GET /api/simulations/{workspace_id}/scenarios`
+  (testable, server-side — mirrors lane C's list_workflows) that returns the derived list.
+- **Lane-e half (run wiring):** the mint + the adapted LiveRoom (SIMULATION marker,
+  objectives steering, suppressed Captured-live) + debrief-against-workflow.
+- **THE CONTRACT — a Scenario object my endpoint returns and the page hands to lane-e's Run:**
+  ```
+  Scenario {
+    workflow_id:    string   // real workflow pressure-tested (from workflows table)
+    scenario_label: string   // e.g. "Daily Gold Repricing" — room header + card title
+    persona_key:    string   // matched archetype, MUST be in CAST_KEYS (existing play engine)
+    tests_summary:  string   // derived "what this tests and why" line (card + debrief context)
+    objectives:     string[] // derived probes the interviewer-under-test must hit
+                             // (must-hit steps, exceptions, single-owner risk, low-confidence)
+  }
+  ```
+  Today's mint is `POST /{workspace_id}/roleplay {persona_key}` → session_kind='roleplay',
+  `resumable_state={roleplay_persona}`. Proposed extension (lane-e owns the exact shape):
+  accept the Scenario (extend RolePlayIn with optional scenario fields, back-compatible so a
+  bare persona_key still serves the global "How Nexus is tested" cast), carry
+  `resumable_state={roleplay_persona: persona_key, scenario: {workflow_id, label,
+  tests_summary, objectives}}`, steer the interviewer with `objectives`, and have the debrief
+  judge against BOTH the persona sheet and whether those objectives were surfaced.
+  **Agree this shape with lane-e before either of us commits (team-lead's instruction).**
+
 ## Zero-workflow empty state (no leakage, ever)
 A thin tenant with no qualifying workflows shows an honest empty state, NOT the global cast:
 "Simulations pressure-test the interviewer against your workflows. None are mapped yet — run
