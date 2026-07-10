@@ -113,4 +113,30 @@ to assert the new per-topic states — guarantee preserved, not weakened). My fi
 eslint clean on ObserverView + the page. NOTE (not mine): src/test/generate-plan-button.test
 is RED at HEAD — commit 7569c84 (Phase 3 /plans→/interviews repoint) changed the button href
 to /w/[slug]/interviews but left the test asserting /w/acme/plans. Different lane/file; flagged
-to lead, excluded from this scoped commit.
+to lead, excluded from this scoped commit. (Later fixed in 10bc8ad after the lead handed it to me.)
+
+## PRE-REVIEW — K4 follow-up: admin Captured-live panel in the Observer (lane-E hand-off)
+
+Today: an admin watching a LIVE interview sees the transcript + their own Live notes, but not
+what Nexus is structurally capturing turn-by-turn (that panel only existed on the respondent
+side). lane-E shipped the pieces (GET /{session_id}/live-captures admin endpoint,
+CapturedLivePanel variant="admin" with ladder-mapped badges, and the useLiveCaptures polling
+hook). After (one scoped commit, ObserverView.tsx only): while the interview is LIVE (status
+active), the admin Captured-live panel renders at the TOP of the Live notes column — Nexus's
+real-time structural captures (teams/systems/workflows/decision-rules/goals/open-questions)
+above the admin's own notes, sharing the column height (panel h-[24vh], notes list shrinks to
+max-h-[30vh] so the two never overrun the transcript). Polled only while live (enabled=active,
+mirroring lane-E's LiveRoom); once the call ends the panel drops away and the durable record is
+the compiled claims already listed below. A18/A19 holds: admin variant caps a live single
+source at Reported (badge from the endpoint, not assigned here); respondent surfaces are
+untouched. No backend change; no change to the coverage strip, StageRail, transcript, or the
+notes/claims logic. Suites: observer-badges +2 (panel shows while live with the Reported badge;
+hidden once completed) and the hook is mocked so renders stay deterministic + offline. Simpler
+for the user? RICHER, not more complex: the admin sees exactly what is being saved as it is
+saved, in the column where their own notes already live — one glance, no new surface.
+
+VERDICT (behavior commit): CapturedLivePanel variant="admin" wired into the Live notes column,
+live-only, height-shared with the notes; useLiveCaptures(enabled=active) via
+getLiveCapturesForSession; InsightRail gains a listMaxHClass prop to shrink when the panel
+shares the column. Frontend 95/95 (+2 new), my files tsc-clean, eslint clean. No respondent-side
+or backend change. Open for review.

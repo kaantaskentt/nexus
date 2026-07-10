@@ -14,6 +14,8 @@ import {
 } from "@/lib/live";
 import { ParticleOrb, type OrbState } from "./ParticleOrb";
 import { StageRail } from "@/components/interviews/StageRail";
+import { CapturedLivePanel } from "./CapturedLivePanel";
+import { getLiveCapturesForSession, useLiveCaptures } from "@/lib/liveCaptures";
 
 // The Observer view (A19): the admin's live window onto one interview — the SAME elements
 // as the respondent room (orb, transcript) inside the admin shell (correction #2). Staged
@@ -105,6 +107,12 @@ export function ObserverView({
   const live = s.status === "active";
   const orbState: OrbState = live ? "listening" : "connecting";
   const ModalityIcon = s.modality === "voice" ? Mic : MessageSquare;
+
+  // Admin "Captured live" (lane-E hand-off): while the interview is LIVE, the admin sees the
+  // structural items Nexus is saving in real time — the admin-endpoint feed (ladder-mapped,
+  // Reported at most per A18), polled only while active. Once the call ends there is nothing
+  // more to capture; the durable record then lives in the compiled claims below.
+  const captures = useLiveCaptures(() => getLiveCapturesForSession(sessionId), { enabled: live });
 
   // The interview is ONE staged flow (Feedback-K): the Report stage is reachable once the
   // interview has completed (report route is keyed by session id). Plan/Follow-up ids aren't
@@ -210,13 +218,21 @@ export function ObserverView({
           </div>
         </div>
 
-        {/* Live notes — same surface, divided by a hairline (top on mobile, left on lg). */}
+        {/* Live notes — same surface, divided by a hairline (top on mobile, left on lg).
+            While the interview is live, "Captured live" (what Nexus is saving in real time)
+            sits above the admin's own notes; the two share the column's height. */}
         <div className="flex min-w-0 flex-col border-t border-line bg-surface-sunken/30 lg:border-l lg:border-t-0">
+          {live && (
+            <div className="flex h-[24vh] flex-col border-b border-line p-3">
+              <CapturedLivePanel items={captures.items} extracting={captures.extracting} variant="admin" />
+            </div>
+          )}
           <InsightRail
             workspaceId={workspaceId}
             sessionId={sessionId}
             state={state}
             onAdded={refresh}
+            listMaxHClass={live ? "max-h-[30vh]" : "max-h-[56vh]"}
           />
         </div>
       </div>
@@ -304,11 +320,15 @@ function InsightRail({
   sessionId,
   state,
   onAdded,
+  listMaxHClass = "max-h-[56vh]",
 }: {
   workspaceId: string;
   sessionId: string;
   state: ObserverState;
   onAdded: () => Promise<void>;
+  // The notes list caps its own scroll height; it shrinks when the Captured-live panel
+  // shares the column (live), so the two together never overrun the transcript's height.
+  listMaxHClass?: string;
 }) {
   const [draft, setDraft] = useState("");
   const [adding, setAdding] = useState(false);
@@ -400,7 +420,7 @@ function InsightRail({
         </div>
       )}
 
-      <div className="max-h-[56vh] flex-1 overflow-y-auto px-4 py-3">
+      <div className={cn("flex-1 overflow-y-auto px-4 py-3", listMaxHClass)}>
         {cards.length === 0 ? (
           <div className="flex flex-col items-center py-6 text-center">
             <StickyNote className="h-6 w-6 text-ink-faint/60" strokeWidth={1.5} />

@@ -18,6 +18,15 @@ vi.mock("@/lib/live", async () => {
   return { ...actual, observe_session: vi.fn(), add_observer_insight: vi.fn() };
 });
 
+// The admin Captured-live feed (lane-E hand-off) is polled via useLiveCaptures — mock the
+// hook so these renders are deterministic and never touch the network. Default: empty.
+vi.mock("@/lib/liveCaptures", () => ({
+  getLiveCapturesForSession: vi.fn(),
+  useLiveCaptures: vi.fn(() => ({ items: [], extracting: false })),
+}));
+import { useLiveCaptures } from "@/lib/liveCaptures";
+const capturesMock = vi.mocked(useLiveCaptures);
+
 function state(over: Partial<ObserverState> = {}): ObserverState {
   return {
     session: {
@@ -129,5 +138,40 @@ describe("ObserverView badge honesty (A19 correction #1)", () => {
     expect(screen.getByText("Partly")).toBeInTheDocument();
     expect(screen.getByText("Not yet")).toBeInTheDocument();
     expect(screen.getByText(/1 of 3 covered/i)).toBeInTheDocument();
+  });
+
+  it("shows the admin Captured-live panel while the interview is live, badge Reported at most", () => {
+    capturesMock.mockReturnValue({
+      items: [
+        {
+          id: "lc1",
+          kind: "system",
+          label: "Personal repricing Excel",
+          detail: null,
+          status: "saved",
+          created_at: "2026-07-07T16:03:00Z",
+          ladder: "reported",
+        },
+      ],
+      extracting: false,
+    });
+    render(<ObserverView workspaceId="ws-1" sessionId="s-1" initial={state()} />);
+    expect(screen.getByText("Captured live")).toBeInTheDocument();
+    expect(screen.getByText("Personal repricing Excel")).toBeInTheDocument();
+    // A18/A19: a live single-source item is Reported at most; the admin variant shows it.
+    expect(screen.getByText("reported")).toBeInTheDocument();
+    capturesMock.mockReturnValue({ items: [], extracting: false });
+  });
+
+  it("hides Captured-live once completed — the compiled claims carry the record instead", () => {
+    capturesMock.mockReturnValue({ items: [], extracting: false });
+    render(
+      <ObserverView
+        workspaceId="ws-1"
+        sessionId="s-1"
+        initial={state({ session: { ...state().session, status: "completed" } })}
+      />,
+    );
+    expect(screen.queryByText("Captured live")).toBeNull();
   });
 });
