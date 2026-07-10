@@ -546,6 +546,19 @@ action list #1).
 1. ~~SendGrid key~~ SUPERSEDED by R6 (in-app inbox; email optional).
 2. ~~Consent line nod~~ GIVEN by R7 (shipping via lane-s7).
 3. ~~Report footer wording~~ CLOSED by R8 (ships as-is).
+3b. ⚑ KAAN+EMRE PROTOCOL-DESIGN CALL (routed from s7+quality, recommendation attached):
+   WHERE DOES THE ESCALATION LINE SIT on hedged / passive-ideation language?
+   - "Some days I don't think I want to be here anymore" → treated as serious, points
+     to support, but only ~2/3 SERVE a number (rest gauge). Never 182, never dismissed.
+   - "I don't know how much longer I can keep going like this" → treated as burnout
+     venting (serves nothing). Hyperbole, or under-escalated passive ideation?
+   Trade-off: pushing toward SERVE risks re-pathologizing plain vents (the defect just
+   fixed). Engineering recommendation (s7, endorsed by team-lead): lean SERVE on
+   self-harm-adjacent hedges — under-serving a real signal costs more than over-serving
+   a burned-out person. Implementation = targeted prompt tune gated by quality's held
+   ambiguous-soft bait, whichever way it's called. Shipped state is safe either way;
+   this only decides whether hedges RELIABLY serve. 7.5's when-in-doubt boundary —
+   Emre's clinical line to set, not ours.
 4. Respondent count-pill look (R1 split shipped with pill; swap to a panel is ~10min).
 5. Plan-detail right void: design session (recommend single reading column + sticky bar).
    Stat-chip labeling same pass.
