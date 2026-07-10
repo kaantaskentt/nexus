@@ -1,4 +1,66 @@
-# SIMPLIFY SPRINT — July 9 (docs/SIMPLIFY-PLAN.md; A28 binds every change)
+# SIMPLIFY SPRINT — July 9/10 — CLOSE-OUT (verdicts through round-3; walk/cleaner appended below when they land)
+
+**HEADLINE: Kaan's Feedback A-K + refine-round addenda 3.1-3.3 + 4 are ALL built,
+deployed, and seam-verified on prod (0fd1f3d).** Four seams + three refine rounds, each
+browser-verified at 1440+390 before the next. Full per-seam evidence:
+docs/sprint-logs/simplify-seam{1..4}.md + simplify-round3.md + per-lane logs.
+
+**AUDIT VERDICTS (A23, one line each):**
+- A reorder+delete: BUILT+VERIFIED LIVE (drag persists; delete preview shows exact real
+  counts; destructive cascade BUILT but env-gated OFF pending Kaan §6-1). 223e8b0/1009b30/fb44c54.
+- B+G intro+done: BUILT+VERIFIED LIVE (SnapshotIntro one-CTA, real counts only;
+  context done page deep-links first/later). 032da86/1f76fce/b2e8c7a.
+- C workflows: BUILT+VERIFIED LIVE (chips confident-only — live proof: the classifier
+  re-minted a shaky bucket on re-plan and the plan/apply split caught it; detail grid
+  replaced the x3350 strip; backfill: bee-goddess 1 Operations + 2 null, time-pr all-null
+  descriptions kept). bfe7c11/a30fede/7ac8d8b + 0e9d1e3.
+- D CEO copy: BUILT+VERIFIED LIVE incl. spoken-opener coherence + gate-accurate promise
+  line; employee consent byte-unchanged, test-pinned. 0123f83/0584b7d/51d36ae.
+- E+F room: BUILT+VERIFIED LIVE. Captured-live = real per-turn extraction (live_captures,
+  never enters the KB), agent states from real signals, one room voice+text, in-room
+  reconnect. F root causes fixed: silence 30→60s; P1 transcript freeze (Kaan's live find)
+  = missing VAPI clientMessages allow-list (c203bc5, re-provisioned+GET-verified) + a
+  latent client-stream fragility now covered by the grows-only server backstop (ce5ec3f
+  + masking-guard warn 8c74190) — PROVEN by driven calls at two seams. Text latency:
+  prompt caching 13k→3 warm billed tokens (90c64d0) + SSE streaming (8c3203b/a1d169c).
+- J character card: BUILT+VERIFIED (overview card, raw MD demoted; goals row honestly
+  omitted — flagged to Kaan). c8b291a.
+- K hub: BUILT+VERIFIED LIVE (K1 plan relayout · K2 staged hub, /plans merged · K3 one
+  assign screen + found-and-fixed dropped-modality bug · K4 Observe joined+legible ·
+  K5/K6 findings-first report + follow-up as a real stage; K5/K6 bundling deviation
+  logged honestly). 007c263/70e9816/5dd6845/f30c891/feee0b2.
+- I simulations: BUILT+VERIFIED LIVE (scenario-first from real workflows, archetype
+  binding — no fabricated personas, ontology ruling; SIMULATION marker persistent;
+  sim consent makes no real-person promises; jewelry leakage dead; zero-workflow empty
+  state honest). a43a58f/f2311f0/5922451/3a972a5/a75b853/6199a06/bea9fac.
+- Foundation: responsive AppShell (first real mobile layout, 29,407px page → 7,695px,
+  scrollWidth==390 everywhere measured) 4f980c3 · StageRail overflow fix 4e42cc8.
+- ADD-3.2 Snapshot v2: reader-first (story → attention → ONE next action → drill-down),
+  VERIFIED LIVE both widths. 0d4b52b.
+- ADD-3.3 IA fold (Kaan confirmed): Insights retired, findings/opportunities/conflicts
+  live on Home, /insights redirects, ONE name for next-round questions. 2fd4881/3b7be95/b89114b.
+- ADD-4 intake agent: LIVE (flag ON + 0025 seeded at round-3), driven-exchange verified:
+  sharp question → bounded plan edits + honest storage chips; stored facts compile
+  through the STANDARD path (quarantine = data layer); 5/5 evals. 1b0d3c8/cb0c8de/38f8504/624600f/a3f6caf.
+- Robustness (stress lane): delete cascades cancel queued jobs; session-gone handlers
+  no-op (sweep completing); picker N+1 → one aggregate (9b64757, rides final seam).
+  Stress verdict: everything else scales green (17.7ms insights @10k claims).
+
+**OPEN AT CLOSE:** Kaan decision list (delete-company enable §6-1 is the only gated
+capability; naming table; hero drag; J goals/premium; CEO-copy polish) · Emre Section 7
+imminent-harm doc NOT YET DELIVERED (ADD-6 standing, highest care when it lands) ·
+Kaan real-mic call = P1 feel check · Figma/Canva MCP auth for the design lane ·
+opportunity→workflow deep-link path untested on a data-bearing tenant (component-tested).
+
+**PROCESS LESSONS (fed to memory + tasks/lessons.md):** teammate mailboxes drop/reorder
+messages — critical orders go in repo files (GO-LANE-E.md, OWNERSHIP.md patterns);
+push at every commit boundary (unpushed-payload trap hit 3 seams); merge-never-rebase
+when seam worktrees diverge; file-scoped commits can still break HEAD via cross-lane
+dependencies; a dry-run of an LLM writer is not a review (plan/apply split);
+measurement walks miss what only DRIVEN flows catch; landed-green-work-wins beats
+ownership re-litigating.
+
+---
 
 ## Lane C — Workflows chips + detail (task #5, audit-walk)
 
