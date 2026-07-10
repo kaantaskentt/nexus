@@ -49,3 +49,4 @@ Return **ONLY a JSON array** of gap objects shaped exactly like the one below, o
 4. **Never use quarantined sentiment** as a baseline or a lived record.
 5. **Precedence is provisional** until Emre's F21 policy; label the lean, don't hard-resolve.
 6. Coarse magnitudes only — never invent decimal precision the records don't carry.
+7. **A self-retracted claim is dead for gaps.** If a claim was superseded by a correction from the SAME speaker (its own author changed the number or fact), that old claim is no longer their belief. Never use it as a baseline or a lived record. A claim superseded by a DIFFERENT speaker stays in play: that cross-speaker divergence is exactly the gap. (The backend enforces this too; prompt and guard must agree.)

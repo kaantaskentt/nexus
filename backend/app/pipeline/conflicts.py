@@ -38,17 +38,36 @@ def precedence_lean(a: dict, b: dict) -> dict | None:
     return {"favored_record": winner["id"], "reason": f"{winner['tag']} outranks the other (provisional F21)"}
 
 
+def _mark_self_retracted(recs: list[dict]) -> list[dict]:
+    """Flag every claim that its OWN author later retracted (a same-speaker correction
+    supersedes it). Such a claim is no longer that speaker's belief, so it must not seed a
+    perception gap (packet §6 / #29). A CROSS-speaker supersede is left comparable — that
+    divergence IS the gap material (tag precedence). Mutates and returns recs."""
+    by_id = {r["id"]: r for r in recs}
+    retracted: set[str] = set()
+    for r in recs:
+        sup = r.get("supersedes_id")
+        if sup is None:
+            continue
+        old = by_id.get(str(sup))
+        if old is not None and old.get("speaker_id") is not None and old["speaker_id"] == r.get("speaker_id"):
+            retracted.add(str(sup))
+    for r in recs:
+        r["self_retracted"] = r["id"] in retracted
+    return recs
+
+
 async def _records(workspace_id: str) -> list[dict]:
     pool = await get_pool()
     rows = await pool.fetch(
         """select c.id, c.kind, c.topic, c.tag, c.claim_text, c.session_id, c.speaker_id,
-                  e.role as speaker_role, e.canonical_name as speaker_name
+                  c.supersedes_id, e.role as speaker_role, e.canonical_name as speaker_name
            from client_visible_claims c
            left join entities e on e.id = c.speaker_id
            where c.workspace_id = $1""",
         workspace_id,
     )
-    return [dict(r) | {"id": str(r["id"])} for r in rows]
+    return _mark_self_retracted([dict(r) | {"id": str(r["id"])} for r in rows])
 
 
 _LEADERSHIP = re.compile(
@@ -69,7 +88,13 @@ def _valid_perception_gap(a: dict, b: dict) -> bool:
          worker-vs-worker COLLISION, not a perception gap, and a single-operator
          interview (no leadership record) yields zero gaps.
     Fabricating a 'leadership believes…' framing from an operator's own words is the
-    exact confident fiction this guard prevents."""
+    exact confident fiction this guard prevents.
+
+    #29 (packet §6): a claim its OWN author retracted (a same-speaker correction supersedes
+    it) is no longer that speaker's belief, so it can seed no gap on either side. A claim
+    superseded CROSS-speaker is kept — that divergence is the gap material."""
+    if a.get("self_retracted") or b.get("self_retracted"):
+        return False
     sa, sb = a.get("speaker_id"), b.get("speaker_id")
     if sa is not None and sb is not None and sa == sb:
         return False

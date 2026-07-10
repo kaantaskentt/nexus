@@ -92,6 +92,12 @@ behavior, not our existing build re-derived) and not CONFLICT (nothing tested re
   rendered steps and the leak-2 claim-tag gather. No frontend change (render already prints
   `index + 1`, now gap-free). Tests test_report_steps.py 3/3 green; lint clean.
   AUDIT: SIMPLER — no phantom steps; numbering reads 1..n. Test-pinned.
+- **C4 self-correction patch #29 promoted** — applied cleanly against current HEAD; the
+  same-speaker-retraction guard now lives in conflicts.py + perception-gap.md rule 7 + its
+  deterministic test (4/4 green: boutique self-retraction seeds no gap, yıldırım cross-speaker
+  gap survives). Removed the staged .patch and tombstoned staged/README.md. A24 = ADOPT
+  (Emre pilot §3 "promote it", releases F21 hold). conflicts.py lint clean.
+  AUDIT: SIMPLER — a founder correcting his own number no longer renders as founder-vs-founder.
 
 ---
 
