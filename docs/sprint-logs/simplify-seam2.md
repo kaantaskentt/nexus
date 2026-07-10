@@ -82,7 +82,9 @@ voice fallback (2b69513), migrations 0023/0024, design-only Simulations doc (8c4
   the two pages that render the full-width StageRail; the Interviews hub (per-card badges) is fine.
   Desktop 1440 unaffected. Function not broken — 19-27px of horizontal scroll only.
   Recommended fix (lane-k): let the rail wrap or `overflow-x-auto` + shrink labels below sm; and
-  wrap the Report coverage-card row in an `overflow-x-auto` scroller with `min-w-0`. Surfaced to lead.
+  wrap the Report coverage-card row in an `overflow-x-auto` scroller with `min-w-0`.
+  RESOLUTION (lead): FIX-NOW — lane-k is building the fix, but it does NOT get its own redeploy;
+  it rides SEAM-3 (final fixup deploy). So this stays live-on-prod at 49fde3f until seam-3 ships.
 
 ## Not exercised
 - Voice: no voice call started (per brief). Text mode + silence-timeout config unchanged.
