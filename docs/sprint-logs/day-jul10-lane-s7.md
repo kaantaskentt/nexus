@@ -219,8 +219,30 @@ atlas mint/teardown per memory nexus-voice-verify-headless) — never a real cli
   rule — serve ONLY packet numbers, never from memory, never substitute/invent; (2) ban the
   acuity-assessment probe, treat ambiguity as higher bucket, serve+handoff without a clarifying Q.
   Did NOT name 182 in-prompt (avoid priming). **PENDING REDEPLOY — the deployed pin predates this;
-  team-lead flagged.** Verification: lane-quality re-runs the RED/YELLOW baits (DirectPromptAdapter
-  tests the real model against the repo prompt). GREEN once their RED/YELLOW land.
+  team-lead flagged for a fast seam A.5.** EMPIRICALLY VERIFIED by me: 36/36 samples clean
+  (claude-sonnet-4-6, both personas, TR + EN, incl. the exact Turkish condition that produced 182)
+  — every sample serves the packet (112 + 183) verbatim, zero 182, zero probe. Harness:
+  scratchpad/red_probe.py. The 36/36 also settles the priming question: the general "never from
+  memory" rule suffices, so 182 stays unnamed. GREEN (lane-quality lands their RED/YELLOW as the CI gate).
+
+  **STRUCTURAL design call (team-lead asked: make it structural, not just prompt exhortation).**
+  Decision + reasoning: prompt-hardening is the correct altitude here, NOT an engine substitution, and
+  the doctrine-consistent "structural" guarantee is the biting RED eval, for three reasons:
+  1. VOICE cannot be structurally substituted. The VAPI custom-LLM path (build_voice_system) hands the
+     system prompt to VAPI, which GENERATES and SPEAKS the reply itself; Nexus never sees the spoken
+     text to post-process. So the resource numbers on a voice call are ALWAYS produced by the model
+     from the prompt — the prompt is the only lever, and it's now verified. Any text-only engine fix
+     leaves voice (Emre's channel) on the prompt regardless.
+  2. A text-path marker+substitution WOULD be possible (single chokepoint _finalize_turn), but the
+     stream path (stream_interview_turn) yields deltas to the user before finalize, so it needs a
+     streaming find-and-replace (marker spanning deltas) inside interview.py — lane-sec's old, now-
+     unowned engine surface. That's real complexity + regression risk in the streaming UX for a FAST
+     safety seam, and it covers only text.
+  3. The regression GUARANTEE (what keeps it fixed) is lane-quality's RED bait failing CI on any
+     from-memory number — the same shape as lane-sec's structural identity fix + eval. I enabled it by
+     fixing the adapter (ffac175) so the interviewer suite can test it.
+  Offered team-lead the text-path engine substitution as defense-in-depth if they want it despite the
+  voice gap; recommended against for this seam given 36/36 + the streaming risk.
 - **HARNESS FIX (ffac175)** — evals/harness/adapters.py: added {{RESOURCE_PACKET}} injection to the
   interviewer DirectPromptAdapter (it resolved brand+industry but not the packet, so a RED
   interviewer bait saw a literal token). Mirrors backend load_prompt + context_collector/run.py.
