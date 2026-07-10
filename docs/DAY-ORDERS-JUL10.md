@@ -583,7 +583,9 @@ UNCAVEATED; his one open adjudication = the hedged-ideation line (item 3b).
    repo — docs/kaan-inbox/room-mockups/ is EMPTY. Re-commit the screenshots there or
    send the Figma file/node. Lane proceeds on the orders' text + R1 + token system
    meanwhile (rail mounted per R1's own wording; pixel-exact + welcome 3-box copy held).
-3d. ⚑ ANYTIME-CONTEXT deviations for your veto (recommendations shipped):
+3d. ✅ RESOLVED by Kaan (39ce84b): all three deviations APPROVED as recommended —
+   v1/v2 gate split stands, voice-primary stands, first-call-CONFIRMED trust asymmetry
+   deliberately KEPT (ontology ruling settled). Original items kept below for the record:
    - Per-fact confirm-what-to-store gate DEFERRED to v2 (your order named it): v1 ships
      call-based honesty (CLAIMED cap + quarantine + Company-Context chips); v2 design
      note = post-call review screen reusing intake chips (in-room gate would collide
