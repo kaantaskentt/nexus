@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from ..auth import require_admin, resolve_seat
 from ..config import get_settings
-from ..db import get_pool
+from ..db import get_pool, loads
 from ..pipeline import deletion, entities
 from ..pipeline.transcript import parse_transcript
 from ..queue import enqueue
@@ -28,8 +28,6 @@ _DISCOVERY_STAGES = [
 ]
 
 
-def _loads(v):
-    return json.loads(v) if isinstance(v, str) else v
 
 
 def _slugify(name: str) -> str:
@@ -80,7 +78,7 @@ async def create_workspace(body: NewWorkspaceIn):
         "returning id, name, slug, industry, is_demo, config",
         name, slug, (body.industry or None), json.dumps(config),
     )
-    return {**dict(row), "config": _loads(row["config"])}
+    return {**dict(row), "config": loads(row["config"])}
 
 
 # The picker (frontend root page) needs three per-workspace counts to render each card:
@@ -122,7 +120,7 @@ async def list_workspaces(user_id: str = Depends(require_admin)):
             base + "where w.is_internal = false "
             "order by w.sort_order asc nulls last, w.created_at desc"
         )
-    return [{**dict(r), "config": _loads(r["config"])} for r in rows]
+    return [{**dict(r), "config": loads(r["config"])} for r in rows]
 
 
 class ReorderIn(BaseModel):
@@ -190,7 +188,7 @@ async def get_snapshot(workspace_id: str):
         workspace_id,
     )
     return [{"id": str(r["id"]), "card_type": r["card_type"], "confidence": r["confidence"],
-             "render_batch": r["render_batch"], "content": _loads(r["content"])} for r in rows]
+             "render_batch": r["render_batch"], "content": loads(r["content"])} for r in rows]
 
 
 @router.get("/{workspace_id}/insights")
@@ -226,7 +224,7 @@ async def get_insights(workspace_id: str):
 
     conflicts = []
     for r in conflict_rows:
-        res = _loads(r["resolution"])
+        res = loads(r["resolution"])
         note = (res.get("gap") or res.get("note")) if isinstance(res, dict) else None
         conflicts.append({
             "id": str(r["id"]), "kind": r["kind"], "status": r["status"], "note": note,
@@ -269,7 +267,7 @@ async def get_insights(workspace_id: str):
     )
     admissions = []
     for r in adm_rows:
-        prov = _loads(r["provenance"]) or {}
+        prov = loads(r["provenance"]) or {}
         objectives = [t.split(":", 1)[1].strip() for t in prov.get("triggers", [])
                       if isinstance(t, str) and t.startswith("INTERVIEW-OBJECTIVE:")]
         admissions.append({
@@ -318,9 +316,9 @@ async def automation_opportunities(workspace_id: str):
     )
     return [
         {"id": str(r["id"]), "title": r["title"], "summary": r["summary"],
-         "signals": _loads(r["signals"]) or [], "claim_ids": _loads(r["claim_ids"]) or [],
+         "signals": loads(r["signals"]) or [], "claim_ids": loads(r["claim_ids"]) or [],
          "workflow_id": str(r["workflow_id"]) if r["workflow_id"] else None,
-         "step_ids": _loads(r["step_ids"]) or [], "roi": _loads(r["roi"])}
+         "step_ids": loads(r["step_ids"]) or [], "roi": loads(r["roi"])}
         for r in rows
     ]
 
@@ -342,7 +340,7 @@ async def start_context_call(workspace_id: str):
     )
     if row is None:
         raise HTTPException(404, "workspace not found")
-    config = _loads(row["config"]) or {}
+    config = loads(row["config"]) or {}
     if not config.get("beta_context_call"):
         raise HTTPException(403, "the context call beta is not enabled for this workspace")
 
@@ -378,7 +376,7 @@ async def set_pulse_config(workspace_id: str, body: PulseConfigIn):
     row = await pool.fetchrow("select config from workspaces where id = $1", workspace_id)
     if row is None:
         raise HTTPException(404, "workspace not found")
-    config = _loads(row["config"]) or {}
+    config = loads(row["config"]) or {}
     config["weekly_pulse"] = body.enabled
     await pool.execute(
         "update workspaces set config = $2 where id = $1", workspace_id, json.dumps(config)
@@ -395,7 +393,7 @@ async def mark_snapshot_intro_seen(workspace_id: str):
     row = await pool.fetchrow("select config from workspaces where id = $1", workspace_id)
     if row is None:
         raise HTTPException(404, "workspace not found")
-    config = _loads(row["config"]) or {}
+    config = loads(row["config"]) or {}
     config["snapshot_intro_seen"] = True
     await pool.execute(
         "update workspaces set config = $2 where id = $1", workspace_id, json.dumps(config)
@@ -419,7 +417,7 @@ async def weekly_pulse(workspace_id: str):
     )
     if ws is None:
         raise HTTPException(404, "workspace not found")
-    enabled = bool((_loads(ws["config"]) or {}).get("weekly_pulse", False))
+    enabled = bool((loads(ws["config"]) or {}).get("weekly_pulse", False))
 
     new_claims = await pool.fetch(
         """select c.claim_text, c.topic, e.role
@@ -446,7 +444,7 @@ async def weekly_pulse(workspace_id: str):
     )
     new_conflicts = []
     for r in conflict_rows:
-        res = _loads(r["resolution"])
+        res = loads(r["resolution"])
         note = (res.get("gap") or res.get("note")) if isinstance(res, dict) else None
         new_conflicts.append({"kind": r["kind"], "note": note})
 
@@ -475,14 +473,14 @@ async def weekly_pulse(workspace_id: str):
     )
     for r in cards:
         if r["card_type"] == "area_to_investigate":
-            title = (_loads(r["content"]) or {}).get("title")
+            title = (loads(r["content"]) or {}).get("title")
             if title:
                 next_step = f"Investigate: {title}"
                 break
     if next_step is None:
         for r in cards:
             if r["card_type"] == "suggested_person":
-                c = _loads(r["content"]) or {}
+                c = loads(r["content"]) or {}
                 if c.get("name"):
                     role = f" ({c['role']})" if c.get("role") else ""
                     next_step = f"Schedule an interview with {c['name']}{role}"
@@ -604,7 +602,7 @@ async def upload_discovery(workspace_id: str, body: DiscoveryIn):
     if ws is None:
         raise HTTPException(404, "workspace not found")
 
-    config = _loads(ws["config"]) or {}
+    config = loads(ws["config"]) or {}
     if is_people_map:
         # The people-map subject is a NAMED person ("ask Meltem, she runs Izmir"), never
         # a founder default — an unnamed people-map intake is a data-entry error.
@@ -685,7 +683,7 @@ async def generate_demo_transcript(workspace_id: str):
     )
     if ws is None:
         raise HTTPException(404, "workspace not found")
-    config = _loads(ws["config"]) or {}
+    config = loads(ws["config"]) or {}
     from ..llm import run_agent
     from ..pipeline.compiler import _load_industry_block
 

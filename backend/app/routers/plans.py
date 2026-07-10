@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from ..config import get_settings
-from ..db import get_pool
+from ..db import get_pool, loads
 from ..llm import extract_json, run_agent
 from ..pipeline import entities
 from ..pipeline.compiler import _load_industry_block
@@ -393,13 +393,11 @@ async def refine_chat(plan_id: str, body: RefineIn):
     if plan is None:
         raise HTTPException(404, "plan not found")
 
-    def _loads(v, default):
-        return json.loads(v) if isinstance(v, str) else (v if v is not None else default)
 
-    mission = _loads(plan["mission"], {})
-    questions = _loads(plan["suggested_questions"], [])
-    never = _loads(plan["never_list"], [])
-    change_log = _loads(plan["change_log"], [])
+    mission = loads(plan["mission"], {})
+    questions = loads(plan["suggested_questions"], [])
+    never = loads(plan["never_list"], [])
+    change_log = loads(plan["change_log"], [])
 
     # Conversation memory (July 8, Emre doc-2 P1): the agent must be able to reference
     # its OWN prior replies — above all the compliant alternative it just offered, so
@@ -532,13 +530,11 @@ async def intake_chat(plan_id: str, body: IntakeIn):
     if plan is None:
         raise HTTPException(404, "plan not found")
 
-    def _loads(v, default):
-        return json.loads(v) if isinstance(v, str) else (v if v is not None else default)
 
-    mission = _loads(plan["mission"], {})
-    questions = _loads(plan["suggested_questions"], [])
-    never = _loads(plan["never_list"], [])
-    change_log = _loads(plan["change_log"], [])
+    mission = loads(plan["mission"], {})
+    questions = loads(plan["suggested_questions"], [])
+    never = loads(plan["never_list"], [])
+    change_log = loads(plan["change_log"], [])
 
     # Bounded records digest: the real (non-scraped) records so the agent aims at what the
     # store is THIN on, never re-asking what it already covers.

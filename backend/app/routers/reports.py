@@ -3,17 +3,11 @@ this. Everything traces to records and goes through client_visible_claims, so
 quarantined content can never surface. Perception gaps appear ONLY here (F27), never
 on the live snapshot."""
 
-import json
-
 from fastapi import APIRouter
 
-from ..db import get_pool
+from ..db import get_pool, loads
 
 router = APIRouter()
-
-
-def _loads(v):
-    return json.loads(v) if isinstance(v, str) else v
 
 
 _TOOL_KIND = {"whatsapp": "whatsapp", "excel": "excel", "spreadsheet": "excel",
@@ -78,8 +72,8 @@ async def report(session_id: str):
             claim_map = {str(r["id"]): r for r in crows}
 
         def _step(s):
-            spine = _loads(s["spine_slots"]) or {}
-            scores = _loads(s["slot_scores"]) or {}
+            spine = loads(s["spine_slots"]) or {}
+            scores = loads(s["slot_scores"]) or {}
             ids = [str(c) for c in s["claim_ids"]]
             texts = [claim_map[i]["claim_text"] for i in ids if i in claim_map]
             speakers = [claim_map[i]["speaker"] for i in ids if claim_map.get(i) and claim_map[i]["speaker"]]
@@ -116,7 +110,7 @@ async def report(session_id: str):
     )
     conflicts = [
         {"id": str(r["id"]), "kind": r["kind"], "status": r["status"],
-         "resolution": _loads(r["resolution"]),
+         "resolution": loads(r["resolution"]),
          "claim_a": {"text": r["claim_a"], "tag": r["tag_a"]},
          "claim_b": {"text": r["claim_b"], "tag": r["tag_b"]}}
         for r in conflict_rows
@@ -150,11 +144,11 @@ async def report(session_id: str):
     )
     follow_up_on = []
     for r in followup_rows:
-        prov = _loads(r["provenance"]) or {}
+        prov = loads(r["provenance"]) or {}
         objectives = [t for t in prov.get("triggers", []) if "INTERVIEW-OBJECTIVE" in t]
         follow_up_on.append({"text": r["claim_text"], "kind": r["kind"], "objectives": objectives})
 
-    quality = (_loads(session["resumable_state"]) or {}).get("interview_quality")
+    quality = (loads(session["resumable_state"]) or {}).get("interview_quality")
     if quality and isinstance(quality.get("objectives"), list):
         from collections import Counter
         counts = Counter(o.get("outcome") for o in quality["objectives"])

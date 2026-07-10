@@ -20,7 +20,7 @@ import logging
 
 from datetime import datetime, timezone
 
-from ..db import get_pool
+from ..db import get_pool, loads
 from ..llm import run_agent_json
 from ..queue import enqueue, handles
 from .compiler import _load_industry_block
@@ -178,13 +178,11 @@ async def run_nexus_check(payload: dict) -> None:
     if plan["state"] != "NEXUS_CHECK":
         return
 
-    def _loads(v, default):
-        return json.loads(v) if isinstance(v, str) else (v if v is not None else default)
 
-    mission = _loads(plan["mission"], {})
-    questions = _loads(plan["suggested_questions"], [])
-    never = _loads(plan["never_list"], [])
-    change_log = _loads(plan["change_log"], [])
+    mission = loads(plan["mission"], {})
+    questions = loads(plan["suggested_questions"], [])
+    never = loads(plan["never_list"], [])
+    change_log = loads(plan["change_log"], [])
 
     user_content = (
         "# Plan to review\n"

@@ -37,6 +37,14 @@ evidence, and the `@/components` barrel has no dead re-exports — 10/10 used.)
 Both are the kind of "one shared helper" cleanup worth doing at Phase 4 merge when the tree is
 frozen, not racing other lanes now.
 
+## TREE-FREEZE COMMITS (both dedups approved by team-lead; executed on the frozen tree)
+- **CLEANUP 4 — `_loads` → single `loads(v, default=None)` in app/db.py.** Removed the 5
+  duplicate copies (routers/plans, reports, workspaces; pipeline/plan, workflow_edit — 3
+  signatures) for one shared read-side jsonb helper paired with the pool codec. 1-arg calls
+  get default=None (identical to the old 1-arg), 2-arg calls get their default — behavior
+  preserved at every call site; reports.py's now-unused `import json` removed too. Verified:
+  backend 253 passed/1 skipped, zero new ruff findings (per-file counts identical to HEAD).
+
 ## Notes / not-touched
 - `evals/adjudication/staged/29-perception-gap-same-speaker-retraction.patch` — LEGIT F21
   comparator artifact awaiting Emre's ratification (team-lead). OFF-LIMITS.

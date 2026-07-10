@@ -29,6 +29,16 @@ async def _init_conn(conn: asyncpg.Connection) -> None:
     )
 
 
+def loads(v, default=None):
+    """Read-side jsonb helper, shared by the routers/pipeline (replaces the per-module
+    `_loads` copies). The pool codec above already decodes jsonb to Python objects, so this
+    is now mostly a null-to-default shim: return `default` when the column was SQL NULL,
+    still decode the legacy case where a raw JSON string slips through, and otherwise pass
+    the value straight through. 1-arg calls get default=None (identical to the old 1-arg
+    `_loads`); 2-arg calls get their supplied default."""
+    return json.loads(v) if isinstance(v, str) else (v if v is not None else default)
+
+
 async def get_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:

@@ -16,7 +16,7 @@ Verbs:
 import json
 from datetime import datetime, timezone
 
-from ..db import get_pool
+from ..db import get_pool, loads
 from ..llm import extract_json, run_agent
 from ..queue import handles
 from .compiler import _load_industry_block
@@ -41,10 +41,6 @@ _SPINE_CANON: list[tuple[str, tuple[str, ...]]] = [
 ]
 
 
-def _loads(v, default=None):
-    # jsonb is decoded to Python objects by the pool codec (app.db.get_pool); this now
-    # only supplies the caller's default when the column was SQL NULL.
-    return v if v is not None else default
 
 
 def _now() -> str:
@@ -60,7 +56,7 @@ async def _base_steps(pool, workflow_id: str) -> list[dict]:
     )
     out = []
     for r in rows:
-        spine = _loads(r["spine_slots"], {}) or {}
+        spine = loads(r["spine_slots"], {}) or {}
         out.append({
             "step_id": str(r["id"]),
             "source": "claim_derived",
@@ -81,10 +77,10 @@ def _fold(base: list[dict], overlays: list[dict]) -> list[dict]:
     max_sort = max((s["sort"] for s in base), default=-1.0)
 
     for ov in overlays:
-        op, payload = ov["op"], _loads(ov["payload"], {}) or {}
+        op, payload = ov["op"], loads(ov["payload"], {}) or {}
         stamp = {"op": op, "actor": ov["actor"], "at": ov["created_at"].isoformat()
                  if hasattr(ov["created_at"], "isoformat") else str(ov["created_at"]),
-                 "prior_value": _loads(ov["prior_value"])}
+                 "prior_value": loads(ov["prior_value"])}
         if op == "add_manual":
             after = payload.get("after_index")
             max_sort += 1.0
@@ -205,8 +201,8 @@ async def history(pool, workflow_id: str) -> list[dict]:
     )
     return [{
         "overlay_id": str(r["id"]), "step_id": str(r["step_id"]) if r["step_id"] else None,
-        "op": r["op"], "payload": _loads(r["payload"], {}),
-        "prior_value": _loads(r["prior_value"]), "actor": r["actor"],
+        "op": r["op"], "payload": loads(r["payload"], {}),
+        "prior_value": loads(r["prior_value"]), "actor": r["actor"],
         "at": r["created_at"].isoformat(),
     } for r in rows]
 
