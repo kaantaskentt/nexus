@@ -1,0 +1,59 @@
+# SIMPLIFY Lane A — company reorder + delete (task #3)
+
+Per-lane log (team-lead's rule, July 10): A28 pre-reviews + audit verdicts live HERE, not
+in SPRINT-STATE.md (concurrent-write hotspot; lead merges at Phase 4). A28 binds every
+change: two-line pre-review (today -> after) + "simpler or more complex for the user?".
+
+## A28 pre-review — COMMIT 1 (picker reorder) — landed 223e8b0
+
+Today: `GET /api/workspaces` returns `order by created_at` ASC; `page.tsx` does a client
+`.reverse()` to get newest-first; there is no way to reorder. After: backend orders by
+`sort_order` nulls-last then `created_at desc` (default order byte-identical to today's
+newest-first for null sort_order); `page.tsx` drops `.reverse()` (order semantics live in
+ONE place); the "Other workspaces" rows get a drag handle (framer-motion `Reorder`) that
+persists on drop via `PATCH /api/workspaces/reorder` (admin-only). Hero stays the computed
+"newest prepared non-demo" spotlight, unchanged; `is_internal` filter + `is_demo` hero
+guard untouched. Simpler or more complex for the user? SIMPLER — they can put the company
+they care about at the top; if they never drag, the picker looks exactly as today.
+Taste call: hero is a computed spotlight, NOT drag-sortable (protects the P5 hero guard;
+image9 draws a handle on the hero too). Lead shipped this as the recommendation to Kaan.
+
+## A28 pre-review — COMMIT 2 (delete preview, non-destructive) — landed 1009b30
+
+Today: a company row has no delete affordance; only interviews are deletable (sessions.py).
+After: each picker row gets a quiet trash affordance opening the image9 dialog
+(type-company-name-to-confirm, exact cascade counts from a new non-destructive
+`GET /api/workspaces/{id}/delete-preview`, "cannot be undone", permanent-lock line). The
+Delete button is DISABLED behind a frontend `WORKSPACE_DELETE_ENABLED` flag (default off)
+with honest microcopy "Awaiting final confirmation of delete semantics". Simpler or more
+complex? SIMPLER and SAFER: the count-exact preview is read-only; nothing can be deleted
+yet.
+
+## A28 pre-review — COMMIT 3 (delete cascade, inert) — landed fb44c54
+
+Today: no company-delete path exists. After: `pipeline/deletion.py delete_workspace`
+tears a tenant down in ONE transaction, hand-ordered children-first (most workspace_id FKs
+have no on-delete-cascade); `DELETE /api/workspaces/{id}` admin-only, gated behind
+`settings.workspace_delete_enabled` (returns 403 by default). Deliberate precedent
+departures, flagged to Emre in code: sealed_flags DELETED (no tenant left to hold them),
+agent_runs RETAINED with refs nulled. Simpler or more complex? NEUTRAL and inert until
+enabled — nothing destructive is reachable in any deployed env until Kaan confirms §6-1.
+
+Note: plan/task say "migration 0021" but 0021_context_call.sql already existed — used the
+next free number 0022 for `workspaces.sort_order`. Flagged to lead.
+
+## AUDIT VERDICT (all 3 commits landed)
+
+COMMIT 1 reorder 223e8b0, COMMIT 2 preview 1009b30, COMMIT 3 cascade (inert, 403-gated)
+fb44c54. Lane-A suite 20/20 green in isolation (reorder 5 + preview 4 + cascade 4 +
+delete-interview 4 + workspaces 3); frontend 67p; tsc + lint clean. Full backend suite
+shows shared-test-DB contention errors when another lane runs pytest against the same
+nexus-test container concurrently (per-test `drop schema cascade` collides) — NOT a code
+failure; each file passes alone and as a lane set.
+
+Two gates held for lead/Kaan:
+1. DEPLOY SEAM — migration 0022 NOT applied to live Supabase; reorder won't work on prod
+   until it is. Lead coordinates.
+2. DELETE ENABLE — COMMIT 3 inert. Enable after Kaan confirms §6-1: backend env
+   WORKSPACE_DELETE_ENABLED=1 + frontend env NEXT_PUBLIC_WORKSPACE_DELETE_ENABLED=1. The
+   sealed-flag deletion departure is an open ruling with Emre.
