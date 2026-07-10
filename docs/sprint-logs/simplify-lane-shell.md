@@ -113,3 +113,28 @@ distinct JOB:
   section. Rec: remove + deep-link (it duplicates Home's Open questions AND Context's admission
   records); do not re-plumb admissions into Home. Reversible — if Kaan wants admissions visible
   on Home, it's a small data-routing follow-up, not a redesign.
+
+### REVISION 1 (post-resume) — Kaan CONFIRMED the Insights FOLD (supersedes "nav does not shrink")
+PARK doc now records "Insights fold = CONFIRMED by Kaan (ADD-3.3 building it)." That overrides my
+analysis above (which kept Insights because findings/opportunities were unique to it). The tab
+FOLDS. New target model:
+- **Nav SHRINKS: Insights is removed.** Its content relocates to canonical homes rather than being
+  deleted (findings/opportunities are real intelligence — a fold must move, not drop):
+  - Conflicts → **Home / Snapshot v2** (perception gaps are attention-worthy; lane-dbg's surface).
+  - Key findings (ranked pains) → **Home / Snapshot v2** (synthesis "what we understand").
+  - Automation opportunities → **Home** (cite records like findings; recommend Home so Home is THE
+    synthesis surface — OPEN: could instead sit on Workflows since they point at workflows; lead call).
+  - Admissions / open questions → **Company Context** (records, already there) + Home attention list
+    (areas). No re-render on a standalone Insights page.
+- **Division of labor (needs lead + lane-dbg bless):**
+  - lane-dbg (Snapshot v2) HOSTS conflicts + findings + opportunities as part of their redesign.
+  - lane-shell (me) OWNS: remove the Insights nav item from `AppShell.NAV` + `SEG_TO_NAV`; redirect
+    the `/w/[slug]/insights` route (→ Home, or a Home#section deep-link) so old links don't 404;
+    delete/retire `InsightsView` + `insights/page.tsx` once content has a home. PLUS the Report
+    "Follow up on" → "Open questions" rename (independent).
+- **SEQUENCING DEPENDENCY (hard):** my nav/route removal must land AFTER lane-dbg's Snapshot v2 hosts
+  the content — dropping the tab first strands conflicts/findings/opportunities. So this lane is now
+  BLOCKED ON lane-dbg for the content move; I build the nav/route retirement behind them. The Report
+  rename is the only independent piece and it collides with lane-k's active Report rewrite (coordinate).
+- Nothing to build in isolation right now → proposing the mapping + division to lead, correcting my
+  earlier lane-dbg boundary note (fold, not stay), then sequencing my nav/route work behind Snapshot v2.
