@@ -427,7 +427,7 @@ export function SnapshotView({
         </p>
       </div>
 
-      <AreaDrawer area={openArea} claimsById={claimsById} onClose={() => setOpenArea(null)} />
+      <AreaDrawer area={openArea} claimsById={claimsById} slug={workspace.slug} onClose={() => setOpenArea(null)} />
       <EvidenceDrawer
         open={evidenceOpen}
         evidence={railEvidence}
@@ -478,13 +478,27 @@ function Section({
 function AreaDrawer({
   area,
   claimsById,
+  slug,
   onClose,
 }: {
   area: AreaContent | null;
   claimsById: Map<string, ClaimRecord>;
+  slug: string;
   onClose: () => void;
 }) {
   useEscapeClose(area !== null, onClose);
+  // "Add to Interview Plan" → the K3 assign flow, pre-seeded: the person who holds this
+  // knowledge (when known) as name/role, and the open question + its unknowns as the
+  // required focus. AssignInterviewFlow reads ?name/role/focus (ADD-4.1). Gate is untouched.
+  const planHref = area
+    ? `/w/${slug}/interviews/new?${new URLSearchParams({
+        ...(area.who_holds?.name ? { name: area.who_holds.name } : {}),
+        ...(area.who_holds?.role ? { role: area.who_holds.role } : {}),
+        focus: area.what_we_dont_know.length
+          ? `Investigate "${area.title}". Open questions: ${area.what_we_dont_know.join("; ")}`
+          : `Investigate "${area.title}".`,
+      }).toString()}`
+    : "#";
   return (
     <AnimatePresence>
       {area && (
@@ -619,25 +633,24 @@ function AreaDrawer({
               </motion.div>
 
               <div className="mt-6 flex flex-col gap-2 pt-2">
-                <button
-                  disabled
-                  title="Creating an interview plan from an area is being wired in this build"
-                  className="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-md border border-line px-4 py-2.5 text-sm font-medium text-ink-faint opacity-60"
+                {/* Real action now (ADD-5): opens the assign flow with this open question as
+                    the focus + the knowledge-holder pre-filled. No longer a dead promise. */}
+                <Link
+                  href={planHref}
+                  onClick={onClose}
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
                 >
                   Add to Interview Plan <ArrowRight className="h-4 w-4" strokeWidth={2} />
-                </button>
+                </Link>
                 <p className="text-center text-xs text-ink-faint">
                   will create objectives from the unknowns above
                 </p>
-                <div className="flex items-center justify-center gap-4 pt-1 text-xs font-medium">
-                  <button
-                    disabled
-                    title="Transcript view ships in the next build"
-                    className="cursor-not-allowed text-ink-faint opacity-60"
-                  >
-                    View full transcript
-                  </button>
-                  {/* Add context is the #20 chat entry point — wired live as the chat agent lands. */}
+                {/* "View full transcript" removed: snapshot areas are sourced from the CEO
+                    context call, which has no clean transcript route yet — the verbatim
+                    evidence is in the Sources & evidence drawer. */}
+                <div className="flex items-center justify-center pt-1 text-xs font-medium">
+                  {/* Add context is the #20 chat entry point — wired live as the chat agent
+                      lands (owned by that lane, not this scope). */}
                   <button className="text-accent hover:underline">
                     Add context (chat with {brand.product_name})
                   </button>

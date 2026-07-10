@@ -189,3 +189,19 @@ Built the whole owned sequence on main@0d4b52b (lane-dbg's v2 base, never revert
 - b89114b — RETIRE: Insights out of AppShell NAV + NavKey (BarChart3 removed); SEG_TO_NAV `insights`→`home`; /w/[slug]/insights → server redirect to Home; InsightsView.tsx deleted (457 lines gone). Nav shrinks by one, exactly as Kaan confirmed.
 Green: tsc clean, eslint whole-project clean, frontend suite 107/107, `next build` green (/insights now a 166 B redirect stub, Home carries the fold).
 OUTSTANDING (handed to audit/re-walk #19): screenshot-verify the assembled Home at 1440 + 390 (fold sections read right, no horizontal overflow, Insights gone from nav, /insights redirects). Not run from here — the audit lane holds the browser; every verify pass must drive the real surface (park lesson). Offering to run the Playwright pass myself if the lead prefers.
+
+### A28 pre-review — wire the two AreaDrawer dead buttons (lead-assigned, ADD-5 bug-detector)
+Today: Home's open-question drawer shows two DISABLED "coming in a future build" buttons (Add to
+Interview Plan / View full transcript) — dead affordances on Kaan's demo surface. After: "Add to
+Interview Plan" becomes a real Link into the K3 assign flow (/interviews/new pre-seeded name+role
+from area.who_holds + focus from the area title + its open questions; AssignInterviewFlow already
+reads ?name/role/focus, focus now required — ADD-4.1). "View full transcript" is HIDDEN, not wired:
+the only session-id destination is ObserverView (an interview observer window, not a clean transcript
+view, and these areas are sourced from the CEO context call) — a link there risks a wrong/empty view,
+and the verbatim evidence is already reachable via the Sources & evidence drawer + Company Context.
+Per the lead's hide-if-not-cleanly-derivable fallback. Simpler or more complex for the user? SIMPLER:
+one dead button becomes a real action, the other stops promising a view that has no clean home.
+(Taste note for Kaan: "View full transcript" on snapshot areas needs a real context-call transcript
+route before it can be honest; hidden until then. Also flagged: the drawer's "Add context (chat)"
+button is a no-op that looks live — left for the #20 chat-agent lane, not in this scope.)
+Edits the audit-verified AreaDrawer → telling audit-walk directly so their re-drive covers it.
