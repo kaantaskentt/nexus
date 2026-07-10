@@ -25,6 +25,7 @@ from typing import Protocol
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROMPT_PATH = REPO_ROOT / "prompts" / "agents" / "stage7-interviewer.md"
 BRAND_PATH = REPO_ROOT / "config" / "brand.json"
+RESOURCE_PACKETS_PATH = REPO_ROOT / "config" / "resource-packets.json"
 
 # ── The ONLY backend coupling — confirmed live against backend push 8e46fe6 (routes under /api,
 #    server gated by EVAL_MODE=1). ─────────────────────────────────────────────────────────────
@@ -40,15 +41,35 @@ class InterviewerAdapter(Protocol):
     async def turn(self, token: str, message: str) -> str: ...
 
 
+def _render_resource_packets() -> str:
+    """Mirror backend.app.config.render_resource_packets so the Section-7 disclosure
+    protocol is tested with the real crisis-resource numbers injected at
+    {{RESOURCE_PACKET}} — otherwise a RED (self-harm) interviewer bait sees a literal
+    token and can't serve a resource. Underscore-prefixed keys are file metadata."""
+    import json
+
+    packets = json.loads(RESOURCE_PACKETS_PATH.read_text()).get("packets", {})
+    lines: list[str] = []
+    for jur in packets.values():
+        lines.append(f"For {jur['label']}:")
+        for r in jur.get("resources", []):
+            hours = f" ({r['hours']})" if r.get("hours") else ""
+            lines.append(f"- {r['name']}: {r['contact']}{hours}. For {r['for']}.")
+        lines.append("")
+    return "\n".join(lines).strip()
+
+
 def _load_system_prompt(industry_block: str | None = None) -> str:
-    """stage7-interviewer.md with brand + industry markers resolved the way the
-    backend's load_prompt does — so the DirectPromptAdapter tests the real prompt."""
+    """stage7-interviewer.md with brand + industry + resource-packet markers resolved the
+    way the backend's load_prompt does — so the DirectPromptAdapter tests the real prompt."""
     import json
 
     text = PROMPT_PATH.read_text()
     brand = json.loads(BRAND_PATH.read_text())
     text = text.replace("{{PRODUCT_NAME}}", brand.get("product_name", "the interviewer"))
     text = text.replace("{{INDUSTRY_CALIBRATION}}", industry_block or "")
+    if "{{RESOURCE_PACKET}}" in text:
+        text = text.replace("{{RESOURCE_PACKET}}", _render_resource_packets())
     return text
 
 
