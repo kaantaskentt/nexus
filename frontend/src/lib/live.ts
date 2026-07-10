@@ -77,6 +77,41 @@ export async function reorder_workspaces(ordered_ids: string[]): Promise<{ reord
   });
 }
 
+// ── Company delete preview (SIMPLIFY §4-A / §6-1) ─────────────────────────────
+// The non-destructive half: exact counts of everything a company delete would remove,
+// feeding the type-to-confirm dialog so it never understates. The destructive endpoint
+// is gated separately (WORKSPACE_DELETE_ENABLED) and not wired here yet.
+export interface WorkspaceDeletePreview {
+  workspace_id: string;
+  name: string;
+  sessions: number;
+  turns: number;
+  records: number;
+  conflicts: number;
+  pain_scores: number;
+  workflows: number;
+  workflow_steps: number;
+  sops: number;
+  snapshot_cards: number;
+  plans: number;
+  plan_transitions: number;
+  entities: number;
+  scrape_sources: number;
+  heuristics: number;
+  promises: number;
+  opportunities: number;
+  voice_config: number;
+  report_shares: number;
+  sealed_flags: number;
+  retained_agent_runs: number;
+}
+
+export async function get_workspace_delete_preview(
+  workspace_id: string,
+): Promise<WorkspaceDeletePreview> {
+  return api<WorkspaceDeletePreview>(`/api/workspaces/${workspace_id}/delete-preview`);
+}
+
 // ── CEO discovery upload (A17 / #6) ──────────────────────────────────────────
 // Upload a transcript -> standard compile job -> poll status -> snapshot renders.
 export interface DiscoveryStart {

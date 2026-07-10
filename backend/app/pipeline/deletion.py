@@ -102,6 +102,66 @@ async def _opportunities_touching(pool, workspace_id, claim_ids, workflow_ids) -
     return hit
 
 
+# ── Company (workspace) deletion — SIMPLIFY lane A (docs/SIMPLIFY-PLAN.md §6-1) ──
+# The interview-delete cascade, one level up: a company delete removes the tenant and
+# EVERYTHING scoped to it. This preview is the non-destructive half — it counts EXACTLY
+# what the (still-gated) destructive endpoint would remove so the type-to-confirm dialog
+# never understates. Deliberate departures from the interview precedent, because the
+# tenant itself ceases to exist:
+#   - sealed_flags are counted as REMOVED (an interview delete retains them; a company
+#     delete has no tenant left to hold them). FLAGGED TO EMRE — his protocol owns the
+#     final ruling; see SIMPLIFY-PLAN §6-1. The destructive path is gated until his +
+#     Kaan's confirm, so counting them here commits us to nothing.
+#   - agent_runs are RETAINED (internal cost/audit history, not client data); reported
+#     separately as retained_agent_runs so the dialog can say what SURVIVES, honestly.
+
+
+async def preview_workspace_delete(workspace_id: str) -> dict | None:
+    """Exact counts of everything a company delete would remove, plus the retained
+    agent-run audit count. Returns None for an unknown workspace."""
+    pool = await get_pool()
+    name = await pool.fetchval("select name from workspaces where id = $1", workspace_id)
+    if name is None:
+        return None
+
+    async def n(sql: str) -> int:
+        return int(await pool.fetchval(sql, workspace_id) or 0)
+
+    sess = "select id from interview_sessions where workspace_id = $1"
+    claims = "select id from claim_records where workspace_id = $1"
+    wfs = "select id from workflows where workspace_id = $1"
+    plans = "select id from interview_plans where workspace_id = $1"
+
+    return {
+        "workspace_id": str(workspace_id),
+        "name": name,
+        "sessions": await n(f"select count(*) from interview_sessions where workspace_id = $1"),
+        "turns": await n(f"select count(*) from utterances where session_id in ({sess})"),
+        "records": await n(f"select count(*) from claim_records where workspace_id = $1"),
+        "conflicts": await n(f"select count(*) from claim_conflicts where workspace_id = $1"),
+        "pain_scores": await n(f"select count(*) from pain_scores where claim_id in ({claims})"),
+        "workflows": await n(f"select count(*) from workflows where workspace_id = $1"),
+        "workflow_steps": await n(f"select count(*) from workflow_steps where workflow_id in ({wfs})"),
+        "sops": await n(f"select count(*) from workflow_sops where workflow_id in ({wfs})"),
+        "snapshot_cards": await n(f"select count(*) from snapshot_cards where workspace_id = $1"),
+        "plans": await n(f"select count(*) from interview_plans where workspace_id = $1"),
+        "plan_transitions": await n(
+            f"select count(*) from plan_state_transitions where plan_id in ({plans})"),
+        "entities": await n(f"select count(*) from entities where workspace_id = $1"),
+        "scrape_sources": await n(f"select count(*) from scrape_sources where workspace_id = $1"),
+        "heuristics": await n(f"select count(*) from heuristics where workspace_id = $1"),
+        "promises": await n(f"select count(*) from artifact_promises where workspace_id = $1"),
+        "opportunities": await n(
+            f"select count(*) from automation_opportunities where workspace_id = $1"),
+        "voice_config": await n(f"select count(*) from voice_configs where workspace_id = $1"),
+        "report_shares": await n(f"select count(*) from report_shares where workspace_id = $1"),
+        # Departure from the interview precedent — flagged to Emre (see module note).
+        "sealed_flags": await n(f"select count(*) from sealed_flags where workspace_id = $1"),
+        # Survives the delete with its workspace/session refs nulled (audit history).
+        "retained_agent_runs": await n(f"select count(*) from agent_runs where workspace_id = $1"),
+    }
+
+
 async def delete_interview(session_id: str) -> dict | None:
     """Execute the cascade in one transaction. Returns the removal summary, None for
     an unknown session, {'deletable': False} for a non-interview kind."""

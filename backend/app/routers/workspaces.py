@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from ..auth import require_admin, resolve_seat
 from ..db import get_pool
-from ..pipeline import entities
+from ..pipeline import deletion, entities
 from ..pipeline.transcript import parse_transcript
 from ..queue import enqueue
 
@@ -128,6 +128,21 @@ async def reorder_workspaces(body: ReorderIn):
                     ws_id, position,
                 )
     return {"reordered": len(body.ordered_ids)}
+
+
+# ── Company delete — SIMPLIFY lane A (docs/SIMPLIFY-PLAN.md §4-A/§6-1) ──────────
+# Two-step by design, mirroring the interview delete: this preview feeds the
+# type-company-name-to-confirm dialog with EXACT cascade counts (the dialog is the
+# feature). The DESTRUCTIVE endpoint is gated separately and stays off until Kaan's
+# confirm is relayed — so this read-only preview commits us to nothing.
+
+
+@router.get("/{workspace_id}/delete-preview", dependencies=[Depends(require_admin)])
+async def delete_preview(workspace_id: str):
+    out = await deletion.preview_workspace_delete(workspace_id)
+    if out is None:
+        raise HTTPException(404, "workspace not found")
+    return out
 
 
 @router.get("/{workspace_id}/snapshot")

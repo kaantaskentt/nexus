@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Reorder, useDragControls } from "framer-motion";
-import { ArrowRight, GripVertical } from "lucide-react";
+import { ArrowRight, GripVertical, Trash2 } from "lucide-react";
 import { reorder_workspaces } from "@/lib/live";
+import { WorkspaceDeleteDialog } from "@/components/WorkspaceDeleteDialog";
 
 // SIMPLIFY §4-A: the picker's "other workspaces" rows are drag-reorderable. The hero is a
 // computed spotlight rendered by the server page and is NOT part of this list; to keep the
@@ -27,6 +28,7 @@ export function WorkspaceReorderList({
   heroId: string | null;
 }) {
   const [items, setItems] = useState(rows);
+  const [deleting, setDeleting] = useState<PickerRow | null>(null);
 
   async function persist() {
     const ordered = heroId ? [heroId, ...items.map((r) => r.id)] : items.map((r) => r.id);
@@ -43,7 +45,7 @@ export function WorkspaceReorderList({
     <>
       <Reorder.Group axis="y" values={items} onReorder={setItems} className="space-y-2">
         {items.map((row) => (
-          <PickerRowItem key={row.id} row={row} onDrop={persist} />
+          <PickerRowItem key={row.id} row={row} onDrop={persist} onDelete={() => setDeleting(row)} />
         ))}
       </Reorder.Group>
       {items.length > 1 && (
@@ -52,11 +54,26 @@ export function WorkspaceReorderList({
           Drag to reorder workspaces
         </p>
       )}
+      {deleting && (
+        <WorkspaceDeleteDialog
+          workspaceId={deleting.id}
+          name={deleting.name}
+          onClose={() => setDeleting(null)}
+        />
+      )}
     </>
   );
 }
 
-function PickerRowItem({ row, onDrop }: { row: PickerRow; onDrop: () => void }) {
+function PickerRowItem({
+  row,
+  onDrop,
+  onDelete,
+}: {
+  row: PickerRow;
+  onDrop: () => void;
+  onDelete: () => void;
+}) {
   // dragListener=false + a dedicated handle: the row body stays a normal navigation link,
   // only the grip starts a drag, so click-to-open and drag-to-reorder never fight.
   const controls = useDragControls();
@@ -66,7 +83,7 @@ function PickerRowItem({ row, onDrop }: { row: PickerRow; onDrop: () => void }) 
       dragListener={false}
       dragControls={controls}
       onDragEnd={onDrop}
-      className="lift card-hairline flex items-center gap-1 rounded-card border border-line bg-surface pr-2 hover:border-line-strong"
+      className="lift card-hairline group flex items-center gap-1 rounded-card border border-line bg-surface pr-2 hover:border-line-strong"
     >
       <button
         type="button"
@@ -78,7 +95,7 @@ function PickerRowItem({ row, onDrop }: { row: PickerRow; onDrop: () => void }) 
       </button>
       <Link
         href={`/w/${row.slug}/home`}
-        className="flex flex-1 items-center justify-between py-3 pr-2"
+        className="flex flex-1 items-center justify-between py-3"
       >
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised font-display text-sm text-ink-soft">
@@ -96,6 +113,15 @@ function PickerRowItem({ row, onDrop }: { row: PickerRow; onDrop: () => void }) 
           <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
         </span>
       </Link>
+      {/* Quiet delete affordance: dim until hover, never competing with Open. */}
+      <button
+        type="button"
+        onClick={onDelete}
+        aria-label={`Delete ${row.name}`}
+        className="ml-1 rounded-full p-2 text-ink-faint opacity-0 transition hover:bg-danger-soft hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
+      >
+        <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+      </button>
     </Reorder.Item>
   );
 }
