@@ -464,6 +464,17 @@ action list #1).
   clean); RED still 182 (2/4) + acuity-gauge on ambiguous — matches s7's in-progress
   tasks #1/#2. Gate unchanged: A.6 on full both-directions green.
 
+- RED/YELLOW round-3 state (s7, not stalled — hard suppression): 182-as-resource
+  eliminated but naming it in SERVED text backfired (model sometimes RECITES the
+  exclusion to the person — new failure found only by sampling); fix = exclusion moves
+  internal-only + packet phrased self-sufficient (112 covers self-harm emergencies,
+  183 support — honest while TR line is Pending). Ambiguous-gauge FIXED 5/5. YELLOW
+  residual 2/5 on collector → hard rule (plain vent = zero numbers). CONDITIONAL
+  PRE-APPROVAL (team-lead): if round 3 still leaks on text, a narrow post-gen 182
+  sanitizer at finalize is approved (NOT the declined resource-line synthesis);
+  voice stays prompt-only (VAPI constraint) and any residual voice risk gets stated
+  plainly for Emre — a text sanitizer must not launder the "fixed" claim.
+
 ## RULINGS R2 (Kaan via watchtower, ~15:30) — LANE ASSIGNMENTS
 - R6 NO SendGrid: build IN-APP ADMIN INCIDENT INBOX for harm_incidents (Emre+Kaan see
   them in-app; email optional-if-key-ever-exists; email DROPPED from the done-bar).
