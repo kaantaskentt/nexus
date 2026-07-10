@@ -100,3 +100,16 @@ recording-into-snapshot) render — there's no person to promise. Written as tem
 so the consent drift guard skips it (it governs real-respondent promises); guard stays green
 (18 lines in sync), employee + context branches byte-unchanged. Landed bea9fac. Test pins the
 sim/employee/context split. Frontend tsc 0 / eslint clean / vitest 105.
+
+## P0 opener-ordering — AUDIT VERDICT (df2d418)
+Task: pin turn 0 = interviewer opener on BOTH text-from-start doors (team-lead, off fafb1a5
+trace). Empirical finding: NO residual code bug — start() (text-modality consent) and
+switchToText ("Start by text instead" pre-call, fixed by 55af788) both already fire
+interviewerTurn(null) first on current main. Backend ordering is correct (null message →
+agent opener at turn 0). The fafb1a5 trace (turn_index=1) was captured 01:37 against a prod
+build predating 55af788's 01:28 deploy (git/prod gap, 2e5f13c) — real but stale, caught the
+switch door pre-fix, not a start() defect. Did NOT add a no-op edit to start(). Deliverable =
+regression pin interview-opener-ordering.test.tsx (2 tests, both assert first streamTurn
+carries message===null). Green; interview test group 9/9. Reported the correction to team-lead
++ handed audit-walk the "confirm build has 55af788 before re-confirming" nuance. Reserve for
+recurrence branch per team-lead sequence.
