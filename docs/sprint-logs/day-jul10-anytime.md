@@ -108,3 +108,10 @@ creation. Net-new is only the entry button + a per-session compile cap. (Logged 
   test_context_call.py 8/8 incl. the cap test (first→null, additive→CLAIMED). ONE line remains in
   lane-mest's compiler.py:195 (`or session["compile_max_tag"]`) to make the cap end-to-end — announced
   to lane-mest with the exact diff. Mint-layer verified now; end-to-end cap lands with their one-liner.
+- **CLAIMED cap — END-TO-END GREEN.** lane-mest landed the compiler fallback (7021675,
+  compiler.py:198 `max_tag = payload.get("max_tag") or session["compile_max_tag"]`); migration 0028
+  applied to live (team-lead). Composed re-run (my mint-side + their compiler-side): test_context_call
+  + test_compiler + test_immutability + test_intake = 20 passed, no regression. The additive founder
+  call now caps at CLAIMED end-to-end; first call / interviews (null) unchanged; intake payload
+  short-circuits. Heavy synthetic additive-compile eval DEFERRED by team-lead (the seam-C2 driven
+  walk is the better end-to-end proof; eval built later only if the walk surfaces something soft).
