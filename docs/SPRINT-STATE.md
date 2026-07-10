@@ -239,6 +239,28 @@ or more complex? SIMPLER: one place to find any interview and its next step, not
 the same people. Gate untouched — a plan card's action just opens PlanView where approve/send
 already live.
 
+**A28 pre-review — COMMIT 3 (K3 assign flow, image18).**
+Today: creating an interview is a THREE-surface hop — CustomPlanDoor (draft) → plan detail
+(review) → SendInterviewFlow modal (enter email/modality, send). The modality toggle in that
+modal was DROPPED (send_interview hardcoded modality='text', so voice was never honored). After
+(image18): ONE assign screen at /interviews/new. Step 1 collects who + optional focus →
+generate_plan (the existing job) → step 2 shows the assign screen built from the REAL drafted
+plan: employee details (name/email/job title), interview structure (voice/text + language —
+the ONLY honest structure fields; no editable deadline because the invite TTL is fixed at 14
+days, so a deadline picker would be faked), a draft-plan preview (goal / known context chips /
+definition-of-done / draft topics, all from the real plan), a readiness checklist (four REAL
+checks; "deadline set" dropped), and a left "Add details for Nexus" box wired to the EXISTING
+refine-chat endpoint that shows an applied-changes checklist and re-pulls the plan. "Review
+interview" persists delivery intent to `mission.delivery` (new `POST /plans/{id}/delivery`,
+jsonb, NO migration) and navigates to the plan detail — THE GATE IS UNTOUCHED (approve/check/
+send still live there; nothing sends here). Honest backend fix: send_interview now honors the
+chosen modality (voice IS supported end-to-end — InterviewClient reads session.modality,
+VoiceCall works — it was just being dropped); SendInterviewFlow prefills from mission.delivery
+so delivery is captured once. /interviews/new replaces the ?new=1 door; /plans?new redirects
+there. Simpler or more complex? SIMPLER: one screen to set up an interview instead of three
+hops, with the voice/text choice finally honored. Note: CustomPlanDoor.tsx is now orphaned
+(no importer) — flagged for the Phase 4 dead-code sweep, not deleted here to avoid churn.
+
 ---
 
 # NIGHT MARATHON — July 8/9 (docs/MARATHON-ORDERS.md; A28 binds every change)

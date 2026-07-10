@@ -11,6 +11,10 @@ export default function PlansPage({
   params: { slug: string };
   searchParams?: { new?: string };
 }) {
-  const suffix = searchParams?.new === "1" ? "?new=1" : "";
-  redirect(`/w/${params.slug}/interviews${suffix}`);
+  // The "create" intent now lands on the assign flow; the bare list folds into the hub.
+  redirect(
+    searchParams?.new === "1"
+      ? `/w/${params.slug}/interviews/new`
+      : `/w/${params.slug}/interviews`,
+  );
 }

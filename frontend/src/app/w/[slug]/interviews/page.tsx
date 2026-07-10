@@ -8,13 +8,7 @@ import { InterviewsView } from "@/components/interviews/InterviewsView";
 // force-dynamic: session + plan status is live data, never cache it.
 export const dynamic = "force-dynamic";
 
-export default async function InterviewsPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string };
-  searchParams?: { new?: string };
-}) {
+export default async function InterviewsPage({ params }: { params: { slug: string } }) {
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
 
@@ -22,12 +16,5 @@ export default async function InterviewsPage({
     list_sessions(workspace.id),
     list_plans(workspace.id).catch(() => []),
   ]);
-  return (
-    <InterviewsView
-      workspace={workspace}
-      sessions={sessions}
-      plans={plans}
-      openNew={searchParams?.new === "1"}
-    />
-  );
+  return <InterviewsView workspace={workspace} sessions={sessions} plans={plans} />;
 }

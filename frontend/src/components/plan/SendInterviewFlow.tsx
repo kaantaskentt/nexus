@@ -33,10 +33,13 @@ export function SendInterviewFlow({
   onSent: (invitePath: string) => void;
 }) {
   const [step, setStep] = useState<Step>("details");
+  // Prefill from the assign flow's captured delivery intent (K3 single-capture) so the
+  // send step is a confirm, not a re-entry. Falls back to sensible defaults.
+  const delivery = plan.mission.delivery;
   const [name, setName] = useState(plan.interviewee_name ?? "");
-  const [role, setRole] = useState(plan.interviewee_role ?? "");
-  const [email, setEmail] = useState("");
-  const [modality, setModality] = useState<"voice" | "text">("voice");
+  const [role, setRole] = useState(delivery?.job_title ?? plan.interviewee_role ?? "");
+  const [email, setEmail] = useState(delivery?.email ?? "");
+  const [modality, setModality] = useState<"voice" | "text">(delivery?.modality ?? "voice");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(false);
   const [result, setResult] = useState<SendResult | null>(null);
@@ -62,6 +65,7 @@ export function SendInterviewFlow({
         email,
         job_title: role,
         language: "en",
+        modality,
       });
       setResult(r);
       setStep("sent");

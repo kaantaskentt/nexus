@@ -467,11 +467,30 @@ export interface SendResult {
 }
 export async function send_interview(
   plan_id: string,
-  details: { interviewee_name?: string; email?: string; job_title?: string; language?: string },
+  details: {
+    interviewee_name?: string;
+    email?: string;
+    job_title?: string;
+    language?: string;
+    modality?: "voice" | "text";
+  },
 ): Promise<SendResult> {
   return api<SendResult>(`/api/plans/${plan_id}/send`, {
     method: "POST",
     body: JSON.stringify(details),
+  });
+}
+
+// Persist the assign flow's delivery intent onto the plan (mission.delivery) so the send
+// step post-approval reuses it — no re-asking (K3 single-capture). Admin-only draft
+// metadata; nothing about the gate or the respondent moves here.
+export async function save_plan_delivery(
+  plan_id: string,
+  delivery: { email?: string; job_title?: string; modality?: "voice" | "text"; language?: string },
+): Promise<{ plan_id: string; delivery: Record<string, string> }> {
+  return api(`/api/plans/${plan_id}/delivery`, {
+    method: "POST",
+    body: JSON.stringify(delivery),
   });
 }
 

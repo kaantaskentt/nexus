@@ -10,7 +10,6 @@ import { rise, staggerParent } from "@/lib/variants";
 import { cn } from "@/lib/cn";
 import { PlanStateChip } from "@/components";
 import { DeleteInterviewDialog } from "./DeleteInterviewDialog";
-import { CustomPlanDoor } from "../plan/CustomPlanDoor";
 import { StageDots, stageLabel, type Stage } from "./StageRail";
 
 // Interview status → a calm pill. These are the interview_sessions states (F: pending →
@@ -124,12 +123,10 @@ export function InterviewsView({
   workspace,
   sessions,
   plans,
-  openNew = false,
 }: {
   workspace: Workspace;
   sessions: SessionSummary[];
   plans: InterviewPlan[];
-  openNew?: boolean;
 }) {
   // Expired links are noise for a returning admin (premium audit P1-5): kept out of the
   // list, honestly counted below it. Nothing is deleted; an expired session with a report
@@ -150,10 +147,9 @@ export function InterviewsView({
       <motion.div variants={rise} initial="hidden" animate="show">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Interviews</h1>
-          {/* One primary door for creating an interview (Kaan). Opens the custom-interview
-              form via ?new=1 — the same flow, now on the one hub that holds every stage. */}
+          {/* One primary door for creating an interview (Kaan): the K3 assign flow. */}
           <Link
-            href={`/w/${workspace.slug}/interviews?new=1`}
+            href={`/w/${workspace.slug}/interviews/new`}
             className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover"
           >
             <Plus className="h-4 w-4" strokeWidth={2} /> New interview
@@ -181,12 +177,6 @@ export function InterviewsView({
         )}
       </motion.div>
 
-      {/* Custom-interview door (relocated from /plans). K3 replaces this with the full
-          assign flow at this same entry point. */}
-      <div className="mt-6">
-        <CustomPlanDoor workspaceId={workspace.id} defaultOpen={openNew} />
-      </div>
-
       {items.length === 0 ? (
         <EmptyInterviews />
       ) : (
@@ -194,7 +184,7 @@ export function InterviewsView({
           variants={staggerParent}
           initial="hidden"
           animate="show"
-          className="mt-2 space-y-3"
+          className="mt-8 space-y-3"
         >
           {items.map((item) => (
             <HubCard key={item.key} workspace={workspace} item={item} />

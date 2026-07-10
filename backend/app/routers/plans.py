@@ -257,6 +257,11 @@ class SendIn(BaseModel):
     email: str | None = None
     job_title: str | None = None
     language: str = "en"
+    # Delivery modality (K3 assign flow): the DB + respondent already support voice AND text
+    # (interview_sessions.modality check; InterviewClient reads session.modality), but send
+    # used to hardcode 'text' and drop the caller's choice. Honor it now — text stays the
+    # safe default when unset.
+    modality: str = "text"
 
 
 @router.post("/{plan_id}/send")
@@ -275,6 +280,7 @@ async def send_interview(plan_id: str, body: SendIn):
     if plan["state"] != "APPROVED":
         raise HTTPException(409, f"plan must be APPROVED to send (is {plan['state']})")
 
+    modality = body.modality if body.modality in ("voice", "text") else "text"
     # Build the handoff synchronously so it exists the moment the respondent starts.
     await build_handoff_package(plan_id)
 
@@ -285,9 +291,9 @@ async def send_interview(plan_id: str, body: SendIn):
             """insert into interview_sessions
                  (workspace_id, plan_id, round_id, interviewee_id, modality, language,
                   invite_token, token_expires_at, status)
-               values ($1,$2,$3,$4,'text',$5,$6,$7,'pending') returning id""",
+               values ($1,$2,$3,$4,$5,$6,$7,$8,'pending') returning id""",
             plan["workspace_id"], plan_id, plan["round_id"], plan["interviewee_id"],
-            body.language, token, expires,
+            modality, body.language, token, expires,
         )
         await conn.execute(
             "update interview_plans set state = 'SENT', updated_at = now() where id = $1", plan_id)
@@ -304,6 +310,43 @@ async def send_interview(plan_id: str, body: SendIn):
         "invite_url": f"{base}/i/{token}",
         "state": "SENT",
     }
+
+
+class DeliveryIn(BaseModel):
+    email: str | None = None
+    job_title: str | None = None
+    modality: str | None = None   # "voice" | "text"
+    language: str | None = None
+
+
+@router.post("/{plan_id}/delivery")
+async def save_delivery(plan_id: str, body: DeliveryIn):
+    """Persist the assign flow's delivery intent (email / job title / modality / language)
+    onto the plan so the eventual Send step (post-approval) uses it without re-asking (K3
+    single-capture). Stored inside the mission jsonb under `delivery` — NO schema change,
+    NO gate change: this is admin-only draft metadata, nothing reaches the respondent here
+    and nothing about approval moves. Idempotent: only the provided fields are updated."""
+    pool = await get_pool()
+    row = await pool.fetchrow("select mission from interview_plans where id = $1", plan_id)
+    if row is None:
+        raise HTTPException(404, "plan not found")
+    mission = row["mission"]
+    mission = json.loads(mission) if isinstance(mission, str) else (mission or {})
+    delivery = dict(mission.get("delivery") or {})
+    if body.email is not None:
+        delivery["email"] = body.email
+    if body.job_title is not None:
+        delivery["job_title"] = body.job_title
+    if body.modality in ("voice", "text"):
+        delivery["modality"] = body.modality
+    if body.language:
+        delivery["language"] = body.language
+    mission["delivery"] = delivery
+    await pool.execute(
+        "update interview_plans set mission = $2, updated_at = now() where id = $1",
+        plan_id, json.dumps(mission),
+    )
+    return {"plan_id": plan_id, "delivery": delivery}
 
 
 def _apply_change(mission: dict, questions: list, never: list, change: dict) -> bool:
