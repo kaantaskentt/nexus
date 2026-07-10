@@ -504,6 +504,15 @@ action list #1).
   wiring). R6 backend/frontend commits await team-lead review; 0027 migrations-first
   at seam B; R7 in progress (s7).
 
+- R6 + R7 REVIEWED (team-lead): APPROVED. R6 backend d03e736 (router gated at
+  include_router dependencies=_admin; minimization asserted by test; reviewer actions
+  record actor+time) + frontend 30c4bae (/incidents quiet surface). R7 b04c659 (revert
+  of the hold + respondent.ts render + both persona files, guards green as one unit).
+  Migration 0027 APPLIED to live + verified. SEAM B FIRING: serialized suite at pin
+  fa7a3b3 running; then backend+frontend deploy; driven checks = R6 inbox against the
+  two drill incidents · consent-line render on a live consent page · F7 mission-
+  authorization on a real test-mest plan · export /r leak walk (lane-export's script).
+
 ## RULINGS R2 (Kaan via watchtower, ~15:30) — LANE ASSIGNMENTS
 - R6 NO SendGrid: build IN-APP ADMIN INCIDENT INBOX for harm_incidents (Emre+Kaan see
   them in-app; email optional-if-key-ever-exists; email DROPPED from the done-bar).
