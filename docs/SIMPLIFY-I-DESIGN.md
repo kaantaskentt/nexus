@@ -74,32 +74,37 @@ scenario objectives} and opens the **new LiveRoom** (lane-e) adapted to the scen
 - After the run: the observation debrief (existing roleplay_debriefs → the J-lane overview
   card pattern) says how the interviewer did against this workflow's traps.
 
-## Build split (team-lead) + scenario payload contract
-- **My half (page):** scenario derivation + the page UI (value statement, scenario cards,
-  "How Nexus is tested" link with the Kaan-veto pre-review, zero-workflow empty state).
-  Derivation is a NEW backend endpoint `GET /api/simulations/{workspace_id}/scenarios`
-  (testable, server-side — mirrors lane C's list_workflows) that returns the derived list.
-- **Lane-e half (run wiring):** the mint + the adapted LiveRoom (SIMULATION marker,
-  objectives steering, suppressed Captured-live) + debrief-against-workflow.
-- **THE CONTRACT — a Scenario object my endpoint returns and the page hands to lane-e's Run:**
+## Build split (team-lead) + contract — AGREED with lane-e
+Agreed to lane-e's minimal-boundary shape (single-sourced archetype-match, no client/server
+drift). **The only thing crossing the boundary is `workflow_id` out and `{token, invite_path}`
+back.** The card does NOT name the archetype — the page stays workflow-first (Feedback-I is
+"your workflows", not generic characters); the character the admin will play surfaces in the
+room via the J-lane overview card, not on the scenario card.
+
+- **My half (page + derivation for DISPLAY).** A new `GET /api/simulations/{workspace_id}/scenarios`
+  returns the qualified, ranked cards — derivation is mine (mirrors lane C's list_workflows):
   ```
-  Scenario {
-    workflow_id:    string   // real workflow pressure-tested (from workflows table)
-    scenario_label: string   // e.g. "Daily Gold Repricing" — room header + card title
-    persona_key:    string   // matched archetype, MUST be in CAST_KEYS (existing play engine)
-    tests_summary:  string   // derived "what this tests and why" line (card + debrief context)
-    objectives:     string[] // derived probes the interviewer-under-test must hit
-                             // (must-hit steps, exceptions, single-owner risk, low-confidence)
+  ScenarioCard {
+    workflow_id:    string    // the only value that crosses to Run
+    label:          string    // workflow name, e.g. "Daily Gold Repricing"
+    step_count:     number
+    tests_summary:  string    // derived "what this tests and why" (display prose)
+    signals: { has_exceptions: bool, single_owner: bool, confidence: "high"|"medium"|"low" }
+                              // the ranking signals, from lane-C workflow attributes
   }
   ```
-  Today's mint is `POST /{workspace_id}/roleplay {persona_key}` → session_kind='roleplay',
-  `resumable_state={roleplay_persona}`. Proposed extension (lane-e owns the exact shape):
-  accept the Scenario (extend RolePlayIn with optional scenario fields, back-compatible so a
-  bare persona_key still serves the global "How Nexus is tested" cast), carry
-  `resumable_state={roleplay_persona: persona_key, scenario: {workflow_id, label,
-  tests_summary, objectives}}`, steer the interviewer with `objectives`, and have the debrief
-  judge against BOTH the persona sheet and whether those objectives were surfaced.
-  **Agree this shape with lane-e before either of us commits (team-lead's instruction).**
+  Qualify at >=3 steps; rank by has_exceptions / single_owner / lower confidence. NO archetype
+  or agent objectives here — those are Run's concern.
+- **Lane-e half (run).** `POST /api/simulations/{workspace_id}/scenario-run { workflow_id }`
+  → `{ token, invite_path }`. Given workflow_id, lane-e derives the archetype persona_key
+  (dept/role → CAST_KEYS) AND the interviewer objectives, mints the roleplay-kind session
+  (resumable_state carries persona + workflow_id + objectives), and opens the LiveRoom with the
+  SIMULATION marker + suppressed Captured-live + debrief-against-workflow. The page just
+  navigates to invite_path.
+- **No drift:** archetype-match + agent objectives are single-sourced in lane-e's backend; my
+  "tests_summary" is display prose derived in parallel from the same workflow attributes (a
+  different artifact for a different audience, not a duplicated source of truth).
+- Both halves gated on seam-2 verifying the room live; interface locked, no commits yet.
 
 ## Zero-workflow empty state (no leakage, ever)
 A thin tenant with no qualifying workflows shows an honest empty state, NOT the global cast:
