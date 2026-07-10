@@ -80,8 +80,13 @@ The point was the delta: are the Phase-0 P0/P1s dead? They are.
   changed the back-chrome to "Exit simulation"; added a regression test (marker present on the
   sim consent screen, absent for a normal interview; frontend 102 green). Needs the redeploy
   to land on prod. I will re-run the bee-goddess-demo scenario walk once it deploys and confirm
-  "Simulation · <workflow> — practice run…" shows at consent + pre-call. (Lane-e left the
-  consent BODY copy generic, marker-disambiguated — flagged to team-lead as optional polish.)
+  "Simulation · <workflow> — practice run…" shows at consent + pre-call.
+  **Consent BODY copy also fixed (lane-e bea9fac):** team-lead ruled it not-optional, so a
+  scenario-run consent no longer reads as an employee interview — it states plainly it's a
+  practice run against <workflow>, nothing reaches company records, and DROPS all real-person
+  promises (attribution, role-only sharing, recording-into-snapshot) since there's no person.
+  Consent drift guard green; employee + context consent byte-unchanged. Both fixes
+  (marker 6199a06 + copy bea9fac) ride the same redeploy — my re-verify covers both.
 - **Coverage honesty:** the walk concentrated on the P0s, the two worst Phase-0 pages, my own
   lanes, and a mobile-overflow sweep (Home/plan/interviews all `docOverflow 0`). Because the
   mobile fix is one shared AppShell component, mobile is confirmed dead across that sample
