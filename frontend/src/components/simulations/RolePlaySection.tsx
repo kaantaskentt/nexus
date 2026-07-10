@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Drama, ExternalLink, X, ClipboardList, Check, Minus, CircleDashed } from "lucide-react";
+import { Drama, ExternalLink, X, ClipboardList, Check, Minus, CircleDashed, ChevronDown } from "lucide-react";
 import type { RolePlayRun, SimulationCastMember } from "@/lib/live";
 import {
   get_roleplay_brief,
@@ -12,6 +12,8 @@ import {
 } from "@/lib/live";
 import { scrimFade, drawerSpring } from "@/lib/variants";
 import { useEscapeClose } from "@/lib/useEscapeClose";
+import { parseBrief } from "@/lib/roleplayBrief";
+import { cn } from "@/lib/cn";
 
 // F8 "Jump in as the employee" (admin-only page): pick a cast character, read the
 // playing brief, take the interview yourself in the normal room, come back for the
@@ -33,9 +35,21 @@ export function RolePlaySection({
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingDebrief, setPendingDebrief] = useState<string | null>(null);
+  const [briefTab, setBriefTab] = useState<"overview" | "full">("overview");
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEscapeClose(Boolean(briefFor), () => setBriefFor(null));
+
+  // Every character opens on the Overview tab with details collapsed — the CEO-legible
+  // view first, the raw technical brief one tab away.
+  const parsed = useMemo(() => (brief ? parseBrief(brief) : null), [brief]);
+  const overviewSections = parsed?.sections.filter((s) => s.tier === "overview") ?? [];
+  const detailSections = parsed?.sections.filter((s) => s.tier === "details") ?? [];
+  useEffect(() => {
+    setBriefTab("overview");
+    setDetailsOpen(false);
+  }, [briefFor]);
 
   async function play(member: SimulationCastMember) {
     setBusyKey(member.key);
@@ -228,9 +242,110 @@ export function RolePlaySection({
                   <X className="h-4 w-4" strokeWidth={1.75} />
                 </button>
               </div>
-              <div className="mt-4 min-h-0 flex-1 overflow-y-auto rounded-lg border border-line bg-surface-sunken/50 p-4 text-xs leading-relaxed text-ink-soft whitespace-pre-wrap">
-                {brief}
+              {/* Overview (default) makes the scenario legible; Full brief keeps the raw
+                  markdown verbatim for anyone who wants the technical sheet. */}
+              <div className="mt-4 flex gap-1 border-b border-line">
+                {(["overview", "full"] as const).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setBriefTab(t)}
+                    aria-pressed={briefTab === t}
+                    className={cn(
+                      "-mb-px border-b-2 px-3 py-1.5 text-xs font-medium transition-colors",
+                      briefTab === t
+                        ? "border-ink text-ink"
+                        : "border-transparent text-ink-faint hover:text-ink",
+                    )}
+                  >
+                    {t === "overview" ? "Overview" : "Full brief"}
+                  </button>
+                ))}
               </div>
+
+              {briefTab === "full" ? (
+                <div className="mt-4 min-h-0 flex-1 overflow-y-auto rounded-lg border border-line bg-surface-sunken/50 p-4 text-xs leading-relaxed text-ink-soft whitespace-pre-wrap">
+                  {brief}
+                </div>
+              ) : (
+                <div className="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1 text-sm leading-relaxed text-ink-soft">
+                  {parsed?.intro && (
+                    <div className="rounded-lg border border-line bg-surface-sunken/50 p-4 text-ink">
+                      <MarkdownLite text={parsed.intro} />
+                    </div>
+                  )}
+
+                  {/* Structured cast facts (reliable — not parsed from the sheet). */}
+                  {(briefFor.style || briefFor.tests) && (
+                    <dl className="grid gap-3 sm:grid-cols-2">
+                      {briefFor.style && (
+                        <div>
+                          <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+                            Their style
+                          </dt>
+                          <dd className="mt-0.5">{briefFor.style}</dd>
+                        </div>
+                      )}
+                      {briefFor.tests && (
+                        <div>
+                          <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+                            What they test
+                          </dt>
+                          <dd className="mt-0.5">{briefFor.tests}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  )}
+
+                  {overviewSections.map((s) => (
+                    <section key={s.heading}>
+                      <h4 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+                        {s.heading}
+                      </h4>
+                      <div className="mt-1.5">
+                        <MarkdownLite text={s.body} />
+                      </div>
+                    </section>
+                  ))}
+
+                  {detailSections.length > 0 && (
+                    <div className="border-t border-line pt-3">
+                      <button
+                        onClick={() => setDetailsOpen((o) => !o)}
+                        aria-expanded={detailsOpen}
+                        className="flex items-center gap-1.5 text-xs font-medium text-ink-soft transition-colors hover:text-ink"
+                      >
+                        <ChevronDown
+                          className={cn("h-3.5 w-3.5 transition-transform", detailsOpen && "rotate-180")}
+                          strokeWidth={2}
+                        />
+                        {detailsOpen ? "Hide playing details" : "Show playing details — what to hold back & the baits"}
+                      </button>
+                      {detailsOpen && (
+                        <div className="mt-3 space-y-4">
+                          {detailSections.map((s) => (
+                            <section key={s.heading}>
+                              <h4 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+                                {s.heading}
+                              </h4>
+                              <div className="mt-1.5">
+                                <MarkdownLite text={s.body} />
+                              </div>
+                            </section>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Defensive fallback: a sheet that doesn't parse into anything still
+                      shows its text verbatim — never a blank card. */}
+                  {!parsed?.intro && overviewSections.length === 0 && detailSections.length === 0 && (
+                    <div className="whitespace-pre-wrap rounded-lg border border-line bg-surface-sunken/50 p-4 text-xs text-ink-soft">
+                      {brief}
+                    </div>
+                  )}
+                </div>
+              )}
               {invitePath && (
                 <a
                   href={invitePath}
@@ -247,5 +362,45 @@ export function RolePlaySection({
         )}
       </AnimatePresence>
     </section>
+  );
+}
+
+// A deliberately tiny markdown renderer for the parsed overview: bullet/numbered lists,
+// paragraphs, and **bold** — the only constructs the persona sheets use. The Full brief
+// tab shows the raw text verbatim, so this never has to be a complete markdown engine.
+function MarkdownLite({ text }: { text: string }) {
+  const blocks = text.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
+  return (
+    <div className="space-y-2">
+      {blocks.map((block, i) => {
+        const rows = block.split("\n");
+        const isList = rows.every((r) => /^\s*([-*]|\d+\.)\s+/.test(r));
+        if (isList) {
+          const ordered = /^\s*\d+\.\s+/.test(rows[0]);
+          const items = rows.map((r, j) => (
+            <li key={j}>{inlineBold(r.replace(/^\s*([-*]|\d+\.)\s+/, ""))}</li>
+          ));
+          return ordered ? (
+            <ol key={i} className="list-decimal space-y-1 pl-5">{items}</ol>
+          ) : (
+            <ul key={i} className="list-disc space-y-1 pl-5">{items}</ul>
+          );
+        }
+        return <p key={i}>{inlineBold(block)}</p>;
+      })}
+    </div>
+  );
+}
+
+// Split on **bold** spans; everything else is plain text (newlines collapse to spaces).
+function inlineBold(s: string): ReactNode {
+  return s.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    /^\*\*[^*]+\*\*$/.test(part) ? (
+      <strong key={i} className="font-semibold text-ink">
+        {part.slice(2, -2)}
+      </strong>
+    ) : (
+      part
+    ),
   );
 }
