@@ -209,3 +209,9 @@ at CLAIMED), plan edits reuse the K3 refine `_apply_change` primitive, non-negot
   plan_generate still 12/12 (no regression). Migration 0025 applies at the seam, not by me.
   Remaining: (3) UI intake phase on /interviews/new reusing K3 applied-changes, (4) required
   role+focus + role suggestions, (5) evals (asks-not-tells; storage-decision honest).
+- COMMIT 3 (required fields) LANDED (ADDENDUM 4.1): AssignInterviewFlow CollectStep now REQUIRES
+  name + role + focus (was name-only); the Draft button gates on all three and an inline error
+  names what's missing. Role field gains a datalist of known roles (distinct interviewee_role
+  from existing plans, passed from the server page) but stays free-text. Copy updated: "tell
+  Nexus who, their role, and what this should find out" + a helper noting the intake follow-ups
+  come next. tsc clean, frontend 107/107. Remaining: (UI intake phase) + (evals).

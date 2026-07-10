@@ -28,7 +28,15 @@ type Phase = "collect" | "drafting" | "assign";
 // SendInterviewFlow. Collect the person, let Nexus draft the plan from the records, then
 // shape delivery + refine the draft in one place. "Review interview" carries the plan into
 // the normal gate (the plan detail's approve/check/send is untouched — nothing sends here).
-export function AssignInterviewFlow({ workspace }: { workspace: Workspace }) {
+export function AssignInterviewFlow({
+  workspace,
+  roleSuggestions = [],
+}: {
+  workspace: Workspace;
+  // Known roles from people already in the workspace — offered as suggestions on the
+  // required Role field (ADDENDUM 4.1), but the field stays free-text.
+  roleSuggestions?: string[];
+}) {
   const router = useRouter();
   // Pre-seed from the URL when this flow is entered as a FOLLOW-UP from a report
   // (?name=&role=&focus=): the report's open items become the starting focus, so
@@ -53,7 +61,16 @@ export function AssignInterviewFlow({ workspace }: { workspace: Workspace }) {
   const language = "en";
 
   async function draft() {
-    if (!name.trim() || busy) return;
+    if (busy) return;
+    // ADDENDUM 4.1: role + focus are REQUIRED now — both sharpen the draft, so the flow
+    // asks for them up front instead of silently drafting from thin input.
+    if (!name.trim() || !role.trim() || !focus.trim()) {
+      setError(
+        "Add the person, their role, and what this interview should find out — all three help " +
+          brand.product_name + " draft a sharp plan.",
+      );
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -128,6 +145,7 @@ export function AssignInterviewFlow({ workspace }: { workspace: Workspace }) {
         name={name}
         role={role}
         focus={focus}
+        roleSuggestions={roleSuggestions}
         busy={busy}
         error={error}
         onName={setName}
@@ -179,6 +197,7 @@ function CollectStep({
   name,
   role,
   focus,
+  roleSuggestions,
   busy,
   error,
   onName,
@@ -190,6 +209,7 @@ function CollectStep({
   name: string;
   role: string;
   focus: string;
+  roleSuggestions: string[];
   busy: boolean;
   error: string | null;
   onName: (v: string) => void;
@@ -197,6 +217,7 @@ function CollectStep({
   onFocus: (v: string) => void;
   onDraft: () => void;
 }) {
+  const ready = name.trim() && role.trim() && focus.trim();
   return (
     <div className="mx-auto max-w-2xl px-6 py-10 sm:px-8">
       <Link
@@ -207,9 +228,9 @@ function CollectStep({
       </Link>
       <h1 className="mt-3 font-display text-[2.5rem] leading-[1.05] text-ink">New interview</h1>
       <p className="mt-2 max-w-xl text-[0.95rem] leading-relaxed text-ink-soft">
-        Name who to interview and, if you want, what it should find out. {brand.product_name}{" "}
-        drafts the plan from the records, checks it, and waits for your approval before
-        anything reaches the person.
+        Tell {brand.product_name} who to interview, their role, and what this interview should
+        find out. {brand.product_name} drafts the plan from the records, checks it, and waits
+        for your approval before anything reaches the person.
       </p>
 
       <div className="mt-8 rounded-card border border-line bg-surface p-6 shadow-card">
@@ -224,35 +245,44 @@ function CollectStep({
             />
           </label>
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
-              Role <span className="font-normal normal-case text-ink-faint">(optional)</span>
-            </span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-ink-faint">Role</span>
             <input
               value={role}
               onChange={(e) => onRole(e.target.value)}
               placeholder="Their role"
+              list={roleSuggestions.length > 0 ? "known-roles" : undefined}
               className="mt-1.5 w-full rounded-md border border-line bg-surface-sunken/40 px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-line-strong focus:outline-none"
             />
+            {roleSuggestions.length > 0 && (
+              <datalist id="known-roles">
+                {roleSuggestions.map((r) => (
+                  <option key={r} value={r} />
+                ))}
+              </datalist>
+            )}
           </label>
         </div>
         <label className="mt-4 block">
           <span className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
-            What should this interview find out?{" "}
-            <span className="font-normal normal-case text-ink-faint">(optional)</span>
+            What should this interview find out?
           </span>
           <textarea
             value={focus}
             onChange={(e) => onFocus(e.target.value)}
             rows={3}
-            placeholder="Leave blank to derive the focus from the company records."
+            placeholder="e.g. how they handle customer reschedules, and where they check availability."
             className="mt-1.5 w-full resize-y rounded-md border border-line bg-surface-sunken/40 px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-line-strong focus:outline-none"
           />
+          <span className="mt-1 block text-xs text-ink-faint">
+            A sentence is plenty. {brand.product_name} asks you a couple of sharp follow-ups
+            next to fill the gaps.
+          </span>
         </label>
         {error && <p className="mt-3 text-sm text-danger">{error}</p>}
         <div className="mt-5 flex items-center gap-3">
           <button
             onClick={onDraft}
-            disabled={!name.trim() || busy}
+            disabled={!ready || busy}
             className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard enabled:hover:-translate-y-px enabled:hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : <Sparkles className="h-4 w-4" strokeWidth={2} />}
