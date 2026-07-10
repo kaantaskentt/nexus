@@ -28,6 +28,11 @@ Hi {{RESPONDENT_NAME}}, thanks for being here. {{ADMIN_NAME}} at {{COMPANY_NAME}
 
 - **Nothing is quoted with your name on it.** Your answers are combined with everyone else's before anyone sees conclusions. If there's something you want credited to you, say so, and you'll see exactly how it appears before it goes anywhere.
 - **You won't be asked to rate anyone.** If an opinion about a person comes up, it's kept out of what's shared unless you explicitly say otherwise.
+<!-- GATED-AT-SEAM (lane-s7 commit e): Section 7.8 disclosure/escalation line, Emre-authored.
+     Locked-compliance copy; DO NOT DEPLOY without the Kaan+Emre nod. It converts a surprise
+     escalation into a disclosed term (§7.8): the interviewer never over-promises secrecy in the
+     room because this line already sets the honest expectation. -->
+- **If you disclose imminent harm or serious wrongdoing,** we may stop the interview and escalate to a human reviewer, and we cannot guarantee confidentiality over that disclosure.
 - **You can pause anytime** and pick up later on the same link.
 
 ### Explicit start action
@@ -60,6 +65,10 @@ Hi {{RESPONDENT_NAME}}, thanks for making the time. This is the context call, wh
 - **What you share builds your company's snapshot and is attributed to you as its source.**
 - {{PRODUCT_NAME}} may gather relevant public information about the company after the call to round out the picture. Public information is reference only, never treated as verified fact.
 - **The snapshot is yours to review first**, and no one on your team is contacted without your explicit approval. Nothing you say here is ever repeated to an employee.
+<!-- GATED-AT-SEAM (lane-s7 commit e): Section 7.8 disclosure/escalation line, Emre-authored.
+     Locked-compliance copy; DO NOT DEPLOY without the Kaan+Emre nod. Applies on the context
+     call too (§7.1 scope: all live capture interviews). -->
+- **If you disclose imminent harm or serious wrongdoing,** Nexus may stop the call and escalate to a human reviewer, and we cannot guarantee confidentiality over that disclosure.
 - **You can pause anytime** and pick up later on the same link.
 
 ### Explicit start action
@@ -87,6 +96,9 @@ Merhaba {{RESPONDENT_NAME}}, burada olduğunuz için teşekkürler. {{COMPANY_NA
 - **Kimler görür:** işin nasıl aktığına dair kısa bir özet, bunu isteyen {{COMPANY_NAME}} ekibine gider. Sıkıntılar adınızla değil, "paketlemeden biri" gibi rol düzeyinde paylaşılır.
 - **Adınız geçmeden önce siz görürsünüz.** Adınızla ilişkilendirilmeden önce her şeyi görür; değiştirebilir, adınızı kaldırabilir veya çıkarabilirsiniz.
 - **Kimseyi değerlendirmeniz istenmez.** Bir kişi hakkında görüş çıkarsa, siz açıkça istemedikçe paylaşılana dahil edilmez.
+<!-- GATED-AT-SEAM (lane-s7 commit e): §7.8 disclosure/escalation line, TR draft untuned (A13.1) —
+     DO NOT DEPLOY without the Kaan+Emre nod. -->
+- **Yakın bir zarar veya ciddi bir suistimal paylaşırsanız,** görüşmeyi durdurup konuyu bir insan incelemeciye iletebiliriz ve bu paylaşım için gizlilik garanti edemeyiz.
 - **İstediğiniz an ara verebilir**, aynı bağlantıdan sonra devam edebilirsiniz.
 
 ### Açık başlama eylemi
