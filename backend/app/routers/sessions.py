@@ -5,13 +5,14 @@ import json
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from ..auth import require_admin
 from ..config import get_settings
 from ..db import get_pool
 from ..pipeline import deletion
-from ..pipeline.interview import run_interview_turn
+from ..pipeline.interview import run_interview_turn, stream_interview_turn
 from ..pipeline.live_capture import extraction_in_flight
 from ..queue import enqueue
 from .plans import reconcile_plan_state
@@ -133,6 +134,31 @@ async def take_turn(token: str, body: TurnIn):
         raise HTTPException(409, f"interview already {session['status']}")
     result = await run_interview_turn(str(session["id"]), body.message)
     return result
+
+
+@router.post("/by-token/{token}/turn/stream")
+async def take_turn_stream(token: str, body: TurnIn):
+    """Streaming twin of /turn (SIMPLIFY E): SSE frames carry the interviewer's reply
+    token-by-token so words appear as they generate instead of dots for 3-7s. The
+    non-streaming /turn stays the fallback (the client retries there on any stream error).
+    Same session binding + expiry as /turn. Frames: {'type':'delta','text':...} per token,
+    a final {'type':'done', ...} with turn metadata, or {'type':'error'} if generation
+    failed BEFORE any turn was finalized (no half-turn is ever persisted)."""
+    session = await _session_for_token(token)
+    if session["status"] in ("completed", "expired"):
+        raise HTTPException(409, f"interview already {session['status']}")
+
+    async def sse():
+        try:
+            async for event in stream_interview_turn(str(session["id"]), body.message):
+                yield f"data: {json.dumps(event)}\n\n"
+        except Exception:
+            # Honest failure: the reply was not finalized, so the client can safely retry
+            # the same turn on the non-streaming endpoint (its own message re-send guard
+            # prevents a double respondent turn).
+            yield f"data: {json.dumps({'type': 'error'})}\n\n"
+
+    return StreamingResponse(sse(), media_type="text/event-stream")
 
 
 # ── Live captures (SIMPLIFY E) — the "Captured live" panel's data ───────────────

@@ -151,6 +151,78 @@ def cache_block(text: str) -> dict:
     return {"type": "text", "text": text, "cache_control": {"type": "ephemeral"}}
 
 
+def _chat_system(persona: str, extra_system: str, volatile_system: str, cache: bool):
+    """Assemble the interview-turn system exactly as run_chat does, so the streaming and
+    non-streaming paths are byte-identical (and share the same cache prefix)."""
+    stable = f"{persona}\n\n{extra_system}" if extra_system else persona
+    if cache:
+        system: str | list = [cache_block(stable)]
+        if volatile_system:
+            # Leading "\n\n" keeps the concatenation identical to the uncached string.
+            system.append({"type": "text", "text": f"\n\n{volatile_system}"})
+        return system
+    return f"{stable}\n\n{volatile_system}" if volatile_system else stable
+
+
+async def run_chat_stream(
+    agent_name: str,
+    messages: list[dict],
+    *,
+    extra_system: str = "",
+    volatile_system: str = "",
+    cache: bool = False,
+    workspace_id: str | None = None,
+    session_id: str | None = None,
+    industry_block: str | None = None,
+    max_tokens: int = 2048,
+):
+    """Streaming twin of run_chat for the text-turn SSE path (SIMPLIFY E): yields reply
+    text deltas as they generate so words appear immediately instead of dots for 3-7s,
+    while the pipeline contract is unchanged. Identical cached-system assembly as run_chat;
+    the same agent_runs audit row is written at stream end (with cache token counts)."""
+    cfg = await get_agent_config(agent_name)
+    persona = load_prompt(cfg["prompt_path"], industry_block)
+    system = _chat_system(persona, extra_system, volatile_system, cache)
+    started = time.monotonic()
+    status, error, text = "ok", None, ""
+    usage_in = usage_out = cache_read = cache_write = None
+    try:
+        async with client().messages.stream(
+            model=cfg["model"], max_tokens=max_tokens, system=system, messages=messages
+        ) as stream:
+            async for delta in stream.text_stream:
+                text += delta
+                yield delta
+            final = await stream.get_final_message()
+            usage_in, usage_out = final.usage.input_tokens, final.usage.output_tokens
+            cache_read = getattr(final.usage, "cache_read_input_tokens", None)
+            cache_write = getattr(final.usage, "cache_creation_input_tokens", None)
+    except Exception as e:
+        status, error = "error", str(e)
+        raise
+    finally:
+        pool = await get_pool()
+        await pool.execute(
+            """insert into agent_runs (agent_name, model, prompt_version, workspace_id,
+                   session_id, input_ref, output_ref, retrieval_queries,
+                   input_tokens, output_tokens, latency_ms, status, error)
+               values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)""",
+            agent_name,
+            cfg["model"],
+            cfg["prompt_version"],
+            workspace_id,
+            session_id,
+            json.dumps({"turns": len(messages), "cache_read": cache_read, "cache_write": cache_write, "streamed": True}),
+            json.dumps({"chars": len(text)}),
+            json.dumps([]),
+            usage_in,
+            usage_out,
+            int((time.monotonic() - started) * 1000),
+            status,
+            error,
+        )
+
+
 async def run_chat(
     agent_name: str,
     messages: list[dict],
@@ -174,14 +246,7 @@ async def run_chat(
     served from cache. Same audit trail as run_agent, plus cache token counts."""
     cfg = await get_agent_config(agent_name)
     persona = load_prompt(cfg["prompt_path"], industry_block)
-    stable = f"{persona}\n\n{extra_system}" if extra_system else persona
-    if cache:
-        system: str | list = [cache_block(stable)]
-        if volatile_system:
-            # Leading "\n\n" keeps the concatenation identical to the uncached string.
-            system.append({"type": "text", "text": f"\n\n{volatile_system}"})
-    else:
-        system = f"{stable}\n\n{volatile_system}" if volatile_system else stable
+    system = _chat_system(persona, extra_system, volatile_system, cache)
     started = time.monotonic()
     status, error, text = "ok", None, ""
     usage_in = usage_out = cache_read = cache_write = None

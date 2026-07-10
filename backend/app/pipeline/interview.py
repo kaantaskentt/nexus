@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 
 from ..config import REPO_ROOT, get_settings
 from ..db import get_pool
-from ..llm import cache_block, client, get_agent_config, load_prompt, run_chat
+from ..llm import cache_block, client, get_agent_config, load_prompt, run_chat, run_chat_stream
 from ..queue import handles
 from . import attention, coverage, handoff
 from .live_capture import enqueue_extraction
@@ -253,6 +253,34 @@ async def run_interview_turn(session_id: str, respondent_text: str | None = None
         industry_block=_industry_block(ctx["session"]["industry"]),
     )
     return await _finalize_turn(ctx, reply)
+
+
+async def stream_interview_turn(session_id: str, respondent_text: str | None = None):
+    """Streaming text turn (SIMPLIFY E): the same engine as run_interview_turn, but the
+    reply streams token-by-token so perceived latency drops to first-token instead of
+    3-7s of typing dots. Same contract otherwise — _prepare_turn stores the respondent's
+    verbatim turn, _finalize_turn persists the assembled reply and advances resumable_state
+    (and fires live capture), so a stream and a non-stream turn are indistinguishable in the
+    record. Yields {'type':'delta','text':...} per token, then one {'type':'done', ...} with
+    the same fields the non-streaming endpoint returns. If the stream errors mid-flight the
+    reply is NOT finalized (no half-turn is stored) and the exception propagates to the
+    endpoint, which tells the client to fall back — never a silent partial turn."""
+    ctx = await _prepare_turn(session_id, respondent_text)
+    parts: list[str] = []
+    async for delta in run_chat_stream(
+        ctx["persona"],
+        ctx["messages"],
+        extra_system=ctx["extra_system"],
+        volatile_system=ctx["volatile_system"],
+        cache=True,
+        workspace_id=str(ctx["session"]["workspace_id"]),
+        session_id=session_id,
+        industry_block=_industry_block(ctx["session"]["industry"]),
+    ):
+        parts.append(delta)
+        yield {"type": "delta", "text": delta}
+    result = await _finalize_turn(ctx, "".join(parts))
+    yield {"type": "done", **result}
 
 
 async def build_voice_system(session_id: str) -> list[dict]:
