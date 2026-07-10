@@ -178,3 +178,18 @@ untouched, append-only render order kept within each section. Report-style singl
 VETO TARGETS for Kaan: (1) the section order + which items count as "attention"; (2) demoting
 the evidence rail to a drill-down; (3) dropping the per-card trust chip on the learned cards
 (kept on perception gaps). Suites + tsc + lint before the behavior commit; rides the next seam.
+
+VERDICT (behavior commit 0d4b52b, after pre-review 9886182): SnapshotView rebuilt to the
+reader-first single column exactly as the pre-review; new EvidenceDrawer holds the demoted
+CEO-call quotes; learned cards lost their per-card badge (trust on drill-down); new
+workflowCount prop (page passes workflows.length) feeds one real glance stat. Presentation
+only — no data/tag/order/quarantine change. Frontend 106/106, tsc + eslint clean.
+INCIDENT: SnapshotView.tsx was clobbered mid-edit in the shared tree (my restructure reverted
+to the committed regroup state while writing; only the orphan EvidenceDrawer helper survived).
+Re-applied under an announced hands-off and committed immediately to close the window. Lesson:
+on a hot shared file, announce exclusive edit + commit fast; the small window is the risk.
+OPEN (lane-shell fold, pending lead's mapping): Kaan confirmed the Insights FOLD, so Home may
+need to also HOST Automation opportunities + Key findings (not just Conflicts, which v2 already
+keeps). That is a scope expansion beyond this 3.2 commit — lands as a follow-up once the lead
+blesses the Home-vs-Workflows mapping; I own the SnapshotView rendering, lane-shell hands me
+the extracted section components.
