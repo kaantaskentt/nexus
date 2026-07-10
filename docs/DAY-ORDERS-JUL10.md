@@ -443,13 +443,28 @@ suite you designed caught it). Section 7 quarantine + reviewer notification are 
 notification currently persists incidents as 'skipped' until SendGrid keys land (Kaan
 action list #1).
 
+## RULINGS R2 (Kaan via watchtower, ~15:30) — LANE ASSIGNMENTS
+- R6 NO SendGrid: build IN-APP ADMIN INCIDENT INBOX for harm_incidents (Emre+Kaan see
+  them in-app; email optional-if-key-ever-exists; email DROPPED from the done-bar).
+  → lane-s7 (their surface). Reviewer-scoped admin route + quiet admin UI listing
+  {category, bucket, timestamp, session_ref, notify_status} — no verbatim exists by
+  schema. Deploys seam B with driven verify.
+- R7 SHIP the Section 7 consent line: revert the revert 8a03c9e + wire the frontend
+  render (consentCopy) + drift guard + em-dash lint green, one unit. → lane-s7.
+- R8 report footer ships AS-IS — Kaan flag #3 CLOSED.
+- R10 delete-company STAYS HELD (cascade deletes sealed_flags = harm disclosures;
+  needs Emre sealed-flag ruling). Confirmed: gate untouched, reap ledger waits.
+- SEAM A.5 DEPLOYED (pin 5dfaf3a, prompt/eval-only delta verified): RED-182 verbatim-
+  packet fix + acuity-probe ban live. s7's exact-repro evidence: 36/36 both personas
+  TR+EN, zero 182, zero probe. Engine text-substitution DECLINED (voice path cannot be
+  post-processed — VAPI speaks from the prompt; the CI bait is the structural net,
+  same shape as the identity fix). Emre-clearance caveat SOFTENS to: "fixed+deployed;
+  permanent CI baits landing".
+
 ## KAAN ACTION LIST (consolidated, batched — nothing blocks the lanes)
-1. SENDGRID_API_KEY (ENVIRONMENT.md item 6, still outstanding) + new INCIDENT_NOTIFY_EMAILS
-   (Kaan + Emre addresses) in Railway → turns Section 7 reviewer notification from
-   'skipped'-fallback into real email (R2). Until then incidents persist + log loudly.
-2. Consent line nod (Kaan+Emre): S7 §7.8 one-liner — commit 56dce06 held via revert
-   8a03c9e; re-land = revert the revert.
-3. Report footer wording (honest correction shipped, taste pass invited).
+1. ~~SendGrid key~~ SUPERSEDED by R6 (in-app inbox; email optional).
+2. ~~Consent line nod~~ GIVEN by R7 (shipping via lane-s7).
+3. ~~Report footer wording~~ CLOSED by R8 (ships as-is).
 4. Respondent count-pill look (R1 split shipped with pill; swap to a panel is ~10min).
 5. Plan-detail right void: design session (recommend single reading column + sticky bar).
    Stat-chip labeling same pass.
