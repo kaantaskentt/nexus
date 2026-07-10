@@ -191,3 +191,11 @@ does not apply to eval runs).
   ("I've noticed"). Distinct from and cross-referenced to lane-s7's disclosure-humor rule
   (I did not touch that section). Bit 4/4 on old with the agreement-invitation turn; passes
   on new (redirects to process, no play-along). Rides bait-f4-humor-on-person.
+- **F5 — GREEN.** Phase-4 script, quarantine-reflex example, and banned-list all changed
+  from the ranking form ("who's solid, who's coasting, who would surprise me") to the
+  process-shaped + individual-read form ("who owns what" / "how do you read [name], so I
+  know how to walk in"); the recovery/quarantine promise stays; deliberate read-capture
+  (build hook) preserved. Bit on old (emitted the exact pilot ranking even after the
+  promise); passes on new (promise then per-person read, no leaderboard). No regression:
+  fixed 10/10 (cc-people-reads-quarantine-promise), calibration 7/7 (cal-people-*). Rides
+  bait-f5-no-people-ranking.
