@@ -13,6 +13,7 @@ from .routers import (
     chat,
     claims,
     company_report,
+    incidents,
     integrations,
     observer,
     plans,
@@ -67,6 +68,8 @@ app.include_router(integrations.router, prefix="/api/integrations", tags=["integ
 app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"], dependencies=_seat)
 app.include_router(observer.router, prefix="/api/observer", tags=["observer"], dependencies=_admin)
 app.include_router(simulations.router, prefix="/api/simulations", tags=["simulations"], dependencies=_admin)
+# R6: Section-7 harm-incident inbox — reviewer-scoped, admin-gated, never client-visible.
+app.include_router(incidents.router, prefix="/api/incidents", tags=["incidents"], dependencies=_admin)
 # artifacts: mixed gate like `sessions` — by-token routes are public (the respondent has
 # no JWT), the admin routes carry require_admin per-route.
 app.include_router(artifacts.router, prefix="/api/artifacts", tags=["artifacts"])

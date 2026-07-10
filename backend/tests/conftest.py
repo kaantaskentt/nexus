@@ -47,6 +47,7 @@ MIGRATIONS = [
     BACKEND / "db" / "migrations" / "0024_live_captures.sql",
     # 0025_intake_agent.sql stays parked (SIMPLIFY-PARK); 0026 is independent of it.
     BACKEND / "db" / "migrations" / "0026_harm_incidents.sql",
+    BACKEND / "db" / "migrations" / "0027_harm_incident_review.sql",
 ]
 
 
