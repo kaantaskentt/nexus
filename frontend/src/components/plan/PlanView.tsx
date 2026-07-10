@@ -12,7 +12,8 @@ import {
   Info,
   Clock,
   CheckCircle2,
-  Paperclip,
+  HelpCircle,
+  Sparkles,
   SendHorizontal,
   PencilLine,
   ArrowLeft,
@@ -22,28 +23,73 @@ import {
   AlertTriangle,
   PauseCircle,
   Loader2,
+  ChevronDown,
 } from "lucide-react";
-import type { InterviewPlan, PlanCheckFlag, PlanState, Workspace } from "@/lib/types";
+import type {
+  ClaimTopic,
+  InterviewPlan,
+  PlanCheckFlag,
+  PlanState,
+  SuggestedQuestion,
+  Workspace,
+} from "@/lib/types";
 import brand from "@/lib/brand";
 import { transition_plan, refine_plan, redraft_plan } from "@/lib/live";
 import { PlanStateChip, MustHitDot, DiscoveryTag, BrandMark } from "@/components";
+import { cn } from "@/lib/cn";
 import { SendInterviewFlow } from "./SendInterviewFlow";
 
 // The tracker ends at a single terminal node "Completed" (YC-AUDIT #13): COMPILED is the
 // same milestone to the user (records compiled behind the scenes), so it sits on the
 // COMPLETED node rather than adding a second near-identical "Compiled" step.
 const TRACK: PlanState[] = ["SENT", "OPENED", "IN_PROGRESS", "COMPLETED"];
-// States that imply the plan cleared approval (footer reads "Approved" even when the
-// live plan carries no approved_by stamp).
-const APPROVED_STATES = new Set<PlanState>([
-  "APPROVED", "SENT", "OPENED", "IN_PROGRESS", "PAUSED", "COMPLETED", "COMPILED",
-]);
 const TRACK_LABEL: Record<string, string> = {
   SENT: "Sent",
   OPENED: "Opened",
   IN_PROGRESS: "In progress",
   COMPLETED: "Completed",
 };
+
+// Suggested questions carry the generator's real per-question `topic` (a ClaimTopic — the
+// same taxonomy the records use), so grouping them is HONEST, never a fabricated mapping
+// (K1 acceptance). These are the human-readable group headers; an untagged question falls
+// into a general bucket. When the plan carries only one topic (or none), the view renders a
+// single "Suggested questions" group rather than an invented subdivision.
+const QUESTION_GROUP_LABEL: Record<ClaimTopic, string> = {
+  process_step: "Process & steps",
+  pain: "Pain points & friction",
+  person: "People & handoffs",
+  tool: "Tools & systems",
+  vocabulary: "Terms & vocabulary",
+  time_or_cost: "Time & cost",
+  company_fact: "Company facts",
+  success_criteria: "Outcomes & success",
+};
+
+const GENERAL_KEY = "_general";
+
+function groupQuestions(
+  questions: SuggestedQuestion[],
+): { key: string; label: string; questions: SuggestedQuestion[] }[] {
+  const order: string[] = [];
+  const buckets = new Map<string, SuggestedQuestion[]>();
+  for (const q of questions) {
+    const key = q.topic ?? GENERAL_KEY;
+    if (!buckets.has(key)) {
+      buckets.set(key, []);
+      order.push(key);
+    }
+    buckets.get(key)!.push(q);
+  }
+  return order.map((key) => ({
+    key,
+    label:
+      key === GENERAL_KEY
+        ? "More questions"
+        : QUESTION_GROUP_LABEL[key as ClaimTopic] ?? "More questions",
+    questions: buckets.get(key)!,
+  }));
+}
 
 export function PlanView({
   workspace,
@@ -138,20 +184,35 @@ export function PlanView({
   const mustHit = plan.mission.topics.filter((t) => t.must_hit);
   const niceToHave = plan.mission.topics.filter((t) => !t.must_hit);
   const cfg = workspace.config ?? {};
+  const displayName = plan.interviewee_name ?? "this person";
 
   return (
     <>
-      <div className="mx-auto max-w-6xl px-8 py-8">
-        <Link
-          href={`/w/${workspace.slug}/plans`}
-          className="inline-flex items-center gap-1 text-sm text-ink-faint hover:text-ink"
-        >
-          <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> All interview plans
-        </Link>
+      <div className="mx-auto max-w-6xl px-6 pb-40 pt-8 sm:px-8">
+        {/* Breadcrumb-style return (image21): the hub, then this person. */}
+        <div className="flex flex-wrap items-center gap-1.5 text-sm text-ink-faint">
+          <Link
+            href={`/w/${workspace.slug}/interviews`}
+            className="inline-flex items-center gap-1 hover:text-ink"
+          >
+            <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> All interviews
+          </Link>
+          <span className="text-line-strong">›</span>
+          <span className="text-ink-soft">
+            {plan.interviewee_name ?? "Unassigned"}
+            {plan.interviewee_role && `, ${plan.interviewee_role}`}
+          </span>
+        </div>
 
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Interview Plan</h1>
-          <div className="flex items-center gap-3">
+        <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Interview Plan</h1>
+            <p className="mt-1.5 max-w-xl text-[0.95rem] leading-relaxed text-ink-soft">
+              This is the interview mission for {displayName}. Review and refine it before
+              sending.
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
             {reportSessionId && (
               <Link
                 href={`/w/${workspace.slug}/report/${reportSessionId}`}
@@ -211,37 +272,32 @@ export function PlanView({
           </div>
         )}
 
+        {/* Two calm columns (image21). Left owns the mission as collapsible sections; right
+            owns Refine + the grouped question list. Both columns share consistent widths at
+            every viewport — the 254px/530px/1088px mix (audit finding 3) is gone. */}
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* ── Interview Mission ─────────────────────────────────────── */}
-          <section className="rounded-card border border-line bg-surface p-6 shadow-card">
-            <h2 className="font-display text-xl text-ink">Interview Mission</h2>
-
-            <div className="mt-4">
+          {/* ── Left: the mission, one calm section at a time ─────────── */}
+          <div className="space-y-4">
+            <div className="rounded-card border border-line bg-surface p-5 shadow-card">
               <div className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
                 Company
               </div>
               <div className="mt-1.5 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-line font-display text-sm text-ink">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-line font-display text-sm text-ink">
                   {workspace.name.split(/\s+/).slice(0, 2).map((p) => p[0]).join("")}
                 </div>
-                <div>
-                  <div className="font-medium text-ink">{workspace.name}</div>
+                <div className="min-w-0">
+                  <div className="truncate font-medium text-ink">{workspace.name}</div>
                   {cfg.tagline && (
-                    <div className="text-xs text-ink-faint">{cfg.tagline}</div>
+                    <div className="truncate text-xs text-ink-faint">{cfg.tagline}</div>
                   )}
                 </div>
               </div>
-            </div>
-
-            <div className="mt-4">
-              <div className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
-                Target Interviewee
-              </div>
-              <div className="mt-1.5 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-raised font-medium text-ink-soft">
+              <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-raised font-medium text-ink-soft">
                   {(plan.interviewee_name ?? "?").charAt(0)}
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <span className="font-medium text-ink">
                     {plan.interviewee_name}
                     {plan.interviewee_role && (
@@ -263,30 +319,37 @@ export function PlanView({
               </div>
             </div>
 
-            <div className="mt-6 space-y-4">
-              <MissionItem n={1} icon={Target} title="Goal">
-                <p className="text-sm leading-relaxed text-ink-soft">{plan.mission.goal}</p>
-                {plan.mission.custom_focus && (
-                  <p className="mt-1 text-xs text-ink-faint">
-                    Your focus, as you described it: &ldquo;{plan.mission.custom_focus}&rdquo;
-                  </p>
-                )}
-              </MissionItem>
+            <CollapsibleSection n={1} icon={Target} title="Goal">
+              <p className="text-sm leading-relaxed text-ink-soft">{plan.mission.goal}</p>
+              {plan.mission.custom_focus && (
+                <p className="mt-1.5 text-xs text-ink-faint">
+                  Your focus, as you described it: &ldquo;{plan.mission.custom_focus}&rdquo;
+                </p>
+              )}
+            </CollapsibleSection>
 
-              <MissionItem n={2} icon={NotebookPen} title="Known Context">
-                <ul className="space-y-1">
+            {plan.mission.known_context.length > 0 && (
+              <CollapsibleSection n={2} icon={NotebookPen} title="Known context">
+                <div className="flex flex-wrap gap-1.5">
                   {plan.mission.known_context.map((k, i) => (
-                    <li key={i} className="text-sm text-ink-soft">{k}</li>
+                    <span
+                      key={i}
+                      className="rounded-chip border border-line bg-surface-sunken px-2.5 py-1 text-xs text-ink-soft"
+                    >
+                      {k}
+                    </span>
                   ))}
-                </ul>
-                <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-ink-faint">
-                  <Paperclip className="h-3 w-3" strokeWidth={1.75} />
+                </div>
+                <p className="mt-2.5 inline-flex items-center gap-1.5 text-xs text-ink-faint">
+                  <Lock className="h-3 w-3" strokeWidth={1.75} />
                   visible to you only, never shared with the interviewee
                 </p>
-              </MissionItem>
+              </CollapsibleSection>
+            )}
 
-              <MissionItem n={3} icon={ListChecks} title="Topics to Cover">
-                <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-accent-ink">
+            {mustHit.length + niceToHave.length > 0 && (
+              <CollapsibleSection n={3} icon={ListChecks} title="Topics to cover">
+                <div className="text-xs font-semibold uppercase tracking-wide text-accent-ink">
                   Must-hit
                 </div>
                 <ul className="mt-1.5 space-y-1.5">
@@ -312,146 +375,79 @@ export function PlanView({
                     </ul>
                   </>
                 )}
-              </MissionItem>
+              </CollapsibleSection>
+            )}
 
-              <MissionItem n={4} icon={CircleCheck} title="Definition of Done">
-                <ul className="space-y-1">
+            {plan.mission.definition_of_done.length > 0 && (
+              <CollapsibleSection n={4} icon={CircleCheck} title="Definition of done">
+                <ul className="space-y-2">
                   {plan.mission.definition_of_done.map((d, i) => (
-                    <li key={i} className="text-sm text-ink-soft">{d}</li>
+                    <li key={i} className="flex items-start gap-2 text-sm text-ink-soft">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" strokeWidth={2} />
+                      <span>{d}</span>
+                    </li>
                   ))}
                 </ul>
-              </MissionItem>
+              </CollapsibleSection>
+            )}
 
-              {plan.mission.handling_notes.length > 0 && (
-                <MissionItem n={5} icon={Lock} title="Handling Notes">
-                  <ul className="space-y-1">
-                    {plan.mission.handling_notes.map((h, i) => (
-                      <li key={i} className="text-sm text-ink-soft">{h}</li>
-                    ))}
-                  </ul>
-                  <p className="mt-2 text-xs text-ink-faint">
-                    from the discovery call, unverified
-                  </p>
-                </MissionItem>
-              )}
-            </div>
-
-            {/* Footer: approval + est time */}
-            <div className="mt-6 rounded-card border border-line bg-surface-raised p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                {plan.approved_by ? (
-                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-success">
-                    <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
-                    Approved by {plan.approved_by.name} · {plan.approved_by.at}
-                  </span>
-                ) : APPROVED_STATES.has(state) ? (
-                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-success">
-                    <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
-                    Approved
-                  </span>
-                ) : (
-                  <span className="text-sm text-ink-faint">Not yet approved</span>
-                )}
-                {plan.est_time && (
-                  <span className="inline-flex items-center gap-1.5 text-sm text-ink-soft">
-                    <Clock className="h-4 w-4" strokeWidth={1.75} />
-                    Est. time: {plan.est_time.total_min} min
-                  </span>
-                )}
-              </div>
-              {plan.est_time && (
-                <div className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-xs text-ink-faint">
-                  <span>{plan.est_time.opening_min} min opening</span>
-                  <span className="text-line-strong">·</span>
-                  <span>{plan.est_time.topics_min} min topics</span>
-                  <span className="text-line-strong">·</span>
-                  <span>{plan.est_time.closing_min} min closing</span>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* ── Refine Plan + Suggested Questions ─────────────────────── */}
-          <div className="flex flex-col gap-6">
-            <RefinePlan plan={plan} />
-
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              {plan.plan_changes && plan.plan_changes.length > 0 && (
-                <section className="rounded-card border border-line bg-surface p-5 shadow-card">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h3 className="font-display text-lg text-ink">Plan Changes</h3>
-                    <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
-                      <span className="h-1.5 w-1.5 rounded-full bg-success" /> Live
-                    </span>
-                  </div>
-                  <ul className="space-y-2">
-                    {plan.plan_changes.map((c, i) => (
-                      <li key={i} className="flex gap-2 text-sm text-ink-soft">
-                        <span className="text-ink-faint">•</span>
-                        <span>{c}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
-              <section className="rounded-card border border-line bg-surface p-5 shadow-card">
-                <h3 className="mb-3 font-display text-lg text-ink">Suggested Questions</h3>
-                <ol className="space-y-3">
-                  {plan.suggested_questions.length === 0 && (
-                    <li className="text-sm text-ink-faint">
-                      Drafted at plan generation once objectives are set.
-                    </li>
-                  )}
-                  {plan.suggested_questions.map((q, i) => (
-                    <li key={i} className="flex gap-2.5 text-sm text-ink">
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-on-accent">
-                        {i + 1}
-                      </span>
-                      <div>
-                        <span>{q.text}</span>
-                        {q.reformulated_from && (
-                          <p className="mt-1 text-xs text-ink-faint">
-                            Reformulated from a leading question:{" "}
-                            <span className="italic">“{q.reformulated_from}”</span>
-                          </p>
-                        )}
-                      </div>
+            {plan.mission.handling_notes.length > 0 && (
+              <CollapsibleSection n={5} icon={Lock} title="Handling notes">
+                <ul className="space-y-1.5">
+                  {plan.mission.handling_notes.map((h, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-ink-soft">
+                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-accent" />
+                      <span>{h}</span>
                     </li>
                   ))}
-                </ol>
+                </ul>
+                <p className="mt-2.5 text-xs text-ink-faint">
+                  from the discovery call, unverified
+                </p>
+              </CollapsibleSection>
+            )}
+          </div>
+
+          {/* ── Right: refine + grouped questions ─────────────────────── */}
+          <div className="space-y-4">
+            <RefinePlan plan={plan} />
+
+            {plan.plan_changes && plan.plan_changes.length > 0 && (
+              <section className="rounded-card border border-line bg-surface p-5 shadow-card">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="font-display text-lg text-ink">Plan changes</h3>
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
+                    <span className="h-1.5 w-1.5 rounded-full bg-success" /> Live
+                  </span>
+                </div>
+                <ul className="space-y-2">
+                  {plan.plan_changes.map((c, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-ink-soft">
+                      <span className="text-ink-faint">•</span>
+                      <span>{c}</span>
+                    </li>
+                  ))}
+                </ul>
               </section>
-            </div>
+            )}
+
+            <SuggestedQuestions questions={plan.suggested_questions} />
           </div>
         </div>
 
-        {/* Inline failure surface (audit: approve/send/revoke never fail silently) */}
-        {error && (
-          <div
-            role="alert"
-            className="mt-6 flex items-start gap-2 rounded-md border border-danger/30 bg-danger-soft px-4 py-2.5 text-sm text-danger"
-          >
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Bottom action bar. Actions follow the server's lifecycle: approve a pending
-            plan, then send it; revoke where legal (APPROVED/SENT/OPENED); once live it's
-            read-only here. NO_RESPONSE and REVOKED carry their own banners above. */}
         {/* What the check flagged — rendered on a returned draft so the reasons travel
             with the plan instead of dying in the audit log. Severity order as stored. */}
         {isDraft && !missionEmpty && checkFlags.length > 0 && (
-          <section className="mt-6 rounded-card border border-accent/25 bg-accent-soft/40 p-4">
+          <section className="mt-6 rounded-card border border-accent/25 bg-accent-soft/40 p-5">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-accent-ink">
               <AlertTriangle className="h-4 w-4" strokeWidth={1.75} />
               What the check flagged
             </h2>
             <p className="mt-1 text-xs leading-relaxed text-ink-soft">
-              Nexus reviewed this draft and sent it back. Each item names the problem and a
-              suggested fix — apply them with Refine Plan below, or draft again.
+              {brand.product_name} reviewed this draft and sent it back. Each item names the
+              problem and a suggested fix — apply them with Refine plan above, or draft again.
             </p>
-            <ul className="mt-3 space-y-2.5">
+            <ul className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {checkFlags.map((f, i) => (
                 <li key={i} className="rounded-lg border border-line bg-surface p-3">
                   <div className="flex flex-wrap items-center gap-2">
@@ -489,110 +485,159 @@ export function PlanView({
           </section>
         )}
 
-        {!isRevoked && !isNoResponse && (
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            {canApprove && (
-              <button
-                onClick={() => requestTransition("APPROVED")}
-                disabled={pending != null || missionEmpty}
-                title={
-                  missionEmpty
-                    ? "This plan hasn't drafted yet: no goal or topics to approve."
-                    : undefined
-                }
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
-                {pending === "APPROVED" ? "Approving…" : "Approve plan"}
-              </button>
-            )}
-            {checking && (
-              <span className="inline-flex items-center gap-2 text-sm text-ink-soft">
-                <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
-                Nexus is checking this plan for leaks and leading questions. It unlocks
-                for your approval when the check lands, usually within a minute.
-              </span>
-            )}
-            {isDraft && (
-              <>
-                {/* A refined returned draft can go BACK through the check carrying its
-                    refinements (bug-hunt #2: redraft regenerates and discards them). */}
-                {!missionEmpty && (
-                  <button
-                    onClick={() => requestTransition("NEXUS_CHECK")}
-                    disabled={pending != null || redrafting}
-                    className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:opacity-50"
-                  >
-                    {pending === "NEXUS_CHECK" ? (
-                      <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
-                    ) : (
-                      <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
-                    )}
-                    Send back for check
-                  </button>
-                )}
-                <button
-                  onClick={redraft}
-                  disabled={redrafting || pending != null}
-                  className={
-                    missionEmpty
-                      ? "inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:opacity-50"
-                      : "inline-flex items-center justify-center gap-2 rounded-md border border-line px-5 py-3 text-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-surface-sunken/40 disabled:opacity-50"
-                  }
-                >
-                  {redrafting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
-                  ) : (
-                    <PencilLine className="h-4 w-4" strokeWidth={2} />
-                  )}
-                  {missionEmpty ? "Draft the plan" : "Draft again"}
-                </button>
-                <span className="max-w-md text-xs leading-relaxed text-ink-faint">
-                  {missionEmpty
-                    ? "Drafting didn't land for this plan (generation can be interrupted). Drafting runs the same pipeline and the same Nexus check."
-                    : "Refine the draft below and send it back for check — your edits travel with it. Draft again regenerates from the records and replaces this draft."}
-                </span>
-              </>
-            )}
-
-            {state === "APPROVED" && (
-              <button
-                onClick={() => setFlowOpen(true)}
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
-              >
-                <SendHorizontal className="h-4 w-4" strokeWidth={2} />
-                Send Interview
-              </button>
-            )}
-
-            {isLive && (
-              <span className="inline-flex items-center gap-1.5 text-sm text-ink-soft">
-                <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={2} />
-                Interview sent. Tracking progress above.
-              </span>
-            )}
-
-            {canRevoke && (
-              <button
-                onClick={revoke}
-                disabled={pending != null}
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-danger/40 px-5 py-3 text-sm font-medium text-danger transition-colors hover:bg-danger-soft disabled:opacity-50"
-              >
-                <Ban className="h-4 w-4" strokeWidth={1.75} />
-                {pending === "REVOKED" ? "Revoking…" : "Revoke"}
-              </button>
-            )}
-
-            <button
-              disabled
-              title="Follow-up templates arrive with the report and SOP tools in this build"
-              className="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-md border border-line px-5 py-3 text-sm font-medium text-ink-faint opacity-60"
-            >
-              <PencilLine className="h-4 w-4" strokeWidth={1.75} />
-              Generate Follow-Up Template
-            </button>
+        {/* Inline failure surface (audit: approve/send/revoke never fail silently) */}
+        {error && (
+          <div
+            role="alert"
+            className="mt-6 flex items-start gap-2 rounded-md border border-danger/30 bg-danger-soft px-4 py-2.5 text-sm text-danger"
+          >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
+            <span>{error}</span>
           </div>
         )}
+      </div>
+
+      {/* ── Footer bar: est-time + the exact lifecycle action bar, restyled ───────── */}
+      <div className="sticky bottom-0 z-20 border-t border-line bg-surface/95 backdrop-blur-sm">
+        <div className="mx-auto max-w-6xl px-6 py-4 sm:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+            <div className="flex items-center gap-4">
+              <Link
+                href={`/w/${workspace.slug}/interviews`}
+                className="inline-flex items-center gap-1.5 rounded-md border border-line px-3.5 py-2 text-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-surface-sunken/40"
+              >
+                <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> Back
+              </Link>
+              {plan.est_time && (
+                <div className="flex flex-col">
+                  <span className="inline-flex items-center gap-1.5 text-sm text-ink-soft">
+                    <Clock className="h-4 w-4" strokeWidth={1.75} />
+                    Est. time: {plan.est_time.total_min} min
+                  </span>
+                  <span className="mt-0.5 text-xs text-ink-faint">
+                    {plan.est_time.opening_min} min opening · {plan.est_time.topics_min} min topics ·{" "}
+                    {plan.est_time.closing_min} min closing
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* State action bar — EXACT lifecycle semantics preserved, restyled only. */}
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {isRevoked || isNoResponse ? (
+                <span className="text-sm text-ink-faint">
+                  {isRevoked ? "This plan is closed." : "Awaiting a response."}
+                </span>
+              ) : (
+                <>
+                  {checking && (
+                    <span className="inline-flex max-w-md items-center gap-2 text-sm text-ink-soft">
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" strokeWidth={2} />
+                      {brand.product_name} is checking this plan for leaks and leading
+                      questions. It unlocks for your approval when the check lands.
+                    </span>
+                  )}
+                  {isDraft && (
+                    <span className="hidden max-w-xs text-xs leading-relaxed text-ink-faint sm:inline">
+                      {missionEmpty
+                        ? "Drafting didn't land (generation can be interrupted). Drafting runs the same pipeline and the same check."
+                        : "Refine above and send it back for check — your edits travel with it. Draft again regenerates from the records."}
+                    </span>
+                  )}
+                  {isLive && (
+                    <span className="inline-flex items-center gap-1.5 text-sm text-ink-soft">
+                      <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={2} />
+                      Interview sent. Tracking progress above.
+                    </span>
+                  )}
+
+                  {canRevoke && (
+                    <button
+                      onClick={revoke}
+                      disabled={pending != null}
+                      className="inline-flex items-center justify-center gap-2 rounded-md border border-danger/40 px-4 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger-soft disabled:opacity-50"
+                    >
+                      <Ban className="h-4 w-4" strokeWidth={1.75} />
+                      {pending === "REVOKED" ? "Revoking…" : "Revoke"}
+                    </button>
+                  )}
+
+                  {isDraft && !missionEmpty && (
+                    // A refined returned draft can go BACK through the check carrying its
+                    // refinements (bug-hunt #2: redraft regenerates and discards them).
+                    <button
+                      onClick={() => requestTransition("NEXUS_CHECK")}
+                      disabled={pending != null || redrafting}
+                      className="inline-flex items-center justify-center gap-2 rounded-md border border-line px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-surface-sunken/40 disabled:opacity-50"
+                    >
+                      {pending === "NEXUS_CHECK" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
+                      )}
+                      Send back for check
+                    </button>
+                  )}
+                  {isDraft && (
+                    <button
+                      onClick={redraft}
+                      disabled={redrafting || pending != null}
+                      className={
+                        missionEmpty
+                          ? "inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:opacity-50"
+                          : "inline-flex items-center justify-center gap-2 rounded-md border border-line px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-surface-sunken/40 disabled:opacity-50"
+                      }
+                    >
+                      {redrafting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                      ) : (
+                        <PencilLine className="h-4 w-4" strokeWidth={2} />
+                      )}
+                      {missionEmpty ? "Draft the plan" : "Draft again"}
+                    </button>
+                  )}
+
+                  {canApprove && (
+                    <button
+                      onClick={() => requestTransition("APPROVED")}
+                      disabled={pending != null || missionEmpty}
+                      title={
+                        missionEmpty
+                          ? "This plan hasn't drafted yet: no goal or topics to approve."
+                          : undefined
+                      }
+                      className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
+                      {pending === "APPROVED" ? "Approving…" : "Approve plan"}
+                    </button>
+                  )}
+                  {state === "APPROVED" && (
+                    <button
+                      onClick={() => setFlowOpen(true)}
+                      className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
+                    >
+                      <SendHorizontal className="h-4 w-4" strokeWidth={2} />
+                      Send interview
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+            <p className="inline-flex items-center gap-1.5 text-xs text-ink-faint">
+              <Lock className="h-3 w-3" strokeWidth={1.75} />
+              {brand.product_name} will prepare the final review before anything reaches the person.
+            </p>
+            {plan.approved_by && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
+                <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
+                Approved by {plan.approved_by.name} · {plan.approved_by.at}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       <SendInterviewFlow
@@ -606,7 +651,9 @@ export function PlanView({
   );
 }
 
-function MissionItem({
+// A calm mission section that opens and closes. Default open so nothing is hidden on
+// arrival; the admin collapses what they've read. Numbered + icon-led to match image21.
+function CollapsibleSection({
   n,
   icon: Icon,
   title,
@@ -617,18 +664,168 @@ function MissionItem({
   title: string;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(true);
   return (
-    <div className="flex gap-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-ink">
-        <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-2">
+    <section className="rounded-card border border-line bg-surface shadow-card">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 rounded-card px-5 py-4 text-left transition-colors hover:bg-surface-sunken/30"
+      >
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-ink">
+          <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
+        </span>
+        <span className="flex items-baseline gap-2">
           <span className="text-xs font-semibold text-ink-faint">{n}</span>
-          <h4 className="font-semibold text-ink">{title}</h4>
+          <span className="font-semibold text-ink">{title}</span>
+        </span>
+        <ChevronDown
+          className={cn(
+            "ml-auto h-4 w-4 shrink-0 text-ink-faint transition-transform",
+            open && "rotate-180",
+          )}
+          strokeWidth={1.75}
+        />
+      </button>
+      {open && <div className="px-5 pb-5 pl-16">{children}</div>}
+    </section>
+  );
+}
+
+// Suggested questions, grouped by the generator's real per-question topic (honest — see
+// QUESTION_GROUP_LABEL). One-topic / untagged plans render a single group. Each group is an
+// accordion with its own count; Expand all / Collapse all drive them together.
+function SuggestedQuestions({ questions }: { questions: SuggestedQuestion[] }) {
+  const groups = groupQuestions(questions);
+  const multi = groups.length > 1;
+  // Default: first group open, rest collapsed (image21). Single-group plans open it.
+  const [openKeys, setOpenKeys] = useState<Set<string>>(
+    () => new Set(groups.slice(0, 1).map((g) => g.key)),
+  );
+  const allOpen = groups.every((g) => openKeys.has(g.key));
+
+  function toggle(key: string) {
+    setOpenKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  return (
+    <section className="rounded-card border border-line bg-surface p-5 shadow-card">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-soft text-accent-ink">
+            <HelpCircle className="h-[18px] w-[18px]" strokeWidth={1.75} />
+          </span>
+          <h3 className="font-display text-lg text-ink">Suggested questions</h3>
         </div>
-        <div className="mt-1">{children}</div>
+        {multi && (
+          <div className="flex items-center gap-3 text-xs font-medium text-accent-ink">
+            <button
+              onClick={() => setOpenKeys(new Set(groups.map((g) => g.key)))}
+              disabled={allOpen}
+              className="hover:underline disabled:text-ink-faint disabled:no-underline"
+            >
+              Expand all
+            </button>
+            <span className="text-line-strong">|</span>
+            <button
+              onClick={() => setOpenKeys(new Set())}
+              disabled={openKeys.size === 0}
+              className="hover:underline disabled:text-ink-faint disabled:no-underline"
+            >
+              Collapse all
+            </button>
+          </div>
+        )}
       </div>
+      <p className="mt-1.5 text-sm text-ink-soft">
+        {brand.product_name} will use these as a guide during the interview.
+      </p>
+
+      {questions.length === 0 ? (
+        <p className="mt-4 text-sm text-ink-faint">
+          Drafted at plan generation once objectives are set.
+        </p>
+      ) : multi ? (
+        <ol className="mt-4 space-y-2.5">
+          {groups.map((g, gi) => {
+            const isOpen = openKeys.has(g.key);
+            return (
+              <li key={g.key} className="rounded-card border border-line bg-surface-sunken/25">
+                <button
+                  type="button"
+                  onClick={() => toggle(g.key)}
+                  aria-expanded={isOpen}
+                  className="flex w-full items-center gap-3 rounded-card px-4 py-3 text-left transition-colors hover:bg-surface-sunken/50"
+                >
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-on-accent">
+                    {gi + 1}
+                  </span>
+                  <span className="font-medium text-ink">{g.label}</span>
+                  <span className="ml-auto flex items-center gap-2.5">
+                    <span className="rounded-chip border border-line bg-surface px-2 py-0.5 text-xs text-ink-faint">
+                      {g.questions.length} question{g.questions.length === 1 ? "" : "s"}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 text-ink-faint transition-transform",
+                        isOpen && "rotate-180",
+                      )}
+                      strokeWidth={1.75}
+                    />
+                  </span>
+                </button>
+                {isOpen && (
+                  <ul className="space-y-2.5 px-4 pb-4 pl-[3.25rem]">
+                    {g.questions.map((q, i) => (
+                      <QuestionRow key={i} q={q} />
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {questions.map((q, i) => (
+            <li key={i} className="flex gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-on-accent">
+                {i + 1}
+              </span>
+              <QuestionBody q={q} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function QuestionRow({ q }: { q: SuggestedQuestion }) {
+  return (
+    <li className="flex gap-2 text-sm text-ink">
+      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+      <QuestionBody q={q} />
+    </li>
+  );
+}
+
+function QuestionBody({ q }: { q: SuggestedQuestion }) {
+  return (
+    <div className="min-w-0">
+      <span className="text-sm text-ink">{q.text}</span>
+      {q.reformulated_from && (
+        <p className="mt-1 text-xs text-ink-faint">
+          Reformulated from a leading question:{" "}
+          <span className="italic">“{q.reformulated_from}”</span>
+        </p>
+      )}
     </div>
   );
 }
@@ -672,63 +869,76 @@ function RefinePlan({ plan }: { plan: InterviewPlan }) {
   }
 
   return (
-    <section className="card-hairline flex min-h-[22rem] flex-col rounded-card border border-line bg-surface p-5">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="font-display text-lg text-ink">Refine Plan</h3>
-        <span className="rounded-chip bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-ink-faint ring-1 ring-inset ring-ink/[0.04]">
-          Every change logged
+    <section className="card-hairline flex flex-col rounded-card border border-line bg-surface p-5">
+      <div className="flex items-center gap-2.5">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-soft text-accent-ink">
+          <Sparkles className="h-[18px] w-[18px]" strokeWidth={1.75} />
         </span>
+        <h3 className="font-display text-lg text-ink">Refine plan</h3>
       </div>
-      <div className="flex-1 space-y-3 overflow-y-auto">
-        {messages.length === 0 && (
-          <p className="text-sm leading-relaxed text-ink-faint">
-            Ask {brand.product_name} to adjust an objective, add a topic, or reword a question
-            in plain language. Every change compiles into the plan with an audited change log.
-          </p>
-        )}
-        {messages.map((m, i) =>
-          m.role === "you" ? (
-            <div key={i} className="flex justify-end">
-              <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-accent-soft px-3.5 py-2">
-                <div className="mb-0.5 flex items-center justify-end gap-1.5 text-[11px] text-ink-faint">
-                  You · {m.at}
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[8px] font-semibold text-on-accent">
-                    {m.author ?? "ES"}
-                  </span>
+      <p className="mt-1.5 text-sm text-ink-soft">
+        Add more detail for {brand.product_name} to improve the interview.
+      </p>
+
+      {messages.length > 0 && (
+        <div className="mt-3 max-h-64 space-y-3 overflow-y-auto rounded-md border border-line bg-surface-sunken/30 p-3">
+          {messages.map((m, i) =>
+            m.role === "you" ? (
+              <div key={i} className="flex justify-end">
+                <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-accent-soft px-3.5 py-2">
+                  <div className="mb-0.5 flex items-center justify-end gap-1.5 text-[11px] text-ink-faint">
+                    You · {m.at}
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[8px] font-semibold text-on-accent">
+                      {m.author ?? "ES"}
+                    </span>
+                  </div>
+                  <p className="text-sm text-ink">{m.text}</p>
                 </div>
-                <p className="text-sm text-ink">{m.text}</p>
               </div>
-            </div>
-          ) : (
-            <div key={i} className="flex gap-2">
-              <BrandMark className="mt-1 h-4 w-4 shrink-0 text-accent" />
-              <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-surface-raised px-3.5 py-2">
-                <div className="mb-0.5 text-[11px] text-ink-faint">{brand.product_name} · {m.at}</div>
-                <p className="text-sm text-ink">{m.text}</p>
+            ) : (
+              <div key={i} className="flex gap-2">
+                <BrandMark className="mt-1 h-4 w-4 shrink-0 text-accent" />
+                <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-surface-raised px-3.5 py-2">
+                  <div className="mb-0.5 text-[11px] text-ink-faint">{brand.product_name} · {m.at}</div>
+                  <p className="text-sm text-ink">{m.text}</p>
+                </div>
               </div>
-            </div>
-          ),
-        )}
-      </div>
-      <div className="mt-3 flex items-center gap-2 rounded-md border border-line bg-surface-sunken px-3 py-2">
-        <Paperclip className="h-4 w-4 shrink-0 text-ink-faint" strokeWidth={1.75} />
-        <input
+            ),
+          )}
+        </div>
+      )}
+
+      <div className="mt-3 rounded-md border border-line bg-surface-sunken px-3 py-2.5">
+        <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && send()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              send();
+            }
+          }}
           disabled={busy}
+          rows={2}
           placeholder={busy ? `${brand.product_name} is applying that…` : "e.g. add a question about how returns get approved"}
-          className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint disabled:cursor-wait"
+          className="min-h-[2.5rem] w-full resize-none bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint disabled:cursor-wait"
         />
-        <button
-          onClick={send}
-          disabled={busy || !draft.trim()}
-          className="flex h-7 w-7 items-center justify-center rounded-md bg-surface text-accent-ink transition-colors enabled:hover:bg-accent-soft disabled:cursor-not-allowed disabled:text-ink-faint"
-          aria-label="Send refine instruction"
-        >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : <SendHorizontal className="h-4 w-4" strokeWidth={2} />}
-        </button>
+        <div className="mt-1 flex items-center justify-between">
+          <Sparkles className="h-4 w-4 text-ink-faint" strokeWidth={1.75} />
+          <button
+            onClick={send}
+            disabled={busy || !draft.trim()}
+            className="flex h-8 w-8 items-center justify-center rounded-md bg-surface text-accent-ink transition-colors enabled:hover:bg-accent-soft disabled:cursor-not-allowed disabled:text-ink-faint"
+            aria-label="Send refine instruction"
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : <SendHorizontal className="h-4 w-4" strokeWidth={2} />}
+          </button>
+        </div>
       </div>
+      <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-ink-faint">
+        <Info className="h-3 w-3" strokeWidth={1.75} />
+        Every change is logged in the change history.
+      </p>
     </section>
   );
 }
