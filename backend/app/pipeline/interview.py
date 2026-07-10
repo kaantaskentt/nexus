@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 
 from ..config import REPO_ROOT, get_settings
 from ..db import get_pool
-from ..llm import client, get_agent_config, load_prompt, run_chat
+from ..llm import cache_block, client, get_agent_config, load_prompt, run_chat
 from ..queue import handles
 from . import attention, coverage, handoff
 
@@ -111,15 +111,25 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
     # persona. It has no plan handoff — the persona carries the exit-condition table —
     # so it gets a runtime block instead of the interviewer's package block. Every other
     # kind takes the exact path it always did.
+    # Split the system into a STABLE prefix (cached prompt-prefix) and a VOLATILE tail
+    # (changes every turn, never cached). The persona + handoff package are identical
+    # turn-to-turn — caching them stops ~8k input tokens being reprocessed each turn
+    # (SIMPLIFY-EF-FINDINGS E). The model still sees byte-identical system text: the two
+    # blocks concatenate exactly as the old single string did.
     is_context_call = session["session_kind"] == "context"
     if is_context_call:
-        extra_system = _context_call_block(session, elapsed_min)
+        # No plan handoff (the persona carries the exit table). The context block holds the
+        # elapsed clock, so it IS the volatile part; there's no stable package prefix here.
+        stable_extra = ""
+        volatile_extra = _context_call_block(session, elapsed_min)
     else:
-        extra_system = (
+        stable_extra = (
             "## Your handoff package for this interview\n"
             "This package is your whole world — objectives, questions, vocabulary, handling "
             "notes, and the NEVER list. You were never told what anyone else said.\n\n"
-            f"```json\n{json.dumps(package, ensure_ascii=False, indent=2)}\n```\n\n"
+            f"```json\n{json.dumps(package, ensure_ascii=False, indent=2)}\n```"
+        )
+        volatile_extra = (
             f"Runtime status: about {int(elapsed_min)} minute(s) elapsed. Time budget "
             f"{package.get('time_budget_minutes', 30)} minutes."
         )
@@ -130,7 +140,8 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
     # None map just leaves the persona's own (model-side) coverage in charge. Default OFF
     # (config.coverage_routing): the A/B showed the persona already covers explicit
     # must-hit objectives at baseline, so this per-turn classifier is dormant until an
-    # eval justifies its latency (see config comment + proof-matrix.md).
+    # eval justifies its latency (see config comment + proof-matrix.md). Per-turn, so it
+    # rides the VOLATILE block — never the cached prefix.
     cov = None
     if get_settings().coverage_routing:
         cov = await coverage.compute_coverage(
@@ -141,7 +152,7 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
         )
         cov_block = coverage.build_coverage_block(cov)
         if cov_block:
-            extra_system = f"{extra_system}\n\n{cov_block}"
+            volatile_extra = f"{volatile_extra}\n\n{cov_block}"
 
     # Tea-break v1 (A26): fade-triggered pause offer. Deterministic signals, injected
     # ONCE per session — pause_offered is the shared once-max flag with the 20-minute
@@ -153,8 +164,8 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
         fade = attention.detect_fade(utterances)
         if fade:
             budget = package.get("time_budget_minutes", 30)
-            extra_system = (
-                f"{extra_system}\n\n"
+            volatile_extra = (
+                f"{volatile_extra}\n\n"
                 + attention.build_fade_nudge(fade["signals"], elapsed_min, budget)
             )
 
@@ -162,7 +173,8 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
         "session": session,
         "persona": "context_collector" if is_context_call else "interviewer",
         "messages": _messages_from(utterances),
-        "extra_system": extra_system,
+        "extra_system": stable_extra,
+        "volatile_system": volatile_extra,
         "started_at": started_at,
         "elapsed_min": elapsed_min,
         "package": package,
@@ -224,6 +236,8 @@ async def run_interview_turn(session_id: str, respondent_text: str | None = None
         ctx["persona"],
         ctx["messages"],
         extra_system=ctx["extra_system"],
+        volatile_system=ctx["volatile_system"],
+        cache=True,
         workspace_id=str(ctx["session"]["workspace_id"]),
         session_id=session_id,
         industry_block=_industry_block(ctx["session"]["industry"]),
@@ -231,17 +245,23 @@ async def run_interview_turn(session_id: str, respondent_text: str | None = None
     return await _finalize_turn(ctx, reply)
 
 
-async def build_voice_system(session_id: str) -> str:
-    """The persona + handoff system prompt for a voice call. The VAPI custom-LLM
-    endpoint supplies the running conversation from its own (transcribed) messages;
-    the verbatim record is captured separately from transcript webhooks, so this path
-    is generation-only and never writes utterances.
+async def build_voice_system(session_id: str) -> list[dict]:
+    """The persona + handoff system prompt for a voice call, as prompt-cached content
+    blocks. The VAPI custom-LLM endpoint supplies the running conversation from its own
+    (transcribed) messages; the verbatim record is captured separately from transcript
+    webhooks, so this path is generation-only and never writes utterances.
 
     MODALITY CONTINUITY (A21 target 4): VAPI only knows the CURRENT call's messages, so
     any earlier stored turns — a dropped call being resumed, or a text thread the
     respondent switched away from — are replayed into the system prompt. Without this a
     reconnect restarts the interview from zero, which is exactly the progress loss the
-    reconnect UI promises against."""
+    reconnect UI promises against.
+
+    CACHING (SIMPLIFY-EF-FINDINGS E/F): the persona + handoff package are a cached stable
+    prefix, and (for the interviewer) the replayed transcript is a second cached block, so
+    each turn reprocesses only the current-call delta instead of the whole prompt. The
+    concatenated blocks are byte-identical to the old single string, so behavior is
+    unchanged. Context calls carry an elapsed clock, so their tail stays uncached."""
     pool = await get_pool()
     session = await pool.fetchrow(
         "select s.plan_id, s.session_kind, s.started_at, w.industry, "
@@ -258,26 +278,32 @@ async def build_voice_system(session_id: str) -> str:
         system = load_prompt(cfg["prompt_path"], _industry_block(session["industry"]))
         started = session["started_at"] or datetime.now(timezone.utc)
         elapsed = (datetime.now(timezone.utc) - started).total_seconds() / 60
-        extra = _context_call_block(session, elapsed)
+        cached_stable = system
+        volatile_tail = "\n\n" + _context_call_block(session, elapsed)  # has the elapsed clock
+        cacheable_transcript = False
     else:
         package = await _load_package(session["plan_id"])
         cfg = await get_agent_config("interviewer")
         system = load_prompt(cfg["prompt_path"], _industry_block(session["industry"]))
-        extra = (
+        cached_stable = (
+            f"{system}\n\n"
             "## Your handoff package for this interview\n"
             "This package is your whole world. You were never told what anyone else said.\n\n"
             f"```json\n{json.dumps(package, ensure_ascii=False, indent=2)}\n```"
         )
+        volatile_tail = ""
+        cacheable_transcript = True
     prior = await pool.fetch(
         "select speaker, text from utterances where session_id = $1 order by turn_index",
         session_id,
     )
+    transcript = ""
     if prior:
         lines = "\n".join(
             f"{'You' if u['speaker'] == 'agent' else 'Respondent'}: {u['text']}"
             for u in prior
         )
-        extra += (
+        transcript = (
             "\n\n## The conversation so far — this interview is RESUMING\n"
             "The interview already started (an earlier call, or by text). Below is the "
             "verbatim record. Continue from where it left off: do NOT re-greet, do NOT "
@@ -285,7 +311,16 @@ async def build_voice_system(session_id: str) -> str:
             "already answered here.\n\n"
             f"{lines}"
         )
-    return f"{system}\n\n{extra}"
+    blocks = [cache_block(cached_stable)]
+    if cacheable_transcript:
+        if transcript:
+            blocks.append(cache_block(transcript))  # stable-growing -> cache the transcript
+    else:
+        # Context: the elapsed block + transcript ride uncached (order preserved).
+        tail = volatile_tail + transcript
+        if tail:
+            blocks.append({"type": "text", "text": tail})
+    return blocks
 
 
 async def stream_reply(session_id: str, messages: list[dict]):

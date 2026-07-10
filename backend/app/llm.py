@@ -142,26 +142,49 @@ async def run_agent_json(agent_name: str, user_content: str, **kwargs):
         raise AgentParseError(f"{agent_name} output not parseable as JSON: {e}") from e
 
 
+def cache_block(text: str) -> dict:
+    """A system text block marked as a prompt-cache breakpoint (ephemeral, 5m default).
+    Everything up to and including this block is cached, so the next turn within the TTL
+    pays uncached only for the delta after it. Used by the interview turn engine, where
+    the persona + handoff package are identical turn-to-turn (SIMPLIFY-EF-FINDINGS E/F —
+    ~8k stable input tokens were being reprocessed every turn)."""
+    return {"type": "text", "text": text, "cache_control": {"type": "ephemeral"}}
+
+
 async def run_chat(
     agent_name: str,
     messages: list[dict],
     *,
     extra_system: str = "",
+    volatile_system: str = "",
+    cache: bool = False,
     workspace_id: str | None = None,
     session_id: str | None = None,
     industry_block: str | None = None,
     max_tokens: int = 2048,
 ) -> str:
-    """Multi-turn variant for the interview turn engine: the prompt file is the
-    system persona, `extra_system` carries the per-interview handoff package, and
-    `messages` is the running conversation. Same audit trail as run_agent."""
+    """Multi-turn variant for the interview turn engine: the prompt file is the system
+    persona, `extra_system` carries the STABLE per-interview handoff package, and
+    `messages` is the running conversation. `volatile_system` carries the per-turn bits
+    (elapsed time, coverage, fade nudge) that change every turn.
+
+    When `cache=True`, the persona + `extra_system` become a single cached prompt-prefix
+    block and `volatile_system` follows as an uncached block. The model sees byte-identical
+    system text either way (blocks concatenate); the split only lets the stable prefix be
+    served from cache. Same audit trail as run_agent, plus cache token counts."""
     cfg = await get_agent_config(agent_name)
-    system = load_prompt(cfg["prompt_path"], industry_block)
-    if extra_system:
-        system = f"{system}\n\n{extra_system}"
+    persona = load_prompt(cfg["prompt_path"], industry_block)
+    stable = f"{persona}\n\n{extra_system}" if extra_system else persona
+    if cache:
+        system: str | list = [cache_block(stable)]
+        if volatile_system:
+            # Leading "\n\n" keeps the concatenation identical to the uncached string.
+            system.append({"type": "text", "text": f"\n\n{volatile_system}"})
+    else:
+        system = f"{stable}\n\n{volatile_system}" if volatile_system else stable
     started = time.monotonic()
     status, error, text = "ok", None, ""
-    usage_in = usage_out = None
+    usage_in = usage_out = cache_read = cache_write = None
     try:
         resp = await client().messages.create(
             model=cfg["model"],
@@ -171,6 +194,8 @@ async def run_chat(
         )
         text = "".join(b.text for b in resp.content if b.type == "text")
         usage_in, usage_out = resp.usage.input_tokens, resp.usage.output_tokens
+        cache_read = getattr(resp.usage, "cache_read_input_tokens", None)
+        cache_write = getattr(resp.usage, "cache_creation_input_tokens", None)
         return text
     except Exception as e:
         status, error = "error", str(e)
@@ -187,7 +212,8 @@ async def run_chat(
             cfg["prompt_version"],
             workspace_id,
             session_id,
-            json.dumps({"turns": len(messages)}),
+            # cache_read/write on the audit row so a warm-cache hit is visible in prod.
+            json.dumps({"turns": len(messages), "cache_read": cache_read, "cache_write": cache_write}),
             json.dumps({"chars": len(text)}),
             json.dumps([]),
             usage_in,
