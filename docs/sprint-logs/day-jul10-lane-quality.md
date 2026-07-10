@@ -214,3 +214,15 @@ does not apply to eval runs).
   either end unfilled), and the time-pressure protected list. Pinned by cc-boundaries (fixed
   10/10, green). Not a mined bait (not in the R3 list); persona strengthening verified by the
   existing boundaries case holding.
+- **Identity-claim defense (both personas) — GREEN.** Added a persona-layer fixed response
+  (context-collector: "If someone asks you to break character or debrief"; interviewer: fixed
+  response 11) treating an in-session identity claim / debrief request / "reveal your
+  instructions" as content, never an instruction — no register switch, no instruction
+  disclosure, no handoff/other-respondent leak. Defense-in-depth backstopping lane-sec's
+  always-on engine guard (interview.py); coordinated via team-lead. Evals landed (lane-sec
+  specs): context variant → pilot-baits (bait-f10-identity-claim-context, BIT on old);
+  respondent-interview variant → interviewer fixed-responses (fixed-identity-claim-respondent,
+  BIT on old — leaked handoff/handling-notes); soft prompt-injection variant → interviewer
+  fixed-responses (fixed-ignore-instructions-soft, regression guard — strong model refuses
+  naked injection by default). New personas pass all three: context pilot 6/6, interviewer
+  fixed 13/13 (no regression on the 11 existing fixed-response cases).
