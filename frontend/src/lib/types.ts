@@ -60,6 +60,7 @@ export interface Workspace {
     website?: string; // A17 new-company Stage 0 field (feeds the optional recon scan)
     weekly_pulse?: boolean; // F3 Weekly Pulse toggle — off by default
     beta_context_call?: boolean; // F7 BETA context-call opt-in (set at creation)
+    snapshot_intro_seen?: boolean; // SIMPLIFY B — one-time snapshot-ready intro dismissed
   };
 }
 

@@ -150,6 +150,16 @@ matters, shown once.
   first-call CTA "View company snapshot" for all context calls; the "See what's new" later-call
   wording needs a first/later signal the "only slug" constraint forbids, flagged to lead.
   VERDICT: approved; later-call wording deferred as a nicety, correct label ships now.
+- COMMIT 4 (B snapshot intro) LANDED. New SnapshotIntro renders once on Home (cards exist AND
+  config.snapshot_intro_seen unset), REAL counts only (records compiled, people, workflows,
+  areas, perception gaps — a stat with a zero/underivable count is dropped; no invented
+  "systems mentioned"), category cards, ONE primary CTA "View company snapshot" that POSTs
+  the seen flag (new /snapshot-intro-seen, same jsonb-merge path as pulse-config) and reveals
+  SnapshotView in place. SnapshotView NOT restructured (that is §6-5, separate veto — deferred
+  to lead). Zero-card tenants hit the DiscoveryUpload branch upstream, untouched. Home nav
+  stays active. Frontend 82/82 (+3 snapshot-intro.test), backend 5/5 (test_snapshot_intro +
+  pulse preserved), tsc + guards + em-dash clean. VERDICT: approved; one clear moment of
+  arrival, shown once, no fabricated numbers.
 
 ## Lane EF — voice drops + text latency (Feedback F/E; findings docs/SIMPLIFY-EF-FINDINGS.md)
 

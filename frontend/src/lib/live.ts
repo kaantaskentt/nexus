@@ -77,6 +77,14 @@ export async function reorder_workspaces(ordered_ids: string[]): Promise<{ reord
   });
 }
 
+// SIMPLIFY B: persist the one-time "company snapshot ready" intro dismissal so Home shows
+// the snapshot directly on every later visit. Best-effort from the intro's CTA.
+export async function mark_snapshot_intro_seen(
+  workspace_id: string,
+): Promise<{ snapshot_intro_seen: boolean }> {
+  return api(`/api/workspaces/${workspace_id}/snapshot-intro-seen`, { method: "POST" });
+}
+
 // ── Company delete preview (SIMPLIFY §4-A / §6-1) ─────────────────────────────
 // The non-destructive half: exact counts of everything a company delete would remove,
 // feeding the type-to-confirm dialog so it never understates. The destructive endpoint
