@@ -49,3 +49,42 @@ live testing; lane-e is fixing. Mini-seam-4 will RE-DEPLOY bundling THREE fronte
 (marker, already live), bea9fac (sim consent copy), + the transcript-freeze fix (hash TBD from lane-e).
 Verify = the same 3 checks PLUS driving LIVE VOICE turns in the room to confirm the transcript renders
 (coordinate with lane-e on the safest repro/voice_test path). Holding for lane-e's fix hash.
+
+## ROUND 2 — executed (P1 owned end-to-end by seam-1)
+Deployed commit: **c203bc5** (Railway api+worker SUCCESS + Vercel READY nexus-v2-lywek4hzb).
+Scope = config P1 fix (c203bc5) + bea9fac (sim consent copy) + 6199a06 (marker, already live).
+No migrations applied (0025_intake_agent.sql is inert; not applied — belongs to the intake seam).
+
+### P1 (ADD-3.1) — FIXED + VERIFIED END-TO-END
+- Root cause (GET-verified live): both shared VAPI assistants had serverMessages but NO
+  clientMessages, so the browser SDK received zero transcript events and the LiveRoom froze on
+  the opener while the DB filled. Broke at the July-9 re-provision (16a2614).
+- FIX: added clientMessages ["transcript","status-update","speech-update"] to vapi_assistant.py
+  + provision_vapi.py (c203bc5). Re-provisioned BOTH shared assistants (Nexus Interviewer M
+  0853702b / F 44d14d38) via railway-run; GET-verify: clientMessages present, auth intact,
+  silence=60, ryan/sarah + stopSpeaking 2/0.4 untouched. 0 per-workspace assistants = total coverage.
+- VERIFIED BY A REAL DRIVEN HEADLESS CALL: minted disposable voice session on hidden Atlas, the
+  MCP Chrome had a live mic + granted permission, started a real VAPI call — the assistant's opener
+  rendered LIVE on-screen token-by-token ("Hi. I'm Nexus. Thanks so much for making the time…").
+  Double-confirmed: webhook also stored the opener server-side (21 agent utterances). Call ended,
+  session torn down (0 rows remain). Emre unblocked for voice testing; Kaan's mic call = feel check.
+
+### Round-2 checks (against c203bc5)
+- bea9fac sim consent copy PASS: "Practice run · … a simulation, not a real interview … Nothing said
+  here reaches your company records" — no real-person promise leak.
+- SIMULATION marker persistent PASS (consent + room).
+- Employee invite consent BYTE-UNCHANGED PASS (no sim leak).
+- Transient health note: 2 failed jobs (compute_yield/screen_disclosures) from the voice-test's
+  post-call jobs failing after session teardown; preceded the deploy, self-cleared (0 failed now).
+
+### Data hygiene
+- All disposable sessions I minted (voice 8f434b5e, sim 42e0ff89) torn down. Orphan roleplay
+  78d704f4 torn down (lead-authorized). 2 other bee-goddess roleplays remain — other lanes' active
+  sims, left as-is.
+
+### OPEN — pin decision surfaced to lead
+- ce5ec3f (frontend server-transcript backstop, defense-in-depth) landed after the c203bc5 pin and
+  is stacked on top of Snapshot v2 (0d4b52b) — cannot ship the backstop without Snapshot v2. P1 is
+  already fixed+live+verified WITHOUT the backstop. Awaiting lead's call: (A) re-pin 402327a +
+  re-deploy Vercel (ships backstop + Snapshot v2), or (B) defer both to the seam that intentionally
+  ships Snapshot v2. Recommended (B).
