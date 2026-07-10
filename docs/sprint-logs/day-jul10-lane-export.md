@@ -98,6 +98,17 @@ behavior, not our existing build re-derived) and not CONFLICT (nothing tested re
   gap survives). Removed the staged .patch and tombstoned staged/README.md. A24 = ADOPT
   (Emre pilot §3 "promote it", releases F21 hold). conflicts.py lint clean.
   AUDIT: SIMPLER — a founder correcting his own number no longer renders as founder-vs-founder.
+- **C5 export modal backdrop** — ExportReportButton dialog scrim `bg-ink/25` → canonical
+  `bg-scrim` (rgb 31 26 19 / 0.32, "drawer/modal backdrop"), matching the ratified July-8
+  add-company backdrop fix; background no longer bleeds through. tsc clean.
+  AUDIT: SIMPLER — the dialog reads as a dialog.
+
+## Definition of done
+Five leak fixes + bug landed as five scoped, revertable commits (a7cf9f2, b48386c, 7b6d87c,
+7129c75, + C5), all pushed to main, MERGE never rebase. Tests: 15 new deterministic backend
+cases green (deidentify 4, trust 4, steps 3, perception-gap 4) + frontend tsc clean. Lane
+does NOT deploy — seam-B driven-verify script above is ready for team-lead. Cross-lane touches
+(conflicts.py, perception-gap.md, ExportReportButton.tsx) announced to team-lead at start.
 
 ---
 

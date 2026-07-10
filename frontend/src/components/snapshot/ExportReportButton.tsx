@@ -63,7 +63,7 @@ export function ExportReportButton({
         {open && (
           <motion.div
             variants={scrimFade} initial="hidden" animate="show" exit="hidden"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-ink/25 p-6 backdrop-blur-[2px]"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-6 backdrop-blur-[2px]"
             onClick={() => setOpen(false)}
           >
             <motion.div
