@@ -89,3 +89,26 @@ against pre-sprint behavior. Write honest audit verdicts in SPRINT-STATE.
 Non-negotiables untouched (ontology, quarantine, gates, verbatim). BUILD→AUDIT→NEXT.
 Limit protocol: 95% park with live todo + resume on reset; watchtower checks every 30 min.
 Better, not more complicated, is the bar — for every change: is this SIMPLER for the user?
+
+## ADDENDUM (Kaan, ~11:00 July 9 — binding, P1)
+- **DEADLINE: everything complete within 12 hours** (before Emre begins real voice
+  testing). Plan pacing accordingly; park/resume through limit windows without waiting.
+- **Every button works.** A dedicated pass: click every interactive element on every page
+  (desktop + mobile). Kaan reports some are still dead. No dead buttons ship.
+- **Navigation convenience:** from any deep view you can reach other tabs easily AND
+  return to where you were in the flow (back-to-flow affordances per section).
+- **NEW: agentic chat interface.** Build the chat-with-Nexus experience properly — agents
+  behind the chat (use the Claude Agent SDK or roll the loop, your judgment). Primary
+  surface: the Feedback-K plan-chat where conversing updates the interview plan LIVE.
+  Tunç inspiration (Kaan's explicit pointer, verified by watchtower):
+  - `reference/nexus-web-app-main/lib/hooks/use-polling.ts` — usePollingQuery: the
+    page-updates-itself-while-work-happens pattern (used in discovery-run-live-view,
+    kb-diff-live-panel, candidates-live-actions).
+  - `reference/nexus-web-app-main/components/chat/chat-composer.tsx` — auto-growing
+    composer with Enter-to-send.
+  - `reference/nexus-web-app-main/components/reviewer/kb-diff-live-panel.tsx` — live
+    approve/resolve of diff items (the shape for "chat proposed these plan changes,
+    highlight them, let the user keep/undo").
+  Adapt with attribution (FOR-TUNC entry), never paste blind. The chat's plan edits
+  respect the ontology: the plan is a draft artifact so live edits are fine, but
+  anything the gate already approved never mutates silently.
