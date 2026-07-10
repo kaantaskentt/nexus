@@ -170,6 +170,15 @@ Hotel." + one line render; all compliance boxes (incl. S7.8) intact; no overflow
   (e.g. "Build Nexus's first understanding of how your company really works."). 30-sec call.
   Screenshots: scratchpad/parity-screens/parity-welcome-newcopy-{1440,390}.png.
 
+### RESOLVED — kicker dropped (Kaan's call, watchtower)
+Kaan chose: drop the redundant kicker, keep the headline. Removed the uppercase kicker `<p>`
+from ConsentLanding (context branch) — display-only one-liner, no copy-string change (consentCopy
++ consent-landing.md + guard untouched). Chose REMOVE over "make it BETA" because the top Shell
+banner already shows "Beta · Context call", so a BETA kicker would just duplicate the banner.
+Headline "Company context call" + subtitle + one line now stand alone, centered under the orb.
+tsc clean; no test impact (render-only, consentCopy strings unchanged). Visual re-walk on the
+next deploy. This closes the redundancy flag.
+
 ## Verdicts
 - Surface 2 (welcome hero orb) 747fd27. Surface 1 (agent-state rail) 1dda84c, test-green.
   Surface 3 (reconnect cards) 660db57. Seam-C1 gate walk PASS both widths (82befa4).

@@ -634,11 +634,12 @@ function ConsentLanding({
         </div>
       )}
       {session.context_call ? (
-        // Kaan's crisp mockup-2 hero: uppercase kicker + headline + subtitle + one calm line,
-        // centered under the orb. Copy is Kaan's verbatim (via consentCopy).
+        // Kaan's crisp mockup-2 hero: headline + subtitle + one calm line, centered under the
+        // orb. Copy is Kaan's verbatim (via consentCopy). The uppercase kicker was dropped
+        // (Kaan, July 10) — it duplicated the headline word-for-word, and the top Shell banner
+        // already carries the "Beta · Context call" label.
         <div className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">{c.heading}</p>
-          <h1 className="mt-2 font-display text-3xl leading-tight text-ink">{c.heading}</h1>
+          <h1 className="font-display text-3xl leading-tight text-ink">{c.heading}</h1>
           {subtitle && <p className="mt-2 text-lg text-ink-soft">{subtitle}</p>}
           <p className="mx-auto mt-3 max-w-xl leading-relaxed text-ink-faint">{c.intro}</p>
         </div>
