@@ -65,3 +65,52 @@ deliberately lighter tier than a page title. Noting it rather than flattening it
 titles lands at the next deploy's screenshot pass (prod screenshots still show pre-change).
 
 **Verdict:** LANDED.
+
+---
+
+## Screenshot pass — full design-system audit (prod 0fd1f3d, bee-goddess-demo tenant)
+
+21 surfaces captured into docs/audit-screens/refine/ (13 at 1440, 8 at 390): picker, home
+(Snapshot v2), context (record store), interviews hub, interview detail (Observe), plan
+detail (K hub + plan-chat + suggested questions), report, workflows list, workflow detail,
+simulations, settings, trust, new-interview intake. Checked each against the coded design
+system (Figma still unauthed — coded tokens are source of truth per orders).
+
+**HEADLINE VERDICT: the product is already coherent to ONE design system.** Every surface
+applies the globals.css token system consistently — cream canvas, Fraunces display titles,
+Inter body, orange accent + accent banners, the trust/pain chip ladder, uppercase eyebrows,
+elev-1/2 cards. The genuine PURE-VISUAL token divergences were exactly the three found in
+the static scan and already fixed in batches 1a/2 (magic dark hex, page-title size drift,
+un-tokenized label tier). There is NOT a backlog of pure-visual token gaps to sweep.
+Manufacturing more visual churn would violate the standing bar (better-not-more-complicated,
+propose-don't-break). So this lane's build output is batches 1a + 2; the rest is proposals.
+
+**PROPOSALS (structural/density/content — NOT strictly-visual, routed to owning lanes):**
+1. Interview plan detail (K hub): at 1440 the right rail (Refine plan + Suggested questions)
+   is short, then the left column continues alone (Definition of done, Handling notes),
+   leaving a large dead right-side void; "What the check flagged" then spans full width
+   below. Reads unbalanced — the "messy" Kaan flagged. Owner: lane-K. Layout change, propose.
+2. Workflow detail: step cards flow in a 3-col grid with ragged/masonry bottoms (uneven
+   heights). Minor visual roughness; equal-height or true-masonry would tidy it. Owner:
+   lane-C/workflow. Propose (structural).
+3. Interviews hub stat chips read "4 in planning · 4 interviews · 3 completed" — math reads
+   off/confusing. Owner: bug lane / audit-walk (flagged to them already).
+4. Centered ~700px reading column leaves a large right-side void at 1440 on home/interviews/
+   settings/simulations. Consistent across pages (so it's "the system", not a divergence) —
+   but a taste call for Kaan on whether to use the width. Not building; flag for a Kaan session.
+
+**NON-DIVERGENCES confirmed intended:** /insights → /home and /knowledge → /context redirects
+(IA consolidation dropped Insights from nav); simulations correctly uses this tenant's real
+workflows (no jewelry leakage); observe voice-strip dark tile unaffected by the surface-dark
+swap (byte-identical color).
+
+**Skipped deliberately (discipline, not omission):**
+- SnapshotView "last batch": v2 renders on-system and on-scale (lane-dbg got the standards).
+  Only residual is one text-[10px] eyebrow (SnapshotView:728) — a 1px micro-label; not worth
+  churning freshly-landed v2 for. Noted, not built.
+- The .eyebrow application sweep (8 text-[11px] sites): ZERO pixel change (size-identical
+  utility swap), touches files other lanes just wrote. Pure authoring-consistency with no
+  user benefit against a 12h deadline — deferred as optional post-sprint cleanup, not built.
+
+**Verdict:** AUDIT COMPLETE. Design system verified coherent; two build batches landed;
+structural roughness routed as proposals. Screenshots committed as evidence.
