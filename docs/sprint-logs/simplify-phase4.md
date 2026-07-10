@@ -111,3 +111,50 @@ simpler per page" close Kaan asked for — with that single marker gap named, no
   applied immediately: the greenlit naming unification (f3c6dd0) was linted + its nearest
   test run and grep-checked for asserted strings BEFORE commit. Standing habit for this lane:
   grep src/test for the old value and run the touching test file before any string/route change.
+
+---
+
+# REFINE ROUND (task #19, ADDENDUM 3.4 — absorbs ADD-5 bug-detector lane)
+
+**Method correction (owned):** my seam-3 walk was measurement-based and did NOT drive live
+calls — so it could not catch Kaan's P1 transcript freeze (roleplay 5716e93e: 29 utterances
+in DB, screen stuck on opener). This round DRIVES the real flows. GATED on mini-seam-4
+(carries the transcript fix + sim marker 6199a06 + sim consent bea9fac); team-lead signals live.
+
+**Driven-verification checklist — every FEEDBACK.md item, verified by DOING it on prod:**
+- **A · Company mgmt:** drag-reorder the picker (order persists on reload); open the
+  Delete-company dialog — exact counts + type-to-confirm render. DO NOT confirm on a real
+  tenant; disposable tenant + teardown, coordinate the destructive click with team-lead.
+  Checkbox interaction preserved.
+- **B · Post-call snapshot intro:** seed context (paste/upload) → lands on the intro, Home
+  tab active, ONE primary "View company snapshot". (Snapshot v2 itself = lane #16.)
+- **C · Workflows (my lane):** click each dept chip → list filters; open a workflow → expand
+  sections; confidence + descriptions correct. (Structurally verified seam-3; now DRIVE it.)
+- **D · CEO welcome:** create a context call → welcome reads leadership (not employee), one
+  "Begin context call". Drive to the room.
+- **E · Live room + Captured-live (THE freeze class):** DRIVE a voice call AND a text call —
+  confirm live turns RENDER (not frozen on opener), Captured-live panel updates with
+  confirmation checkmarks, agent state (Listening/Thinking/Saving) shows, text-mode toggle
+  works. This is the item my last walk missed; highest priority.
+- **F · Connection stability:** reconnecting state + transcript preserved + recovery confirm
+  (force a network blip in-browser if feasible; else inspect the machinery live).
+- **G · Call-completed:** first call → primary "View company snapshot"; later call → back to
+  snapshot; secondary "Return home". Drive a call to completion on a disposable tenant.
+- **I · Simulations (my lane):** run a scenario → room opens with the SIMULATION marker +
+  practice-run consent (verify 6199a06 + bea9fac landed) + suppressed captures.
+- **J · Play-this-character:** overview card first (role/goals/context/behaviors), raw MD
+  demoted to a secondary tab.
+- **K · Interview hub:** Plan→Observe→Report→Follow-up as connected stages; Observe view
+  transcript connected + topic coverage legible + minimal scroll; Report CEO-navigable;
+  Follow-up sensible; New-interview flow + plan-chat live-updates the draft; suggested-
+  questions spacing correct at 1440 AND 390.
+- **Regression classes (c):** merged bubbles, scroll discipline, observer polling, report
+  links, export, delete dialogs — the transcript freeze is the proven class; check each still
+  works post-rewrite.
+- **Click-every-button pass** at 1440 + 390 including the mutate/navigate buttons skipped
+  last time (Add to plan, Open workflow editor, Add insight, Export report, Hear it live,
+  Send/Approve) — on disposable tenants with teardown; destructive clicks coordinated with
+  team-lead.
+- **(d) Beyond the doc:** propose-and-fix genuine improvements, A28 gating each (simpler-or-stop).
+
+Findings + fixes will be logged below this checklist as I drive each, once mini-seam-4 is live.
