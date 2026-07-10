@@ -6,11 +6,14 @@ import logging
 
 from . import pipeline  # noqa: F401  (registers compile_session / rate_pain)
 from .db import close_pool
-from .queue import worker_loop
+from .queue import enqueue, worker_loop
 
 
 async def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+    # Self-heal sweep on every boot: re-drive any context call stranded before its snapshot
+    # (records saved, snapshot never composed) — idempotent, so a clean queue is a no-op.
+    await enqueue("reconcile_snapshots", {})
     try:
         await worker_loop()
     finally:
