@@ -22,13 +22,91 @@ from ..db import get_pool
 from ..pipeline.roleplay import CAST_KEYS, persona_sheet
 from ..queue import enqueue
 from ..simulation_history import SIMULATION_CAST, SIMULATION_ROUNDS
+from .workflows import _derive_confidence
 
 router = APIRouter()
+
+
+def _join_and(parts: list[str]) -> str:
+    if len(parts) <= 1:
+        return parts[0] if parts else ""
+    return ", ".join(parts[:-1]) + " and " + parts[-1]
+
+
+def _scenario_summary(label, steps, has_exceptions, has_decisions, confidence) -> str:
+    """Display prose for a scenario card — a template filled from the workflow's own
+    attributes, so it never leaks another company's example. This is the card copy only;
+    the interviewer's steering objectives are derived separately server-side in lane-e's
+    mint (locked contract), never shared with this string."""
+    facts = [f"{steps} steps"]
+    if has_exceptions:
+        facts.append("documented exceptions")
+    if has_decisions:
+        facts.append("decision points")
+    lead = f"{label} — {_join_and(facts)}."
+    tests = []
+    if has_exceptions:
+        tests.append("surfaces how it handles exceptions")
+    if has_decisions:
+        tests.append("draws out the decision logic")
+    if confidence in ("low", "medium"):
+        tests.append("corroborates the steps that rest on a single account")
+    if not tests:
+        tests.append("holds a straightforward process to real specifics")
+    return f"{lead} Tests whether the interviewer {_join_and(tests)}."
 
 
 @router.get("/history")
 async def simulation_history():
     return {"cast": SIMULATION_CAST, "rounds": SIMULATION_ROUNDS}
+
+
+@router.get("/{workspace_id}/scenarios")
+async def list_scenarios(workspace_id: str):
+    """Simulation scenarios derived from THIS workspace's real workflows (SIMPLIFY I).
+    A workflow qualifies when it has >= 3 steps (a 1-2 step 'workflow' isn't worth a drill);
+    cards are ranked by testing value — the places a real interview must dig: documented
+    exceptions, decision points, and thinly-sourced (lower-confidence) steps. Display-only:
+    the Run button sends only `workflow_id` to the mint, which derives the archetype +
+    interviewer objectives server-side (locked contract — client-supplied objectives never
+    cross the wire). Never invents a scenario from thin data; a tenant with no qualifying
+    workflow gets an empty list (the page shows an honest empty state, never the global cast)."""
+    pool = await get_pool()
+    rows = await pool.fetch(
+        """select w.id, w.name,
+                  (select count(*) from workflow_steps s where s.workflow_id = w.id) as step_count,
+                  (select count(*) from workflow_steps s
+                     where s.workflow_id = w.id and s.verified = 'verified') as verified_count,
+                  exists(select 1 from workflow_steps s where s.workflow_id = w.id
+                           and coalesce(s.spine_slots->>'exceptions','') <> '') as has_exceptions,
+                  exists(select 1 from workflow_steps s where s.workflow_id = w.id
+                           and coalesce(s.spine_slots->>'rules','') <> '') as has_decisions
+           from workflows w where w.workspace_id = $1""",
+        workspace_id,
+    )
+    scenarios = []
+    for r in rows:
+        steps = r["step_count"]
+        if steps < 3:
+            continue
+        confidence = _derive_confidence(steps, r["verified_count"])
+        has_exceptions, has_decisions = r["has_exceptions"], r["has_decisions"]
+        score = (2 if has_exceptions else 0) + (1 if has_decisions else 0) + \
+                {"low": 2, "medium": 1}.get(confidence or "", 0)
+        scenarios.append({
+            "workflow_id": str(r["id"]),
+            "label": r["name"],
+            "step_count": steps,
+            "tests_summary": _scenario_summary(r["name"], steps, has_exceptions, has_decisions, confidence),
+            "signals": {
+                "has_exceptions": has_exceptions,
+                "has_decisions": has_decisions,
+                "confidence": confidence,
+            },
+            "_score": score,
+        })
+    scenarios.sort(key=lambda s: s.pop("_score"), reverse=True)
+    return scenarios
 
 
 # ── F8 role-play ─────────────────────────────────────────────────────────────
