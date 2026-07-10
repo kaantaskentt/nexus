@@ -16,20 +16,21 @@ import { ParticleOrb, type OrbState } from "./ParticleOrb";
 import { StageRail } from "@/components/interviews/StageRail";
 
 // The Observer view (A19): the admin's live window onto one interview — the SAME elements
-// as the respondent room (orb, transcript) inside the admin shell (correction #2), plus
-// timestamped insight cards, a topics-covered ring, and Add insight.
+// as the respondent room (orb, transcript) inside the admin shell (correction #2). Staged
+// under a StageRail (K4), it joins the verbatim transcript and the timestamped Live notes
+// into one bordered room, with a legible topic-coverage strip above.
 //
 // Honesty rules this surface is built on:
-// - Badges come ONLY from the real trust ladder (correction #1): observer insights are
+// - Badges come ONLY from the real trust ladder (correction #1): observer notes are
 //   CLAIMED at the data layer → they render as "Reported", never anything stronger. Post-
 //   compile claims carry their true tags through confidenceForTag. Nothing is "Verified"
 //   unless the compiler independently corroborated it.
 // - The orb here has NO audio feed (the call runs respondent↔voice-provider). It reflects
 //   only real polled signal: session status + a pulse when a new utterance lands. We never
 //   fabricate amplitude the observer isn't hearing.
-// - The topics ring renders ONLY the coverage map the turn engine actually computed. When
-//   coverage tracking is off (or hasn't run), we say "not tracked" — never an empty-but-
-//   confident ring.
+// - The topic-coverage strip renders ONLY the map the turn engine actually computed: each
+//   topic shows its real state (Covered/Partly/Not yet), or "Planned" when tracking is off —
+//   never an empty-but-confident state.
 // - People are initials chips, never photos (correction #3).
 
 const POLL_MS = 4000;
