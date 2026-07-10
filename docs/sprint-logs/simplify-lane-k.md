@@ -58,3 +58,26 @@ jsdom class test added (src/test/stage-rail.test.tsx): pins the overflow-x-auto/
 page stops scrolling sideways on a phone; desktop unchanged (sm+ classes match the old sizes).
 Green: tsc + eslint clean on touched files; stage-rail 2/2, observer-badges 7/7,
 generate-plan-button green. Rides the seam-3 fixup deploy.
+
+## ADD-4 — new-interview intake agent (task #18, SIMPLIFY ADDENDUM 4)
+A short intake conversation on /interviews/new before the plan is finalized: 2-3 sharp
+follow-ups one at a time (records/plan/coverage aware), answers shape the plan, and each
+company fact gets an explicit plan-only-vs-store-as-context decision shown as a chip.
+
+Isolated commits: (1) intake prompt + strong seat (this) · (2) intake endpoint · (3) required
+role+focus + role suggestions + UI intake phase · (4) evals.
+
+Design decisions worth pinning:
+- STRONG seat (non-negotiable #7): `intake_interviewer` = claude-sonnet-4-6, same tier as
+  plan_generator / plan_refine_chat / interviewer. Migration 0025 seeds agent_configs
+  (hand-apply at the deploy seam; conftest re-applies all migrations so tests pick it up).
+- Storage quarantine enforced at the DATA LAYER, not by prompt (non-negotiable #4): a
+  `store_context` fact is compiled through the STANDARD compiler at CLAIMED (reusing the
+  chat add_context path), so the compiler's existing sentiment-quarantine is the enforcement.
+  The agent's decision is a hint; the compiler is the backstop — a person-sentiment fact
+  routed to store is quarantined → no client_visible_claims row. `plan_only` stores nothing.
+- Plan edits reuse the SAME bounded `_apply_change` machinery + targets as K3 refine
+  (never_list / suggested_questions / handling_notes; leading input reformulated). The intake
+  agent is the second consumer of that primitive — kept shared, not forked.
+- Non-negotiable #2 holds absolutely: admin input only shapes questions, is never spoken to
+  the interviewee. The UI intake reuses the K3 applied-changes checklist (shared primitive).
