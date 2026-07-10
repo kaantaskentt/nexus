@@ -133,3 +133,13 @@ tested behavior (update the eval WITH the change, same commit or adjacent):
    the previewed counts and leaves other tenants byte-identical (interview-delete precedent).**
 Everything else: leave the eval suite alone. If a change doesn't touch tested behavior,
 it doesn't need an eval. Report in the Phase 4 sweep which evals moved and why.
+
+## WATCHTOWER FLAG (20:35 July 9, P1 deploy coherence)
+Independent prod check: migrations diverge from git. LIVE Supabase has 0022
+(sort_order) applied, but **0023 (workflows.department/description) and 0024
+(live_captures) are committed to git and NOT applied to live**. The C workflows-
+department surface and the E Captured-live panel will 500 on prod until these are
+hand-applied per deploy protocol. This MUST land (apply + GET-verify columns/table
+exist + browser-walk the surface) before those features count as "done" and before
+Emre voice-tests tonight. Track every new migration to live before marking its lane
+green. Do not let git-green masquerade as prod-green.
