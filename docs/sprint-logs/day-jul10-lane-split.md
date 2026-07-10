@@ -60,6 +60,17 @@ existing waveform (voice) / state rail (text) already prove liveness. If you'd r
 respondent keep a dedicated "capture status" panel on desktop, that's a 10-min swap — say
 the word at seam C. Recommendation: the pill; it's calmer and matches "bare count".
 
+## Route audit (team-lead caution — two routes, two audiences, no client switch)
+Confirmed the admin panel is NOT served by the by-token route — they are separate endpoints
+with separate auth, so counts-only on the respondent route does not touch Kaan's rich panel:
+- **Admin** `ObserverView.tsx` → `getLiveCapturesForSession(sessionId)` →
+  `GET /api/sessions/{session_id}/live-captures` → `dependencies=[Depends(require_admin)]`
+  (sessions.py L218) → full items + `ladder: reported`. UNCHANGED this commit.
+- **Respondent** `InterviewClient`/`VoiceCall` → `getLiveCapturesByToken(token)` →
+  `GET /api/sessions/by-token/{token}/live-captures` → `{count, extracting}` only.
+Seam-C network tab: verify BOTH — the respondent route payload has no item strings; the
+admin route (authed) still returns items + ladder.
+
 ## DRIVEN verify script (post-seam-C, prepared now)
 Real live session BOTH modes on prod (1440 + 390):
 1. RESPONDENT (/i/[token], both an employee interview and a founder context call): open the
