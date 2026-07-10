@@ -215,6 +215,30 @@ Findings + fixes will be logged below this checklist as I drive each, once mini-
   (a) opener-ordering fix → re-drive text-from-start reply, both kinds; (b) AreaDrawer → live
   Add-to-plan lands on /interviews/new focus-pre-seeded + transcript button gone; (c)
   interviews-hub stat relabel. Batch at the next seam.
+
+  **POST-NEXT-SEAM RE-VERIFY BATCH (exhaustive — nothing marked verified off a commit):**
+  - lane-e **55af788** (P0 fix): switchToText fires the opener as a real turn-0 into the empty
+    text room, so the user's first answer is turn 1 and gets an engaged reply. Re-drive
+    "Start by text instead" on BOTH a scenario Run and a normal "Hear it live" → confirm the
+    interviewer replies to my answer (not the opener-as-reply). I re-drive SOLO (lane-e holds
+    off to avoid a two-driver muddle); ping them only if it still shows opener-as-reply.
+  - lane-shell IA chain (one atomic change — verify Home + drawer + workflow round-trip together):
+    · **3b7be95** Home hosts Key findings + Automation opportunities (Insights fold) — both
+      render when data exists; opportunity "See it in the workflow" deep-links ?highlight= (from=home).
+    · **b89114b** Insights removed from nav; /w/[slug]/insights 307→Home — verify no nav item
+      (desktop + mobile drawer) + the redirect.
+    · **2fd4881** Report "Follow up on" → "Open questions".
+    · **fd6559b** workflow back-link from=home/insights → "Back to Home" — verify the
+      Home → opportunity → workflow → Back round-trip returns to Home.
+    · **51d3692** AreaDrawer "Add to Interview Plan" live → lands on /interviews/new with focus
+      pre-seeded (+ person if area has a knowledge-holder); "View full transcript" gone.
+    · **155ee50** AreaDrawer "Add context (chat)" no-op removed.
+  - Still-un-driven (0fd1f3d, not yet done): C chip filtering, D CEO welcome copy, J play-
+    character overview card, picker drag-reorder persistence, remaining mutate/button pass on
+    QA Refine, and the QA Refine DiscoveryUpload paste → compile → intro → snapshot (Feedback-B).
+  - Then: with the P0 fixed, drive the K interview hub end-to-end (Plan→Observe→Report→Follow-up)
+    + the ADD-4 intake-agent live-diff + call-to-completion + G call-completed screen.
+  #19 completes only after this batch runs green post-seam.
 - **[✓ A · Company mgmt — verified driven]** Picker: every row has a "Drag to reorder" handle
   AND a per-company "Delete" button (Feedback-A both features present). Opened the delete
   dialog (preview only, did NOT confirm): "Delete company — This will permanently remove Test
