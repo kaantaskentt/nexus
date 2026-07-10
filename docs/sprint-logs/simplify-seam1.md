@@ -60,6 +60,12 @@ cascade fb44c54, responsive AppShell 4f980c3). Pinned once; J/C/K1 deliberately 
   and deployed fb44c54 source + consent-copy.test.ts pin the leadership strings (headline
   "A working conversation about ...", "attributed to you as its source", gate line, "Begin
   the context call"). Flagged to lead — data-state gap, not a deploy defect.
+- Gate-line note (lead confirmed): fb44c54 carries the EARLIER gate line "You will see the
+  snapshot before anyone on your team is interviewed"; the amendment to "no one on your team
+  is contacted without your explicit approval" is 51d36ae, which landed AFTER this pin and
+  rides seam 2 — so the earlier line is EXPECTED here, NOT a 6c failure. Live-corroborated:
+  the Atlas done-page rendered the old language ("You'll see it before anyone on your team is
+  interviewed"), confirming this deploy is pre-51d36ae.
 
 ## 6d — Voice
 - Not exercised (per brief: no call started; silence-timeout config was GET-verified live earlier).
