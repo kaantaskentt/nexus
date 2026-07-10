@@ -241,14 +241,29 @@ RESULT — all safety guarantees proven on DEPLOYED code:
 - QUARANTINE proven by counts: claim_records = **0**, snapshot_cards = **0**. The disclosure never
   entered the KB or snapshot.
 
-INCIDENT ROW LIFECYCLE (per team-lead's ask): created (amber/illegality, notify_status='pending')
-→ notify attempted → 'skipped' (config absent) → would survive a session delete by design →
-teardown REMOVED it explicitly. Teardown rationale (logged): synthetic disclosure in a disposable
-is_internal tenant; leaving a fabricated 'illegality' incident would put false noise in Emre's
-reviewer queue, so it was cleaned. Teardown deleted agent_runs(1)+harm_incidents(1)+sealed_flags(1)
-+jobs(1)+utterances(2)+session(1)+workspace(1); post-check: zero residue, whole harm_incidents
-table back to empty. (agent_runs FK has no cascade — the product's own delete_workspace nulls it; I
-deleted my synthetic audit row instead.)
+TEARDOWN — corrected to team-lead's hidden-shell pattern (honest crossing noted):
+- FIRST run (workspace 8f7918c9, session 0a735ec4, job 379): I tore it down with a raw-SQL
+  cascade (deleted agent_runs+harm_incidents+sealed_flags+jobs+utterances+session+workspace, zero
+  residue) BEFORE team-lead's refined teardown guidance arrived. That guidance (received after
+  completion) said: do NOT raw-SQL a workspace delete even for our own data (don't touch the
+  §6-1 delete gate we're holding), and RETAIN the drill incident as evidence the survival
+  semantics work. My first teardown diverged on both points — flagged here, owned to team-lead.
+  No gated PRODUCT capability was touched (I never flipped workspace_delete_enabled or hit the
+  DELETE endpoint), and it was a synthetic is_internal tenant, so no real data or gate was harmed,
+  but the raw-SQL workspace delete is the divergence.
+- RE-RUN per the correct pattern (workspace 2fb919fa-0995-4057-b2f1-822d8711728d "S7 Drill
+  (internal)", session d163ce7d-2d44-4ca3-b1fd-4ceebd945f8f, job 383 done): same PASS. This time
+  the deployed screen flagged TWO amber incidents (model split the disclosure into illegality +
+  safety), both notify_status='skipped', session_ref set, claim_records=0, snapshot_cards=0.
+  RETAINED as the hidden-shell artifact per team-lead: incident ids
+  e47dc2b8-3110-4902-9478-8e4aabc95a06 (illegality) + e69dfd6f-6783-4cc4-86f3-f25295afbef6
+  (safety). Tenant left as a labeled hidden is_internal shell → seam-close ledger + Kaan reap
+  list ("reap when §6-1 arms delete", same as prior walk tenants). The retained rows are
+  themselves live evidence that the survival semantics hold.
+- Survival-on-interview-delete is already proven two ways without needing the disposable admin
+  password in a visible command: the green unit test test_incident_survives_interview_delete +
+  the live FK rule session_id ON DELETE SET NULL confirmed on prod (PART 1). Did not drive the
+  product delete endpoint to avoid handling the disposable credential in transcript-visible shell.
 
 IN-ROOM persona live-turn: NOT driven this pass — the turn engine + by-token routing is lane-sec's
 owned surface, and a raw-minted session drive there risks a misleading result in code I don't own.
