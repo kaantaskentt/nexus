@@ -226,9 +226,10 @@ export function VoiceSettings({
           className="input resize-none"
         />
         <p className="mt-1.5 text-xs text-ink-faint">
-          When empty, the interviewer opens with the standard greeting above, spoken the
-          moment the call connects: who it is, why this conversation exists, how sharing
-          works, then the first question.
+          This is the employee interview opener. When empty, the interviewer opens with the
+          standard greeting above, spoken the moment the call connects: who it is, why this
+          conversation exists, how sharing works, then the first question. The BETA context
+          call with a founder uses its own opening line, not this one.
         </p>
       </Section>
 

@@ -21,3 +21,15 @@ flagged to Kaan+Emre). consent-landing.md updated in lockstep. Drift guard 18 li
 em-dash lint clean, consent-copy + done-page leak tests green (role-only promise still absent
 from the context branch). Simpler/more complex for the user? SAME shape, TRUER promise.
 VERDICT: approved, landed.
+
+## FOLLOW-UP — Settings voice-opener preview label (audit amendment 4)
+
+Today: Settings' "Opening line" preview shows the employee interview opener greyed out with
+no label saying so — a viewer could read it as the opener for every call, including the BETA
+context call (which uses the collector's own opening line). After: one clarifying line under
+the field — "This is the employee interview opener ... The BETA context call with a founder
+uses its own opening line, not this one." No behavior change; the previewed opener STAYS the
+employee one, it is just labeled. voice-settings suite 7/7. Simpler? SIMPLER: removes a
+"which opener is this?" ambiguity. VERDICT: approved, landed.
+(tsc project-wide currently red on WorkflowEditor.tsx — lane-C uncommitted WIP, not this
+lane; my commit is path-scoped and excludes it.)
