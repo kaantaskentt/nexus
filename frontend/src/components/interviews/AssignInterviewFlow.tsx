@@ -259,7 +259,7 @@ function CollectStep({
       >
         <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> Back to interviews
       </Link>
-      <h1 className="mt-3 font-display text-[2.5rem] leading-[1.05] text-ink">New interview</h1>
+      <h1 className="mt-3 font-display text-[2.75rem] leading-[1.05] text-ink">New interview</h1>
       <p className="mt-2 max-w-xl text-[0.95rem] leading-relaxed text-ink-soft">
         Tell {brand.product_name} who to interview, their role, and what this interview should
         find out. {brand.product_name} drafts the plan from the records, checks it, and waits
@@ -390,7 +390,7 @@ function AssignStep({
 
         {/* Right: the assign form. */}
         <div className="min-w-0">
-          <h1 className="font-display text-[2.5rem] leading-[1.05] text-ink">Assign interview</h1>
+          <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Assign interview</h1>
           <p className="mt-1.5 max-w-xl text-[0.95rem] leading-relaxed text-ink-soft">
             Choose who receives this interview and finalize the setup before review.
           </p>

@@ -242,7 +242,7 @@ export function DiscoveryUpload({
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft text-accent-ink ring-1 ring-inset ring-accent/20">
           <Mic className="h-7 w-7" strokeWidth={1.5} />
         </div>
-        <h1 className="mt-6 font-display text-[2.5rem] leading-[1.1] text-ink">
+        <h1 className="mt-6 font-display text-[2.75rem] leading-[1.1] text-ink">
           {append
             ? "Add a call transcript"
             : hasRecords
@@ -583,7 +583,7 @@ function CompilingView({ status, done }: { status: DiscoveryStatus | null; done:
             <Loader2 className="h-7 w-7 animate-spin" strokeWidth={1.75} />
           )}
         </div>
-        <h1 className="mt-6 font-display text-[2.5rem] leading-[1.1] text-ink">
+        <h1 className="mt-6 font-display text-[2.75rem] leading-[1.1] text-ink">
           {done ? "Your snapshot is ready" : "Building your snapshot"}
         </h1>
         <p className="mt-3 text-sm text-ink-soft">

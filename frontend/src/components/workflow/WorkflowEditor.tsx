@@ -205,7 +205,7 @@ export function WorkflowEditor({
                 </span>
               )}
             </div>
-            <h1 className="mt-1 font-display text-[2.5rem] leading-tight text-ink">{workflow.name}</h1>
+            <h1 className="mt-1 font-display text-[2.75rem] leading-tight text-ink">{workflow.name}</h1>
             {workflow.description && (
               <p className="mt-2 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft">
                 {workflow.description}
