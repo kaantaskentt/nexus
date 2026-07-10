@@ -99,5 +99,14 @@ Real live session BOTH modes on prod (1440 + 390):
   load right now (schema-drop deadlocks + server connection exhaustion → UndefinedTable /
   OSError). Those are the infra contention flagged in my P0 report, not this change; the
   single-file run also passed cleanly on the shared DB in a quiet window.
-- **Not yet driven** — needs seam C (deploy) for the real both-mode prod walk (network tab
-  proving no content payload). Script is above.
+- **Seam A is LIVE** (split 987fc02 + identity e0907c5 deployed: backend Railway
+  nexus-api-production-d644 /health ok; frontend nexus-v2.vercel.app 200). Team-lead pulled
+  the driven walk into seam A.
+- **Driven verify: PREPPED, BLOCKED on creds.** Harness scratchpad/verify_prod.sh is
+  token-agnostic (by-token routes are unauthenticated by design) and does the identity baits
+  + the R1 live-captures shape assertion in one pass. Minting a disposable session is
+  seat-gated (workspaces router = require_workspace_seat), so blocked on team-lead relaying
+  the admin@nexus.app password OR a disposable context token + workspace slug. The MCP
+  browser profile is also locked by another lane; only the two VISUAL confirmations
+  (respondent count pill / admin ObserverView) need it — the data-layer + identity proofs
+  run via curl without it. Will fill PASS/FAIL here the moment a token lands.
