@@ -46,7 +46,10 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <header className="flex h-16 items-center justify-end gap-2 px-8">
+      <header className="flex h-16 items-center justify-end gap-4 px-8">
+        <Link href="/incidents" className="text-sm text-ink-soft hover:text-ink">
+          Incidents
+        </Link>
         <SignOutButton />
       </header>
 

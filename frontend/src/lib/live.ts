@@ -1108,3 +1108,39 @@ export async function delete_interview(session_id: string): Promise<{
 }> {
   return api(`/api/sessions/${session_id}`, { method: "DELETE" });
 }
+
+// R6 — Section-7 harm-incident inbox (reviewer-scoped admin surface). The row is already
+// minimized by the backend schema: no verbatim, ever. category/bucket/timestamp/session_ref
+// + notify/review state only.
+export interface IncidentRow {
+  id: string;
+  category: string;
+  bucket: "red" | "amber" | "yellow";
+  created_at: string;
+  session_id: string | null;
+  notify_status: string;
+  review_status: "unreviewed" | "reviewed" | "dismissed";
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  workspace_id: string;
+  workspace_name: string;
+}
+
+export async function list_incidents(
+  status?: string,
+  token?: string | null,
+): Promise<IncidentRow[]> {
+  const q = status ? `?status=${encodeURIComponent(status)}` : "";
+  const { incidents } = await api<{ incidents: IncidentRow[] }>(`/api/incidents${q}`, undefined, token);
+  return incidents;
+}
+
+export async function review_incident(
+  id: string,
+  action: "reviewed" | "dismissed",
+): Promise<{ id: string; review_status: string; reviewed_by: string; reviewed_at: string }> {
+  return api(`/api/incidents/${id}/review`, {
+    method: "POST",
+    body: JSON.stringify({ action }),
+  });
+}
