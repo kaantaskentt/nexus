@@ -90,6 +90,23 @@ dismiss persists. Kaan removed the co-primary Generate-plan / Review-transcript 
 the intro carries a single CTA. Simpler? SIMPLER: one clear next step at the one moment it
 matters, shown once.
 
+## Lane EF — voice drops + text latency (Feedback F/E; findings docs/SIMPLIFY-EF-FINDINGS.md)
+
+**A28 pre-review — COMMIT 1 (silence-timeout 30 → 60 + re-provision).**
+Today: every live VAPI assistant (Nexus M `0853702b`, F `44d14d38`, verified by GET) carries
+`silenceTimeoutSeconds: 30`; a respondent who pauses ~30s to think gets auto-hung-up
+mid-conversation — the root of Kaan's July 9 unexpected cutoffs (evidence: SIMPLIFY-EF-FINDINGS
+F, backed by prod agent_runs latency + live assistant config). After: `silenceTimeoutSeconds: 60`
+in `vapi_assistant.py` + `provision_vapi.py` defaults; re-provision the TWO shared assistants ONLY
+(the script keys by name "Nexus Interviewer (M)/(F)", so the 4 CASTING relics are untouched), WITH
+the prod `VOICE_SHARED_SECRET` injected from Railway (verified: prod secret == live assistant auth
+header, 64 chars; local .env has none, so a secretless run would strip auth — the script already
+refuses that at L158). Every other field re-asserts its current live value (voice ryan/speed 1.07,
+startSpeakingPlan 0.4, stopSpeakingPlan numWords 2 — the July 8 interruption tuning preserved);
+only silence changes. Post-check: GET both assistants, confirm silence=60, auth header intact,
+voice unchanged, stopSpeakingPlan numWords still 2. Simpler or more complex for the user? SIMPLER:
+the call stops hanging up on people who are thinking; nothing else about the call changes.
+
 ---
 
 # NIGHT MARATHON — July 8/9 (docs/MARATHON-ORDERS.md; A28 binds every change)

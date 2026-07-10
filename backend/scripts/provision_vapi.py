@@ -116,7 +116,9 @@ def _assistant_config(name: str, voice: dict, base_url: str, secret: str) -> dic
         # (6) INTERRUPTION — yield instantly on any speech; never talk over the respondent.
         "stopSpeakingPlan": {"numWords": 2, "voiceSeconds": 0.4, "backoffSeconds": 1.0},
         # (7) SILENCE — long; the gentle check-in is the persona's job, not an auto hang-up.
-        "silenceTimeoutSeconds": 30,
+        # 60s (was 30): 30 cut real calls short when a respondent paused to think
+        # (SIMPLIFY-EF-FINDINGS.md F). Keep in sync with app/vapi_assistant.py.
+        "silenceTimeoutSeconds": 60,
         "maxDurationSeconds": 3600,
         "voice": voice,
         # (4) RECORDING + WEBHOOKS — raw audio + verbatim transcript are evidence.

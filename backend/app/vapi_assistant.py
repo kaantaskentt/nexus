@@ -191,7 +191,10 @@ def build_assistant_config(
         # floor under it. Start side untouched — opener velocity is a Kaan-won behavior.
         "stopSpeakingPlan": {"numWords": 2, "voiceSeconds": 0.4, "backoffSeconds": 1.0},
         # SILENCE — long; the gentle check-in is the persona's job, not an auto hang-up.
-        "silenceTimeoutSeconds": 30,
+        # 60s (was 30): a reflective respondent recalling how the work actually flows can
+        # sit quiet longer than 30s, and 30 was cutting real calls short mid-conversation
+        # (SIMPLIFY-EF-FINDINGS.md F, Kaan July 9). The persona still offers a break itself.
+        "silenceTimeoutSeconds": 60,
         "maxDurationSeconds": 3600,
         "voice": voice_block(voice_id, speed),
         # RECORDING + WEBHOOKS — raw audio + verbatim transcript are evidence.
