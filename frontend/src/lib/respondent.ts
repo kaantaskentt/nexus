@@ -281,6 +281,9 @@ export function consentCopy(session: RespondentSession) {
         "What you share builds your company's snapshot and is attributed to you as its source.",
         `${brand.product_name} may gather relevant public information about the company after the call to round out the picture. Public information is reference only, never treated as verified fact.`,
         "The snapshot is yours to review first, and no one on your team is contacted without your explicit approval. Nothing you say here is ever repeated to an employee.",
+        // Section 7.8 disclosure/escalation line (lane-s7 R7). Kept in sync with the
+        // context-call section of consent-landing.md (consent_copy_sync guard).
+        "If you disclose imminent harm or serious wrongdoing, we may stop the call and escalate to a human reviewer, and we cannot guarantee confidentiality over that disclosure.",
         "You can pause anytime and pick up later on the same link.",
       ],
       startAction: "Begin the context call",
@@ -319,6 +322,9 @@ export function consentCopy(session: RespondentSession) {
       `A short summary of how the work flows goes to ${audience}. Pain points are shared by role, like "someone in operations," not by your name.`,
       "Nothing is quoted with your name on it. Your answers are combined with everyone else's before anyone sees conclusions. If there's something you want credited to you, say so, and you'll see exactly how it appears before it goes anywhere.",
       "You won't be asked to rate anyone. If an opinion about a person comes up, it's kept out of what's shared unless you explicitly say otherwise.",
+      // Section 7.8 disclosure/escalation line (lane-s7 R7). Kept in sync with the interview
+      // section of consent-landing.md (consent_copy_sync guard); a fixed promise, not templated.
+      "If you disclose imminent harm or serious wrongdoing, we may stop the interview and escalate to a human reviewer, and we cannot guarantee confidentiality over that disclosure.",
       "You can pause anytime and pick up later on the same link.",
     ],
     startAction: "I'm ready, start the conversation",
