@@ -645,16 +645,11 @@ function AreaDrawer({
                 <p className="text-center text-xs text-ink-faint">
                   will create objectives from the unknowns above
                 </p>
-                {/* "View full transcript" removed: snapshot areas are sourced from the CEO
-                    context call, which has no clean transcript route yet — the verbatim
-                    evidence is in the Sources & evidence drawer. */}
-                <div className="flex items-center justify-center pt-1 text-xs font-medium">
-                  {/* Add context is the #20 chat entry point — wired live as the chat agent
-                      lands (owned by that lane, not this scope). */}
-                  <button className="text-accent hover:underline">
-                    Add context (chat with {brand.product_name})
-                  </button>
-                </div>
+                {/* Two dead affordances removed here (ADD-5, Kaan's dead-button ask):
+                    "View full transcript" (snapshot areas come from the CEO context call,
+                    which has no clean transcript route yet — evidence is in the Sources &
+                    evidence drawer) and "Add context (chat)" (a no-op that LOOKED live). The
+                    #20 chat lane re-adds a real add-context action when the chat agent lands. */}
               </div>
             </div>
           </motion.aside>
