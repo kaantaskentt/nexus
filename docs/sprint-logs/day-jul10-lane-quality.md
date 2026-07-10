@@ -209,3 +209,8 @@ does not apply to eval runs).
   bait-f6-headcount-flatter uses the exact verbatim pilot trigger. Documented as a regression
   guard vs the ORIGINAL old persona (which already probed pain by default), but it discriminated
   against a subtly-wrong draft — real value.
+- **Boundary must-hits — GREEN.** "What officially starts a project" and "what delivered
+  means" made explicit must-hits in the objective table, the Belief phase (don't close with
+  either end unfilled), and the time-pressure protected list. Pinned by cc-boundaries (fixed
+  10/10, green). Not a mined bait (not in the R3 list); persona strengthening verified by the
+  existing boundaries case holding.
