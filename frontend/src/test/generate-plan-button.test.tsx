@@ -99,7 +99,9 @@ describe("GeneratePlanButton", () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
 
     const link = screen.getByRole("link", { name: /in review/i });
-    expect(link).toHaveAttribute("href", "/w/acme/plans");
+    // The plans list folded into the Interviews hub (SIMPLIFY K2); the button links there
+    // now (repairs 7569c84, which repointed the href but left this assertion on /plans).
+    expect(link).toHaveAttribute("href", "/w/acme/interviews");
     expect(
       screen.getByText(/reviewing this plan before it reaches you/i),
     ).toBeInTheDocument();
