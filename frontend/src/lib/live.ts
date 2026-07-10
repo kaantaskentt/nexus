@@ -927,8 +927,13 @@ export interface CompanyReport {
     tag: TrustTag | null;
     mention_count: number;
     role: string | null;
+    // Below CONFIRMED (hand-added CLAIMED, GUESS, SCRAPED, untagged): render a qualifier so
+    // the footer's "carry their own confidence levels" promise stays true (pilot §3 leak 2).
+    unverified?: boolean;
   }[];
-  workflows: { name: string; steps: CompanyReportStep[] }[];
+  // unverified: none of the workflow's backing records reaches CONFIRMED (e.g. spawned from
+  // a single hand-added CLAIMED record) — the export qualifies it rather than asserting it.
+  workflows: { name: string; steps: CompanyReportStep[]; unverified?: boolean }[];
   gaps: CompanyReportGap[];
   opportunities: {
     title: string;

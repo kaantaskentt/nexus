@@ -79,6 +79,14 @@ behavior, not our existing build re-derived) and not CONFLICT (nothing tested re
   from roles/count. New DB-less test test_report_deidentify.py 4/4 green: the co-occurrence
   guard bites on the raw payload (role-attributed pain + names) and is clean after the pass.
   AUDIT: SIMPLER for the reader — document is now consistently role-only. Data-layer, not CSS.
+- **C2 trust-tag honesty** — findings below CONFIRMED (CLAIMED/GUESS/SCRAPED/untagged) now
+  carry `unverified` + a dashed qualifier chip ("Claimed — not yet verified" etc.); workflows
+  whose backing claims never reach CONFIRMED carry `unverified` + a "Provisional — built from
+  unverified records" caption. Footer reworded to drop the false "nothing here is edited by
+  hand" (hand-added CLAIMED records exist) and to state the confidence promise truthfully.
+  Tests test_report_trust.py 4/4 green; tsc clean. FLAG to Kaan (via team-lead): footer copy
+  is client-facing — I made the minimal honest correction the mandate requires; taste nod.
+  AUDIT: SIMPLER (more honest) — the footer promise is now literally true.
 
 ---
 

@@ -27,6 +27,21 @@ function toolName(tool: CompanyReportStep["tool"]): string | null {
   return tool.name ?? tool.kind ?? null;
 }
 
+// Honest qualifier for a finding whose record never reached CONFIRMED (pilot §3, leak 2).
+// A hand-added record is capped CLAIMED; it must never read as an unlabeled finding.
+function unverifiedLabel(tag: string | null): string {
+  switch (tag) {
+    case "SCRAPED":
+      return "From public sources";
+    case "GUESS":
+      return "Unconfirmed estimate";
+    case "CLAIMED":
+      return "Claimed — not yet verified";
+    default:
+      return "Unverified";
+  }
+}
+
 function SectionTitle({ n, children }: { n: number; children: React.ReactNode }) {
   return (
     <h2 className="mt-12 flex items-baseline gap-3 border-b border-line pb-2 font-display text-2xl text-ink">
@@ -113,6 +128,11 @@ export default async function CompanyReportPage({ params }: { params: { token: s
                           </span>
                         )}
                         {f.role && <span className="text-xs text-ink-faint">from the {f.role}</span>}
+                        {f.unverified && (
+                          <span className="rounded-full border border-dashed border-line px-2 py-0.5 text-xs text-ink-faint">
+                            {unverifiedLabel(f.tag)}
+                          </span>
+                        )}
                       </div>
                       <p className="mt-1.5 text-sm leading-relaxed text-ink">{f.text}</p>
                     </div>
@@ -129,6 +149,11 @@ export default async function CompanyReportPage({ params }: { params: { token: s
                   {report.workflows.map((wf) => (
                     <div key={wf.name} className="break-inside-avoid">
                       <div className="font-medium text-ink">{wf.name}</div>
+                      {wf.unverified && (
+                        <div className="mt-0.5 text-xs text-ink-faint">
+                          Provisional — built from unverified records.
+                        </div>
+                      )}
                       <ol className="mt-2 space-y-1.5">
                         {wf.steps.map((s) => {
                           const tool = toolName(s.tool);
@@ -233,8 +258,9 @@ export default async function CompanyReportPage({ params }: { params: { token: s
 
         {/* ── Quiet product footer ── */}
         <footer className="mt-16 border-t border-line pt-4 text-xs text-ink-faint">
-          Powered by {brand.product_name} · Findings are compiled from interviews and
-          carry their own confidence levels; nothing here is edited by hand.
+          Powered by {brand.product_name} · Findings are compiled from interviews and each
+          carries its own confidence level; anything not yet verified across interviews is
+          labelled as such.
         </footer>
       </div>
     </div>

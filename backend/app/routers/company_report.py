@@ -28,6 +28,27 @@ from .workspaces import automation_opportunities, get_insights, get_snapshot
 
 router = APIRouter()
 
+# ── Trust-tag honesty in export (pilot §3, leak 2) ─────────────────────────────
+# A hand-added record is capped CLAIMED internally, but the report rendered it as an
+# unlabeled finding — and even spawned a whole exported workflow from one such record —
+# so the footer's "findings carry their own confidence levels" promise was untrue. Tags
+# never upgrade (non-negotiable #1); this only decides where an honest qualifier is SHOWN.
+_TAG_RANK = {None: -1, "SCRAPED": 0, "GUESS": 1, "CLAIMED": 2, "CONFIRMED": 3, "VERIFIED": 4}
+_CONFIRMED_RANK = _TAG_RANK["CONFIRMED"]
+
+
+def _is_unverified(tag) -> bool:
+    """A finding is unverified for export when its tag ranks below CONFIRMED (SCRAPED,
+    GUESS, CLAIMED, or untagged) — not corroborated through the interviews the report rests
+    on. The renderer shows a qualifier so the confidence promise stays true."""
+    return _TAG_RANK.get(tag, -1) < _CONFIRMED_RANK
+
+
+def _records_unverified(tags: list) -> bool:
+    """A derived surface (a workflow) is unverified when NONE of the records backing it
+    reaches CONFIRMED — e.g. a workflow spawned from a single hand-added CLAIMED record."""
+    return not any(_TAG_RANK.get(t, -1) >= _CONFIRMED_RANK for t in tags)
+
 
 @router.post("/{workspace_id}/share", dependencies=[Depends(require_admin)])
 async def mint_share(workspace_id: str):
@@ -161,13 +182,28 @@ async def report_by_token(token: str):
     workflows = []
     for wf in wf_rows:
         effective = await workflow_edit.effective_workflow(pool, str(wf["id"]))
+        visible = [s for s in effective["steps"] if not s["hidden"]]
         steps = [
             {"index": s["index"], "title": s["title"], "action": s["action"],
              "tool": s["tool"], "status": s["status"]}
-            for s in effective["steps"] if not s["hidden"]
+            for s in visible
         ]
         if steps:
-            workflows.append({"name": effective["name"], "steps": steps})
+            # A workflow inherits the confidence of the records it rests on: if none of its
+            # backing claims reaches CONFIRMED (e.g. spawned from one CLAIMED record), the
+            # export must qualify it, not present it as an established process (leak 2).
+            claim_ids = [cid for s in visible for cid in s.get("claim_ids", [])]
+            tags = []
+            if claim_ids:
+                tag_rows = await pool.fetch(
+                    "select tag from client_visible_claims where id = any($1::uuid[])",
+                    claim_ids,
+                )
+                tags = [r["tag"] for r in tag_rows]
+            workflows.append({
+                "name": effective["name"], "steps": steps,
+                "unverified": _records_unverified(tags),
+            })
 
     # Gaps: cross-interview conflicts + perception gaps, role-only sides.
     gaps = [
@@ -213,7 +249,8 @@ async def report_by_token(token: str):
 
     findings = [
         {"text": f["text"], "band": f["band"], "tag": f["tag"],
-         "mention_count": f["mention_count"], "role": f["role"]}
+         "mention_count": f["mention_count"], "role": f["role"],
+         "unverified": _is_unverified(f["tag"])}
         for f in insights["key_findings"]
     ]
 
