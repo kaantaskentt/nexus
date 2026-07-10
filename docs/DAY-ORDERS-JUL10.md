@@ -39,6 +39,8 @@ commit boundary · scope commits `git commit -- <paths>`.
 | backend/app/pipeline/interview.py + engine identity/mode binding | lane-sec |
 | backend/app/routers/company_report.py + frontend/src/app/r/** | lane-export |
 | evals/adjudication/** (incl. staged/29 patch promotion) | lane-export |
+| pipeline/conflicts.py + prompts/agents/perception-gap.md + test_perception_gap_retraction.py (patch-29 surfaces) | lane-export (granted by team-lead, announced) |
+| frontend/src/components/snapshot/ExportReportButton.tsx (backdrop bug only) | lane-export (granted; NOT components/interview/**) |
 | pipeline/disclosure.py, incident/notify code, resource-packet config, prompts/agents/disclosure-screen.md | lane-s7 |
 | prompts/agents/stage3-context-collector.md | lane-s7 FIRST (disclosure/never-list section only), then lane-quality (everything else). Quality does not start this file until s7's persona commit is pushed. |
 | prompts/agents/stage7-interviewer.md | lane-s7 (disclosure section) then lane-quality if needed |
