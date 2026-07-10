@@ -75,6 +75,13 @@ The point was the delta: are the Phase-0 P0/P1s dead? They are.
   connects (then it isn't "persistent" as required) or scenario-run sessions fall through to
   voice-test chrome. I did not drive the call further (no conversation). **Flagged to lane-e**
   — the one trust-surface item to close before Emre's voice test.
+  **UPDATE — FIXED IN CODE (lane-e 6199a06), pending prod redeploy re-verify:** lane-e lifted
+  the marker to the Shell so it's persistent on the consent + pre-call + done screens, and
+  changed the back-chrome to "Exit simulation"; added a regression test (marker present on the
+  sim consent screen, absent for a normal interview; frontend 102 green). Needs the redeploy
+  to land on prod. I will re-run the bee-goddess-demo scenario walk once it deploys and confirm
+  "Simulation · <workflow> — practice run…" shows at consent + pre-call. (Lane-e left the
+  consent BODY copy generic, marker-disambiguated — flagged to team-lead as optional polish.)
 - **Coverage honesty:** the walk concentrated on the P0s, the two worst Phase-0 pages, my own
   lanes, and a mobile-overflow sweep (Home/plan/interviews all `docOverflow 0`). Because the
   mobile fix is one shared AppShell component, mobile is confirmed dead across that sample
