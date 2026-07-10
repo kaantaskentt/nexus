@@ -61,3 +61,5 @@ failed-job monitor and clears orphaned post-teardown jobs — do not chase those
   built today: deleting a company deletes its sealed_flags = harm disclosures. Arming it
   without Emre's explicit sealed-flag ruling would let a company-delete WIPE a Tier-2 harm
   record. This is exactly the confirm-before-destructive case. Keep gated; Emre rules first.
+
+## KAAN APPROVAL (ANYTIME deviations, ~09:40): proceed as recommended. v1 call-level honesty + v2 post-call confirm-gate; voice-primary; first-call CONFIRMED vs additive CLAIMED asymmetry kept (Emre can still weigh in). No vetoes.
