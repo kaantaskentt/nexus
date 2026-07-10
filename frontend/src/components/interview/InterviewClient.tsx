@@ -452,7 +452,7 @@ function ConsentLanding({
       <h1 className="font-display text-3xl leading-tight text-ink">{c.heading}</h1>
       <p className="mt-4 leading-relaxed text-ink-soft">{c.intro}</p>
 
-      <Block title="What this is (and isn't)">
+      <Block title={c.whatItIsTitle}>
         <ul className="space-y-2">
           {c.whatItIs.map((t, i) => (
             <li key={i} className="flex gap-2 text-sm text-ink-soft">
@@ -463,7 +463,7 @@ function ConsentLanding({
         </ul>
       </Block>
 
-      <Block title="How your words are handled">
+      <Block title={c.handlingTitle}>
         <ul className="space-y-2">
           {c.handling.map((t, i) => (
             <li key={i} className="flex gap-2 text-sm text-ink-soft">

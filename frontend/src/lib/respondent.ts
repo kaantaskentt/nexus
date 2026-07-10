@@ -138,7 +138,14 @@ export async function getCallVoice(token: string): Promise<CallVoice> {
 
 // Consent copy assembled from prompts/personas/consent-landing.md with whatever merge
 // fields the session provides; missing fields degrade to neutral, honest phrasing
-// (no fabricated names). The locked promises are kept by the interviewer at open/close.
+// (no fabricated names). The locked promises are kept by the interviewer/collector at
+// open/close. Two kinds, two promises: an employee `interview` is owed the role-only
+// sharing protection (nothing is quoted under their name); a `context` call is the
+// founder's own conversation, so the promise is the OPPOSITE — their words build the
+// snapshot and are attributed to them as its source (Non-negotiable 2: nothing they say
+// here ever reaches an interviewee). `session.context_call` is the kind signal
+// (sessions.py sets it for session_kind='context'). Both branches are kept in sync with
+// consent-landing.md by the drift guard (evals/consent_copy_sync.py).
 export function consentCopy(session: RespondentSession) {
   const ctx = session.context ?? {};
   const name = ctx.respondent_name?.trim() || "there";
@@ -147,6 +154,38 @@ export function consentCopy(session: RespondentSession) {
   const topic = ctx.interview_topic?.trim() || "your work";
   const minutes = ctx.est_minutes ?? 20;
   const modality = (ctx.modality ?? session.modality) === "voice" ? "voice call" : "chat";
+
+  // Leadership copy — the context call is WITH the client's founder/admin, not an employee
+  // under consent protection. The role-only respondent promise is wrong here and must not
+  // appear; what this person is owed is honest attribution + the pre-interview promise.
+  if (session.context_call) {
+    return {
+      heading: company
+        ? `A working conversation about ${company}`
+        : "A working conversation about your company",
+      intro: `Hi ${name}, thanks for making the time. This is the context call, where ${brand.product_name} learns how ${company ?? "the company"} actually works, so everything built after this fits the real thing and not a tidy version of it. It takes about ${minutes} minutes, and you can pause anytime.`,
+      whatItIsTitle: "What this is",
+      whatItIs: [
+        `${brand.product_name} is here to understand the company, its goals, and how the work actually gets done. It does not pitch, advise, or solve.`,
+        "There are no right answers, and nothing to prepare.",
+        "This is the conversation everything downstream is built from, so the more real it is, the better the snapshot.",
+      ],
+      handlingTitle: `What ${brand.product_name} does with this`,
+      handling: [
+        "This call is recorded and turned into the first version of your company snapshot: how the work flows, the systems in play, and the open questions worth digging into.",
+        "What you share builds your company's snapshot and is attributed to you as its source.",
+        `${brand.product_name} may gather relevant public information about the company after the call to round out the picture. Public information is reference only, never treated as verified fact.`,
+        "You will see the snapshot before anyone on your team is interviewed. Nothing you say here is ever repeated to an employee.",
+        "You can pause anytime and pick up later on the same link.",
+      ],
+      startAction: "Begin the context call",
+      consentFinePrint:
+        "By starting, you consent to this call being recorded and turned into your company snapshot, as described above. You can stop at any time.",
+      name,
+      minutes,
+      hasContext: Boolean(session.context),
+    };
+  }
 
   const askedBy =
     admin && company
@@ -161,11 +200,13 @@ export function consentCopy(session: RespondentSession) {
   return {
     heading: `A quick, honest conversation about ${topic}`,
     intro: `Hi ${name}, thanks for being here. ${askedBy} to understand how the work really happens, and your view matters because you're the one who does it. This takes about ${minutes} minutes, and you're in control the whole way.`,
+    whatItIsTitle: "What this is (and isn't)",
     whatItIs: [
       `It's a ${modality} about how your work actually flows: the real version, not the tidy one.`,
       "There are no right answers, and nothing to prepare.",
       "It is not a performance review. It is not scored. It's about the work, not a judgment of you.",
     ],
+    handlingTitle: "How your words are handled",
     handling: [
       "The conversation is recorded and summarized so your account is captured accurately.",
       // Role example kept vertical-neutral (Emre doc-2 P3: "someone in packing" read

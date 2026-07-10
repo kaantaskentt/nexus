@@ -1,3 +1,97 @@
+# SIMPLIFY SPRINT — July 9 (docs/SIMPLIFY-PLAN.md; A28 binds every change)
+
+## Lane A — company reorder + delete (task #3)
+
+**A28 pre-review — COMMIT 1 (picker reorder).**
+Today: `GET /api/workspaces` returns `order by created_at` ASC; `page.tsx` does a client
+`.reverse()` (L47) to get newest-first; there is no way to reorder. After: backend orders
+by `sort_order` nulls-last then `created_at desc` (default order byte-identical to today's
+newest-first for null sort_order); `page.tsx` drops `.reverse()` (order semantics live in
+ONE place); the "Other workspaces" rows get a drag handle (framer-motion `Reorder`) that
+persists on drop via `PATCH /api/workspaces/reorder` (admin-only). Hero stays the computed
+"newest prepared non-demo" spotlight, unchanged; `is_internal` filter + `is_demo` hero
+guard untouched. Simpler or more complex for the user? SIMPLER — they can put the company
+they care about at the top; if they never drag, the picker looks exactly as it does today.
+Taste flag to lead: hero is a computed spotlight, NOT drag-sortable (keeps hero logic
+literally untouched); image9 draws a handle on the hero too — deferring that to a Kaan call.
+
+**A28 pre-review — COMMIT 2 (delete preview, non-destructive).**
+Today: a company row has no delete affordance; only interviews are deletable (sessions.py).
+After: each picker row gets a quiet trash affordance opening the image9 dialog
+(type-company-name-to-confirm, exact cascade counts from a new non-destructive
+`GET /api/workspaces/{id}/delete-preview`, "cannot be undone", permanent-lock line). The
+Delete button is DISABLED behind a frontend `WORKSPACE_DELETE_ENABLED` flag (default off)
+with honest microcopy "Awaiting final confirmation of delete semantics" — no destructive
+path ships until Kaan's confirm (§6-1). Simpler or more complex? SIMPLER and SAFER: the
+count-exact preview is read-only; nothing can be deleted yet. Destructive `delete_workspace`
++ `DELETE /api/workspaces/{id}` (COMMIT 3) is built behind `WORKSPACE_DELETE_ENABLED=1` env
+and stays 403 until the lead relays Kaan's nod.
+
+Note: plan/task say "migration 0021" but 0021_context_call.sql already exists — using the
+next free number 0022 for `workspaces.sort_order`. Flagged to lead.
+
+## Lane Shell — responsive AppShell (task #13, PLAN §8 Amendment 1)
+
+**A28 pre-review — COMMIT 1 (responsive shell).**
+Today: `AppShell` renders `<aside>` (fixed `w-[236px]`) in a flex row that never collapses;
+below ~1024px the content column is crushed to ~154px with horizontal overflow — no mobile
+layout on any /w/* page. After: the aside becomes `hidden lg:flex` (present + byte-identical
+at lg+; desktop DOM/classes unchanged, Kaan's demo surface untouched); below lg a slim
+`lg:hidden` glass header appears with a 44px hamburger + workspace-name/breadcrumb-lite, and
+the SAME sidebar body (logo, switcher, nav, user block, sign-out, Trust Center) renders in a
+left slide-over drawer (`drawerSpring` panel + `scrimFade` scrim, `useEscapeClose`), full-
+width content with sane padding. Drawer closes on nav-click, Escape, and scrim-tap; drawer
+tap targets ≥44px. Sidebar markup is extracted once into `SidebarBody` and rendered in both
+the desktop aside and the drawer (no duplication); `SignOutButton` gains an off-by-default
+`touch` prop (picker call byte-identical). Simpler or more complex for the user? SIMPLER —
+the pages become usable on a phone; on desktop nothing moves. One commit; extends the vitest
+suite with a jsdom render test (hamburger exists, drawer opens/closes via role/aria state).
+
+## Lane DBG — CEO welcome copy + intro + done page (tasks #6, #4)
+
+**A28 pre-review — COMMIT 1 (D welcome copy).**
+Today: `consentCopy()` returns ONE generic-but-honest block for every session kind; a
+context-call CEO sees the employee promise (role-only attribution, "not a performance
+review", "pain points shared by role") — the wrong promise for the founder whose words
+build the attributed snapshot (open flag, SHIFT 2). After: `consentCopy()` branches on
+`session.context_call` (the existing end-to-end kind signal). The `context` branch gets
+leadership copy: a working-conversation headline, honest attribution ("What you share
+builds your company's snapshot and is attributed to you as its source"), a public-info-
+after-the-call note (reference only), the "you see it before anyone is interviewed / never
+repeated to an employee" promise, and one "Begin the context call" CTA. The employee
+`interview` branch is byte-identical to today (test-pinned). Section titles move into the
+copy object so each kind names its own sections; interview titles unchanged. Drift guard +
+em-dash lint stay green (new context strings added to consent-landing.md). Simpler or more
+complex for the user? SIMPLER and HONEST: the founder finally sees the promise that
+actually applies to them; the employee page does not change at all.
+
+**A28 pre-review — COMMIT 2 (D coherence: persona + evals).**
+Today: stage3-context-collector.md opens the call in its own words; no eval pins the
+literal opener (every case runs mid-call via MIDCALL_NOTE). After: the opener wording is
+reconciled with the new welcome promise (same "learn how the company works / built around
+the real thing" spine), stage3-context-collector.md added to the no-em-dash checklist in
+glossary-and-policies.md (WIRE-TIME FLAG from SHIFT CLOSE). No eval case weakened; the
+affected suite runs and passes. Simpler? SIMPLER: the page and the agent say one thing.
+
+**A28 pre-review — COMMIT 3 (G done page).**
+Today: the respondent done page shows one employee-framed thank-you for every kind. After:
+the done phase branches by kind — a context-call CEO gets a "View company snapshot" primary
+CTA (deep link to `/w/[slug]/home`) + "Return home" secondary; the employee interview done
+page is byte-identical. The public by-token payload exposes ONLY the workspace slug (nothing
+else new). Simpler? SIMPLER: the CEO lands on the thing their call just built.
+
+**A28 pre-review — COMMIT 4 (B snapshot intro).**
+Today: Home jumps straight from `DiscoveryUpload` (zero cards) to `SnapshotView` (cards
+exist); the first compiled snapshot has no moment of arrival. After: a `SnapshotIntro`
+renders when cards exist AND `workspaces.config.snapshot_intro_seen` is unset — real counts
+only (no invented stat), category cards, ONE primary CTA "View company snapshot" that POSTs
+the seen flag and reveals the snapshot. Zero-card tenants (DiscoveryUpload) untouched;
+dismiss persists. Kaan removed the co-primary Generate-plan / Review-transcript actions, so
+the intro carries a single CTA. Simpler? SIMPLER: one clear next step at the one moment it
+matters, shown once.
+
+---
+
 # NIGHT MARATHON — July 8/9 (docs/MARATHON-ORDERS.md; A28 binds every change)
 
 **Lanes:** F2>F3>F5>F6 (team-lead) · UI debate (2 teammates) · F7 persona (teammate) · F8.

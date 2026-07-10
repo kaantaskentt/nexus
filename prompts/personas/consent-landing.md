@@ -39,6 +39,36 @@ Hi {{RESPONDENT_NAME}}, thanks for being here. {{ADMIN_NAME}} at {{COMPANY_NAME}
 
 ---
 
+## EN — context call (BETA, F7): the CEO/founder's own conversation
+
+The senior stakeholder who arranged this runs the context call directly with {{PRODUCT_NAME}}. They are the **client**, not an employee under consent protection, so the promise is the opposite of the interview page: their words BUILD the snapshot and are **attributed to them as its source** (Non-negotiable 2: nothing said here ever reaches an interviewee). The role-only respondent promise must never appear here. Kept in sync with the `context` branch of `consentCopy()` (see evals consent-copy-sync). Sensitive line flagged to Kaan+Emre for a wording pass (confirm #2); the clearly-better version ships now.
+
+### Heading
+A working conversation about {{COMPANY_NAME}}
+<!-- fallback when company is unknown: --> A working conversation about your company
+
+### Intro
+Hi {{RESPONDENT_NAME}}, thanks for making the time. This is the context call, where {{PRODUCT_NAME}} learns how {{COMPANY_NAME}} actually works, so everything built after this fits the real thing and not a tidy version of it. It takes about {{EST_MINUTES}} minutes, and you can pause anytime.
+
+### What this is
+- **{{PRODUCT_NAME}} is here to understand the company**, its goals, and how the work actually gets done. It does not pitch, advise, or solve.
+- **There are no right answers**, and nothing to prepare.
+- This is the conversation everything downstream is built from, so the more real it is, the better the snapshot.
+
+### What {{PRODUCT_NAME}} does with this
+- This call is recorded and turned into the first version of your company snapshot: how the work flows, the systems in play, and the open questions worth digging into.
+- **What you share builds your company's snapshot and is attributed to you as its source.**
+- {{PRODUCT_NAME}} may gather relevant public information about the company after the call to round out the picture. Public information is reference only, never treated as verified fact.
+- **You will see the snapshot before anyone on your team is interviewed.** Nothing you say here is ever repeated to an employee.
+- **You can pause anytime** and pick up later on the same link.
+
+### Explicit start action
+**[ Begin the context call ]**
+
+<small>By starting, you consent to this call being recorded and turned into your company snapshot, as described above. You can stop at any time.</small>
+
+---
+
 ## TR — designed-in (v1, untuned — A13.1; verify tone before the first TR call)
 
 ### Başlık

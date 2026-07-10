@@ -5,7 +5,13 @@ consent-landing.md (prompts/personas/) is the source; frontend/src/lib/responden
 consentCopy(). If either is reworded independently, the respondent sees a promise the other half doesn't
 back — a trust bug. This test extracts the plain promise strings from consentCopy() and asserts each
 appears in consent-landing.md (formatting + merge fields normalized away). Templated lines (containing
-${...}) are skipped: they're personalized at render, not fixed copy.
+${...} or written as `backtick` template literals) are skipped: they're personalized at render, not
+fixed copy.
+
+Covers BOTH session-kind branches (F7): the employee `interview` copy AND the `context`-call
+(CEO/founder) copy each live in consentCopy() and each have their own section in consent-landing.md.
+The extractor reads the whole function body, so both branches' fixed promise strings are checked in one
+pass — a context-branch promise added to the code without its md line, or vice-versa, fails the guard.
 
 Usage:  python -m evals.consent_copy_sync    # exit 1 on drift
 """
