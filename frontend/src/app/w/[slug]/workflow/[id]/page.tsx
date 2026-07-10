@@ -30,11 +30,14 @@ export default async function WorkflowEditorPage({
     ? { href: `/w/${params.slug}/report/${reportSession}`, label: "Back to report" }
     : from === "skills"
       ? { href: `/w/${params.slug}/skills`, label: "Back to Agent Skills" }
-      : from === "insights"
-        ? { href: `/w/${params.slug}/insights`, label: "Back to Insights" }
+      : from === "home" || from === "insights"
+        ? // Insights folded into Home (ADD-3.3): automation opportunities live on the
+          // Company Snapshot now, so both the new from=home and any lingering from=insights
+          // deep-link return to Home rather than the retired Insights route.
+          { href: `/w/${params.slug}/home`, label: "Back to Home" }
         : { href: `/w/${params.slug}/workflows`, label: "Back to Workflows" };
   // Automation opportunity deep link (Kaan F2+3): ?highlight=stepA,stepB rings the
-  // automatable steps so the click from Insights lands on the exact toil.
+  // automatable steps so the click from the snapshot lands on the exact toil.
   const highlight = (searchParams?.highlight ?? "").split(",").map((x) => x.trim()).filter(Boolean);
 
   return (
