@@ -74,3 +74,8 @@ Law: A28 per change, own revertable commits, evals ride behavior, push each.
   gated on `workspace.config?.beta_context_call` (matches the mint's 403 gate). Room UNTOUCHED.
   tsc clean; add-more-context.test.tsx 2/2; snapshot-intro 3/3 (no regression). Defaults to
   voice (the polished room) pending team-lead's modality decision. A28 own commit.
+- **Change 2 (mint modality param) — GREEN.** `POST /context-call` gains optional
+  `modality: 'voice'|'text'` (default 'voice' = byte-identical; invalid → 422); live.ts wrapper
+  threads it. test_context_call.py 7/7 incl. a new additive-mint test (two clicks → two distinct
+  context sessions, no once-only gate) + voice-default/text/invalid-422. A28 own commit. NOTE:
+  touched the context-call endpoint in workspaces.py (the granted mint path) — announced.

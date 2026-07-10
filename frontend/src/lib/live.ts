@@ -1078,8 +1078,10 @@ export async function request_roleplay_debrief(
 // opted into the beta at creation. The founder/admin takes the call at invite_path.
 export async function start_context_call(
   workspace_id: string,
+  modality?: "voice" | "text",
 ): Promise<{ token: string; invite_path: string }> {
-  return api(`/api/workspaces/${workspace_id}/context-call`, { method: "POST" });
+  const q = modality ? `?modality=${modality}` : "";
+  return api(`/api/workspaces/${workspace_id}/context-call${q}`, { method: "POST" });
 }
 
 // ── Interview deletion (Kaan P2) ──────────────────────────────────────────────

@@ -164,3 +164,33 @@ async def test_complete_context_call_requests_snapshot_render(db):
     import json as _json
     payload = _json.loads(payload) if isinstance(payload, str) else payload
     assert payload.get("render_snapshot") is True
+
+
+# ── ANYTIME-CONTEXT: additive mint + optional modality ──────────────────────────────
+async def test_mint_is_additive_and_honors_modality(db):
+    """The knowledge-engine loop: the mint has no once-only gate (a CEO adds context any
+    time → each click is a distinct additive context session), and modality is voice by
+    default (byte-identical to before) or 'text' when asked. An invalid modality is 422."""
+    async with _client() as c:
+        ws = await _beta_workspace(c)
+
+        # Additive: two mints → two distinct context sessions on the SAME workspace.
+        t1 = (await c.post(f"/api/workspaces/{ws}/context-call")).json()["token"]
+        t2 = (await c.post(f"/api/workspaces/{ws}/context-call")).json()["token"]
+        assert t1 != t2
+        n = await db.fetchval(
+            "select count(*) from interview_sessions where workspace_id=$1 and session_kind='context'", ws)
+        assert n == 2
+
+        # Default modality is voice (unchanged behavior).
+        m1 = await db.fetchval("select modality from interview_sessions where invite_token=$1", t1)
+        assert m1 == "voice"
+
+        # Explicit text.
+        t3 = (await c.post(f"/api/workspaces/{ws}/context-call?modality=text")).json()["token"]
+        m3 = await db.fetchval("select modality from interview_sessions where invite_token=$1", t3)
+        assert m3 == "text"
+
+        # Invalid modality is rejected.
+        bad = await c.post(f"/api/workspaces/{ws}/context-call?modality=carrier-pigeon")
+        assert bad.status_code == 422

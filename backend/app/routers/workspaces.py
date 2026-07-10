@@ -331,8 +331,15 @@ async def automation_opportunities(workspace_id: str):
 
 
 @router.post("/{workspace_id}/context-call")
-async def start_context_call(workspace_id: str):
+async def start_context_call(workspace_id: str, modality: str = "voice"):
+    """Mint a context call on this workspace (additive — session_kind 'context'). ANYTIME-
+    CONTEXT (the knowledge-engine loop) reuses this: a CEO can add more context any time and
+    the new call folds into the existing snapshot. `modality` is 'voice' (the polished room,
+    default — byte-identical to before) or 'text'."""
     import secrets
+
+    if modality not in ("voice", "text"):
+        raise HTTPException(422, "modality must be 'voice' or 'text'")
 
     pool = await get_pool()
     row = await pool.fetchrow(
@@ -353,8 +360,8 @@ async def start_context_call(workspace_id: str):
     await pool.execute(
         """insert into interview_sessions
              (workspace_id, interviewee_id, modality, language, invite_token, status, session_kind)
-           values ($1, $2, 'voice', 'en', $3, 'pending', 'context')""",
-        workspace_id, ceo_id, token,
+           values ($1, $2, $4, 'en', $3, 'pending', 'context')""",
+        workspace_id, ceo_id, token, modality,
     )
     return {"token": token, "invite_path": f"/i/{token}"}
 
