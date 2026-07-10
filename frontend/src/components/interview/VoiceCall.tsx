@@ -115,6 +115,7 @@ export function VoiceCall({
   const autoTried = useRef(false); // one automatic attempt per drop; further tries are manual
   const recoveredTimer = useRef<number | null>(null);
   const reconnectTimer = useRef<number | null>(null); // pending auto-reconnect; cancel on leave
+  const warnedDegraded = useRef(false); // warn once when the backstop has to rescue the transcript
 
   const vapiRef = useRef<VapiLike | null>(null);
   const heardRef = useRef(false); // any user transcript event arrived
@@ -172,7 +173,22 @@ export function VoiceCall({
             text: t.text,
           })),
         );
-        if (alive) setTurns((prev) => (merged.length > prev.length ? merged : prev));
+        if (!alive) return;
+        setTurns((prev) => {
+          if (merged.length <= prev.length) return prev;
+          // The server is AHEAD of what the client rendered — the VAPI client event stream
+          // is degraded (e.g. a missing/broken clientMessages allow-list). Recover the user
+          // silently, but SCREAM once in the log so the real regression can't hide behind the
+          // backstop (team-lead's masking-guard).
+          if (!warnedDegraded.current) {
+            warnedDegraded.current = true;
+            console.warn(
+              "voice transcript recovered from the server; the VAPI client event stream may be " +
+                "degraded (check assistant clientMessages).",
+            );
+          }
+          return merged;
+        });
       } catch {
         /* keep the live client turns; the next tick retries */
       }
