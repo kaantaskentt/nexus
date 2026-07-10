@@ -74,12 +74,15 @@ scenario objectives} and opens the **new LiveRoom** (lane-e) adapted to the scen
 - After the run: the observation debrief (existing roleplay_debriefs → the J-lane overview
   card pattern) says how the interviewer did against this workflow's traps.
 
-## Build split (team-lead) + contract — AGREED with lane-e
-Agreed to lane-e's minimal-boundary shape (single-sourced archetype-match, no client/server
-drift). **The only thing crossing the boundary is `workflow_id` out and `{token, invite_path}`
-back.** The card does NOT name the archetype — the page stays workflow-first (Feedback-I is
-"your workflows", not generic characters); the character the admin will play surfaces in the
-room via the J-lane overview card, not on the scenario card.
+## Build split (team-lead) + contract — LOCKED (both sides confirmed)
+Final: the minimal-boundary shape, confirmed by lane-e (superseding a crossed-message
+proposal that briefly had persona_key + objectives crossing the wire — rejected because
+client-supplied agent-steering objectives are a prompt-injection surface). Single-sourced
+archetype-match, no client/server drift, no runtime dependency between the two endpoints
+(buildable in parallel). **The only thing crossing the boundary is `workflow_id` out and
+`{token, invite_path}` back.** The card does NOT name the archetype — the page stays
+workflow-first (Feedback-I is "your workflows", not generic characters); the character the
+admin will play surfaces in the room via the J-lane overview card, not on the scenario card.
 
 - **My half (page + derivation for DISPLAY).** A new `GET /api/simulations/{workspace_id}/scenarios`
   returns the qualified, ranked cards — derivation is mine (mirrors lane C's list_workflows):
