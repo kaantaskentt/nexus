@@ -452,6 +452,18 @@ action list #1).
   test-mest, so records-based is not a no-op; capture-side scan = follow-up only if
   per-plan variance appears.
 
+- F7 LANDED (c263faa, diff-reviewed by team-lead: APPROVED): validated sponsor
+  artifact-authorization on the mission. Better than spec on two points:
+  source_session_id derives from the DB row (not model output — audit trail can't be
+  hallucinated) and id::text compare makes malformed ids a clean no-match. Fail-closed
+  on every path (no claim / no id / unknown id / cross-tenant id → false + WARNING);
+  handoff reads nested .authorized, absent/legacy byte-identical False. 8 new tests,
+  20 green. SEAM-B DRIVEN CHECK ADDED: draft a plan on test-mest → mission carries
+  {authorized:true, source_session_id, evidence_record_id} citing a real record.
+- Quality interim: YELLOW over-escalation FIXED on s7's current commit (insomnia 3/3
+  clean); RED still 182 (2/4) + acuity-gauge on ambiguous — matches s7's in-progress
+  tasks #1/#2. Gate unchanged: A.6 on full both-directions green.
+
 ## RULINGS R2 (Kaan via watchtower, ~15:30) — LANE ASSIGNMENTS
 - R6 NO SendGrid: build IN-APP ADMIN INCIDENT INBOX for harm_incidents (Emre+Kaan see
   them in-app; email optional-if-key-ever-exists; email DROPPED from the done-bar).
