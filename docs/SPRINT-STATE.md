@@ -47,6 +47,16 @@ the desktop aside and the drawer (no duplication); `SignOutButton` gains an off-
 the pages become usable on a phone; on desktop nothing moves. One commit; extends the vitest
 suite with a jsdom render test (hamburger exists, drawer opens/closes via role/aria state).
 
+**AUDIT VERDICT — LANDED (commit 4f980c3; pre-review text rode in on 0584b7d).** Shipped as
+scoped one commit: aside `hidden lg:flex`, `lg:hidden` glass mobile header + hamburger, left
+slide-over drawer (drawerSpring/scrimFade/useEscapeClose), `SidebarBody` extracted (aside +
+drawer share it), `SignOutButton touch` prop off-by-default. Drawer closes on nav-click,
+Escape, scrim-tap, route-change; tap targets ≥44px. Desktop DOM byte-identical at lg+. Green:
+frontend suite 67/67 (incl. new `app-shell-responsive.test.tsx` 5/5) + tsc + lint + next build
+(23 routes). Not prod-verified from here (audit lane holds the browser). Note: this SPRINT-
+STATE block was captured by a concurrent lane's commit (0584b7d) before my scoped commit ran —
+no work lost, just flagging the shared-file sweep.
+
 ## Lane DBG — CEO welcome copy + intro + done page (tasks #6, #4)
 
 **A28 pre-review — COMMIT 1 (D welcome copy).**
