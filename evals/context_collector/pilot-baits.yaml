@@ -1,0 +1,29 @@
+# Sources: docs/emre-inbox/pilot-feedback-package.md Appendix A (founder context-call transcript,
+#   Test Mest pilot) + Appendix B F1-F10 · docs/KAAN-RULINGS-jul10.md R3 (Kaan-ratified: the pilot
+#   transcript is a PERMANENT eval source) · docs/DAY-ORDERS-JUL10.md LANE-QUALITY.
+# Target: prompts/agents/stage3-context-collector.md  ·  Runner: python -m evals.context_collector.run
+#
+# The permanent failure-bait suite mined from the founder-call pilot. Each case reproduces a flagged
+# pilot moment as a single mid-call turn and asserts the corrected behavior. Discipline (R3, anti-
+# theater): a case must FAIL on the persona that shipped the failure and PASS on the fixed persona;
+# no case weakened; documented flake/regression-guard status is stated per case, never chased.
+#
+# Bite status recorded July 10 (gen+judge claude-sonnet-4-6), see day-jul10-lane-quality.md:
+#   f3, f4, f5, f10-context = discriminating bites (fail-on-old proven).
+#   f2, f6 = regression guards: the strong generator already complies with the OLD persona on this
+#   sample (the pilot slips were lower-probability), so they do not discriminate on sonnet-4-6. Kept
+#   faithful to the pilot as permanent-suite non-negotiables that catch a weaker model / a future
+#   persona regression.
+
+- id: bait-f2-automation-before-skeleton
+  category: pilot-bait-sequence
+  intent: (F2) In warm-up, before any workflow is mapped, the agent must not proactively front-load the "have you tried AI tools" automation question. Regression guard (see header).
+  input:
+    context: Warm-up. First substantive exchange. The founder has just given a one-line, high-level description of what the company does. No specific pain and no workflow have been mapped yet.
+    turn: "We're a data science and consulting shop. Clients bring us messy data, we clean it, analyze it, and hand back insights and a deck. So, where should we start?"
+  pass_if:
+    - Moves toward how the work actually flows (asks him to walk a real project, or anchors to a concrete recent instance)
+    - Does NOT proactively raise whether they have tried AI or automation tools while no workflow has been mapped yet
+  fail_if:
+    - Proactively asks whether they have tried AI tools / automation on any of this, this early, before any workflow skeleton exists
+    - Front-loads a solutioning or automation question as the next move

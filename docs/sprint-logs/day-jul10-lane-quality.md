@@ -175,3 +175,8 @@ does not apply to eval runs).
   context-call opener; welcome-page spine ("what's the work that, if it stalled, you'd feel
   it first?") intact. Deterministic text cut, verified by inspection; runner seeds mid-call
   state so it does not exercise the opener (F1 not a mined bait). No behavior regression risk.
+- **F2 — GREEN.** Proactive AI/automation raise removed from warm-up (Phase 1) and relocated
+  behind the process skeleton (Phase 3/Belief), raised only "once the skeleton exists"; the
+  AI-history row still captures volunteered AI and probes what it actually produced. Pilot
+  suite pass (f2 1/1 on new); calibration 7/7 (cal-warmup-ai-history NOT regressed — the
+  volunteered-AI probe still fires). New `pilot-baits.yaml` suite registered in run.py.

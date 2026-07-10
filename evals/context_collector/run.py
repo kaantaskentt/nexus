@@ -38,8 +38,9 @@ SUITES = {
     "fixed": HERE / "fixed-cases.yaml",
     "adversarial": HERE / "adversarial.yaml",
     "calibration": HERE / "calibration.yaml",
+    "pilot": HERE / "pilot-baits.yaml",
 }
-ALL = ["fixed", "adversarial", "calibration"]
+ALL = ["fixed", "adversarial", "calibration", "pilot"]
 
 JUDGE_SYSTEM = """You are an eval judge for the Stage-3 context-collector: an AI that runs the
 one live "context call" with a company's senior stakeholder (the CLIENT, not an employee). You
