@@ -402,6 +402,34 @@ export async function refine_plan(plan_id: string, instruction: string): Promise
   });
 }
 
+// New-interview intake (ADD-4): one intake turn on a DRAFT plan. message=null opens the
+// conversation (the agent asks first). Answers become the same bounded plan edits as refine;
+// `storage` is the honest plan-only-vs-store decision the UI renders as a chip.
+export interface PlanChange {
+  target: string;
+  op: string;
+  value: string;
+}
+export interface IntakeResult {
+  reply: string;
+  question: string | null;
+  done: boolean;
+  applied: PlanChange[];
+  rejected: (PlanChange & { reason: string })[];
+  storage: {
+    decision: "store_context" | "plan_only";
+    stored: boolean;
+    why: string | null;
+    chip: string;
+  };
+}
+export async function plan_intake(plan_id: string, message: string | null): Promise<IntakeResult> {
+  return api<IntakeResult>(`/api/plans/${plan_id}/intake`, {
+    method: "POST",
+    body: JSON.stringify({ message }),
+  });
+}
+
 // ── Context chat (#20 APIs, UI door July 7) ──────────────────────────────────
 export interface ChatCitation {
   record_id: string;

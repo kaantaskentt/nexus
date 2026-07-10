@@ -18,11 +18,18 @@ import {
 } from "lucide-react";
 import brand from "@/lib/brand";
 import type { InterviewPlan, Workspace } from "@/lib/types";
-import { generate_plan, get_plan, refine_plan, save_plan_delivery } from "@/lib/live";
+import {
+  generate_plan,
+  get_plan,
+  refine_plan,
+  save_plan_delivery,
+  plan_intake,
+  type PlanChange,
+} from "@/lib/live";
 import { cn } from "@/lib/cn";
 
 type Modality = "voice" | "text";
-type Phase = "collect" | "drafting" | "assign";
+type Phase = "collect" | "drafting" | "intake" | "assign";
 
 // K3 assign flow (image18): the ONE screen that replaces CustomPlanDoor -> plan page ->
 // SendInterviewFlow. Collect the person, let Nexus draft the plan from the records, then
@@ -107,7 +114,9 @@ export function AssignInterviewFlow({
         setRole((rr) => p.interviewee_role ?? rr);
         setModality((m) => (p.mission?.delivery?.modality as Modality) ?? m);
         setEmail((e) => p.mission?.delivery?.email ?? e);
-        setPhase("assign");
+        // ADDENDUM 4.2: before the plan is shown, the intake agent asks 2-3 sharp
+        // follow-ups that shape the draft. The plan exists now, so intake can edit it.
+        setPhase("intake");
         setBusy(false);
       }
     };
@@ -167,6 +176,22 @@ export function AssignInterviewFlow({
           few seconds — nothing sends without your approval.
         </p>
       </div>
+    );
+  }
+
+  if (phase === "intake" && planId) {
+    // Refresh the plan when leaving intake so the assign screen shows the shaped draft.
+    const finishIntake = async () => {
+      await refreshPlan();
+      setPhase("assign");
+    };
+    return (
+      <IntakeStep
+        workspace={workspace}
+        planId={planId}
+        name={name}
+        onDone={finishIntake}
+      />
     );
   }
 
@@ -635,6 +660,227 @@ function AddDetailsPanel({
         Update structure
       </button>
     </aside>
+  );
+}
+
+// Intake phase (ADDENDUM 4.2): a short, records/plan-aware conversation on the DRAFT plan
+// before the assign screen. The agent asks 2-3 sharp follow-ups one at a time; each answer
+// shapes the plan via the /intake endpoint (same bounded edits as refine), and every answer's
+// storage decision is shown honestly as a chip. Nothing the admin says is spoken to the
+// interviewee (non-negotiable 2); intake is skippable.
+function IntakeStep({
+  workspace,
+  planId,
+  name,
+  onDone,
+}: {
+  workspace: Workspace;
+  planId: string;
+  name: string;
+  onDone: () => void;
+}) {
+  type Turn = { role: "agent" | "admin"; text: string };
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [applied, setApplied] = useState<PlanChange[]>([]);
+  const [chips, setChips] = useState<{ label: string; stored: boolean; why: string | null }[]>([]);
+  const [draftMsg, setDraftMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const opened = useRef(false);
+  const scroller = useRef<HTMLDivElement>(null);
+
+  const runTurn = useCallback(
+    async (message: string | null) => {
+      setBusy(true);
+      setError(null);
+      try {
+        const r = await plan_intake(planId, message);
+        setTurns((t) => [
+          ...t,
+          ...(r.reply ? [{ role: "agent" as const, text: r.reply }] : []),
+          ...(r.question ? [{ role: "agent" as const, text: r.question }] : []),
+        ]);
+        if (r.applied.length > 0) setApplied((a) => [...r.applied, ...a].slice(0, 12));
+        // Show the storage decision only on answer turns (not the opening question), so the
+        // admin always sees whether a fact was stored — never silently.
+        if (message !== null) {
+          setChips((c) => [
+            { label: r.storage.chip, stored: r.storage.stored, why: r.storage.why },
+            ...c,
+          ].slice(0, 6));
+        }
+        if (r.done || !r.question) setDone(true);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "That did not go through. Try again.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [planId],
+  );
+
+  useEffect(() => {
+    if (opened.current) return;
+    opened.current = true;
+    void runTurn(null);
+  }, [runTurn]);
+
+  useEffect(() => {
+    scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
+  }, [turns, busy]);
+
+  async function send() {
+    const m = draftMsg.trim();
+    if (!m || busy || done) return;
+    setTurns((t) => [...t, { role: "admin", text: m }]);
+    setDraftMsg("");
+    await runTurn(m);
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl px-6 py-10 sm:px-8">
+      <Link
+        href={`/w/${workspace.slug}/interviews`}
+        className="inline-flex items-center gap-1 text-sm text-ink-faint hover:text-ink"
+      >
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.75} /> Back to interviews
+      </Link>
+      <div className="mt-3 flex items-center gap-2.5">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-soft text-accent-ink">
+          <Sparkles className="h-[18px] w-[18px]" strokeWidth={1.75} />
+        </span>
+        <h1 className="font-display text-[2rem] leading-tight text-ink">A couple of quick questions</h1>
+      </div>
+      <p className="mt-2 max-w-xl text-[0.95rem] leading-relaxed text-ink-soft">
+        {brand.product_name} asks 2 or 3 sharp follow-ups to make {name || "this"}&apos;s interview
+        genuinely useful. Your answers shape the questions {brand.product_name} will ask, and
+        nothing you say here is ever spoken to {name || "the interviewee"} as a statement.
+      </p>
+
+      <div className="mt-6 rounded-card border border-line bg-surface p-5 shadow-card">
+        <div ref={scroller} className="max-h-[42vh] space-y-3 overflow-y-auto">
+          {turns.map((t, i) => (
+            <div key={i} className={t.role === "admin" ? "flex justify-end" : "flex gap-2.5"}>
+              {t.role === "agent" && (
+                <Sparkles className="mt-1 h-4 w-4 shrink-0 text-accent" strokeWidth={1.75} />
+              )}
+              <div
+                className={cn(
+                  "max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
+                  t.role === "admin"
+                    ? "rounded-tr-sm bg-accent text-on-accent"
+                    : "rounded-tl-sm bg-surface-sunken/60 text-ink",
+                )}
+              >
+                {t.text}
+              </div>
+            </div>
+          ))}
+          {busy && (
+            <div className="flex items-center gap-2 pl-6 text-xs text-ink-faint">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> thinking
+            </div>
+          )}
+        </div>
+
+        {!done ? (
+          <div className="mt-3 flex items-end gap-2 border-t border-line pt-3">
+            <textarea
+              value={draftMsg}
+              onChange={(e) => setDraftMsg(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void send();
+                }
+              }}
+              rows={1}
+              placeholder="Type your answer…"
+              className="max-h-32 min-w-0 flex-1 resize-none rounded-md border border-line bg-surface-sunken/40 px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-line-strong focus:outline-none"
+            />
+            <button
+              onClick={send}
+              disabled={!draftMsg.trim() || busy}
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-accent px-4 text-sm font-semibold text-on-accent transition-colors enabled:hover:bg-accent-hover disabled:opacity-50"
+            >
+              Send
+            </button>
+          </div>
+        ) : (
+          <div className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-sm text-ink-soft">
+            <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={2} /> That is enough to
+            sharpen the plan.
+          </div>
+        )}
+        {error && <p className="mt-2 text-xs text-danger">{error}</p>}
+      </div>
+
+      {applied.length > 0 && (
+        <div className="mt-4">
+          <div className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
+            {brand.product_name} shaped the plan
+          </div>
+          <ul className="mt-2 space-y-2">
+            {applied.map((a, i) => (
+              <li
+                key={i}
+                className="flex items-start gap-2 rounded-md border border-line bg-surface-sunken/30 p-2.5"
+              >
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" strokeWidth={2} />
+                <div className="min-w-0">
+                  <div className="text-xs font-medium capitalize text-ink">
+                    {a.op} · {a.target.replace(/_/g, " ")}
+                  </div>
+                  <div className="truncate text-xs text-ink-soft">{a.value}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {chips.length > 0 && (
+        <div className="mt-4">
+          <div className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
+            What happens with what you shared
+          </div>
+          <ul className="mt-2 space-y-1.5">
+            {chips.map((c, i) => (
+              <li key={i} className="flex items-center gap-2 text-xs">
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-chip px-2 py-0.5 font-medium ring-1 ring-inset",
+                    c.stored
+                      ? "bg-accent-soft text-accent-ink ring-accent/20"
+                      : "bg-surface-sunken text-ink-soft ring-ink/[0.06]",
+                  )}
+                >
+                  {c.stored ? <Lock className="h-3 w-3" strokeWidth={1.75} /> : null}
+                  {c.label}
+                </span>
+                {c.why && <span className="min-w-0 text-ink-faint">{c.why}</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="mt-6 flex items-center gap-3">
+        <button
+          onClick={onDone}
+          disabled={busy}
+          className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard enabled:hover:-translate-y-px enabled:hover:bg-accent-hover disabled:opacity-50"
+        >
+          Continue to setup <ArrowRight className="h-4 w-4" strokeWidth={2} />
+        </button>
+        {!done && (
+          <button onClick={onDone} disabled={busy} className="text-sm text-ink-soft hover:text-ink">
+            Skip these
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 

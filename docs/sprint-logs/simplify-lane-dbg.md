@@ -215,3 +215,13 @@ at CLAIMED), plan edits reuse the K3 refine `_apply_change` primitive, non-negot
   from existing plans, passed from the server page) but stays free-text. Copy updated: "tell
   Nexus who, their role, and what this should find out" + a helper noting the intake follow-ups
   come next. tsc clean, frontend 107/107. Remaining: (UI intake phase) + (evals).
+- COMMIT 3b (UI intake phase) LANDED (ADDENDUM 4.2): a new `intake` phase in AssignInterviewFlow
+  sits between drafting and assign. On enter it opens the conversation (plan_intake(planId,
+  null) → first question); the admin answers one at a time; each answer runs plan_intake and
+  the reply + next question stream into a chat, applied plan edits show as an accumulating
+  "shaped the plan" checklist, and each answer's storage decision renders as an honest chip
+  ("Saved to Company Context" with a lock vs "Used for this plan only"). When the agent is done
+  (or offers no next question) the input closes; "Continue to setup" refreshes the plan and
+  goes to assign; intake is skippable. New `plan_intake` client + IntakeResult type in live.ts.
+  Non-negotiable 2 stated in the header copy. tsc + eslint clean, frontend 107/107. Remaining:
+  (5) evals (asks-not-tells; storage-decision honest) — the intake-interviewer eval suite.
