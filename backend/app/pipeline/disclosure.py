@@ -20,6 +20,7 @@ import re
 
 from ..db import get_pool
 from ..llm import AgentParseError, run_agent
+from ..notify import send_incident_notification
 from ..queue import handles
 from .compiler import _transcript_block
 
@@ -106,6 +107,7 @@ async def screen_session(payload: dict) -> None:
     # exists without its incident. The incident holds ONLY {category, bucket, timestamp,
     # session_ref} — no verbatim (§7.6). notify_status stays 'pending' here; the reviewer
     # email is fired best-effort by the caller after this returns (never fails the job).
+    incidents: list[dict] = []
     async with pool.acquire() as conn:
         async with conn.transaction():
             for f in flags:
@@ -116,13 +118,30 @@ async def screen_session(payload: dict) -> None:
                     session["workspace_id"], session["id"], f["tier"], f["category"],
                     f["reviewer_summary"], json.dumps(f.get("turn_refs") or []),
                 )
-                await conn.execute(
+                inc = await conn.fetchrow(
                     """insert into harm_incidents
                          (workspace_id, session_id, category, bucket, sealed_flag_id)
-                       values ($1, $2, $3, $4, $5)""",
+                       values ($1, $2, $3, $4, $5)
+                       returning id, category, bucket, session_id, created_at""",
                     session["workspace_id"], session["id"], f["category"],
                     _bucket_for_tier(f["tier"]), flag_id,
                 )
+                incidents.append(dict(inc))
+    # R2 reviewer notification, best-effort. This runs AFTER the incident is committed and
+    # send_incident_notification never raises, so a notification failure can never fail the
+    # session/job — the incident row persists with notify_status='failed' (or 'skipped' when
+    # no email config is present) for manual review.
+    for inc in incidents:
+        status = await send_incident_notification(
+            incident_id=inc["id"], category=inc["category"], bucket=inc["bucket"],
+            session_ref=inc["session_id"], created_at=inc["created_at"],
+        )
+        await pool.execute(
+            "update harm_incidents set notify_status = $2, "
+            "notified_at = case when $2 = 'sent' then now() else notified_at end "
+            "where id = $1",
+            inc["id"], status,
+        )
 
 
 @handles("screen_disclosures")

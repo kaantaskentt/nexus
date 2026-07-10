@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     # admin JWT against GoTrue (app/auth.py). Same key the browser client uses.
     supabase_anon_key: str = ""
 
+    # Section 7 reviewer notification (KAAN-RULINGS R2): comma-separated reviewer emails
+    # (Kaan + Emre) a harm-incident notification is sent to. Reviewer-maintained, like the
+    # Appendix A resource/counsel rows. Empty (or an absent sendgrid_api_key) => the notify
+    # step is SKIPPED and logged; the incident row still persists (never fails the session).
+    incident_notify_emails: str = ""
+
     app_base_url: str = "http://localhost:8000"
     # Comma-separated browser origins allowed to call the API (CORS). Localhost dev by
     # default; deploy sets the Vercel origin(s). "*" allows any (used only if explicit).

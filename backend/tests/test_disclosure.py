@@ -71,7 +71,9 @@ async def test_flag_mints_minimized_incident_amber(db, monkeypatch):
     assert len(rows) == 1
     inc = rows[0]
     assert inc["category"] == "safety" and inc["bucket"] == "amber"
-    assert inc["notify_status"] == "pending" and inc["notified_at"] is None
+    # No reviewer-email config in the test env, so the best-effort notify is skipped and
+    # the incident still persists (it never blocks the session).
+    assert inc["notify_status"] == "skipped" and inc["notified_at"] is None
     flag_id = await db.fetchval("select id from sealed_flags where session_id = $1", sess)
     assert inc["sealed_flag_id"] == flag_id
     # Schema-enforced minimization: no column can hold verbatim disclosure content.
@@ -132,6 +134,56 @@ async def test_incident_survives_interview_delete(db, monkeypatch):
     # Incident survives, session ref nulled — same doctrine as sealed_flags.
     surviving = await db.fetch("select session_id from harm_incidents where workspace_id = $1", ws)
     assert len(surviving) == 1 and surviving[0]["session_id"] is None
+
+
+async def test_notify_sent_flips_status_and_stamps_time(db, monkeypatch):
+    ws = await make_workspace(db)
+    sess = await make_session(db, ws)
+    await _seed_utterances(db, sess, [("respondent", "we don't report the accidents")])
+    monkeypatch.setattr(disclosure, "run_agent", _mock_agent(TIER2))
+
+    async def _sent(**_k):
+        return "sent"
+
+    monkeypatch.setattr(disclosure, "send_incident_notification", _sent)
+    await disclosure.screen_session({"session_id": str(sess)})
+    row = await db.fetchrow("select notify_status, notified_at from harm_incidents where session_id = $1", sess)
+    assert row["notify_status"] == "sent" and row["notified_at"] is not None
+
+
+async def test_notify_failure_never_fails_the_session(db, monkeypatch):
+    """A reviewer-email failure must not fail the screen job: the incident persists with
+    notify_status='failed' for manual review (7.x hard invariant)."""
+    ws = await make_workspace(db)
+    sess = await make_session(db, ws)
+    await _seed_utterances(db, sess, [("respondent", "we don't report the accidents")])
+    monkeypatch.setattr(disclosure, "run_agent", _mock_agent(TIER2))
+
+    async def _failed(**_k):
+        return "failed"
+
+    monkeypatch.setattr(disclosure, "send_incident_notification", _failed)
+    await disclosure.screen_session({"session_id": str(sess)})  # must not raise
+    row = await db.fetchrow("select notify_status from harm_incidents where session_id = $1", sess)
+    assert row["notify_status"] == "failed"
+    # The flag + incident are still there — the promise was kept even though email failed.
+    assert await db.fetchval("select count(*) from sealed_flags where session_id = $1", sess) == 1
+
+
+def test_incident_email_carries_no_verbatim():
+    """The reviewer email is built from the minimized fields ONLY — a transcript line can
+    never reach it (§7.6). Structural: build_incident_email takes no verbatim argument."""
+    from app import notify
+
+    payload = notify.build_incident_email(
+        incident_id="inc-1", category="illegality", bucket="amber",
+        session_ref="sess-1", created_at="2026-07-10T00:00:00Z",
+    )
+    blob = json.dumps(payload)
+    assert "illegality" in blob and "amber" in blob and "sess-1" in blob
+    # Nothing a respondent actually said can appear — the builder has no channel for it.
+    for verbatim in ("cocaine", "we don't report the accidents", "bathroom"):
+        assert verbatim not in blob
 
 
 async def test_screen_idempotent_no_duplicate_flags(db, monkeypatch):
