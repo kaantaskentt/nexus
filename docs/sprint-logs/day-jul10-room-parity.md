@@ -103,10 +103,21 @@ Figma file link (Kaan's file) in case the real mockups live there.
 - **Sim parity** — the sim room uses the same family (hideCaptured suppresses rail + count;
   practice-run marker stays). Verify at the seam-C gate.
 
-## Seam-C GATE walk (team-lead condition — not a viewing; one fix round budgeted)
-1440 + 390 on prod post-deploy: fix any composition/overflow/legibility issue on ALL surfaces
-(orb sizing, rail layout at 390, reconnect card wrap, welcome spacing, sim room) before seam C
-closes. Only pixel-exactness vs Kaan's mockup is deferred (reconcile when Figma lands).
+## Seam-C1 GATE walk — DONE, PASS both widths (deployed 660db57 on nexus-v2-alpha)
+Drove a disposable hidden context session (workspace 6f824daf, is_internal) on prod, viewed the
+real deployed room at 1440 + 390:
+- **Welcome hero orb** — PASS 1440 + 390: welcome opens on the centered particle orb above the
+  heading; boxes + button stack cleanly, no overflow, calm/legible.
+- **Agent-state rail** — PASS 1440 (right "Nexus" rail: vertical Listening/Thinking/Saving/
+  Speaking, active highlighted + "3 items captured" footer, counts-only) and 390 (rail hidden,
+  compact "Listening" line returns in header + count above composer, no overflow). R1 held.
+- **Reconnect cards** — code-verified (tsc); visual not driven (a voice drop is hard to force),
+  styling-only.
+No composition/overflow/legibility FAILURES. One pixel-pending note (mockup, not a gate fail):
+the 1440 rail count sits at the bottom (matches the CapturedLivePanel footer pattern), slightly
+sparse with only 4 state rows — final rail composition waits on the mockup. With SIGHT the 2-box
+welcome reads clean; the 3rd "After the call" box stays a copy decision (ruling 2), confirmed.
+Screenshots: scratchpad/parity-screens/. Teardown: workspace 6f824daf left is_internal for reap.
 
 ## A28 pre-review — Surface 3 (reconnect pills → cards) — LANDED
 - Today: ReconnectBanner is a flat rounded-md bordered strip (trying / recovered).
