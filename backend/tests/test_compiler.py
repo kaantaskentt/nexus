@@ -185,6 +185,45 @@ async def test_new_person_minted_client_side(db, monkeypatch):
     assert selin["source"] == "interview"
 
 
+async def _compile_confirmed_fact(db, monkeypatch, *, session_max_tag, payload_max_tag):
+    """Compile one CONFIRMED-tagged fact and return the tag it persisted with, given a
+    session compile_max_tag and/or a payload max_tag. Isolates the cap resolution."""
+    ws = await make_workspace(db)
+    sess = await make_session(db, ws)
+    if session_max_tag is not None:
+        await db.execute(
+            "update interview_sessions set compile_max_tag = $1 where id = $2",
+            session_max_tag, sess,
+        )
+    await _seed_utterances(db, sess, [("respondent", "We ship every order the same morning it comes in.")])
+    output = {
+        "records": [{
+            "id": "r1", "kind": "statement", "topic": "process-step", "tag": "confirmed",
+            "claim": "Orders ship the same morning",
+            "evidence": {"quote": "ship every order the same morning", "timestamp": "#0", "speaker": "Ece"},
+            "speaker_name": "Ece",
+        }],
+        "mentions": [],
+    }
+    monkeypatch.setattr(compiler, "run_agent", _mock_agent(output))
+    payload = {"session_id": str(sess)}
+    if payload_max_tag is not None:
+        payload["max_tag"] = payload_max_tag
+    await compiler.compile_session(payload)
+    return await db.fetchval("select tag from claim_records where workspace_id = $1", ws)
+
+
+async def test_compile_caps_at_session_max_tag(db, monkeypatch):
+    """ANYTIME-CONTEXT CLAIMED cap. Pins the compiler's max_tag resolution
+    (payload.get('max_tag') or session['compile_max_tag']) at three points:
+      1. a session cap of CLAIMED pulls a CONFIRMED fact down to CLAIMED (additive founder call);
+      2. a null session leaves it CONFIRMED — byte-identical to today (first call / interviews);
+      3. an explicit payload max_tag wins over the session column (intake still short-circuits)."""
+    assert await _compile_confirmed_fact(db, monkeypatch, session_max_tag="CLAIMED", payload_max_tag=None) == "CLAIMED"
+    assert await _compile_confirmed_fact(db, monkeypatch, session_max_tag=None, payload_max_tag=None) == "CONFIRMED"
+    assert await _compile_confirmed_fact(db, monkeypatch, session_max_tag="CLAIMED", payload_max_tag="GUESS") == "GUESS"
+
+
 async def test_directive_stores_with_null_tag(db, monkeypatch):
     """Directives are not on the trust ladder — they persist with a null tag."""
     ws = await make_workspace(db)
