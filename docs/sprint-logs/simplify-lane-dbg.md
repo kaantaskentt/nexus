@@ -193,3 +193,19 @@ need to also HOST Automation opportunities + Key findings (not just Conflicts, w
 keeps). That is a scope expansion beyond this 3.2 commit — lands as a follow-up once the lead
 blesses the Home-vs-Workflows mapping; I own the SnapshotView rendering, lane-shell hands me
 the extracted section components.
+
+## ADD-4 intake agent (task #18, adopted from lane-k after their commit 1/4). A28 isolated.
+
+Design is lane-k's (docs/sprint-logs/simplify-lane-k.md): STRONG seat (migration 0025 seeds
+`intake_interviewer`), storage quarantine at the DATA layer (store_context → standard compiler
+at CLAIMED), plan edits reuse the K3 refine `_apply_change` primitive, non-negotiable 2 holds.
+- COMMIT 2 (endpoint) LANDED: `POST /api/plans/{id}/intake` (routers/plans.py). One intake turn
+  on a DRAFT plan; records-digest + plan-skeleton in the prompt context; reuses refine's
+  `_apply_change` targets (suggested_questions/handling_notes/never_list) + the `_has_attribution`
+  structural guard on never_list; a `store_context` fact is compiled via the STANDARD add-context
+  path (context session + `compile_session` at `max_tag=CLAIMED`) so quarantine is data-layer;
+  `plan_only` stores nothing; the storage decision returns as an honest chip. change_log gets an
+  `actor:"intake"` entry (never silent). Gate untouched. Tests: test_intake.py 4/4; refine +
+  plan_generate still 12/12 (no regression). Migration 0025 applies at the seam, not by me.
+  Remaining: (3) UI intake phase on /interviews/new reusing K3 applied-changes, (4) required
+  role+focus + role suggestions, (5) evals (asks-not-tells; storage-decision honest).

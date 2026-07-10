@@ -480,3 +480,177 @@ async def refine_chat(plan_id: str, body: RefineIn):
         "rejected": rejected,
         "change_log_entry": entry,
     }
+
+
+# ── New-interview intake agent (SIMPLIFY ADDENDUM 4) ─────────────────────────────
+# A short, records/plan-aware conversation that sharpens the DRAFT plan before it is shown:
+# 2-3 sharp follow-ups one at a time. It reuses the refine-chat primitives (the SAME bounded
+# _apply_change targets + attribution guard), and makes the sensitive storage call. A stored
+# fact is compiled through the STANDARD path at CLAIMED (the add_context route), so the
+# compiler's data-layer sentiment quarantine is the enforcement, not the prompt. Non-
+# negotiable 2 holds: admin input only shapes questions, never reaches the interviewee.
+
+_INTAKE_OUTPUT_REMINDER = """
+## Return ONE json object exactly as your instructions specify, nothing else
+{"reply": "...", "question": "next single question or null", "done": false,
+ "plan_changes": [{"target": "suggested_questions|handling_notes|never_list", "op": "add|remove", "value": "..."}],
+ "storage": {"decision": "store_context|plan_only", "fact": "neutral fact or null", "why": "..."}}
+No prose outside the JSON. No em-dashes in authored text.
+"""
+
+
+def _plan_skeleton(mission: dict, questions: list, never: list) -> str:
+    return (
+        f"goal: {json.dumps(mission.get('goal'), ensure_ascii=False)}\n"
+        f"objectives: {json.dumps(mission.get('objectives') or mission.get('must_hit') or [], ensure_ascii=False)}\n"
+        f"known_context: {json.dumps(mission.get('known_context'), ensure_ascii=False)}\n"
+        f"definition_of_done: {json.dumps(mission.get('definition_of_done'), ensure_ascii=False)}\n"
+        f"handling_notes: {json.dumps(mission.get('handling_notes') or [], ensure_ascii=False)}\n"
+        f"suggested_questions: {json.dumps([q.get('text') for q in questions], ensure_ascii=False)}\n"
+        f"never_list: {json.dumps(never, ensure_ascii=False)}\n"
+    )
+
+
+class IntakeIn(BaseModel):
+    message: str | None = None  # None on the opening turn — the intake agent asks first
+
+
+@router.post("/{plan_id}/intake")
+async def intake_chat(plan_id: str, body: IntakeIn):
+    """One intake turn on a DRAFT plan. Records/plan aware; answers become the SAME bounded
+    plan edits as refine-chat; company facts get an explicit plan-only-vs-store decision, and
+    a store_context fact is compiled through the standard CLAIMED path so quarantine is data-
+    layer. Returns the reply, next question, done flag, applied edits, and the honest storage
+    decision the UI renders as a chip. The gate (approval/send) is untouched."""
+    pool = await get_pool()
+    plan = await pool.fetchrow(
+        "select p.workspace_id, p.mission, p.suggested_questions, p.never_list, p.change_log, "
+        "w.industry from interview_plans p join workspaces w on w.id = p.workspace_id "
+        "where p.id = $1",
+        plan_id,
+    )
+    if plan is None:
+        raise HTTPException(404, "plan not found")
+
+    def _loads(v, default):
+        return json.loads(v) if isinstance(v, str) else (v if v is not None else default)
+
+    mission = _loads(plan["mission"], {})
+    questions = _loads(plan["suggested_questions"], [])
+    never = _loads(plan["never_list"], [])
+    change_log = _loads(plan["change_log"], [])
+
+    # Bounded records digest: the real (non-scraped) records so the agent aims at what the
+    # store is THIN on, never re-asking what it already covers.
+    recs = await pool.fetch(
+        "select claim_text, topic from claim_records where workspace_id = $1 "
+        "and (tag is null or tag <> 'SCRAPED') order by created_at desc limit 40",
+        plan["workspace_id"],
+    )
+    records_block = (
+        "# Company records so far (aim your questions at the gaps, not these)\n"
+        + ("\n".join(f"- [{r['topic']}] {r['claim_text']}" for r in recs) or "(none yet)")
+        + "\n\n"
+    )
+
+    # Intake conversation memory from the change_log (this endpoint's own prior turns).
+    convo_lines: list[str] = []
+    for e in change_log[-6:]:
+        if e.get("actor") != "intake":
+            continue
+        if e.get("message"):
+            convo_lines.append(f"Admin: {e['message']}")
+        if e.get("question"):
+            convo_lines.append(f"You asked: {e['question']}")
+    convo_block = (
+        "# Intake so far (oldest first)\n" + "\n".join(convo_lines) + "\n\n"
+    ) if convo_lines else ""
+
+    answer_block = (
+        f"# Admin's latest answer (respond to THIS)\n{body.message}\n\n"
+        if body.message
+        else "# Opening turn — no answer yet. Ask your first single follow-up question.\n\n"
+    )
+
+    user_content = (
+        records_block
+        + convo_block
+        + answer_block
+        + "# Draft plan (edit ONLY via the plan_changes contract)\n"
+        + _plan_skeleton(mission, questions, never)
+        + _INTAKE_OUTPUT_REMINDER
+    )
+    raw = await run_agent(
+        "intake_interviewer", user_content, workspace_id=str(plan["workspace_id"]),
+        industry_block=_load_industry_block(plan["industry"]),
+    )
+    result = extract_json(raw)
+
+    # Apply bounded plan edits — SAME targets + attribution guard as refine-chat (#4 backstop).
+    applied, rejected = [], []
+    for ch in result.get("plan_changes") or []:
+        if (ch.get("target") == "never_list" and ch.get("op") == "add"
+                and _has_attribution(str(ch.get("value") or ""))):
+            rejected.append({**ch, "reason": "attribution/sentiment: names who-said-what about a "
+                             "person; rephrase as a neutral topic prohibition"})
+            continue
+        if _apply_change(mission, questions, never, ch):
+            applied.append(ch)
+
+    # Storage decision. A store_context fact is compiled through the STANDARD path at CLAIMED
+    # (same as chat add-context): the compiler's sentiment quarantine is the data-layer
+    # enforcement — a person-opinion routed here is quarantined, never a client_visible row.
+    # plan_only stores nothing. Nothing becomes a record silently.
+    storage = result.get("storage") if isinstance(result.get("storage"), dict) else {}
+    decision = storage.get("decision")
+    fact = storage.get("fact")
+    fact = fact.strip() if isinstance(fact, str) else ""
+    stored = False
+    if decision == "store_context" and fact:
+        sid = await pool.fetchval(
+            "insert into interview_sessions (workspace_id, modality, status, session_kind) "
+            "values ($1, 'text', 'completed', 'context') returning id",
+            plan["workspace_id"],
+        )
+        await pool.execute(
+            "insert into utterances (session_id, turn_index, speaker, text) "
+            "values ($1, 0, 'respondent', $2)",
+            sid, fact,
+        )
+        await enqueue("compile_session", {"session_id": str(sid), "max_tag": "CLAIMED"})
+        stored = True
+
+    entry = {
+        "at": datetime.now(timezone.utc).isoformat(),
+        "actor": "intake",
+        "message": body.message,
+        "question": result.get("question"),
+        "reply": result.get("reply", ""),
+        "done": bool(result.get("done")),
+        "applied": applied,
+        "rejected": rejected,
+        "storage": {"decision": decision, "why": storage.get("why"), "stored": stored},
+    }
+    change_log.append(entry)
+
+    await pool.execute(
+        "update interview_plans set mission=$2, suggested_questions=$3, never_list=$4, "
+        "change_log=$5, updated_at=now() where id=$1",
+        plan_id, json.dumps(mission), json.dumps(questions), json.dumps(never),
+        json.dumps(change_log),
+    )
+
+    return {
+        "reply": result.get("reply", ""),
+        "question": result.get("question"),
+        "done": bool(result.get("done")),
+        "applied": applied,
+        "rejected": rejected,
+        # Honest storage surface for the UI chip — never silent.
+        "storage": {
+            "decision": decision if decision in ("store_context", "plan_only") else "plan_only",
+            "stored": stored,
+            "why": storage.get("why"),
+            "chip": "Saved to Company Context" if stored else "Used for this plan only",
+        },
+    }
