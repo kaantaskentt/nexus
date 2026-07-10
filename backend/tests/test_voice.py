@@ -229,6 +229,31 @@ async def test_webhook_both_end_events_compile_once(db):
     assert state["recording_url"] == "https://rec/y.wav"   # report evidence still stored
 
 
+async def test_webhook_both_end_events_compile_once_reverse_order(db):
+    """The other race order: end-of-call-report FIRST, then status-update:ended. Still
+    exactly one compile — the CAS flag is order-independent (team-lead seam-A constraint)."""
+    ws = await make_workspace(db, industry="jewelry")
+    sess = await _context_session(db, ws, "voicerev")
+    async with _client() as c:
+        await c.post("/api/voice/webhook", json={"message": {
+            "type": "end-of-call-report",
+            "call": {"metadata": {"session_token": "voicerev"}},
+            "artifact": {"recording": {"stereoUrl": "https://rec/z.wav"},
+                         "transcript": "N: hi\nUser: hello"},
+        }})
+        await c.post("/api/voice/webhook", json={"message": {
+            "type": "status-update", "status": "ended",
+            "call": {"metadata": {"session_token": "voicerev"}},
+        }})
+    n = await db.fetchval(
+        "select count(*) from jobs where kind='compile_session' and payload->>'session_id'=$1",
+        str(sess),
+    )
+    assert n == 1
+    row = await db.fetchrow("select status from interview_sessions where id=$1", sess)
+    assert row["status"] == "completed"
+
+
 async def test_voice_secret_gate(monkeypatch):
     monkeypatch.setattr(voice, "get_settings", lambda: SimpleNamespace(voice_shared_secret="s3cret"))
     with pytest.raises(HTTPException) as e:
