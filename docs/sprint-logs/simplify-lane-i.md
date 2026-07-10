@@ -42,3 +42,15 @@ their data. No capability removed.
 - Run button → lane-e's `POST /scenario-run {workflow_id}` → navigate to invite_path.
 
 Isolated commits, scoped paths, tests run before each (the tested-first habit from Phase 3).
+
+## AUDIT VERDICT — page half landed + contract-aligned with lane-e
+Commits: pre-review (Kaan veto) · backend GET /scenarios + 4 tests · frontend page +
+ScenariosSection + 3 tests. tsc 0, eslint clean, tests green per commit; scoped paths.
+**Integration verified by inspection:** lane-e's `POST /{ws}/scenario-run {workflow_id}` →
+{token, invite_path} matches my `run_scenario` client exactly; they derive archetype +
+objectives server-side, only workflow_id crosses, roleplay firewall intact, and they added a
+defense-in-depth >=3-step check mirroring my qualification. Both halves consistent. REMAINING:
+live prod verification at seam-3 (folded into my #12 walk) — confirm a real workflow yields a
+scenario card, Run opens the room with the SIMULATION marker, and a thin tenant shows the
+empty state (never the global cast). Nothing said in a simulation touches client records
+(session_kind='roleplay' firewall, unchanged).
