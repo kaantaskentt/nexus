@@ -114,3 +114,17 @@ swap (byte-identical color).
 
 **Verdict:** AUDIT COMPLETE. Design system verified coherent; two build batches landed;
 structural roughness routed as proposals. Screenshots committed as evidence.
+
+---
+
+## Post-seam render confirm (prod round-4 0150dbf — batches 1a+2 verified live via git ancestry)
+
+Computed-style check on deployed prod (not eyeballed — exact values):
+- Batch 2 (title scale): interviews/new "New interview" h1 → getComputedStyle fontSize = **44px**
+  (was 40px/2.5rem; now --step-4/2.75rem). Confirmed live.
+- Batch 1a (surface-dark): :root --surface-dark resolves to **#1c1712**; exactly **1** element
+  on the observe voice surface renders background-color **rgb(28, 23, 18)** = the voice-presence
+  strip. Tailwind bg-surface-dark mapping resolved, byte-identical to the old magic hex — no
+  regression. Confirmed live.
+
+**FINAL: both batches render correctly on prod. Lane closed for the night.**
