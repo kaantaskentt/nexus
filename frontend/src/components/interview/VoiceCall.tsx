@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  Mic, MicOff, PhoneOff, PhoneCall, Loader2, MessageSquare, AlertTriangle, Check,
+  Mic, MicOff, PhoneOff, PhoneCall, Loader2, MessageSquare, AlertTriangle, Check, RefreshCw,
 } from "lucide-react";
 import { ParticleOrb, type OrbState } from "./ParticleOrb";
 import { MicWaveform } from "./MicWaveform";
@@ -35,11 +35,12 @@ const ASSISTANTS = {
   sharedM: "0853702b-cb75-4609-8af0-d15653dcbbae", // 11labs ryan — the global default (A20)
 };
 
-// "dropped" is a call that ended WITHOUT the respondent asking it to (network, device,
-// provider) — it gets an honest reconnect screen, never a silent slide into text and
-// never a "Call ended" that implies it finished on purpose (A21 target 4; the July 6
-// drop read as a normal completion, which is how it silently became text).
-type CallState = "idle" | "connecting" | "live" | "ended" | "dropped" | "error";
+// A call that ended WITHOUT the respondent asking it to (network, device, provider) is a
+// DROP — never a silent slide into text and never a "Call ended" that implies it finished
+// on purpose (A21 target 4; the July 6 drop read as a normal completion). SIMPLIFY F: a
+// drop no longer throws up a full-screen screen — it keeps the room (transcript preserved)
+// and shows an unobtrusive reconnecting banner that auto-recovers, with a manual retry.
+type CallState = "idle" | "connecting" | "live" | "ended" | "reconnecting" | "error";
 
 // Minimal structural view of the VAPI client we use (avoids `any`).
 interface VapiLike {
@@ -105,6 +106,12 @@ export function VoiceCall({
   // "You're talking but the call can't hear you" (P0-A): local mic activity with zero
   // user transcript events is the July 6/7 drop signature surfaced EARLY and honestly.
   const [micWarning, setMicWarning] = useState(false);
+  // SIMPLIFY F: the in-room reconnect signal. "trying" while we auto-recover a drop,
+  // "recovered" for a brief confirmation flash once the line is back.
+  const [reconnecting, setReconnecting] = useState<null | "trying" | "recovered">(null);
+  const autoTried = useRef(false); // one automatic attempt per drop; further tries are manual
+  const recoveredTimer = useRef<number | null>(null);
+  const reconnectTimer = useRef<number | null>(null); // pending auto-reconnect; cancel on leave
 
   const vapiRef = useRef<VapiLike | null>(null);
   const heardRef = useRef(false); // any user transcript event arrived
@@ -128,6 +135,8 @@ export function VoiceCall({
   useEffect(() => () => {
     try { vapiRef.current?.stop(); } catch { /* already gone */ }
     stopMicWatchdog();
+    if (recoveredTimer.current) window.clearTimeout(recoveredTimer.current);
+    if (reconnectTimer.current) window.clearTimeout(reconnectTimer.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -139,13 +148,16 @@ export function VoiceCall({
     return () => window.clearInterval(id);
   }, [state]);
 
-  async function startCall() {
+  async function startCall(opts?: { reconnect?: boolean }) {
+    const reconnect = opts?.reconnect ?? false;
     if (!pubKey) {
       setErrorMsg("Voice isn't available right now.");
       setState("error");
       return;
     }
-    setState("connecting");
+    // A reconnect keeps the room (state stays "reconnecting", transcript preserved) and
+    // shows the banner; a fresh start shows the centered connecting moment.
+    if (!reconnect) setState("connecting");
     setOrbState("connecting");
     setErrorMsg(null);
     setPartial(null);
@@ -163,7 +175,10 @@ export function VoiceCall({
       setErrorMsg(
         "We couldn't reach your microphone. Check the browser's mic permission and try again, or continue by text.",
       );
-      setState("error");
+      // On a reconnect, a mic failure keeps the room + banner (transcript preserved, manual
+      // retry / continue-by-text right there); only a first-start mic failure is a full screen.
+      setState(reconnect ? "reconnecting" : "error");
+      if (reconnect) setReconnecting("trying");
       return;
     }
 
@@ -176,13 +191,32 @@ export function VoiceCall({
         setState("live");
         setOrbState("listening");
         startMicWatchdog();
+        // If this start recovered a drop, flash a brief "Reconnected" confirm, then clear.
+        setReconnecting((r) => {
+          if (r !== "trying") return r;
+          autoTried.current = false;
+          if (recoveredTimer.current) window.clearTimeout(recoveredTimer.current);
+          recoveredTimer.current = window.setTimeout(() => setReconnecting(null), 3500);
+          return "recovered";
+        });
       });
       vapi.on("call-end", () => {
-        // Only a respondent-requested end is "ended"; anything else is a DROP and gets
-        // the reconnect screen (never a silent completion, never a silent text switch).
-        setState(endRequested.current ? "ended" : "dropped");
         setVolume(0);
         stopMicWatchdog();
+        // A respondent-requested end is a normal "ended". Anything else is a DROP: keep the
+        // room and its transcript, show the reconnecting banner, and auto-recover ONCE
+        // (further tries are the manual button) — never a silent completion or text switch.
+        if (endRequested.current) {
+          setState("ended");
+          return;
+        }
+        setState("reconnecting");
+        setOrbState("connecting");
+        setReconnecting("trying");
+        if (!autoTried.current) {
+          autoTried.current = true;
+          reconnectTimer.current = window.setTimeout(() => { void startCall({ reconnect: true }); }, 1200);
+        }
       });
 
       // REAL volume drive for the orb (assistant output level, 0..1).
@@ -229,10 +263,21 @@ export function VoiceCall({
           ? (e as { message: string }).message
           : null;
         setErrorMsg(msg);
-        // An error on a LIVE call is a drop (reconnectable); before connection it's a
-        // failure to start. Two different truths, two different screens.
-        setState((s) => (s === "live" ? "dropped" : "error"));
         setVolume(0);
+        // An error on a LIVE (or reconnecting) call is a drop → in-room reconnect; before
+        // connection it's a failure to start → the full error screen. Two different truths.
+        setState((s) => {
+          if (s === "live" || s === "reconnecting") {
+            setOrbState("connecting");
+            setReconnecting("trying");
+            if (!autoTried.current) {
+              autoTried.current = true;
+              reconnectTimer.current = window.setTimeout(() => { void startCall({ reconnect: true }); }, 1200);
+            }
+            return "reconnecting";
+          }
+          return "error";
+        });
       });
       // Resolve THIS workspace's assistant (Sprint2-B / #39): the admin's chosen voice is
       // baked into a dedicated VAPI assistant server-side, so we only need its id. Falls
@@ -250,7 +295,10 @@ export function VoiceCall({
       });
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "We couldn't start the call.");
-      setState("error");
+      // A failed reconnect stays in-room (banner offers retry / continue-by-text); a failed
+      // first start is the full error screen.
+      setState(reconnect ? "reconnecting" : "error");
+      if (reconnect) setReconnecting("trying");
     }
   }
 
@@ -300,14 +348,29 @@ export function VoiceCall({
     watchdog.current = { timer: null, stream: null, ctx: null };
   }
 
+  function cancelPendingReconnect() {
+    if (reconnectTimer.current) window.clearTimeout(reconnectTimer.current);
+    reconnectTimer.current = null;
+    setReconnecting(null);
+  }
+
   function endCall() {
+    cancelPendingReconnect();
     endRequested.current = true;
     try { vapiRef.current?.stop(); } catch { /* ignore */ }
     setState("ended");
   }
 
+  // Manual reconnect from the in-room banner (when auto-recovery hasn't caught, or the
+  // respondent taps "Try again"). autoTried stays set so we don't also fire an auto-attempt.
+  function retryReconnect() {
+    autoTried.current = true;
+    void startCall({ reconnect: true });
+  }
+
   // Mid-call switch to text: a deliberate stop, then the same session continues as chat.
   function switchToText() {
+    cancelPendingReconnect();
     endRequested.current = true;
     try { vapiRef.current?.stop(); } catch { /* ignore */ }
     onUseText();
@@ -335,8 +398,11 @@ export function VoiceCall({
     );
   }
 
-  // ── Live: the room (voice mode) ──────────────────────────────────────
-  if (state === "live") {
+  // ── Live / reconnecting: the room (voice mode) ───────────────────────
+  // A drop keeps the room here (transcript preserved) and shows the reconnecting banner —
+  // it does NOT throw up a separate screen (SIMPLIFY F).
+  if (state === "live" || state === "reconnecting") {
+    const live = state === "live";
     // Concept A (Kaan-approved): the orb is a compact presence element in a slim bar —
     // 64px particle avatar in its dark tile, the REAL mic waveform beside it (unmounts
     // while muted — honest about what the interviewer can hear), and the neutral state/
@@ -348,7 +414,9 @@ export function VoiceCall({
             <ParticleOrb volume={volume} state={orbState} />
           </div>
           <div className="h-8 w-36">
-            <MicWaveform active={!muted} />
+            {/* The waveform is honest about what the line can hear: silent while muted OR
+                while the connection is down (reconnecting). */}
+            <MicWaveform active={!muted && live} />
             {muted && (
               <p className="flex h-full items-center gap-1.5 text-xs text-ink-faint">
                 <MicOff className="h-3.5 w-3.5" strokeWidth={1.75} /> Muted
@@ -409,47 +477,26 @@ export function VoiceCall({
       <LiveRoom
         header={presence}
         controls={controls}
+        banner={
+          reconnecting ? (
+            <ReconnectBanner
+              phase={reconnecting}
+              onRetry={retryReconnect}
+              onUseText={switchToText}
+            />
+          ) : undefined
+        }
         capturedPanel={
           <CapturedLivePanel items={captures.items} extracting={captures.extracting} />
         }
         capturedCount={captures.items.length}
       >
-        {/* The transcript owns the middle of the room (non-negotiable 5, un-boxed). */}
+        {/* The transcript owns the middle of the room (non-negotiable 5, un-boxed). It stays
+            put through a reconnect — nothing shared is lost (SIMPLIFY F). */}
         <div className="h-full p-1">
           <LiveTranscript turns={turns} partial={partial} />
         </div>
       </LiveRoom>
-    );
-  }
-
-  // ── Dropped: the honest reconnect screen (never a silent fallback) ───
-  if (state === "dropped") {
-    return (
-      <div className="py-12 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft text-accent-ink">
-          <PhoneOff className="h-6 w-6" strokeWidth={1.75} />
-        </div>
-        <h1 className="mt-5 font-display text-2xl text-ink">The call dropped</h1>
-        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">
-          {errorMsg ? `${errorMsg} ` : "Something interrupted the connection. "}
-          Everything you shared is saved. Pick up the same conversation by voice, or
-          continue it by text.
-        </p>
-        <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <button
-            onClick={startCall}
-            className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
-          >
-            <PhoneCall className="h-4 w-4" strokeWidth={1.75} /> Resume voice call
-          </button>
-          <button
-            onClick={onUseText}
-            className="inline-flex items-center gap-2 rounded-md border border-line-strong px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-surface-raised"
-          >
-            <MessageSquare className="h-4 w-4" strokeWidth={1.75} /> Continue by text
-          </button>
-        </div>
-      </div>
     );
   }
 
@@ -497,7 +544,7 @@ export function VoiceCall({
         </p>
         <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <button
-            onClick={startCall}
+            onClick={() => startCall()}
             className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
           >
             <PhoneCall className="h-4 w-4" strokeWidth={1.75} /> Try the call again
@@ -530,7 +577,7 @@ export function VoiceCall({
       </p>
       <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <button
-          onClick={startCall}
+          onClick={() => startCall()}
           className="inline-flex items-center gap-2 rounded-md bg-accent px-7 py-3.5 text-base font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2"
         >
           <Mic className="h-5 w-5" strokeWidth={1.75} />
@@ -547,6 +594,50 @@ export function VoiceCall({
       <p className="mt-4 text-xs text-ink-faint">
         Starting a call will ask for your microphone.
       </p>
+    </div>
+  );
+}
+
+// SIMPLIFY F: the unobtrusive in-room reconnect banner (image1/image20). It sits inside the
+// room with the transcript still visible; it auto-recovers a drop and offers a manual retry,
+// never a full-screen interruption. "recovered" is a brief confirmation that clears itself.
+function ReconnectBanner({
+  phase,
+  onRetry,
+  onUseText,
+}: {
+  phase: "trying" | "recovered";
+  onRetry: () => void;
+  onUseText: () => void;
+}) {
+  if (phase === "recovered") {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success-soft px-4 py-2.5 text-sm text-tag-verified">
+        <Check className="h-4 w-4 shrink-0" strokeWidth={2} />
+        <span>Reconnected. Back together, continuing our conversation.</span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-line bg-surface-raised px-4 py-2.5 text-sm text-ink-soft">
+      <Loader2 className="h-4 w-4 shrink-0 animate-spin text-accent" strokeWidth={2} />
+      <span className="min-w-0 flex-1">
+        Reconnecting… hang tight, we&apos;re back in a moment. Nothing you shared is lost.
+      </span>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onRetry}
+          className="inline-flex items-center gap-1.5 rounded-md border border-line-strong px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-surface-raised"
+        >
+          <RefreshCw className="h-3.5 w-3.5" strokeWidth={1.75} /> Try again
+        </button>
+        <button
+          onClick={onUseText}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-faint transition-colors hover:text-ink"
+        >
+          <MessageSquare className="h-3.5 w-3.5" strokeWidth={1.75} /> Continue by text
+        </button>
+      </div>
     </div>
   );
 }
