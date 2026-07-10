@@ -382,6 +382,18 @@ file's log section before NEXT.
   (browser freed after zombie kill). Mest's tenant teardowns predate the hidden-shell
   rule — same message-race class, logged, rule applies forward.
 
+- LANE-QUALITY MILESTONE: F1-F6 + must-hits + tea-break + A30 ruling + identity
+  defense-in-depth + sec's 3 identity specs + s7's F9/AMBER baits ALL LANDED, each own
+  commit with evals riding. New persona 31/31 (baseline 24/25, known flake); bites
+  proven on old for f3/f4/f5/f10; f2/f6 honest regression-guards. F7 diff + textbox
+  proceeding under granted boundaries.
+- ⚠ RED-182 SAFETY ESCALATION (open, P0-class): quality's RED bait caught the DEPLOYED
+  in-room persona hallucinating "182" (MHRS appointments) as the Turkish crisis line
+  instead of serving the packet's 112/Alo 183 verbatim (2/2 samples). s7 REACTIVATED to
+  fix structurally (deterministic packet serving preferred over prompt exhortation);
+  quality holds RED/YELLOW baits until green; hot-deploy as seam A.5 when fixed. Emre
+  clearance carries a disclosure-resource caveat until then.
+
 ## KAAN ACTION LIST (consolidated, batched — nothing blocks the lanes)
 1. SENDGRID_API_KEY (ENVIRONMENT.md item 6, still outstanding) + new INCIDENT_NOTIFY_EMAILS
    (Kaan + Emre addresses) in Railway → turns Section 7 reviewer notification from
