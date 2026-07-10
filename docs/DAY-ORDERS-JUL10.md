@@ -282,6 +282,19 @@ file's log section before NEXT.
   sections, all eval suites (lands sec's + s7's bait specs), glossary standing ruling +
   MERGE_PLAN entry, F7 authorization-state check. Interview-room composer file (text-box
   grow) requires pre-announcement — lane-split holds components/interview/** today.
+- LANE-EXPORT COMPLETE (diff-reviewed: a7cf9f2 + 7129c75 spot-checked by team-lead):
+  all four leaks + backdrop fixed in 5 scoped commits (a7cf9f2 compose-time
+  de-identification, data layer; b48386c CLAIMED/GUESS/untagged qualifier + honest
+  footer; 7b6d87c placeholder-step drop + contiguous numbering; 7129c75 patch-29
+  promoted, A24=ADOPT per pilot §3 ratification, staged patch tombstoned, 4 eval cases;
+  873fbaf bg-scrim backdrop). 20 affected tests green. Deploys at seam B (no migrations
+  of its own; 0025 still pending first). Teammate reassigned → LANE-RESIDUALS.
+- KAAN FLAG (batched, client-facing copy): report footer reworded for honesty — old
+  "findings carry their own confidence levels; nothing here is edited by hand" (second
+  clause false, first not shown) → new "each carries its own confidence level; anything
+  not yet verified across interviews is labelled as such". Taste nod wanted before
+  seam B; the correction itself is mandate-required (honest display), only wording is
+  Kaan's.
 
 ## Infra note (from lane-sec, binds all lanes)
 Concurrent full-suite runs against the shared test DB (localhost:55432) deadlock on the
