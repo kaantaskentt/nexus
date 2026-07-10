@@ -351,6 +351,10 @@ file's log section before NEXT.
    Stat-chip labeling same pass.
 6. Watchtower standing cadence for reconcile_snapshots (proposal in lane-mest log; not built).
 7. Standing: naming table (Emre veto) · delete-company §6-1 · Marmara manual read (above).
+8. Seam-close ledger: hidden test shells to reap once §6-1 arms delete — "S7 Drill
+   (internal)" (s7 disclosure drill, harm-incident row retained by design) + any split/mest
+   verify tenants that report as kept-hidden. Disposable admin verify-jul10@nexus.app is
+   deleted by team-lead at seam close (not a Kaan item; listed for transparency).
 
 ## Infra note (from lane-sec, binds all lanes)
 Concurrent full-suite runs against the shared test DB (localhost:55432) deadlock on the
