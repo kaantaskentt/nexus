@@ -39,3 +39,12 @@ Simpler or more complex for the user? SIMPLER — the CEO reads a plain-language
 card instead of a raw system-prompt file, and the full technical brief is still one tab away
 verbatim for anyone who wants it. New files: `lib/roleplayBrief.ts` (parser) + its unit test;
 edit to `RolePlaySection.tsx`; a small `MarkdownLite` renderer local to the component.
+
+**AUDIT VERDICT — LANDED (commit c8b291a).** Shipped as one scoped commit. Overview/Full-brief
+tabs; parser is pure + defensive (verified against all 5 cast personas' heading shapes: How
+you speak / Your real workflow / Vocabulary / Hidden knowledge / Planted traps / Staying in
+character — all relabel + tier correctly; unmatched heading survives; blank/comment-only input
+returns an empty shape without throwing). Full brief tab is the exact pre-existing box (raw MD
+verbatim). No backend touched. Green: frontend suite 79/79 (new roleplay-brief 7/7 +
+roleplay-section 3/3), tsc clean across the tree, lint clean. Not prod-verified from here
+(audit lane holds the browser).
