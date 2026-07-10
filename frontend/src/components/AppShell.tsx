@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   House,
   Users,
@@ -13,10 +14,13 @@ import {
   Settings2,
   ChevronsUpDown,
   Check,
+  Menu,
 } from "lucide-react";
 import brand from "@/lib/brand";
 import type { Workspace } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { drawerSpring, scrimFade } from "@/lib/variants";
+import { useEscapeClose } from "@/lib/useEscapeClose";
 import { BrandMark } from "./BrandMark";
 import { SignOutButton } from "./SignOutButton";
 
@@ -128,80 +132,100 @@ export function AppShell({
   const userName = user?.name ?? "Signed in";
   const userDetail = user?.email ?? "";
 
+  // Below lg the sidebar collapses into a hamburger-triggered slide-over drawer; at lg+
+  // there is no drawer and the desktop aside is unchanged. The drawer closes on nav-click
+  // (onNavigate), Escape, scrim-tap, and — as a catch-all — on any route change.
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+  useEscapeClose(drawerOpen, closeDrawer);
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
+
   return (
     <div className="flex min-h-screen bg-canvas">
-      <aside className="sticky top-0 flex h-screen w-[236px] shrink-0 flex-col border-r border-line bg-surface">
-        {/* Logo → this workspace's Home (#26): inside a workspace the logo is "take me
-            back to the start of THIS company" — the picker stays one click away via the
-            switcher's "All companies". */}
-        <Link
-          href={`/w/${workspace.slug}/home`}
-          className="flex items-center gap-1.5 px-6 pb-3 pt-6 transition-opacity hover:opacity-80"
-        >
-          <span className="font-display text-2xl tracking-tight text-ink">
-            {brand.product_name}
-          </span>
-          <BrandMark className="h-4 w-4 text-accent" />
-        </Link>
-
-        <WorkspaceSwitcher current={workspace} all={workspaces} />
-
-        <nav className="mt-2 flex flex-col gap-0.5 px-3">
-          {navItems.map((item) => {
-            const isActive = item.key === active;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.key}
-                href={item.href(workspace.slug)}
-                aria-current={isActive ? "page" : undefined}
-                className={cn(
-                  "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-150 ease-standard",
-                  isActive
-                    ? "bg-accent-soft text-accent-ink shadow-elev-1"
-                    : "text-ink-soft hover:translate-x-0.5 hover:bg-surface-raised hover:text-ink",
-                )}
-              >
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent" />
-                )}
-                <Icon
-                  className={cn("h-[18px] w-[18px] transition-colors", isActive && "text-accent")}
-                  strokeWidth={1.75}
-                />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Signed-in user — the real authenticated person, never the workspace founder. */}
-        <div className="mt-auto p-3">
-          <div className="flex items-center gap-3 rounded-md border border-line bg-surface-raised p-2.5 shadow-elev-1">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-ink ring-1 ring-inset ring-accent/20">
-              {initials(userName)}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium text-ink">{userName}</div>
-              {userDetail && (
-                <div className="truncate text-xs text-ink-faint">{userDetail}</div>
-              )}
-            </div>
-          </div>
-          <SignOutButton variant="row" className="mt-1" />
-          {/* F5 Trust Center: footer territory per Kaan (privacy/policy placement) —
-              a quiet link, deliberately outside the main nav. */}
-          <Link
-            href={`/w/${workspace.slug}/trust`}
-            className="mt-2 block px-3 text-xs text-ink-faint transition-colors hover:text-ink"
-          >
-            Trust Center: how your people&apos;s words are handled
-          </Link>
-        </div>
+      {/* Desktop sidebar — byte-identical at lg+; hidden below lg where the drawer takes
+          over. `lg:flex` restores the exact resting layout Kaan demos on. */}
+      <aside className="sticky top-0 hidden h-screen w-[236px] shrink-0 flex-col border-r border-line bg-surface lg:flex">
+        <SidebarBody
+          workspace={workspace}
+          workspaces={workspaces}
+          navItems={navItems}
+          active={active}
+          userName={userName}
+          userDetail={userDetail}
+        />
       </aside>
 
+      {/* Mobile nav drawer (below lg only): the SAME sidebar body slides in from the left
+          over a scrim, using the shared drawerSpring/scrimFade vocabulary. */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <div className="lg:hidden">
+            <motion.div
+              variants={scrimFade}
+              initial="hidden"
+              animate="show"
+              exit="hidden"
+              onClick={closeDrawer}
+              aria-hidden="true"
+              className="fixed inset-0 z-40 bg-scrim backdrop-blur-[2px]"
+            />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={drawerSpring}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigation"
+              className="fixed inset-y-0 left-0 z-50 flex w-[264px] max-w-[82%] flex-col border-r border-line bg-surface shadow-elev-3"
+            >
+              <SidebarBody
+                workspace={workspace}
+                workspaces={workspaces}
+                navItems={navItems}
+                active={active}
+                userName={userName}
+                userDetail={userDetail}
+                onNavigate={closeDrawer}
+                touch
+              />
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
+
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="glass sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-4 border-b px-8">
+        {/* Mobile header (below lg): hamburger + workspace name + breadcrumb-lite. */}
+        <header className="glass sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b px-4 lg:hidden">
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open navigation"
+            aria-expanded={drawerOpen}
+            className="-ml-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-ink-soft transition-colors hover:bg-surface-raised hover:text-ink"
+          >
+            <Menu className="h-5 w-5" strokeWidth={1.75} />
+          </button>
+          <div className="flex min-w-0 items-center gap-1.5 text-sm">
+            <Link
+              href={`/w/${workspace.slug}/home`}
+              className="shrink-0 truncate font-medium text-ink transition-colors hover:text-accent-ink"
+            >
+              {workspace.name}
+            </Link>
+            {sectionLabel && active && (
+              <>
+                <span className="shrink-0 text-ink-faint">/</span>
+                <span className="truncate text-ink-soft">{leafLabel ?? sectionLabel}</span>
+              </>
+            )}
+          </div>
+        </header>
+
+        {/* Desktop header — byte-identical at lg+; hidden below lg. */}
+        <header className="glass sticky top-0 z-30 hidden h-16 shrink-0 items-center justify-between gap-4 border-b px-8 lg:flex">
           {/* Breadcrumbs are all real links except the current leaf (#26): company →
               workspace Home, section → its index — every crumb is a way back up. */}
           <div className="flex items-center gap-2 text-sm">
@@ -243,6 +267,110 @@ export function AppShell({
         <main className="min-w-0 flex-1">{children}</main>
       </div>
     </div>
+  );
+}
+
+// The sidebar's inner content — logo, workspace switcher, nav, and the signed-in/footer
+// block. Rendered in BOTH the desktop aside and the mobile drawer so the two never drift.
+// `onNavigate` fires on every in-drawer navigation (closes the drawer); `touch` grows the
+// tap targets to ≥44px for the drawer. With both omitted (the desktop call) the output is
+// byte-identical to the pre-drawer shell.
+function SidebarBody({
+  workspace,
+  workspaces,
+  navItems,
+  active,
+  userName,
+  userDetail,
+  onNavigate,
+  touch = false,
+}: {
+  workspace: Workspace;
+  workspaces: Workspace[];
+  navItems: typeof NAV;
+  active: NavKey | null;
+  userName: string;
+  userDetail: string;
+  onNavigate?: () => void;
+  touch?: boolean;
+}) {
+  return (
+    <>
+      {/* Logo → this workspace's Home (#26): inside a workspace the logo is "take me
+          back to the start of THIS company" — the picker stays one click away via the
+          switcher's "All companies". */}
+      <Link
+        href={`/w/${workspace.slug}/home`}
+        onClick={onNavigate}
+        className="flex items-center gap-1.5 px-6 pb-3 pt-6 transition-opacity hover:opacity-80"
+      >
+        <span className="font-display text-2xl tracking-tight text-ink">
+          {brand.product_name}
+        </span>
+        <BrandMark className="h-4 w-4 text-accent" />
+      </Link>
+
+      <WorkspaceSwitcher current={workspace} all={workspaces} />
+
+      <nav className="mt-2 flex flex-col gap-0.5 px-3">
+        {navItems.map((item) => {
+          const isActive = item.key === active;
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.key}
+              href={item.href(workspace.slug)}
+              onClick={onNavigate}
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-150 ease-standard",
+                isActive
+                  ? "bg-accent-soft text-accent-ink shadow-elev-1"
+                  : "text-ink-soft hover:translate-x-0.5 hover:bg-surface-raised hover:text-ink",
+                touch && "min-h-[44px]",
+              )}
+            >
+              {isActive && (
+                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent" />
+              )}
+              <Icon
+                className={cn("h-[18px] w-[18px] transition-colors", isActive && "text-accent")}
+                strokeWidth={1.75}
+              />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Signed-in user — the real authenticated person, never the workspace founder. */}
+      <div className="mt-auto p-3">
+        <div className="flex items-center gap-3 rounded-md border border-line bg-surface-raised p-2.5 shadow-elev-1">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent-ink ring-1 ring-inset ring-accent/20">
+            {initials(userName)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-medium text-ink">{userName}</div>
+            {userDetail && (
+              <div className="truncate text-xs text-ink-faint">{userDetail}</div>
+            )}
+          </div>
+        </div>
+        <SignOutButton variant="row" className="mt-1" touch={touch} />
+        {/* F5 Trust Center: footer territory per Kaan (privacy/policy placement) —
+            a quiet link, deliberately outside the main nav. */}
+        <Link
+          href={`/w/${workspace.slug}/trust`}
+          onClick={onNavigate}
+          className={cn(
+            "mt-2 px-3 text-xs text-ink-faint transition-colors hover:text-ink",
+            touch ? "flex min-h-[44px] items-center" : "block",
+          )}
+        >
+          Trust Center: how your people&apos;s words are handled
+        </Link>
+      </div>
+    </>
   );
 }
 

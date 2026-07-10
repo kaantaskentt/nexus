@@ -21,6 +21,7 @@ vi.mock("framer-motion", () => ({
             animate,
             exit,
             transition,
+            variants,
             whileHover,
             whileTap,
             children,
@@ -30,6 +31,7 @@ vi.mock("framer-motion", () => ({
           void animate;
           void exit;
           void transition;
+          void variants;
           void whileHover;
           void whileTap;
           return React.createElement(tag, { ...rest, ref }, children as React.ReactNode);
