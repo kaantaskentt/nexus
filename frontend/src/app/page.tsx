@@ -11,7 +11,7 @@ import {
   Check,
 } from "lucide-react";
 import brand from "@/lib/brand";
-import { list_workspaces, list_plans, list_snapshot_cards } from "@/lib/live-server";
+import { list_workspaces } from "@/lib/live-server";
 import { BrandMark } from "@/components/BrandMark";
 import { SignOutButton } from "@/components/SignOutButton";
 import { AddCompany } from "@/components/AddCompany";
@@ -26,21 +26,14 @@ import { WorkspaceReorderList } from "@/components/WorkspaceReorderList";
 export default async function Home() {
   const workspaces = await list_workspaces();
 
-  // Pull counts per workspace so the card reflects real records, not hardcoded JSX.
-  const withCounts = await Promise.all(
-    workspaces.map(async (ws) => {
-      const [plans, cards] = await Promise.all([
-        list_plans(ws.id),
-        list_snapshot_cards(ws.id),
-      ]);
-      return {
-        ws,
-        interviews: plans.length,
-        areas: cards.filter((c) => c.card_type === "area_to_investigate").length,
-        prepared: cards.length > 0,
-      };
-    }),
-  );
+  // Counts come pre-aggregated from GET /api/workspaces (one query), so the picker no
+  // longer fans out list_plans + list_snapshot_cards per workspace (lane 5.3 stress fix).
+  const withCounts = workspaces.map((ws) => ({
+    ws,
+    interviews: ws.plans_count ?? 0,
+    areas: ws.areas_count ?? 0,
+    prepared: ws.prepared ?? false,
+  }));
 
   // Ordering now lives on the backend (sort_order nulls-last, then created_at desc — the
   // admin's dragged arrangement, falling back to newest-first). No client reversal: order

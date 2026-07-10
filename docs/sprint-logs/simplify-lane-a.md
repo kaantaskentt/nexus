@@ -132,3 +132,17 @@ where the real cost is network fan-out that is called out explicitly.
 
 Robustness fixes landed from this lane's failure-class hunt: 72b3cef (cascade cancels
 queued jobs), 71181bb (handlers no-op on gone session).
+
+## A28 pre-review — picker N+1 fix (lead approved, ADD-3.3 collision cleared)
+
+Today: the root page.tsx fetches list_workspaces, then for EACH workspace fetches
+list_plans + list_snapshot_cards (2N+1 no-store round trips) purely to render three counts.
+After: GET /api/workspaces computes plans_count, areas_count (area_to_investigate in the
+latest snapshot batch) and prepared (any snapshot card exists) in ONE aggregate query;
+page.tsx maps those straight onto the card model and drops the per-workspace Promise.all
+(and the now-unused imports). Hero / is_internal / is_demo semantics stay byte-identical:
+prepared="any card exists" equals the old "latest batch non-empty" because batches are
+append-only, and the hero find() over the same order is unchanged. Simpler AND faster for
+Kaan's first screen: one request instead of hundreds. Backend test asserts the three
+counts (incl. latest-batch-only areas) on a seeded tenant; the list-shape tests
+(test_workspaces / client_seats / internal_flags / reorder) stay green with the added keys.

@@ -83,6 +83,23 @@ async def create_workspace(body: NewWorkspaceIn):
     return {**dict(row), "config": _loads(row["config"])}
 
 
+# The picker (frontend root page) needs three per-workspace counts to render each card:
+# interview-plan count, "areas to investigate" in the latest snapshot batch, and whether
+# the tenant is prepared (has any snapshot cards) — the last drives the hero guard. These
+# used to be N separate list_plans + list_snapshot_cards calls PER workspace (a 2N+1 round
+# trip fan-out, lane 5.3 stress finding); folding them into ONE aggregate here is the fix.
+# `prepared` = "any snapshot card exists" is equivalent to the old "latest batch non-empty"
+# because batches are append-only, so the hero/is_demo semantics stay byte-identical.
+_PICKER_COUNTS = """,
+  (select count(*) from interview_plans p where p.workspace_id = w.id) as plans_count,
+  (select count(*) from snapshot_cards s
+     where s.workspace_id = w.id and s.card_type = 'area_to_investigate'
+       and s.render_batch = (select max(render_batch) from snapshot_cards
+                             where workspace_id = w.id)) as areas_count,
+  exists(select 1 from snapshot_cards s where s.workspace_id = w.id) as prepared
+"""
+
+
 @router.get("")
 async def list_workspaces(user_id: str = Depends(require_admin)):
     pool = await get_pool()
@@ -91,10 +108,10 @@ async def list_workspaces(user_id: str = Depends(require_admin)):
     seat = await resolve_seat(user_id)
     # Internal scaffolding (eval/e2e/voice tenants, demo-respondent dup) is hidden by
     # default — it must never render as a real client workspace in the picker (#22).
+    base = f"select w.id, w.name, w.slug, w.industry, w.is_demo, w.config{_PICKER_COUNTS} from workspaces w "
     if seat["role"] == "client":
         rows = await pool.fetch(
-            "select id, name, slug, industry, is_demo, config from workspaces "
-            "where is_internal = false and id = $1", seat["workspace_id"]
+            base + "where w.is_internal = false and w.id = $1", seat["workspace_id"]
         )
     else:
         # Order semantics live HERE, in one place (the frontend used to `.reverse()`):
@@ -102,9 +119,8 @@ async def list_workspaces(user_id: str = Depends(require_admin)):
         # untouched (sort_order null) falls to newest-first, so a picker nobody has
         # reordered looks exactly as it did before this column existed.
         rows = await pool.fetch(
-            "select id, name, slug, industry, is_demo, config from workspaces "
-            "where is_internal = false "
-            "order by sort_order asc nulls last, created_at desc"
+            base + "where w.is_internal = false "
+            "order by w.sort_order asc nulls last, w.created_at desc"
         )
     return [{**dict(r), "config": _loads(r["config"])} for r in rows]
 

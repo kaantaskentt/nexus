@@ -47,6 +47,11 @@ export interface Workspace {
   slug: string;
   industry: string | null;
   is_demo: boolean;
+  // Picker-only aggregate counts (GET /api/workspaces computes them in one query so the
+  // root page renders each card without a per-workspace fan-out). Absent on other callers.
+  plans_count?: number;
+  areas_count?: number;
+  prepared?: boolean;
   // workspaces.config jsonb — display fields the picker/shell render (the live
   // router will need to select `config`; the demo carries it inline).
   config?: {
