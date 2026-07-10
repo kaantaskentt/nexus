@@ -31,6 +31,13 @@ import { cn } from "@/lib/cn";
 type Modality = "voice" | "text";
 type Phase = "collect" | "drafting" | "intake" | "assign";
 
+// The intake chat phase calls POST /plans/{id}/intake, which needs the `intake_interviewer`
+// agent seat (migration 0025). Until that seat is applied on an environment the endpoint 500s,
+// so the phase is gated OFF by default and enabled per-env (NEXT_PUBLIC_INTAKE_ENABLED=1) once
+// the seat lands — with it off, the flow goes drafting -> assign exactly as before ADD-4 (the
+// required-fields change stays live either way).
+const INTAKE_ENABLED = process.env.NEXT_PUBLIC_INTAKE_ENABLED === "1";
+
 // K3 assign flow (image18): the ONE screen that replaces CustomPlanDoor -> plan page ->
 // SendInterviewFlow. Collect the person, let Nexus draft the plan from the records, then
 // shape delivery + refine the draft in one place. "Review interview" carries the plan into
@@ -115,8 +122,9 @@ export function AssignInterviewFlow({
         setModality((m) => (p.mission?.delivery?.modality as Modality) ?? m);
         setEmail((e) => p.mission?.delivery?.email ?? e);
         // ADDENDUM 4.2: before the plan is shown, the intake agent asks 2-3 sharp
-        // follow-ups that shape the draft. The plan exists now, so intake can edit it.
-        setPhase("intake");
+        // follow-ups that shape the draft. The plan exists now, so intake can edit it —
+        // but only when the intake seat is live (gated); otherwise straight to assign.
+        setPhase(INTAKE_ENABLED ? "intake" : "assign");
         setBusy(false);
       }
     };
@@ -179,7 +187,7 @@ export function AssignInterviewFlow({
     );
   }
 
-  if (phase === "intake" && planId) {
+  if (phase === "intake" && planId && INTAKE_ENABLED) {
     // Refresh the plan when leaving intake so the assign screen shows the shaped draft.
     const finishIntake = async () => {
       await refreshPlan();
