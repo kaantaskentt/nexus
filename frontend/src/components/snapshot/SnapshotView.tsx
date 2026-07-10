@@ -30,6 +30,7 @@ import { useEscapeClose } from "@/lib/useEscapeClose";
 import brand from "@/lib/brand";
 import { GeneratePlanButton } from "./GeneratePlanButton";
 import { ExportReportButton } from "./ExportReportButton";
+import { AddMoreContextButton } from "./AddMoreContextButton";
 
 // The quote a claim shows in the evidence rail (same fallback EvidenceQuoteCard uses).
 function railQuote(c: ClaimRecord): string {
@@ -152,7 +153,14 @@ export function SnapshotView({
                 What {brand.product_name} understands about {workspace.name} so far.
               </p>
             </div>
-            <ExportReportButton workspaceId={workspace.id} workspaceSlug={workspace.slug} />
+            {/* ANYTIME-CONTEXT: add more context any time (primary) sits beside Export (quiet
+                secondary). Only where the context-call beta is enabled — the mint 403s otherwise. */}
+            <div className="flex shrink-0 flex-wrap items-start justify-end gap-2">
+              {workspace.config?.beta_context_call && (
+                <AddMoreContextButton workspaceId={workspace.id} />
+              )}
+              <ExportReportButton workspaceId={workspace.id} workspaceSlug={workspace.slug} />
+            </div>
           </div>
 
           <div className="mt-5 flex items-center gap-4">
