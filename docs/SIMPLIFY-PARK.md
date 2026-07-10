@@ -1,4 +1,12 @@
-# SIMPLIFY PARK — July 9 ~22:45 PDT (monthly spend limit hit; ALL lanes dead)
+# SIMPLIFY PARK — July 9 ~22:45 PDT (spend limit; lanes since revived)
+
+**P1 STATUS UPDATE (July 10 ~00:35 PDT): FIXED + VERIFIED END-TO-END.** Root cause =
+missing clientMessages allow-list on the VAPI assistants (+ a latent client-event-stream
+fragility). Fixed by c203bc5 (config, re-provisioned + GET-verified live) + ce5ec3f
+(grows-only server-transcript backstop, self-heals within one 2.5s poll). PROVEN by a
+real driven headless call: the opener rendered live token-by-token post-fix. **Emre is
+unblocked for voice testing** once seam-4 round-2's bundle deploy reports green
+(carries the frontend backstop + sim consent copy). Kaan's mic call = feel check only.
 
 **UNBLOCK (Kaan, one action): raise the limit at claude.ai/settings/usage.** Watchtower
 resumes lanes after. This file is the exact resume state.
