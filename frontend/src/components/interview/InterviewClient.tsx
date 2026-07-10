@@ -138,11 +138,25 @@ export function InterviewClient({ token }: { token: string }) {
         });
       }
     };
+    let doneReply: string | null = null;
     try {
       await streamTurn(token, message, {
         onDelta: grow,
-        onDone: (res) => setOfferPause(res.should_offer_pause),
+        onDone: (res) => {
+          doneReply = res.reply ?? null;
+          setOfferPause(res.should_offer_pause);
+        },
       });
+      // The stream completed but no token frames ever rendered a bubble. The `done` frame
+      // still carries the full assembled reply, so render THAT rather than show nothing
+      // (never a silent no-reply). If the reply is genuinely empty, surface an honest retry.
+      if (!streamed) {
+        if (doneReply && (doneReply as string).trim()) {
+          setMessages((m) => [...m, { role: "interviewer", text: doneReply as string }]);
+        } else {
+          setTurnError(true);
+        }
+      }
     } catch (e) {
       // Streaming failed. Drop the partial (incomplete) bubble, then fall back to the
       // non-streaming turn. If the server already stored the respondent turn (generate
