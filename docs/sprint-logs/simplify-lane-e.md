@@ -91,3 +91,12 @@ absence for a normal interview. Frontend tsc 0 / vitest 102. Open (minor, flagge
 consent BODY copy is still the generic employee-interview wording; the persistent marker now
 disambiguates it, so this is polish, not a trust gap — and it touches the drift-guarded
 consentCopy + F8, so it's a separate change.
+
+## #10 FIX 2 — simulation consent copy (team-lead final fixup)
+Consent for a scenario-run session no longer reads as an employee interview. consentCopy()
+gains a simulation branch: plainly a practice run against <workflow>, nothing reaches company
+records, and NONE of the real-person promises (attribution, anonymity/role-only sharing,
+recording-into-snapshot) render — there's no person to promise. Written as template literals
+so the consent drift guard skips it (it governs real-respondent promises); guard stays green
+(18 lines in sync), employee + context branches byte-unchanged. Landed bea9fac. Test pins the
+sim/employee/context split. Frontend tsc 0 / eslint clean / vitest 105.
