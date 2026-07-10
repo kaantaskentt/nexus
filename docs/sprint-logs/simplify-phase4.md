@@ -179,6 +179,31 @@ Findings + fixes will be logged below this checklist as I drive each, once mini-
   he tests text. VOICE not drivable headless (needs mic), likely OK post ADD-3.1. Escalated to
   team-lead → route to LiveRoom/E owner (text-mode SSE consumer for /turn/stream). Evidence:
   REFINE-roleplay-text-noreply.png + the /turn/stream 200 with no rendered reply.
+  **ROOT CAUSE CONFIRMED + my earlier framing CORRECTED (honesty):** lane-e couldn't repro
+  and had shown the happy path works; I re-drove in a CLEAN isolated session (fresh voice-test
+  jM9T6…, text-from-start) and captured the /turn/stream RESPONSE BODY. It returns 200 + full
+  frames + done — NOT a failed/empty stream. The `done` frame for my FIRST typed turn is
+  `{"reply":"Hi, I'm Nexus. Thanks for making the time… what do you actually do here?… not
+  just the repricing part?", "turn_index":1}` — i.e. the server replied with the interviewer's
+  OPENER as turn 1, because the opener never fired as turn 0: the UI shows a placeholder opener
+  but no real agent turn-0, so the user's first answer becomes turn 0 and the agent returns its
+  greeting as turn 1. This is lane-e's ordering bug (68d63ff1: turn0=respondent, turn1=agent
+  opener). CORRECTIONS: (1) NOT a "general SSE consumer never renders" bug — I over-framed it;
+  the stream is fine. (2) NOT roleplay-only — a NORMAL voice_test hits it too; it's the
+  "Start by text instead" (text-from-start) path for ALL kinds (switch-to-text works because
+  the opener already fired). Fix = fire the opener as a real turn 0 on text-from-start init.
+  Root cause + exact trace handed to lane-e. (Lesson: capture the response BODY before naming
+  a root cause — my first "SSE render" guess was wrong; the body settled it.)
+- **[P2 — Interviews hub stat clarity, lane-design flagged, my lane K]** Chips read "4 in
+  planning · 4 interviews · 3 completed". NOT a math bug — each count is individually correct
+  (4 plans in the planning stage = 1 Awaiting-approval + 3 Draft; 4 interview RUNS = 1
+  Not-started + 3 Completed; 3 of those completed). But they are three NON-summing lifecycle
+  buckets shown as equal chips, so a reader intuitively sums "4 + 3" and is confused (exactly
+  lane-design's + a CEO's reaction; the two 4s being coincidental makes it worse). Fix is
+  labeling/grouping, not counting — e.g. "4 plans in progress · 4 interviews (3 completed)".
+  Proposing to lane-k (owns InterviewsView); P2, not blocking.
+- **[✓ IA consolidation confirmed]** /insights → /home and /knowledge → /context redirect
+  (ADD-3.3), Insights dropped from nav — deliberate, not dead links (lane-design confirmed).
 - **[✓ A · Company mgmt — verified driven]** Picker: every row has a "Drag to reorder" handle
   AND a per-company "Delete" button (Feedback-A both features present). Opened the delete
   dialog (preview only, did NOT confirm): "Delete company — This will permanently remove Test
