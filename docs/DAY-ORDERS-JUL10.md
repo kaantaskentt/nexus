@@ -583,6 +583,14 @@ UNCAVEATED; his one open adjudication = the hedged-ideation line (item 3b).
    repo — docs/kaan-inbox/room-mockups/ is EMPTY. Re-commit the screenshots there or
    send the Figma file/node. Lane proceeds on the orders' text + R1 + token system
    meanwhile (rail mounted per R1's own wording; pixel-exact + welcome 3-box copy held).
+   PLUS two decisions the lane surfaced (honest flags, ce6fd6b):
+   - "After the call" 3rd welcome box needs NEW locked copy (consentCopy is two locked
+     sync-guarded groups; splitting them at a guessed point isn't honest). Kaan+Emre
+     wording, or the welcome ships 2-box.
+   - "Preview questions" (mockup 2 button) is an UNBUILT FEATURE, not display polish —
+     in scope or not? A dead button will not ship.
+   Also accepted from the lane: captured-cards already at bar; waveform-footer N/A per
+   R1 (respondent counts-only); text-mode rail-orb = mockup call.
 3d. ✅ RESOLVED by Kaan (39ce84b): all three deviations APPROVED as recommended —
    v1/v2 gate split stands, voice-primary stands, first-call-CONFIRMED trust asymmetry
    deliberately KEPT (ontology ruling settled). Original items kept below for the record:
