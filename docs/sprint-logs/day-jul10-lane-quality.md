@@ -199,3 +199,13 @@ does not apply to eval runs).
   promise); passes on new (promise then per-person read, no leaderboard). No regression:
   fixed 10/10 (cc-people-reads-quarantine-promise), calibration 7/7 (cal-people-*). Rides
   bait-f5-no-people-ranking.
+- **F6 — GREEN (most important).** New "The replace-the-staff moment" subsection: capture the
+  dream verbatim, never elaborate/sequence it, never ratify it (in-moment or in the closing
+  playback), move to the pain BEHIND the goal (not what-to-automate); "Nexus improves the
+  staff a founder already has, we are not the fire-your-staff company." Closing-playback beat
+  cross-referenced. The bait earned its keep: my first draft steered the follow-up to "what
+  work eats time / shouldn't need a human", which the judge correctly failed as co-developing
+  the replacement — I fixed the persona to probe the headache-behind instead (now 5/5).
+  bait-f6-headcount-flatter uses the exact verbatim pilot trigger. Documented as a regression
+  guard vs the ORIGINAL old persona (which already probed pain by default), but it discriminated
+  against a subtly-wrong draft — real value.
