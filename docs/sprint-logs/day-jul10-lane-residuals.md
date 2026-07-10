@@ -28,18 +28,30 @@ definitive for "pushed" and "migration parked"; team-lead confirms against the l
 | **2026f50** | ADD-4 — new-interview intake agent prompt (`intake-interviewer.md`) + **migration 0025_intake_agent.sql** (seeds the `intake_interviewer` agent_config, strong seat) | YES, in main | **0025 PARKED** — not in conftest.MIGRATIONS, not applied to the test container (conftest line 48 comment confirms), presumed not applied to live | apply 0025 to the live DB **then** backend deploy; feature stays behind `NEXT_PUBLIC_INTAKE_ENABLED` (used in AssignInterviewFlow.tsx + live.ts) |
 | **96b4580** | ADD-3.3 — IA consolidation *proposal* (docs only: simplify-lane-shell.md) | YES, in main | none | NOTHING to deploy — it is a proposal doc, not a runtime payload. "Deployed" is N/A; it is a decision for Kaan/team-lead, not a ship. |
 
-**Seam-B migration order (numeric, before backend deploy):** `0025_intake_agent.sql` (parked
-intake seed) → `0026_harm_incidents.sql` (lane-s7's, already in conftest). Both pending on live.
-0026 is lane-s7's to own; I only flag the ordering.
+**Seam-B migrations — CORRECTED after read-only prod verification** (Supabase MCP, project
+`kfauvrvigxxctrnuegoo` = "nexus", metadata only, no client data — team-lead assigned item 1 as
+read-only, so I ran the deploy-state check):
+- **0025 intake seed is ALREADY LIVE on prod** — `agent_configs` has the `intake_interviewer`
+  row (count = 1). The DAY-ORDERS seam-B note "0025 intake seed still pending" is **STALE**.
+  0025 uses `on conflict do nothing`, so re-applying is a harmless no-op; the migrations-first
+  step does not actually need it.
+- **0026_harm_incidents is genuinely PENDING** — `to_regclass('public.harm_incidents')` = null.
+  lane-s7's NEW migration this sprint; apply before lane-s7's backend deploy at seam B. This is
+  the real migrations-first item (not 0025).
+- Method caveat: prod `schema_migrations` UNDER-REPORTS (lists only foundation + 0002-0004 +
+  0016-0017) because migrations are applied BY HAND, not via the Supabase CLI — `list_migrations`
+  is not a reliable "what's applied" oracle here. Verified by table/row existence instead:
+  report_shares (0018), live_captures (0024), automation_opportunities (0017), sealed_flags
+  (0011) all EXIST; harm_incidents (0026) does not; intake config (0025) is present.
+- Still team-lead's to confirm (no DB signal; needs Railway/Vercel): deployed BACKEND image
+  includes 2026f50 (the live intake config points at `prompts/agents/intake-interviewer.md`; a
+  stale image would 404 that prompt) and deployed FRONTEND includes bea9fac.
 
-**Offer:** I can run a read-only live confirmation (Supabase MCP `list_migrations` +
-`select count(*) from agent_configs where agent_name='intake_interviewer'`) if team-lead wants
-it — I have not, to avoid touching the live tenant without the nod (prod verification is your
-seam). Say the word.
-
-**VERDICT (item 1):** bea9fac = deploy-pending (frontend, no migration). 2026f50 =
-deploy-pending AND migration-0025-pending (parked). 96b4580 = not a shippable payload (docs
-proposal). Nothing here needs a lane-residuals commit; all three are seam-B/team-lead actions.
+**VERDICT (item 1):** bea9fac = frontend deploy-pending (no migration). 2026f50 = intake
+**migration 0025 already live**, so only the backend CODE deploy is pending (feature still
+behind `NEXT_PUBLIC_INTAKE_ENABLED`). 96b4580 = not a shippable payload (docs proposal). The
+one genuine migrations-first action for seam B is **0026_harm_incidents (lane-s7)**, not 0025.
+Nothing here needs a lane-residuals commit; all remaining actions are seam-B/team-lead.
 
 ---
 
@@ -140,8 +152,10 @@ not landed, so the invite-email→canonical-consent sync cannot be verified or b
 **VERDICT (item 6):** blocked on human-gated CEO-consent wording; re-open when that lands.
 
 ## Build/verdict log
-- item 1 (parked payloads) — READ-ONLY inventory, no commit. bea9fac + 2026f50 deploy-pending
-  (2026f50 also needs parked migration 0025); 96b4580 is a docs proposal, not a payload.
+- item 1 (parked payloads) — READ-ONLY inventory + prod verification, no commit. bea9fac +
+  2026f50 = CODE deploy-pending; **migration 0025 is already live on prod** (verified), so the
+  only genuine migrations-first item for seam B is 0026_harm_incidents (lane-s7). 96b4580 is a
+  docs proposal, not a payload.
 - item 2 (automation orphan) — READ-ONLY verdict: NOT orphaned (Home+report render correctly,
   gated on non-empty; absence was upstream compile/data), no commit.
 - item 3 (Marmara thin-compile) — prod-gated (real prospect); prepared seam read-only steps.
