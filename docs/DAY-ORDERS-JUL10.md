@@ -287,7 +287,8 @@ file's log section before NEXT.
   de-identification, data layer; b48386c CLAIMED/GUESS/untagged qualifier + honest
   footer; 7b6d87c placeholder-step drop + contiguous numbering; 7129c75 patch-29
   promoted, A24=ADOPT per pilot §3 ratification, staged patch tombstoned, 4 eval cases;
-  873fbaf bg-scrim backdrop). 20 affected tests green. Deploys at seam B (no migrations
+  873fbaf bg-scrim backdrop; + e9d4ef8 perception-gap.md header cites #29/pilot-§3 with
+  supersede-not-edit framing). 20 affected tests green. Deploys at seam B (no migrations
   of its own; 0025 still pending first). Teammate reassigned → LANE-RESIDUALS.
 - KAAN FLAG (batched, client-facing copy): report footer reworded for honesty — old
   "findings carry their own confidence levels; nothing here is edited by hand" (second
