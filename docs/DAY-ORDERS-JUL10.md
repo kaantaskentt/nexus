@@ -460,6 +460,17 @@ action list #1).
   post-processed — VAPI speaks from the prompt; the CI bait is the structural net,
   same shape as the identity fix). Emre-clearance caveat SOFTENS to: "fixed+deployed;
   permanent CI baits landing".
+- ⚠ CAVEAT RESTORED (team-lead owning a sequencing error): quality's INDEPENDENT re-run
+  contradicts s7's 36/36 self-verification — RED still emits 182 in some packet-serving
+  samples + soft-gauges via if/if framing, and a NEW defect surfaced: YELLOW
+  over-escalates (crisis lines served for a no-danger insomnia vent ~1/3). A.5 was an
+  IMPROVEMENT (deploying it was still right — the old pin was worse) but the gate is
+  NOT green and I softened the Emre caveat prematurely — caveat back at full strength.
+  LESSON (process, for tasks/lessons.md): author-run verification is not a deploy gate
+  when an independent suite exists and is minutes away; deploy on improvement evidence
+  if live exposure demands it, but never soften the user-facing caveat until the
+  INDEPENDENT gate is green. s7 iterating (name 182 explicitly · kill if/if gauging ·
+  calibrate YELLOW); F9+AMBER green+landed (8/8). Seam A.6 deploys on quality's green.
 
 ## KAAN ACTION LIST (consolidated, batched — nothing blocks the lanes)
 1. ~~SendGrid key~~ SUPERSEDED by R6 (in-app inbox; email optional).
