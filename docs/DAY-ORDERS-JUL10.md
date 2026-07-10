@@ -261,6 +261,9 @@ file's log section before NEXT.
   _IDENTITY_GUARD on both personas + both transports (cached prefix, A14-neutral); 3 new
   invariant tests bite; affected suites 15/15, full backend 252p/1s. Prod driven verify
   (3 bait replays, both kinds) queued for seam A. Eval specs → lane-quality at wave 3.
+- REASSIGNMENT: the lane-sec teammate now runs LANE-SPLIT (R1), pulled forward from
+  wave 3 (no dependency on mest/s7/export; interview/** components unowned). Backend
+  live-captures endpoint ownership to be announced in day-jul10-lane-split.md.
 
 ## Infra note (from lane-sec, binds all lanes)
 Concurrent full-suite runs against the shared test DB (localhost:55432) deadlock on the
