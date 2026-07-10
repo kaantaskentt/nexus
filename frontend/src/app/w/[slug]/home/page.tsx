@@ -77,7 +77,13 @@ export default async function HomePage({ params }: { params: { slug: string } })
 
   const snapshotBody = (
     <>
-      <SnapshotView workspace={workspace} cards={cards} claims={claims} personPlans={personPlans} />
+      <SnapshotView
+        workspace={workspace}
+        cards={cards}
+        claims={claims}
+        personPlans={personPlans}
+        workflowCount={workflows.length}
+      />
       {pulse?.enabled && <WeeklyPulseCard pulse={pulse} />}
       <AddTranscriptDoor
         workspaceId={workspace.id}
