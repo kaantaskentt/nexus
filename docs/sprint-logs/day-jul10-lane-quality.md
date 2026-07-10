@@ -187,7 +187,24 @@ does not apply to eval runs).
   shows, the robust hardening is a capture-side scan (artifacts.py, granted) writing the flag once. Not
   doing that now — the confirmed records + explicit-only contract + fail-closed test are sufficient and
   minimal. Recommend proceeding with the records-based path; will add the capture-side scan only if variance appears.
-- **STATUS: awaiting team-lead approval before I apply.**
+- **STATUS: APPROVED (team-lead) with the evidence-citation amendment — BUILT + GREEN.**
+- **Amendment (team-lead): structural, not contractual.** A false positive (LLM asserts an
+  authorization the records don't support) is a consent harm, so the contract now emits
+  `evidence_record_id` and `plan.py` VALIDATES it against this workspace's client-visible
+  records before writing authorized:true. `_records_block` now prefixes each record with its
+  `[id]` so the generator can cite one; a missing / hallucinated / cross-tenant / unresolvable
+  id forces `{"authorized": false}` + a WARNING log. Stored: `{authorized, source_session_id,
+  evidence_record_id}`. handoff.py reads `.authorized` truthy (isinstance-guarded; absent or
+  legacy bare-bool → byte-identical False).
+- **Verdict — GREEN.** 3 files (plan.py, plan-generator.md, handoff.py [unowned, announced];
+  NOT routers/plans.py) + 8 tests. `test_plan_generate.py` + `test_handoff.py` = 20 passed,
+  0 failed (F7 tests: valid-citation → authorized+source+evidence; no-claim → false;
+  true-without-id → forced false; hallucinated-id + cross-tenant-id → forced false; records
+  block exposes ids; end-to-end generate_plan writes the mission dict; handoff nested-read
+  true + fail-closed absent/false). No regression on existing plan/handoff tests.
+- **Follow-up trigger (logged per team-lead):** the boolean is re-derived per-plan by the LLM;
+  if per-plan variance ever appears, the robust hardening is a capture-side scan (artifacts.py
+  context gate, granted) computing the workspace authorization ONCE. Not needed now.
 
 ---
 

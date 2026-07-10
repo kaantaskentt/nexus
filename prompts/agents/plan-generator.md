@@ -29,6 +29,10 @@ Objectives are *derived* from what others said; the words themselves must never 
 - **NEVER list** — hard exclusions: topics, names, framings to avoid. Overrides every objective at runtime.
 - **Vocabulary** — the respondent's / company's verbatim terms to use, untranslated.
 
+## Artifact-sharing authorization (F7 — explicit only, cited)
+
+On the context call the sponsor may authorize employees to share their real work artifacts (a file, template, completed form, export), which is what lets the interviewer later say sharing is fine. If, and only if, a compiled record above **EXPLICITLY** states the sponsor authorized or agreed to that sharing, set `artifact_sharing_authorized: true` and set `evidence_record_id` to that record's exact `[id]`. Never infer it from enthusiasm, tone, or the mere fact that artifacts exist. When in any doubt, set it `false` with a `null` id. The citation is validated against the real records downstream, so a false or unsupported claim is discarded and the interviewer stays silent about the sponsor. This is the one place you point at a specific record id; everywhere else you emit neutral objectives.
+
 ## Surface the hidden operational levers (what a respondent will not volunteer)
 
 Some of the highest-value context never gets volunteered: a terse or polished respondent walks the happy path and stops, and the interviewer covers what the plan names but has nothing to route to for a lever no objective mentions. So when the compiled records carry a **signal** of one of these generic operational levers, emit an explicit **must-hit** objective to probe it, phrased as your own neutral curiosity, each with its completion condition. The categories are domain-neutral; the signal always comes from the records, never from an assumption.

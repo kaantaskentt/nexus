@@ -46,11 +46,20 @@ OUTPUT_CONTRACT = """
   "suggested_questions": [
     {"text": "open, non-leading, episodic question", "topic": "process_step", "audience": "does_the_work"}
   ],
-  "time_budget_minutes": 30
+  "time_budget_minutes": 30,
+  "artifact_sharing_authorized": false,
+  "evidence_record_id": null
 }
 ```
 
 Objectives only — never claim text, quotes, or who-said-what. No em-dashes in authored text.
+
+`artifact_sharing_authorized`: true ONLY if a record above EXPLICITLY states the sponsor
+authorized or agreed that employees may share their real work artifacts (a file, template,
+completed form, export). Never infer it from enthusiasm, tone, or the mere existence of
+artifacts. When true, set `evidence_record_id` to the exact [id] of that record; when in any
+doubt, set false and null. This is checked against the real records, so a citation that does
+not back an explicit authorization is discarded.
 """
 
 
@@ -65,15 +74,48 @@ async def _records_block(pool, workspace_id: str) -> str:
     # Deny-by-default: client_visible_claims omits quarantined rows, so sentiment about a
     # named person can never reach the plan generator (non-negotiable #4).
     rows = await pool.fetch(
-        "select kind, topic, tag, claim_text from client_visible_claims "
+        "select id, kind, topic, tag, claim_text from client_visible_claims "
         "where workspace_id = $1 order by created_at limit 120",
         workspace_id,
     )
     if not rows:
         return "(no compiled records yet)"
+    # The leading [id] lets the generator cite the exact record backing an artifact-sharing
+    # authorization (F7). It is an internal reference only, never client-visible text.
     return "\n".join(
-        f"- {r['kind']}/{r['topic']}/{r['tag'] or 'n/a'}: {r['claim_text']}" for r in rows
+        f"- [{r['id']}] {r['kind']}/{r['topic']}/{r['tag'] or 'n/a'}: {r['claim_text']}" for r in rows
     )
+
+
+async def _resolve_artifact_authorization(pool, workspace_id: str, plan_id: str, data: dict) -> dict:
+    """F7: validated artifact-sharing authorization state for the mission.
+
+    The context call captures the sponsor authorizing employees to share their work
+    artifacts; the interviewer only invokes that blessing when it is real. A false positive
+    is a consent harm (an employee told "the founder authorized this" untruthfully), so this
+    is STRUCTURAL, not contractual: authorized is true ONLY when the generator cited an
+    evidence record id that actually exists in THIS workspace's client-visible records. A
+    missing or invalid citation forces authorized=false with a warning; an absent claim is
+    false. Fail-closed — absent behaves byte-identically to before this fix.
+    """
+    if not data.get("artifact_sharing_authorized"):
+        return {"authorized": False}
+    rec_id = str(data.get("evidence_record_id") or "").strip()
+    if not rec_id:
+        log.warning("plan %s: artifact_sharing_authorized asserted with no evidence_record_id — forcing false", plan_id)
+        return {"authorized": False}
+    # id::text compare avoids a cast error on a malformed/hallucinated id (just no match).
+    row = await pool.fetchrow(
+        "select session_id from client_visible_claims where id::text = $1 and workspace_id = $2",
+        rec_id, workspace_id,
+    )
+    if row is None:
+        log.warning(
+            "plan %s: artifact authorization cites record %s not in workspace %s — forcing false",
+            plan_id, rec_id, workspace_id,
+        )
+        return {"authorized": False}
+    return {"authorized": True, "source_session_id": str(row["session_id"]), "evidence_record_id": rec_id}
 
 
 async def generate_plan(payload: dict) -> None:
@@ -123,6 +165,7 @@ async def generate_plan(payload: dict) -> None:
         max_tokens=4000,
     )
 
+    artifact_auth = await _resolve_artifact_authorization(pool, workspace_id, plan_id, data)
     mission = {
         "goal": data.get("goal", ""),
         "interview_topic": data.get("interview_topic") or data.get("goal", ""),
@@ -135,6 +178,9 @@ async def generate_plan(payload: dict) -> None:
         # Honest provenance: the admin's own focus text, kept on the mission so the
         # review screen shows what this plan was aimed at. None for record-derived plans.
         "custom_focus": custom_goal or None,
+        # F7: validated sponsor authorization for employees to share artifacts. Structural,
+        # fail-closed, auditable ({authorized, source_session_id, evidence_record_id}).
+        "artifact_sharing_authorized": artifact_auth,
     }
     questions = data.get("suggested_questions") or []
     never = data.get("never_list") or []

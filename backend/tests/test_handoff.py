@@ -128,3 +128,33 @@ async def test_handoff_strips_attribution_from_never_list(db):
     assert any("Harrods" in n for n in package["never_list"])
     assert not any("Burak is slow" in n for n in package["never_list"])
     assert "founder said" not in json.dumps(package)
+
+
+async def _plan_with_mission(db, ws, mission):
+    return await db.fetchval(
+        "insert into interview_plans (workspace_id, state, mission, suggested_questions, never_list) "
+        "values ($1,'APPROVED',$2,'[]','[]') returning id",
+        ws, json.dumps(mission),
+    )
+
+
+async def test_handoff_artifact_authorization_reads_nested_true(db):
+    """F7: build_handoff reads .authorized from the mission's {authorized,...} dict."""
+    ws = await make_workspace(db, industry="jewelry")
+    plan_id = await _plan_with_mission(db, ws, {
+        "goal": "g", "topics": [],
+        "artifact_sharing_authorized": {"authorized": True, "source_session_id": "s", "evidence_record_id": "r"},
+    })
+    package = await build_handoff_package(str(plan_id))
+    assert package["artifact_sharing_authorized"] is True
+
+
+async def test_handoff_artifact_authorization_fail_closed(db):
+    """Absent (every plan before F7) and explicit-false both read False — byte-identical to
+    the pre-F7 behavior, so the interviewer never invokes an authorization nobody gave."""
+    ws = await make_workspace(db, industry="jewelry")
+    for mission in ({"goal": "g", "topics": []},
+                    {"goal": "g", "topics": [], "artifact_sharing_authorized": {"authorized": False}}):
+        plan_id = await _plan_with_mission(db, ws, mission)
+        package = await build_handoff_package(str(plan_id))
+        assert package["artifact_sharing_authorized"] is False

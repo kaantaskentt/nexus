@@ -134,6 +134,15 @@ async def build_handoff_package(plan_id: str) -> dict:
     # remaining free-text field — never_list included (backstop for the refine-chat
     # guard) — is run through the attribution guard so a dirty plan (leaked quotes in
     # an objective, or an attribution-shaped prohibition) still can't reach the agent.
+    # Stage-3 v04 artifact ask (A24, F7): the exec's authorization for employees to share
+    # work artifacts, captured on the CEO call and recorded on the plan mission as an
+    # auditable {authorized, source_session_id, evidence_record_id}. The interviewer only
+    # invokes the sponsor's blessing when authorized is True — it never asserts an
+    # authorization nobody captured. Fail-closed: an absent value (every plan before F7) or a
+    # legacy bare bool reads exactly as before — False unless explicitly true.
+    _auth = mission.get("artifact_sharing_authorized")
+    artifact_sharing_authorized = bool(_auth.get("authorized")) if isinstance(_auth, dict) else bool(_auth)
+
     package = {
         "goal": _strip_attribution(mission.get("goal")),
         "objectives": _strip_attribution(mission.get("topics", mission.get("objectives", []))),
@@ -145,11 +154,7 @@ async def build_handoff_package(plan_id: str) -> dict:
             mission.get("definition_of_done", mission.get("DoD"))
         ),
         "time_budget_minutes": mission.get("time_budget_minutes", DEFAULT_TIME_BUDGET_MIN),
-        # Stage-3 v04 artifact ask (A24): the exec's authorization for employees to share
-        # work artifacts, captured on the CEO call and recorded on the plan mission. The
-        # interviewer only invokes the sponsor's blessing when this is True — it never
-        # asserts an authorization nobody captured.
-        "artifact_sharing_authorized": bool(mission.get("artifact_sharing_authorized")),
+        "artifact_sharing_authorized": artifact_sharing_authorized,
     }
 
     await pool.execute(

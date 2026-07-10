@@ -241,3 +241,91 @@ async def test_generate_heals_stale_entity_id_via_name(db):
         "select e.canonical_name from interview_plans p join entities e on e.id=p.interviewee_id "
         "where p.id=$1", plan_id)
     assert name == "Melis"
+
+
+# ── F7: validated artifact-sharing authorization state ───────────────────────────────
+from app.pipeline.plan import _resolve_artifact_authorization, _records_block  # noqa: E402
+from tests.conftest import make_session  # noqa: E402
+
+
+async def _auth_record(db, ws, session_id=None):
+    return await db.fetchval(
+        "insert into claim_records (workspace_id, session_id, kind, topic, tag, claim_text, quarantined) "
+        "values ($1,$2,'statement','tool','CONFIRMED',"
+        "'The founder confirmed employees may share their completed questionnaires', false) returning id",
+        ws, session_id,
+    )
+
+
+async def test_f7_authorization_valid_citation(db):
+    """Explicit authorization + a real cited record → authorized true, with the record's
+    session as auditable source and the evidence id retained."""
+    ws = await make_workspace(db, industry="jewelry")
+    sess = await make_session(db, ws)
+    rec_id = await _auth_record(db, ws, sess)
+    out = await _resolve_artifact_authorization(
+        db, str(ws), "plan-x",
+        {"artifact_sharing_authorized": True, "evidence_record_id": str(rec_id)},
+    )
+    assert out["authorized"] is True
+    assert out["evidence_record_id"] == str(rec_id)
+    assert out["source_session_id"] == str(sess)
+
+
+async def test_f7_no_claim_is_false(db):
+    ws = await make_workspace(db, industry="jewelry")
+    assert await _resolve_artifact_authorization(db, str(ws), "p", {}) == {"authorized": False}
+
+
+async def test_f7_true_without_evidence_id_forced_false(db):
+    """The amendment: a bare true with no citation is discarded (fail-closed)."""
+    ws = await make_workspace(db, industry="jewelry")
+    out = await _resolve_artifact_authorization(db, str(ws), "p", {"artifact_sharing_authorized": True})
+    assert out == {"authorized": False}
+
+
+async def test_f7_hallucinated_or_foreign_record_forced_false(db):
+    """A citation that doesn't resolve to a record IN THIS workspace is discarded — a
+    hallucinated id, and (cross-tenant guard) a real id from another workspace, both force false."""
+    ws = await make_workspace(db, industry="jewelry")
+    ws2 = await make_workspace(db, industry="jewelry")
+    foreign = await _auth_record(db, ws2, None)
+    bogus = await _resolve_artifact_authorization(
+        db, str(ws), "p", {"artifact_sharing_authorized": True, "evidence_record_id": "not-a-real-id"})
+    assert bogus == {"authorized": False}
+    cross = await _resolve_artifact_authorization(
+        db, str(ws), "p", {"artifact_sharing_authorized": True, "evidence_record_id": str(foreign)})
+    assert cross == {"authorized": False}
+
+
+async def test_f7_records_block_exposes_ids(db):
+    """The generator can only cite an id the records block actually shows it."""
+    ws = await make_workspace(db, industry="jewelry")
+    rec_id = await _auth_record(db, ws, None)
+    block = await _records_block(db, str(ws))
+    assert f"[{rec_id}]" in block
+
+
+async def test_f7_generate_plan_sets_mission_authorization(db, monkeypatch):
+    """End to end: the job writes the validated authorization dict onto the mission."""
+    ws = await make_workspace(db, industry="jewelry")
+    person = await _person(db, ws)
+    sess = await make_session(db, ws)
+    rec_id = await _auth_record(db, ws, sess)
+    plan_id = await db.fetchval(
+        "insert into interview_plans (workspace_id, interviewee_id, state) values ($1,$2,'DRAFT') returning id",
+        ws, person,
+    )
+
+    async def _fake(agent_name, user_content, **kw):
+        return {"goal": "g", "topics": [], "suggested_questions": [], "never_list": [],
+                "artifact_sharing_authorized": True, "evidence_record_id": str(rec_id)}
+
+    monkeypatch.setattr("app.pipeline.plan.run_agent_json", _fake)
+    await plan_pipeline.generate_plan({"plan_id": str(plan_id), "workspace_id": str(ws)})
+
+    mission = (await db.fetchrow("select mission from interview_plans where id=$1", plan_id))["mission"]
+    auth = mission["artifact_sharing_authorized"]
+    assert auth["authorized"] is True
+    assert auth["source_session_id"] == str(sess)
+    assert auth["evidence_record_id"] == str(rec_id)
