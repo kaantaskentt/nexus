@@ -176,7 +176,10 @@ async def compile_session(payload: dict) -> None:
         session_id,
     )
     if session is None:
-        raise RuntimeError(f"compile_session: no session {session_id}")
+        # Session deleted before this queued job ran (admin delete). A gone session is a
+        # terminal no-op, not a retryable crash — same stance as generate_roleplay_debrief.
+        log.info("compile_session: session %s is gone — skipping", session_id)
+        return
     # A voice test is the admin auditioning the assistant, a roleplay is the admin
     # playing a fictional character (F8) — never data. Nothing said in either may enter
     # the record store (premium audit P1-3 / marathon F8); the guard lives here, at the

@@ -7,11 +7,14 @@ the store without redesign — A10: this measures understanding, never promises 
 Every step traces to claim record ids; nothing enters that isn't in the store."""
 
 import json
+import logging
 import re
 
 from ..db import get_pool
 from ..llm import run_agent_json
 from ..queue import handles
+
+log = logging.getLogger("nexus.workflow")
 
 _UUID = re.compile(r"^[0-9a-f-]{36}$", re.I)
 
@@ -68,7 +71,10 @@ async def build_workflow_schema(payload: dict) -> None:
         "select workspace_id from interview_sessions where id = $1", session_id
     )
     if session is None:
-        raise RuntimeError(f"build_workflow_schema: no session {session_id}")
+        # Session deleted before this queued job ran (admin delete). A gone session is a
+        # terminal no-op, not a retryable crash — same stance as generate_roleplay_debrief.
+        log.info("build_workflow_schema: session %s is gone — skipping", session_id)
+        return
     workspace_id = str(session["workspace_id"])
 
     rows = await pool.fetch(

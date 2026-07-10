@@ -146,3 +146,16 @@ append-only, and the hero find() over the same order is unchanged. Simpler AND f
 Kaan's first screen: one request instead of hundreds. Backend test asserts the three
 counts (incl. latest-batch-only areas) on a seeded tenant; the list-shape tests
 (test_workspaces / client_seats / internal_flags / reorder) stay green with the added keys.
+
+## A28 pre-review — finish the missing-session handler sweep (lead: 71181bb was partial)
+
+A second watchtower red (build_workflow_schema) proved the "session torn down before its
+queued job runs" class covers ~6 handlers, not the 2 in 71181bb. Today: compile_session
+(compiler.py) and build_workflow_schema (workflow.py) still `raise RuntimeError` on a gone
+session -> crash-retry-fail into dead rows. After: both log-and-return, copying
+disclosure.py's exact pattern. Already-correct, left as-is (verified + pinned by tests, no
+code change): score_interview_quality (quality.py already returns), render_snapshot
+(snapshot.py is workspace-scoped, no session fetch, no-ops on no claims). DELIBERATELY left
+raising: interview.py _prepare_turn (L121) — the LIVE turn path, where a missing session is
+a genuine error, not a torn-down-before-job race; noted so the next sweep won't "fix" it.
+One scoped commit, tests green.
