@@ -44,6 +44,7 @@ MIGRATIONS = [
     BACKEND / "db" / "migrations" / "0021_context_call.sql",
     BACKEND / "db" / "migrations" / "0022_workspace_sort_order.sql",
     BACKEND / "db" / "migrations" / "0023_workflow_taxonomy.sql",
+    BACKEND / "db" / "migrations" / "0024_live_captures.sql",
 ]
 
 

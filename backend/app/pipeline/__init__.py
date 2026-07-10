@@ -11,6 +11,7 @@ from . import (  # noqa: F401  (importing registers each @handles job)
     handoff,
     heuristics,
     interview,
+    live_capture,
     pain,
     plan,
     quality,

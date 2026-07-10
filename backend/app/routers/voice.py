@@ -27,6 +27,7 @@ from fastapi.responses import StreamingResponse
 from ..config import get_settings
 from ..db import get_pool
 from ..pipeline.interview import _START_NUDGE, stream_reply
+from ..pipeline.live_capture import enqueue_extraction
 from ..queue import enqueue
 
 router = APIRouter()
@@ -169,6 +170,13 @@ async def webhook(request: Request, authorization: str | None = Header(default=N
             json.dumps(message.get("words")) if message.get("words") else None,
             (message.get("artifact") or {}).get("recordingUrl"),
         )
+        # SIMPLIFY E: fire the live-capture extractor off a committed RESPONDENT turn (the
+        # webhook transcript path, mirroring the text finalize). Fire-and-forget display
+        # data; the handler firewalls non-capture kinds. Voice stores one utterance per
+        # speech chunk, so a long answer fires several small deltas — the extractor dedups,
+        # so captures accrue without duplicating (make-it-work-then-cheap).
+        if speaker == "respondent":
+            await enqueue_extraction(str(session_id), idx)
 
     elif mtype == "end-of-call-report":
         artifact = message.get("artifact") or {}
