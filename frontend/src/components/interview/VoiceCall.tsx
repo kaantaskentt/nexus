@@ -11,7 +11,7 @@ import { mergeTurns } from "@/lib/transcript-display";
 import { InterviewProgress } from "./InterviewProgress";
 import { LiveRoom } from "./LiveRoom";
 import { CapturedLivePanel } from "./CapturedLivePanel";
-import { getCallVoice } from "@/lib/respondent";
+import { getCallVoice, getSession } from "@/lib/respondent";
 import { getLiveCapturesByToken, useLiveCaptures } from "@/lib/liveCaptures";
 
 // Voice interview widget (#26, upgraded to the live room in #40). A real VAPI web call —
@@ -151,6 +151,35 @@ export function VoiceCall({
     const id = window.setInterval(() => setElapsedSec(Math.floor((Date.now() - started) / 1000)), 1000);
     return () => window.clearInterval(id);
   }, [state]);
+
+  // ADD-3.1 (P1): resilient transcript backstop. The live transcript is driven by VAPI
+  // client `message` events, but that client subscription can silently drop mid-call (Kaan's
+  // live test: a full conversation stored via the webhook, screen frozen on the opener). The
+  // server transcript (written by the voice webhook) is the source of truth, so while the
+  // call is up we poll it and ADOPT it whenever it is ahead of what the client has rendered.
+  // This can only GROW the transcript, never regress the faster live client turns — a pure
+  // safety net so a dropped subscription can no longer freeze the room.
+  useEffect(() => {
+    if (state !== "live" && state !== "reconnecting") return;
+    let alive = true;
+    const sync = async () => {
+      if (document.hidden) return;
+      try {
+        const s = await getSession(token);
+        const merged = mergeTurns(
+          s.transcript.map((t) => ({
+            role: t.speaker === "agent" ? ("assistant" as const) : ("user" as const),
+            text: t.text,
+          })),
+        );
+        if (alive) setTurns((prev) => (merged.length > prev.length ? merged : prev));
+      } catch {
+        /* keep the live client turns; the next tick retries */
+      }
+    };
+    const id = window.setInterval(sync, 2500);
+    return () => { alive = false; window.clearInterval(id); };
+  }, [state, token]);
 
   async function startCall(opts?: { reconnect?: boolean }) {
     const reconnect = opts?.reconnect ?? false;
