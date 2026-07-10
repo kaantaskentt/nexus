@@ -202,3 +202,21 @@ changed surface at both widths, delta review, honest verdicts in SPRINT-STATE.
 Audit findings from the Phase 0 prod walk merge into lane scope as they land
 (docs/SIMPLIFY-AUDIT.md); anything the walk finds that this plan doesn't cover gets
 appended here with its own commit before build starts on the affected surface.
+
+## 8 · Phase 0 audit amendments (appended as findings land)
+
+**AMENDMENT 1 (P0, foundation) — responsive AppShell.** The prod walk found there is NO
+mobile layout on any /w/* page: the sidebar never collapses, so at 390px content is
+crushed to a ~154px column with horizontal overflow (plan detail renders 29,407px tall).
+Fix is a shared foundation change, not per-feature: AppShell gains a real breakpoint —
+sidebar becomes a slide-over drawer behind a header hamburger below lg, content goes
+full-width, tap targets sized for touch. Lands BEFORE the E room and K hub builds so
+their 390px acceptance is testable. Own lane, own commit (A28: strictly simpler for the
+user — the pages become usable on a phone).
+
+**AMENDMENT 2 (folds into K scope, task #9):** /interviews and /plans are two separate
+pages listing the same people with overlapping status pills and report links, and /plans
+has no nav item despite being central — confirms the plan's K3 hub combine; the K lane
+treats merging these two lists into the staged hub as in-scope, not optional. The
+suggested-questions column measured at 254px wide x 1614px tall with three mixed content
+widths on one page — the K1 relayout acceptance numbers.
