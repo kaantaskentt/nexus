@@ -181,3 +181,11 @@ Drill-downs: AreaDrawer (open questions), EvidenceDrawer (sources & evidence).
 - COMMIT 4 (#17 naming): Report "Follow up on" → "Open questions" (lane-k's Report already landed; no collision).
 Verify each: tsc + lint + full suite; screenshot-verify Home at 1440 + 390 via Playwright (now available)
 before the nav retirement. Not prod-deployed from here — seam runner ships.
+
+### VERDICT — ADD-3.3 IA consolidation SHIPPED (code complete, green)
+Built the whole owned sequence on main@0d4b52b (lane-dbg's v2 base, never reverted):
+- 2fd4881 — Report "Follow up on" → "Open questions" (single vocabulary; compose-follow-up action + StageRail stage name untouched).
+- 3b7be95 — FOLD: Key findings + Automation opportunities now render on Home (Snapshot v2), ported verbatim from InsightsView (ROI-as-estimate, role-quarantine, ?highlight= workflow deep-link with from=home + inline-evidence fallback). home/page.tsx fetches get_insights + get_automation (degrade to no section on a hiccup).
+- b89114b — RETIRE: Insights out of AppShell NAV + NavKey (BarChart3 removed); SEG_TO_NAV `insights`→`home`; /w/[slug]/insights → server redirect to Home; InsightsView.tsx deleted (457 lines gone). Nav shrinks by one, exactly as Kaan confirmed.
+Green: tsc clean, eslint whole-project clean, frontend suite 107/107, `next build` green (/insights now a 166 B redirect stub, Home carries the fold).
+OUTSTANDING (handed to audit/re-walk #19): screenshot-verify the assembled Home at 1440 + 390 (fold sections read right, no horizontal overflow, Insights gone from nav, /insights redirects). Not run from here — the audit lane holds the browser; every verify pass must drive the real surface (park lesson). Offering to run the Playwright pass myself if the lead prefers.
