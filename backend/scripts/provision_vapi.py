@@ -125,6 +125,11 @@ def _assistant_config(name: str, voice: dict, base_url: str, secret: str) -> dic
         "artifactPlan": {"recordingEnabled": True, "videoRecordingEnabled": False},
         "server": {"url": f"{base_url}/api/voice/webhook", "headers": auth},
         "serverMessages": ["transcript", "end-of-call-report", "status-update"],
+        # The browser SDK only receives events named in clientMessages; without this the
+        # LiveRoom got ZERO transcript events and the on-screen transcript froze on the
+        # opener while the DB filled from serverMessages (ADDENDUM 3.1 P1, broke at the
+        # July 9 re-provision 16a2614). Keep in sync with app/vapi_assistant.py.
+        "clientMessages": ["transcript", "status-update", "speech-update"],
         # (5) MINIMAL analysis — the Stage 4 compiler is the single extraction authority.
         "analysisPlan": {
             "summaryPlan": {"enabled": False},
