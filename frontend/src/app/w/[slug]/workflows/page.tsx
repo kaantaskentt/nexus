@@ -2,10 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Network, ArrowRight } from "lucide-react";
 import { get_workspace, get_workflows } from "@/lib/live-server";
+import { WorkflowsList } from "@/components/workflow/WorkflowsList";
 
-// Workflows (A21 IA): every mapped workflow in this company, one row each, opening the
-// editable workflow view. Workflows are compiled from interviews — the empty state says
-// exactly that and points at the action that produces one.
+// Workflows (A21 IA + SIMPLIFY C): every mapped workflow in this company, grouped by
+// department when Nexus is confident of one, each opening the editable workflow view.
+// Workflows are compiled from interviews — the empty state says exactly that and points at
+// the action that produces one.
 export const dynamic = "force-dynamic";
 
 export default async function WorkflowsPage({ params }: { params: { slug: string } }) {
@@ -15,10 +17,7 @@ export default async function WorkflowsPage({ params }: { params: { slug: string
   const workflows = await get_workflows(workspace.id);
 
   return (
-    // Density floor, light version (Kaan-approved proposal 3, B-amended): a short list
-    // sits vertically centered in the canvas instead of top-third over dead cream, and
-    // one quiet line of context closes the page. No rail, no new chrome.
-    <div className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-4xl flex-col justify-center px-8 py-10">
+    <div className="mx-auto max-w-4xl px-8 py-10">
       <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink">Workflows</h1>
       <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-ink-soft">
         How the work actually flows, mapped from interviews step by step. Open a workflow
@@ -41,36 +40,13 @@ export default async function WorkflowsPage({ params }: { params: { slug: string
           </Link>
         </div>
       ) : (
-        <div className="card-hairline mt-8 divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
-          {workflows.map((w) => (
-            <Link
-              key={w.workflow_id}
-              href={`/w/${workspace.slug}/workflow/${w.workflow_id}`}
-              className="group flex items-center gap-4 px-4 py-4 transition-colors hover:bg-surface-raised"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-ink ring-1 ring-inset ring-accent/15">
-                <Network className="h-4.5 w-4.5 h-[18px] w-[18px]" strokeWidth={1.75} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="font-medium text-ink">{w.name}</div>
-                <div className="mt-0.5 text-xs text-ink-faint tabular">
-                  {w.step_count} {w.step_count === 1 ? "step" : "steps"}
-                </div>
-              </div>
-              <ArrowRight
-                className="h-4 w-4 text-ink-faint transition-transform group-hover:translate-x-0.5"
-                strokeWidth={2}
-              />
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {workflows.length > 0 && (
-        <p className="mt-4 text-xs text-ink-faint">
-          This is every workflow mapped so far. Each new interview can add one or refine
-          one that is already here.
-        </p>
+        <>
+          <WorkflowsList slug={workspace.slug} workflows={workflows} />
+          <p className="mt-4 text-xs text-ink-faint">
+            This is every workflow mapped so far. Each new interview can add one or refine
+            one that is already here.
+          </p>
+        </>
       )}
     </div>
   );

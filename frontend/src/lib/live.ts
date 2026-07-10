@@ -784,6 +784,15 @@ export interface WorkflowSummary {
   name: string;
   session_id: string | null;
   step_count: number;
+  // SIMPLIFY C: one-line client-language summary (null for pre-taxonomy rows until backfill);
+  // a coarse department when Nexus is confident (null = unclassified, renders under All);
+  // a derived confidence rollup from the verified-step share; and an updated_at that reflects
+  // the latest edit overlay so "Updated Xh ago" is truthful.
+  description: string | null;
+  department: string | null;
+  confidence: "high" | "medium" | "low" | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export async function get_workflows(workspace_id: string, token?: string): Promise<WorkflowSummary[]> {
