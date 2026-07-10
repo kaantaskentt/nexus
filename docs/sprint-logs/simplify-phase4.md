@@ -42,3 +42,12 @@ Scope: 72 files, +5783/-959 since pre-sprint (a8a9a98).
       context-call welcome (D), interview hub + plan page (K), live room (E/F), play-
       character (J). Confirm the P0 mobile fix (AppShell drawer) holds on each.
 - [ ] Delta review vs pre-sprint behavior: no tested capability regressed.
+
+## Lessons (honesty log)
+- **A copy/href repoint IS a behavior change — run the component's test file before
+  committing, even for "mechanical" fixes.** My 7569c84 changed GeneratePlanButton's href
+  /plans → /interviews but did not run generate-plan-button.test.tsx, which still asserted
+  the old href and went red at HEAD (lane-dbg landed the one-line test fix). Correction
+  applied immediately: the greenlit naming unification (f3c6dd0) was linted + its nearest
+  test run and grep-checked for asserted strings BEFORE commit. Standing habit for this lane:
+  grep src/test for the old value and run the touching test file before any string/route change.
