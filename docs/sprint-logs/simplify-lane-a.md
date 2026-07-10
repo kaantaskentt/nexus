@@ -99,3 +99,36 @@ depth with robustness-1: even a job that slips past the cascade cancel (or a leg
 vanished session) completes as a no-op instead of a dead retry loop. Simpler/safer: a gone
 session is a normal terminal state, not an error. Tests: each handler no-ops on a missing
 session and does not raise.
+
+## STRESS FINDINGS (lane 5.3, task #22) — ranked by embarrassment-in-front-of-a-CEO
+
+Method: disposable `nexus_stress` DB on the local container (A12-safe, torn down after),
+all migrations applied, in-process ASGI endpoints timed at increasing scale. No LLM keys
+locally, so LLM/VAPI write paths (turn engine, compile, live-room reconnect storms) were
+NOT exercised here — flagged for lane-E / a keyed run. Numbers are in-process (no network);
+where the real cost is network fan-out that is called out explicitly.
+
+1. **Picker N+1 (HIGH — the one CEO-visible risk). NOT fixed (collision-avoidance).**
+   `frontend/src/app/page.tsx` fans out TWO backend calls PER workspace (list_plans +
+   list_snapshot_cards) purely to render the counts ("N suggested interviews", "N areas to
+   investigate", prepared badge). That is 2N+1 backend round trips per picker load. In
+   process it is 180-420ms at N=10-200 (noisy, no network); over the real Vercel->Railway
+   hop each is a separate `cache: no-store` HTTPS call, so at 50-200 companies this becomes
+   seconds and a request-fan-out spike on the backend. All three counts are derivable in ONE
+   aggregate SQL query. RECOMMENDATION: add plans_count / areas_count / prepared to
+   list_workspaces (additive, or a dedicated /picker endpoint) and drop the per-ws Promise.all
+   in page.tsx. Held rather than shipped because page.tsx sits under the active ADD-3.3 IA
+   consolidation lane — flagged to lead to avoid a merge collision; I can take it once that
+   lane settles, or ADD-3.3 folds it in.
+
+2. **Company cascade delete: 1.25s on a 10k-claim / 300-workflow tenant (LOW).** Acceptable
+   for a type-to-confirm admin action with a spinner; logged, no fix. Set-based deletes in
+   one transaction — scales linearly, no pathological blowup.
+
+3. **Everything else scales fine (verified green):** get_insights 17.7ms @ 10k claims;
+   get_workflows 12ms @ 500 workflows (the correlated-subquery confidence derive is one
+   round trip, not an N+1); reorder 59ms @ 200 workspaces; parse_transcript 4ms @ 500k
+   chars / 6.7k turns; GET /api/workspaces (list+order) 6ms @ 200. No slow paths found here.
+
+Robustness fixes landed from this lane's failure-class hunt: 72b3cef (cascade cancels
+queued jobs), 71181bb (handlers no-op on gone session).
