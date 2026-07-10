@@ -57,3 +57,20 @@ Two gates held for lead/Kaan:
 2. DELETE ENABLE — COMMIT 3 inert. Enable after Kaan confirms §6-1: backend env
    WORKSPACE_DELETE_ENABLED=1 + frontend env NEXT_PUBLIC_WORKSPACE_DELETE_ENABLED=1. The
    sealed-flag deletion departure is an open ruling with Emre.
+
+## A28 pre-review — RESERVE (backfill plan/apply split, task #14)
+
+Today: `scripts/backfill_workflow_taxonomy.py` calls the LLM classifier
+(`classify_workflow_taxonomy`) in BOTH `--dry-run` and `--apply`. Because the classifier
+is non-deterministic, the dry-run's printed rows are not a pre-image of what `--apply`
+writes (seam-2 saw the same rows get different departments between runs) — so the dry-run
+reviews nothing. After: a plan/apply split. `--plan out.json` runs the classifier ONCE and
+writes the exact proposed rows (workflow id, slug, name, description, department;
+confident-only preserved — unclear department stays null). A human reviews the file.
+`--apply out.json` writes EXACTLY those rows with ZERO LLM calls, and refuses (writes
+nothing) if the DB drifted underneath: a planned workflow id is gone, or a column the plan
+means to fill is no longer null. Simpler or more complex for the operator? SIMPLER and
+SAFER — what you review is byte-for-byte what gets written; a drifted DB aborts loudly
+instead of silently writing stale guesses. Not run against live (seam-2 owns live writes).
+Tests cover the apply-from-file path with the classifier monkeypatched to raise, proving
+apply makes no LLM call, plus the two drift-refusal cases.
