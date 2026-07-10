@@ -205,3 +205,39 @@ one dead button becomes a real action, the other stops promising a view that has
 route before it can be honest; hidden until then. Also flagged: the drawer's "Add context (chat)"
 button is a no-op that looks live — left for the #20 chat-agent lane, not in this scope.)
 Edits the audit-verified AreaDrawer → telling audit-walk directly so their re-drive covers it.
+
+## ═══ NIGHT CLOSE (lane-shell) — July 10 ~02:50 PDT ═══
+
+SHIPPED (git-green: tsc + eslint + frontend suite 109/109; pushed to origin/main):
+- P1 voice-transcript freeze: DIAGNOSED (missing VAPI clientMessages allow-list; serverMessages
+  fed the DB while the browser SDK got zero transcript events). Handed to seam-1, who shipped it
+  (c203bc5 config + re-provision, ce5ec3f server-transcript backstop) and verified via a real
+  driven headless call. Emre unblocked. My poll-backfill idea became lane-e's logged follow-up.
+- ADD-3.3 IA consolidation (Kaan-confirmed Insights fold), built on lane-dbg's v2 base (0d4b52b):
+  · 2fd4881 Report "Follow up on" → "Open questions" (single next-round-questions vocabulary).
+  · 3b7be95 fold: Key findings + Automation opportunities relocated onto Home/Snapshot v2
+    (ported FindingCard + opportunity card verbatim; ?highlight= deep-link kept, from=home).
+  · b89114b retire: Insights out of AppShell NAV/NavKey, /insights → 307 redirect to Home,
+    InsightsView.tsx deleted (457 lines). Nav shrinks by one.
+  · fd6559b self-caught regression: workflow back-link handled from=home/insights → Home
+    (was falling through to "Back to Workflows" + a dead "Back to Insights").
+- ADD-5 dead buttons (Kaan's ask), Home AreaDrawer:
+  · 51d3692 "Add to Interview Plan" WIRED → /interviews/new pre-seeded (who_holds name/role +
+    open-question focus); "View full transcript" REMOVED (no clean context-call transcript route).
+  · 155ee50 "Add context (chat)" no-op REMOVED (looked live, did nothing).
+
+OPEN ITEMS / OWNERS:
+- **Un-driven surfaces (audit-walk):** ALL my ADD-3.3 + ADD-5 commits are git-green but NOT
+  prod-verified — prod was 0fd1f3d, which predates them; they ride the NEXT seam. audit-walk has
+  the full commit list (3b7be95/b89114b/2fd4881/fd6559b/51d3692/155ee50) to re-drive post-deploy:
+  Home fold sections, no-Insights nav + /insights redirect, workflow round-trip, AreaDrawer live
+  Add-to-Plan. Verify as one atomic IA change.
+- **Backend job-handler crash sweep (lane-a):** ROUTED with my read-only worklist —
+  compiler.py L178 + workflow.py L70 still raise on missing session (teardown-race red herrings);
+  copy disclosure.py/roleplay.py's log-and-return guard. (quality.py/snapshot.py to eyeball;
+  interview.py raise is a real live-turn error, keep.)
+- **Taste notes for Kaan:** (1) "View full transcript" on snapshot areas needs a real context-call
+  transcript route before it can be honest (hidden until then). (2) "a bad link is worse than a
+  clean removal" — the principle behind hiding rather than mis-wiring.
+
+CLEAN: no uncommitted work of mine; nothing mid-write. Standing down for the night — not resuming.

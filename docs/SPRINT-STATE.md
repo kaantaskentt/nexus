@@ -1081,3 +1081,16 @@ heuristic over null-session runs.
 **MORNING (Kaan, unchanged):** open prod · FIRST VOICE CALL (voice-modality interview from
 Burak's plan) · morning-review packet (blind golden labeling, Q1-Q3, F38+ proposals) ·
 taste veto batch · Artifact (V2 section).
+
+## NIGHT CLOSE — lane-shell (July 10 ~02:50 PDT)
+SHIPPED + pushed (git-green, tsc/eslint/109 tests): P1 transcript ROOT-CAUSE (missing VAPI
+clientMessages → seam-1 shipped c203bc5+ce5ec3f, driven-verified, Emre unblocked); ADD-3.3
+Insights FOLD end-to-end — Report "Open questions" rename (2fd4881), findings+opportunities
+onto Home (3b7be95), nav/route retirement + InsightsView deleted (b89114b), workflow back-link
+fix (fd6559b); ADD-5 dead buttons — Add-to-Plan wired + View-transcript removed (51d3692),
+Add-context no-op removed (155ee50).
+OPEN: (1) my whole ADD-3.3+ADD-5 chain is un-driven on prod — prod predated it (0fd1f3d); rides
+next seam; **audit-walk** has the commit list to re-verify post-deploy. (2) backend job-handler
+raise-on-missing-session sweep ROUTED to **lane-a** (compiler.py L178 + workflow.py L70; copy
+disclosure.py's guard). (3) Kaan taste: "View full transcript" needs a real context-call
+transcript route before un-hiding. Full detail in docs/sprint-logs/simplify-lane-shell.md.
