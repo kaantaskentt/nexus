@@ -1,0 +1,47 @@
+{
+  "_source": "docs/emre-inbox/section-7-imminent-harm.md Appendix A (per-jurisdiction crisis resource packets). Config, not prompt-baked (A14). The agent SERVES these packets in-room; it NEVER reads the counsel/legal column (reviewer-only, deliberately absent from this file).",
+  "_note": "Nexus operates in two markets. Both packets are injected into the disclosure personas via {{RESOURCE_PACKET}}; the agent serves the region-appropriate one from the conversation's language/context (there is no per-session jurisdiction field yet — when a third market is added, jurisdiction resolution earns its wiring). Official numbers only. Adding a market = adding one packet here, plus a reviewer-maintained counsel row kept OUT of this file.",
+  "packets": {
+    "usa": {
+      "label": "the United States",
+      "resources": [
+        {
+          "name": "988 Suicide & Crisis Lifeline",
+          "contact": "call or text 988",
+          "for": "suicidal thoughts, a mental-health crisis, or emotional distress",
+          "hours": "24/7, free and confidential"
+        },
+        {
+          "name": "Crisis Text Line",
+          "contact": "text HOME to 741741",
+          "for": "any crisis, text-based support",
+          "hours": "24/7"
+        },
+        {
+          "name": "NAMI HelpLine",
+          "contact": "1-800-950-6264",
+          "for": "mental-health information and support",
+          "hours": "see nami.org for current hours"
+        }
+      ]
+    },
+    "turkey": {
+      "label": "Türkiye",
+      "resources": [
+        {
+          "name": "112 Acil Çağrı Merkezi (Emergency)",
+          "contact": "112",
+          "for": "immediate danger to life, or a medical or safety emergency",
+          "hours": "7/24"
+        },
+        {
+          "name": "Alo 183 Sosyal Destek Hattı (Ministry of Family and Social Services)",
+          "contact": "183",
+          "for": "social support, and domestic violence or abuse of women, children, the elderly, and people with disabilities",
+          "hours": "7/24, free and confidential"
+        }
+      ],
+      "_reviewer_note": "Fixes the prior erroneous 'Alo 143' row, which pointed at the Swiss line 143.ch. A dedicated Turkish suicide / mental-health crisis line is reviewer-maintained and PENDING verification: 182 is officially the MHRS health-appointment system (@MHRS_182, mhrs.gov.tr), NOT a crisis line, so it is deliberately excluded to avoid routing a person in danger to an appointment system. Reviewer/counsel confirms the correct line before adding it here."
+    }
+  }
+}

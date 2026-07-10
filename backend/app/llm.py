@@ -9,7 +9,7 @@ import time
 
 import anthropic
 
-from .config import REPO_ROOT, get_brand, get_settings
+from .config import REPO_ROOT, get_brand, get_settings, render_resource_packets
 from .db import get_pool
 
 log = logging.getLogger("nexus.llm")
@@ -65,6 +65,11 @@ def load_prompt(prompt_path: str, industry_block: str | None = None) -> str:
     prompt = (REPO_ROOT / prompt_path).read_text()
     prompt = prompt.replace("{{INDUSTRY_CALIBRATION}}", industry_block or "")
     prompt = prompt.replace("{{PRODUCT_NAME}}", get_brand()["product_name"])
+    # Section 7 crisis-resource packets (A14). A no-op for every prompt that lacks the
+    # token; only the disclosure personas carry {{RESOURCE_PACKET}}. Rendered lazily so a
+    # packet edit is picked up on the next load.
+    if "{{RESOURCE_PACKET}}" in prompt:
+        prompt = prompt.replace("{{RESOURCE_PACKET}}", render_resource_packets())
     return prompt
 
 

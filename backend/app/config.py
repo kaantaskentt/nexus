@@ -76,3 +76,26 @@ def get_settings() -> Settings:
 @lru_cache
 def get_brand() -> dict:
     return json.loads((REPO_ROOT / "config" / "brand.json").read_text())
+
+
+@lru_cache
+def get_resource_packets() -> dict:
+    """Section 7 Appendix A crisis-resource packets, per jurisdiction. Config, not
+    prompt-baked (A14): the disclosure personas serve these numbers; the domain-neutral
+    prompt never hardcodes them. The counsel/legal column is reviewer-only and is
+    deliberately NOT in this file."""
+    return json.loads((REPO_ROOT / "config" / "resource-packets.json").read_text())
+
+
+def render_resource_packets() -> str:
+    """Render the packets as the plain-text block injected at {{RESOURCE_PACKET}}. Keys
+    prefixed with '_' are file metadata (source/notes) and are skipped."""
+    packets = get_resource_packets().get("packets", {})
+    lines: list[str] = []
+    for jur in packets.values():
+        lines.append(f"For {jur['label']}:")
+        for r in jur.get("resources", []):
+            hours = f" ({r['hours']})" if r.get("hours") else ""
+            lines.append(f"- {r['name']}: {r['contact']}{hours}. For {r['for']}.")
+        lines.append("")
+    return "\n".join(lines).strip()
