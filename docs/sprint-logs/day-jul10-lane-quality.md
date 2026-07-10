@@ -157,6 +157,38 @@ does not apply to eval runs).
   extract the founder's artifact-sharing authorization from the context-call and set it on
   the plan mission. Announced to team-lead for sequencing before touching those files.
 
+#### F7 A28 PRE-REVIEW (for team-lead approval BEFORE building — granted surfaces per DAY-ORDERS b8e1701)
+- **Empirical check (team-lead's pivot): records DO carry the authorization.** Queried test-mest
+  (ws aeb5eed8…, context sessions 42c4f2f9 + pilot bcd1385e, both completed). The compiler already
+  produced explicit CONFIRMED records: *"...the respondent confirmed willingness to share these"* and
+  *"Rifat Boyaci or the first interviewed team member will bring the last real completed questionnaire
+  to the Nexus session."* So the plan-generator can read the authorization from records — the minimal
+  fix is NOT a silent no-op. Capture side (artifacts.py context gate) NOT needed for correctness.
+- **Today → after:** `mission["artifact_sharing_authorized"]` is never written → always False
+  (handoff.py:152 `bool(mission.get(...))`), so the interviewer never invokes the sponsor's blessing.
+  After: (a) `plan-generator.md` output contract gains `artifact_sharing_authorized` — true ONLY when a
+  compiled record EXPLICITLY states the sponsor authorized/confirmed employees may share their work
+  artifacts; NEVER inferred from tone/enthusiasm; (b) `plan.py` L126 sets
+  `mission["artifact_sharing_authorized"] = {"authorized": bool(data.get(...)), "source_session_id": <ws
+  completed context session id, fetched deterministically in plan.py>}`; absent/false → `{"authorized":
+  false}` (fail-closed); (c) `handoff.py:152` reads the nested `.authorized` truthy
+  (`bool((mission.get("artifact_sharing_authorized") or {}).get("authorized"))`) — byte-identical to
+  today whenever authorized is false/absent (interviewer stays silent about the sponsor).
+- **Simpler or more complex for the user?** No user-visible change when unauthorized (identical to today).
+  When authorized, the interviewer may truthfully say the sponsor is fine with sharing — the whole point
+  of the [F7] moment. Net: makes an existing promise TRUE; no new surface.
+- **Requirements honored:** {authorized, source_session_id} jsonb (auditable, no migration); explicit-only
+  (contract wording pins it, never tone); fail-closed (absent → False, byte-identical); a test asserts
+  authorized-context → true and no-authorization-context → false/absent → handoff False.
+- **Boundary:** touches plan.py (granted) + plan-generator.md (granted) + handoff.py (unowned consumer —
+  announcing). Does NOT touch routers/plans.py (lane-mest's). No artifacts.py change needed.
+- **Determinism caveat (flagged, not blocking):** the plan-generator is per-interviewee, so the boolean
+  is re-derived per plan (LLM). The authorization is really a workspace fact; if per-plan variance ever
+  shows, the robust hardening is a capture-side scan (artifacts.py, granted) writing the flag once. Not
+  doing that now — the confirmed records + explicit-only contract + fail-closed test are sufficient and
+  minimal. Recommend proceeding with the records-based path; will add the capture-side scan only if variance appears.
+- **STATUS: awaiting team-lead approval before I apply.**
+
 ---
 
 ## Transcript composer auto-grow (granted directly by team-lead; lane-split closed)
