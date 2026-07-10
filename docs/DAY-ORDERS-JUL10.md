@@ -371,9 +371,14 @@ file's log section before NEXT.
 6. Watchtower standing cadence for reconcile_snapshots (proposal in lane-mest log; not built).
 7. Standing: naming table (Emre veto) · delete-company §6-1 · Marmara manual read (above).
 8. Seam-close ledger: hidden test shells to reap once §6-1 arms delete — "S7 Drill
-   (internal)" (s7 disclosure drill, harm-incident row retained by design) + any split/mest
-   verify tenants that report as kept-hidden. Disposable admin verify-jul10@nexus.app is
+   (internal)" workspace 2fb919fa-0995-4057-b2f1-822d8711728d (2 retained amber incident
+   rows e47dc2b8/e69dfd6f = survival evidence, notify 'skipped') + any split/mest verify
+   tenants that report as kept-hidden. Disposable admin verify-jul10@nexus.app is
    deleted by team-lead at seam close (not a Kaan item; listed for transparency).
+   PROCESS NOTE (honest crossing, owned by lane-s7): their FIRST drill teardown used a
+   raw-SQL workspace delete — my no-SQL-teardown guidance arrived after their greenlit
+   run (message race). No gate flipped, no product endpoint bypassed, synthetic tenant
+   only. They flagged it unprompted and re-ran to spec. Divergence logged, closed.
 
 ## Infra note (from lane-sec, binds all lanes)
 Concurrent full-suite runs against the shared test DB (localhost:55432) deadlock on the
