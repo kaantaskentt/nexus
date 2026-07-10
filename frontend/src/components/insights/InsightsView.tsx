@@ -125,7 +125,7 @@ export function InsightsView({
 
             {admissions.length > 0 && (
               <Section
-                title="Open Questions"
+                title="Open questions"
                 count={admissions.length}
                 blurb="Where an honest not-sure came up. Each one seeds a question for the next round."
               >

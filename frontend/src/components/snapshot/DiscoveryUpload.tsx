@@ -299,7 +299,7 @@ export function DiscoveryUpload({
         <div className={append ? "hidden" : "mx-auto mt-6 grid max-w-lg grid-cols-1 gap-2 text-left sm:grid-cols-3"}>
           {[
             ["What Nexus Learned", "The company as described, each point tied to a quote"],
-            ["Areas to Investigate", "Open questions and gaps worth an interview"],
+            ["Open questions", "Gaps worth an interview"],
             ["People to Interview", "Suggested roles, by what they can confirm"],
           ].map(([t, d]) => (
             <div key={t} className="rounded-lg border border-dashed border-line-strong/70 bg-surface-sunken/50 px-3 py-2.5">
