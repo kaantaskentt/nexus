@@ -138,3 +138,46 @@ FOLDS. New target model:
   rename is the only independent piece and it collides with lane-k's active Report rewrite (coordinate).
 - Nothing to build in isolation right now → proposing the mapping + division to lead, correcting my
   earlier lane-dbg boundary note (fold, not stay), then sequencing my nav/route work behind Snapshot v2.
+
+### REVISION 2 (unblocked) — lead handed me task #16 (Snapshot v2) + blessed the mapping
+lane-dbg is spend-capped (Snapshot v2 parked mid-edit on `park/simplify-wip`); lane-k is capped but its
+Report rewrite already LANDED (K5 feee0b2) so no collision. Lead made me sole owner of `SnapshotView.tsx`
+and approved: opportunities → HOME (deep-link each to its workflow via existing `?highlight=`), conflicts +
+findings → Home, admissions/open-questions → Company Context + Home attention. Relocate, never delete.
+
+## Task #16 — ADD-3.2 Snapshot v2 (PRE-REVIEW) + hosts the folded Insights content
+
+**Reader-first, per ADD-3.2 (a story-glance / b needs-attention / c ONE next action / d rest demoted).**
+Adopting lane-dbg's parked WIP (`park/simplify-wip:SnapshotView.tsx`) — it already nails a/b/c/d and demotes
+the old competing evidence rail to a drill-down drawer. It "may not compile" only because it references an
+`EvidenceDrawer` it no longer defines; main HAS a working `EvidenceDrawer` (L556) with a matching signature,
+so COMMIT 1 = adopt the WIP + port that `EvidenceDrawer` + add the `surface-dark` token the WIP's tailwind
+change needs. Attribution: WIP is lane-dbg's; I finish + extend it.
+
+**Section order (fewer things, bigger hierarchy — the anti-dump):**
+1. Header (identity + plain subhead; Export a quiet secondary button)
+2. (a) The story so far — glance stats, REAL counts only (records/people/workflows/open questions/gaps)
+3. (c) Your next move — ONE prominent recommendation card, up top (was buried at the bottom)
+4. (b) Needs your attention — approvals awaiting the gate + open questions (areas), each with an action
+5. Perception gaps (conflicts) — first-class, folded from Insights (already in the WIP)
+6. **Automation opportunities — FOLDED from Insights (NEW)**; actionable band, each deep-links to its
+   workflow (`?highlight=`), honest ROI estimate styling preserved
+7. People to interview (roster, demoted)
+8. **Key findings / ranked pains — FOLDED from Insights (NEW)**; synthesis, demoted near "learned"
+9. What {brand} learned — clean statements, NO per-card trust chip (Kaan's "trust-chip noise" fix);
+   trust + evidence one click away in the Sources & evidence drawer
+10. Trust Center line
+Drill-downs: AreaDrawer (open questions), EvidenceDrawer (sources & evidence).
+
+**Commit plan (A28, one behavior each):**
+- COMMIT 1 (#16): adopt+finish the WIP reader-first redesign (compiles, no fold content yet). This IS the
+  3.2 presentation change; honesty rules untouchable (append-only render, real counts, trust ladder,
+  quarantine) — only presentation moves.
+- COMMIT 2 (#17 fold): plumb `get_insights` (key_findings) + `get_automation` into `home/page.tsx`; add the
+  Key findings + Automation opportunities sections to Snapshot v2 (port FindingCard + opportunity card from
+  InsightsView). This is where Insights content actually MOVES to Home.
+- COMMIT 3 (#17 nav): remove Insights from `AppShell.NAV` + `SEG_TO_NAV`; redirect `/w/[slug]/insights` →
+  Home; retire `InsightsView` + `insights/page.tsx`. Sequenced AFTER commit 2 (content hosted first).
+- COMMIT 4 (#17 naming): Report "Follow up on" → "Open questions" (lane-k's Report already landed; no collision).
+Verify each: tsc + lint + full suite; screenshot-verify Home at 1440 + 390 via Playwright (now available)
+before the nav retirement. Not prod-deployed from here — seam runner ships.
