@@ -159,6 +159,17 @@ consent-landing.md context-call Heading/Intro updated to match (source of truth 
   July 9). Page drops it; the agent still says it → small divergence. NOT touched. Match it?
 - Visual verify pending next deploy; will re-walk welcome 1440/390 with a realistic demo name.
 
+### WALK — new copy live on prod (f515667), PASS both widths (renamed tenant "Grand Harbor Hotel")
+1440 + 390: kicker + headline + subtitle "Build Nexus's first understanding of Grand Harbor
+Hotel." + one line render; all compliance boxes (incl. S7.8) intact; no overflow/legibility issue.
+- **REDUNDANCY CONFIRMED (Kaan's watch-item) — TASTE FLAG for his batch:** the kicker
+  "COMPANY CONTEXT CALL" and the headline "Company context call" are the SAME three words
+  stacked — reads repetitive at both widths. NOT fixed (Kaan taste call per team-lead).
+  Recommendation: keep the kicker as the category label, make the HEADLINE the company name
+  ("Grand Harbor Hotel"), and drop the company from the subtitle so it isn't named twice
+  (e.g. "Build Nexus's first understanding of how your company really works."). 30-sec call.
+  Screenshots: scratchpad/parity-screens/parity-welcome-newcopy-{1440,390}.png.
+
 ## Verdicts
 - Surface 2 (welcome hero orb) 747fd27. Surface 1 (agent-state rail) 1dda84c, test-green.
   Surface 3 (reconnect cards) 660db57. Seam-C1 gate walk PASS both widths (82befa4).
