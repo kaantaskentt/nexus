@@ -60,6 +60,13 @@ class Settings(BaseSettings):
     # routes reject calls without it. Empty in dev.
     voice_shared_secret: str = ""
 
+    # SIMPLIFY §6-1: hard gate on the DESTRUCTIVE company-delete endpoint. Default OFF —
+    # DELETE /api/workspaces/{id} returns 403 until this is flipped on, which does not
+    # happen until Kaan confirms the cascade semantics (sealed-flag ruling flagged to
+    # Emre). The preview endpoint and the type-to-confirm dialog ship without this; only
+    # the irreversible teardown waits behind it.
+    workspace_delete_enabled: bool = False
+
 
 @lru_cache
 def get_settings() -> Settings:

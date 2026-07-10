@@ -249,3 +249,101 @@ async def delete_interview(session_id: str) -> dict | None:
         "plan_revoked": plan_revoked,
         "snapshot_rerender_queued": rerender,
     }
+
+
+async def delete_workspace(workspace_id: str) -> dict | None:
+    """Tear a whole tenant down in one transaction (SIMPLIFY §6-1). The FastAPI route is
+    hard-gated (settings.workspace_delete_enabled, default OFF) so this never runs until
+    Kaan confirms the semantics. Returns the removal summary, or None for an unknown id.
+
+    Most workspace_id FKs have NO `on delete cascade`, so children are deleted by hand,
+    children-first: claim_records reference scrape_sources + entities, sessions reference
+    plans + rounds + entities, so those parents fall only after their referents. The few
+    tables that DO cascade on the workspace row (voice_configs, artifact_promises,
+    automation_opportunities, report_shares, user_roles) are also cleared explicitly here
+    so the summary is honest and the order is one readable list rather than half-implicit.
+
+    Deliberate, precedent-departing choices (see module note, flagged to Emre):
+      - sealed_flags are DELETED (an interview delete retains them; here the tenant that
+        gave them context is gone).
+      - agent_runs are RETAINED with workspace_id AND session_id nulled — the internal
+        cost/audit record outlives the client tenant."""
+    pool = await get_pool()
+    name = await pool.fetchval("select name from workspaces where id = $1", workspace_id)
+    if name is None:
+        return None
+    ws = str(workspace_id)
+
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            session_ids = [r["id"] for r in await conn.fetch(
+                "select id from interview_sessions where workspace_id = $1", ws)]
+            workflow_ids = [r["id"] for r in await conn.fetch(
+                "select id from workflows where workspace_id = $1", ws)]
+            plan_ids = [r["id"] for r in await conn.fetch(
+                "select id from interview_plans where workspace_id = $1", ws)]
+            claim_ids = [r["id"] for r in await conn.fetch(
+                "select id from claim_records where workspace_id = $1", ws)]
+
+            summary = {
+                "sessions": len(session_ids),
+                "records": len(claim_ids),
+                "workflows": len(workflow_ids),
+                "plans": len(plan_ids),
+            }
+
+            # Claim-derived rows + supersede links (any claim, in or out of this tenant,
+            # pointing at a doomed one has its link cut before the delete).
+            if claim_ids:
+                await conn.execute(
+                    "update claim_records set supersedes_id = null where supersedes_id = any($1::uuid[])",
+                    claim_ids)
+                await conn.execute(
+                    "delete from pain_scores where claim_id = any($1::uuid[])", claim_ids)
+            await conn.execute("delete from claim_conflicts where workspace_id = $1", ws)
+            await conn.execute("delete from automation_opportunities where workspace_id = $1", ws)
+            await conn.execute("delete from heuristics where workspace_id = $1", ws)
+
+            # Workflow subtree.
+            if workflow_ids:
+                for table in ("workflow_sops", "workflow_step_overlays", "workflow_steps"):
+                    await conn.execute(
+                        f"delete from {table} where workflow_id = any($1::uuid[])", workflow_ids)
+            await conn.execute("delete from workflows where workspace_id = $1", ws)
+
+            # Session subtree (before sessions themselves).
+            if session_ids:
+                await conn.execute("delete from utterances where session_id = any($1::uuid[])", session_ids)
+                await conn.execute("delete from observer_insights where session_id = any($1::uuid[])", session_ids)
+                await conn.execute("delete from roleplay_debriefs where session_id = any($1::uuid[])", session_ids)
+            await conn.execute("delete from artifact_promises where workspace_id = $1", ws)
+
+            # Safety layer + audit: sealed flags DELETED (departure, flagged to Emre);
+            # agent_runs RETAINED with both refs nulled.
+            await conn.execute("delete from sealed_flags where workspace_id = $1", ws)
+            await conn.execute(
+                "update agent_runs set workspace_id = null, session_id = null where workspace_id = $1", ws)
+
+            # claim_records fall before the things they reference (scrape_sources, entities).
+            await conn.execute("delete from claim_records where workspace_id = $1", ws)
+            await conn.execute("delete from scrape_sources where workspace_id = $1", ws)
+            await conn.execute("delete from report_shares where workspace_id = $1", ws)
+            await conn.execute("delete from voice_configs where workspace_id = $1", ws)
+            await conn.execute("delete from snapshot_cards where workspace_id = $1", ws)
+
+            # Sessions reference plans + rounds + entities; drop sessions, then the plan
+            # subtree, then rounds, then entities.
+            await conn.execute("delete from interview_sessions where workspace_id = $1", ws)
+            if plan_ids:
+                await conn.execute("delete from handoff_packages where plan_id = any($1::uuid[])", plan_ids)
+                await conn.execute("delete from plan_state_transitions where plan_id = any($1::uuid[])", plan_ids)
+            await conn.execute("delete from interview_plans where workspace_id = $1", ws)
+            await conn.execute("delete from interview_rounds where workspace_id = $1", ws)
+            await conn.execute("delete from entities where workspace_id = $1", ws)
+
+            # The tenant row itself — cascades user_roles + any remaining cascade children.
+            await conn.execute("delete from workspaces where id = $1", ws)
+
+    log.info("delete_workspace: %s (%s) removed — %d sessions, %d records, %d workflows",
+             ws, name, len(session_ids), len(claim_ids), len(workflow_ids))
+    return {"deleted": True, "name": name, "removed": summary}

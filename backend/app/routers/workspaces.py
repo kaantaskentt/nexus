@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from ..auth import require_admin, resolve_seat
+from ..config import get_settings
 from ..db import get_pool
 from ..pipeline import deletion, entities
 from ..pipeline.transcript import parse_transcript
@@ -140,6 +141,20 @@ async def reorder_workspaces(body: ReorderIn):
 @router.get("/{workspace_id}/delete-preview", dependencies=[Depends(require_admin)])
 async def delete_preview(workspace_id: str):
     out = await deletion.preview_workspace_delete(workspace_id)
+    if out is None:
+        raise HTTPException(404, "workspace not found")
+    return out
+
+
+@router.delete("/{workspace_id}", dependencies=[Depends(require_admin)])
+async def delete_workspace(workspace_id: str):
+    """Destructive tenant teardown (SIMPLIFY §6-1). HARD-GATED: returns 403 until
+    settings.workspace_delete_enabled is flipped on, which waits on Kaan's confirm of the
+    cascade semantics (sealed-flag ruling flagged to Emre). Built, tested, and inert until
+    then — the preview endpoint and dialog are what ship live."""
+    if not get_settings().workspace_delete_enabled:
+        raise HTTPException(403, "company delete is not enabled")
+    out = await deletion.delete_workspace(workspace_id)
     if out is None:
         raise HTTPException(404, "workspace not found")
     return out
@@ -353,6 +368,23 @@ async def set_pulse_config(workspace_id: str, body: PulseConfigIn):
         "update workspaces set config = $2 where id = $1", workspace_id, json.dumps(config)
     )
     return {"enabled": body.enabled}
+
+
+@router.post("/{workspace_id}/snapshot-intro-seen")
+async def mark_snapshot_intro_seen(workspace_id: str):
+    """SIMPLIFY B: persist the one-time 'company snapshot ready' intro dismissal in
+    workspaces.config (same jsonb-merge path as the pulse toggle). Idempotent — the intro
+    renders once, then Home shows the snapshot directly on every later visit."""
+    pool = await get_pool()
+    row = await pool.fetchrow("select config from workspaces where id = $1", workspace_id)
+    if row is None:
+        raise HTTPException(404, "workspace not found")
+    config = _loads(row["config"]) or {}
+    config["snapshot_intro_seen"] = True
+    await pool.execute(
+        "update workspaces set config = $2 where id = $1", workspace_id, json.dumps(config)
+    )
+    return {"snapshot_intro_seen": True}
 
 
 def _trim(text: str, n: int = 140) -> str:
