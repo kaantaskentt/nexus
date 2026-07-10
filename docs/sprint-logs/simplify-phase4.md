@@ -32,16 +32,64 @@ Scope: 72 files, +5783/-959 since pre-sprint (a8a9a98).
 - Carried from Phase 3: done-page "first version" drift (P1, lane-e file) and the
   next-round-question naming spread (P2) — see simplify-phase3.md.
 
-## B · Verification (GATED on seam-2 — TODO)
-- [ ] Full backend suite (at the seam, not during active lanes — shared test-DB rule).
-- [ ] Full frontend suite (blocked now: ObserverView.tsx has a live tsc error in an
-      uncommitted lane WIP — see phase3 log item 4; must clear before a clean full run).
-- [ ] Prod browser re-walk of EVERY changed surface, desktop 1440 + mobile 390, using the
-      Phase-0 method (resize-to-half for the profile-zoom bug). Priority surfaces: picker
-      reorder/delete (A), snapshot intro + done page (B/G), Workflows list+detail (C),
-      context-call welcome (D), interview hub + plan page (K), live room (E/F), play-
-      character (J). Confirm the P0 mobile fix (AppShell drawer) holds on each.
-- [ ] Delta review vs pre-sprint behavior: no tested capability regressed.
+## B · Verification — DONE at seam-3 (prod c92ba85)
+
+### Full suites — GREEN
+- Backend: **238 passed, 1 skipped** (43s, lanes parked, shared container clean).
+- Frontend: **100 passed** (18 files). No regressions from the whole sprint.
+
+### Prod re-walk vs the Phase-0 baseline (measured, desktop 1440 + mobile 390)
+The point was the delta: are the Phase-0 P0/P1s dead? They are.
+- **[P0 → DEAD] No mobile layout.** Was: every /w/* page crushed to a ~154px column with
+  108px sideways overflow; plan detail 29,407px tall. Now: measured `docOverflow 0` and
+  `main` = full 390px on Home, plan detail, and the Interviews hub; plan detail **29,407 →
+  7,695px**. The AppShell drawer (#13) holds — systemic fix confirmed across the sample.
+- **[P0 → DEAD] Interviews vs Interview Plans duplication.** Merged into one hub (K): no
+  "Plans" nav item, /plans redirects, and the plan detail now carries a
+  **Plan → Observe → Report → Follow-up stage rail** (my audit finding #2 resolved).
+- **[P0 → DEAD] The "just so messy" plan page / 254px suggested-questions.** Was: a
+  254px×1614px suggested-questions ribbon and three inconsistent content widths
+  (530/532/254/1088). Now: consistent full-width blocks (1152/1204), topic-grouped
+  collapsible "Suggested questions" accordions, a calm two-column mission layout, and a
+  bottom action bar. `docOverflow 0`. (screens: DELTA-plan-detail-desktop.png)
+- **[P1 → DEAD] Half-width Home with dead right side.** Content now reaches x1414 of 1440
+  (was ~730). Full-width snapshot.
+- **[P1 → DEAD] Workflow detail horizontal x3350 strip (my lane C).** Now `contentMaxRight
+  1414`, no overflow, wrapping grid + the details panel. Workflows list shows the "All" +
+  "Operations" chips only (no guessed departments) with descriptions + confidence.
+- **[P1 → DEAD] Simulations bloat / jewelry leakage (my #10).** Now scenario-first from Bee
+  Goddess's OWN workflows (2 real scenarios with honest derived "what this tests" copy +
+  confidence chips), the global cast/proving relocated behind a "How Nexus is tested"
+  disclosure. Run mints + navigates to the room; Captured-live correctly suppressed.
+  (screens: DELTA-simulations-desktop.png)
+- **Naming:** snapshot/insights next-round questions unified to "Open questions" (Report's
+  "Follow Up On" left for Kaan's fold).
+
+### What is NOT fully verified / one real gap
+- **[P1 GAP — lane-e's half] The simulation room's SIMULATION marker is not visible at the
+  consent + pre-call screens.** Clicking Run on prod mints correctly and suppresses
+  Captured-live (good), BUT the room's consent landing shows standard employee-interview
+  consent copy, and the pre-call screen shows generic "Test call · Back to Voice Settings"
+  chrome — NOT the persistent "Simulation · <workflow> — practice run, nothing reaches your
+  company records" marker lane-e specified. Either the marker renders only once the call
+  connects (then it isn't "persistent" as required) or scenario-run sessions fall through to
+  voice-test chrome. I did not drive the call further (no conversation). **Flagged to lane-e**
+  — the one trust-surface item to close before Emre's voice test.
+- **Coverage honesty:** the walk concentrated on the P0s, the two worst Phase-0 pages, my own
+  lanes, and a mobile-overflow sweep (Home/plan/interviews all `docOverflow 0`). Because the
+  mobile fix is one shared AppShell component, mobile is confirmed dead across that sample
+  rather than page-by-page. Lighter touch on: context/insights/settings/trust, the respondent
+  consent variants, the live room E full drive, play-character J, and picker delete/reorder A
+  — these passed Phase-0 or their own lane verifies; I did not re-measure each here.
+
+### Verdict — did SIMPLIFY make the product simpler, honestly?
+**Yes, substantially.** The four Phase-0 comprehension-blockers are gone: the product is now
+usable on mobile (it was completely broken), the interview flow is one hub instead of two
+duplicated lists, the "messiest" page is a calm staged layout, and Simulations speaks in the
+tenant's own workflows instead of a stranger's jewelry example. No tested capability regressed
+(238+100 green). The one honest blemish is the simulation room's missing trust marker (lane-e
+to close). Anti-over-engineering: nothing to unwind (§A). This is the "nothing to unwind,
+simpler per page" close Kaan asked for — with that single marker gap named, not hidden.
 
 ## Lessons (honesty log)
 - **A copy/href repoint IS a behavior change — run the component's test file before
