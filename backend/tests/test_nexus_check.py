@@ -95,6 +95,10 @@ async def test_check_is_idempotent_after_move(db, monkeypatch):
 async def test_redraft_reenqueues_generation_with_custom_focus(db):
     ws = await make_workspace(db, industry="jewelry")
     person = await _person(db, ws)
+    # Redraft shares the honest precheck: a workspace with compiled records can draft.
+    await db.execute(
+        "insert into claim_records (workspace_id, kind, topic, tag, claim_text, quarantined) "
+        "values ($1,'statement','process_step','CLAIMED','Leads come in via the site', false)", ws)
     plan_id = await _plan(db, ws, person, state="DRAFT",
                           mission={"goal": "", "topics": [], "custom_focus": "lead gen"})
     async with _client() as c:

@@ -22,9 +22,21 @@ async def _person(db, ws, name="Selin", role="Returns"):
     )
 
 
+async def _seed_record(db, ws):
+    """A workspace can only draft plans once a context call has compiled records
+    (client_visible_claims). Endpoint tests that exercise the drafting wiring seed one so
+    they clear the honest precheck — the realistic post-context-call state."""
+    await db.execute(
+        "insert into claim_records (workspace_id, kind, topic, tag, claim_text, quarantined) "
+        "values ($1,'statement','process_step','CLAIMED','Returns are handled each morning', false)",
+        ws,
+    )
+
+
 async def test_generate_endpoint_creates_draft_and_enqueues(db):
     ws = await make_workspace(db, industry="jewelry")
     person = await _person(db, ws)
+    await _seed_record(db, ws)
     async with _client() as c:
         r = await c.post("/api/plans/generate", json={"workspace_id": str(ws), "entity_id": str(person)})
     assert r.status_code == 200
@@ -42,6 +54,7 @@ async def test_generate_endpoint_creates_draft_and_enqueues(db):
 
 async def test_generate_endpoint_resolves_person_by_name(db):
     ws = await make_workspace(db, industry="jewelry")
+    await _seed_record(db, ws)
     async with _client() as c:
         r = await c.post(
             "/api/plans/generate",
@@ -55,9 +68,24 @@ async def test_generate_endpoint_resolves_person_by_name(db):
 
 async def test_generate_endpoint_requires_person(db):
     ws = await make_workspace(db, industry="jewelry")
+    await _seed_record(db, ws)
     async with _client() as c:
         r = await c.post("/api/plans/generate", json={"workspace_id": str(ws)})
     assert r.status_code == 422
+
+
+async def test_generate_requires_compiled_records(db):
+    """Costume 2: drafting with nothing compiled fails fast (422) with the real CTA,
+    never a doomed job that spins for minutes."""
+    ws = await make_workspace(db, industry="jewelry")
+    person = await _person(db, ws)
+    async with _client() as c:
+        r = await c.post("/api/plans/generate", json={"workspace_id": str(ws), "entity_id": str(person)})
+    assert r.status_code == 422
+    assert "context call" in r.json()["detail"]
+    # No DRAFT plan and no job were created.
+    assert await db.fetchval("select count(*) from interview_plans where workspace_id=$1", ws) == 0
+    assert await db.fetchval("select count(*) from jobs where kind='generate_plan'") == 0
 
 
 async def test_generate_plan_job_persists_and_advances(db, monkeypatch):
@@ -144,6 +172,7 @@ async def test_generate_endpoint_passes_custom_goal(db):
     """POST /generate with a free-text goal carries it into the job payload; the gate
     (DRAFT -> NEXUS_CHECK -> human approval) is unchanged."""
     ws = await make_workspace(db, industry="jewelry")
+    await _seed_record(db, ws)
     async with _client() as c:
         r = await c.post(
             "/api/plans/generate",
@@ -199,6 +228,7 @@ async def test_generate_heals_stale_entity_id_via_name(db):
     from app.main import app
     from tests.conftest import make_workspace
     ws = await make_workspace(db, industry="jewelry")
+    await _seed_record(db, ws)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as c:
         r = await c.post("/api/plans/generate", json={
             "workspace_id": str(ws),

@@ -24,6 +24,22 @@ router = APIRouter()
 
 INVITE_TTL_DAYS = 14
 
+# Honest precheck for plan drafting (test-mest §2, costume 2). The plan_generator reads
+# client_visible_claims directly — the true precondition is COMPILED RECORDS, not rendered
+# snapshot cards. With none, generation used to enqueue a doomed job that spun for minutes
+# then produced an empty shell; fail fast with the real CTA instead.
+_NO_RECORDS_CTA = (
+    "No compiled records yet. Finish a context call and let its snapshot build first, "
+    "then draft interview plans from what it learned."
+)
+
+
+async def _has_compiled_records(pool, workspace_id: str) -> bool:
+    return bool(await pool.fetchval(
+        "select exists(select 1 from client_visible_claims where workspace_id = $1)",
+        workspace_id,
+    ))
+
 # Refine-chat applies only these bounded, well-understood edits; anything else the
 # agent proposes is logged as a proposal (audited) but never blind-applied to the plan.
 # never_list overrides objectives, so adds there are always safe; the rest are additive
@@ -153,6 +169,9 @@ async def generate(body: GenerateIn):
     ws = await pool.fetchrow("select id from workspaces where id = $1", body.workspace_id)
     if ws is None:
         raise HTTPException(404, "workspace not found")
+    # Fail in milliseconds, not minutes, when there is nothing to draft from (costume 2).
+    if not await _has_compiled_records(pool, body.workspace_id):
+        raise HTTPException(422, _NO_RECORDS_CTA)
 
     entity_id = body.entity_id
     if entity_id is not None:
@@ -205,6 +224,9 @@ async def redraft(plan_id: str):
         raise HTTPException(404, "plan not found")
     if plan["state"] not in ("DRAFT", "NEXUS_CHECK"):
         raise HTTPException(409, f"cannot redraft a plan in state {plan['state']}")
+    # Same honest precheck: a redraft with nothing compiled would spin then land empty.
+    if not await _has_compiled_records(pool, str(plan["workspace_id"])):
+        raise HTTPException(422, _NO_RECORDS_CTA)
     mission = plan["mission"]
     mission = json.loads(mission) if isinstance(mission, str) else (mission or {})
     payload = {"plan_id": plan_id, "workspace_id": str(plan["workspace_id"])}
