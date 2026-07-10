@@ -159,6 +159,15 @@ does not apply to eval runs).
 
 ---
 
+## Transcript composer auto-grow (granted directly by team-lead; lane-split closed)
+- A28 (today → after): `InterviewClient.tsx` respondent composer is a `rows={1}` `resize-none`
+  textarea capped at `max-h-32` — stays one row → after, a ref + `useEffect` keyed on `draft`
+  sets height to scrollHeight (grows as you type, shrinks back after send clears `draft`), plus
+  `overflow-y-auto` so it scrolls past the cap. Respondent-simpler, admin unchanged.
+- Verified: `tsc --noEmit` clean; interview/live-room suites 29/29 (7 files incl
+  captured-live-panel, live-room, observer-badges, voice-transcript-live — lane-split's tests
+  stay green). Own commit.
+
 ## Eval runs (announced; honest numbers)
 - **Baseline (old persona, --suite all):** 24 pass · 1 fail / 25 (fail = `cc-rambler-park-and-return`, known anti-sycophancy generator flake).
 - **Bite characterization (mined baits vs OLD persona, gen+judge sonnet-4-6):**

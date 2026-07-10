@@ -45,6 +45,16 @@ export function InterviewClient({ token }: { token: string }) {
   const [mode, setMode] = useState<"voice" | "text">("text"); // set from session on load
   const lastMessage = useRef<string | null>(null); // for honest retry, not a fallback
   const scroller = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+
+  // Composer grows with the text as you type (pilot §4), capped by max-h-32; keying on `draft`
+  // also shrinks it back to one row after send clears it.
+  useEffect(() => {
+    const t = composerRef.current;
+    if (!t) return;
+    t.style.height = "auto";
+    t.style.height = `${t.scrollHeight}px`;
+  }, [draft]);
 
   // Live-capture COUNT for the text room — real polling while the text chat is open, never
   // in a simulation (suppressed there — SIMPLIFY I). Counts only (R1): the respondent sees
@@ -433,6 +443,7 @@ export function InterviewClient({ token }: { token: string }) {
     <>
       <div className="flex items-end gap-2 rounded-2xl border border-line bg-surface px-3 py-2">
         <textarea
+          ref={composerRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -443,7 +454,7 @@ export function InterviewClient({ token }: { token: string }) {
           }}
           rows={1}
           placeholder="Type your answer… take your time"
-          className="max-h-32 min-w-0 flex-1 resize-none bg-transparent py-1.5 text-sm text-ink outline-none placeholder:text-ink-faint"
+          className="max-h-32 min-w-0 flex-1 resize-none overflow-y-auto bg-transparent py-1.5 text-sm text-ink outline-none placeholder:text-ink-faint"
         />
         <button
           onClick={send}
