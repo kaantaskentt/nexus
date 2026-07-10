@@ -153,6 +153,9 @@ async def test_finalize_enqueues_only_for_capture_kinds(db, monkeypatch):
 
 
 async def test_endpoint_shapes_respondent_vs_admin(db, monkeypatch):
+    """R1 audience split: the respondent (by-token) payload carries a COUNT ONLY — item
+    content (labels/details) must never reach the respondent's browser. The admin
+    (require_admin session-id) endpoint keeps the full items + the Reported-at-most badge."""
     ws = await make_workspace(db)
     token = "tok_live_" + "x" * 8
     sid = await db.fetchval(
@@ -163,12 +166,17 @@ async def test_endpoint_shapes_respondent_vs_admin(db, monkeypatch):
         "values ($1,$2,'system','Opera Cloud','Booking system.')", sid, ws)
 
     async with _client() as c:
-        pub = (await c.get(f"/api/sessions/by-token/{token}/live-captures")).json()
+        pub_resp = await c.get(f"/api/sessions/by-token/{token}/live-captures")
+        pub = pub_resp.json()
         adm = (await c.get(f"/api/sessions/{sid}/live-captures")).json()
 
-    assert [i["label"] for i in pub["items"]] == ["Opera Cloud"]
-    assert pub["extracting"] is False
-    assert "ladder" not in pub["items"][0]            # respondent view carries no badge
+    # Respondent: count only, and NO item content anywhere in the payload.
+    assert pub == {"count": 1, "extracting": False}
+    assert "items" not in pub
+    assert "Opera Cloud" not in pub_resp.text
+    assert "Booking system." not in pub_resp.text
+    # Admin: full items + the ladder badge (unchanged).
+    assert [i["label"] for i in adm["items"]] == ["Opera Cloud"]
     assert adm["items"][0]["ladder"] == "reported"    # admin: Reported-at-most (A18)
 
 

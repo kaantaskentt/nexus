@@ -197,14 +197,20 @@ async def _live_captures(pool, session_id) -> list[dict]:
 
 @router.get("/by-token/{token}/live-captures")
 async def live_captures_by_token(token: str):
-    """Respondent view of what Nexus has SAVED so far (the consent promise: you see what is
-    captured). Structural items only, NO confidence badge — badges are admin vocabulary and
-    a respondent-facing surface stays neutral about judgments (A18). `extracting` is a REAL
-    signal (an in-flight extraction job), never a faked 'Saving' state."""
+    """Respondent view — R1 audience split (Kaan): the respondent sees ONLY that capture is
+    happening (a live COUNT + the real extraction heartbeat), NEVER the captured items. A
+    respondent who watches their words become records starts performing for the record
+    (Emre), so the item content must not reach their browser to be hidden in the UI — this
+    payload carries a COUNT ONLY. Item content is admin vocabulary, served solely by the
+    require_admin `/{session_id}/live-captures` endpoint below. Audience is a property of the
+    ROUTE (by-token = respondent), never a client flag. `extracting` is a REAL in-flight
+    signal, never a faked 'Saving' state."""
     session = await _session_for_token(token)
     pool = await get_pool()
     return {
-        "items": await _live_captures(pool, session["id"]),
+        "count": await pool.fetchval(
+            "select count(*) from live_captures where session_id = $1", session["id"]
+        ),
         "extracting": await extraction_in_flight(pool, session["id"]),
     }
 

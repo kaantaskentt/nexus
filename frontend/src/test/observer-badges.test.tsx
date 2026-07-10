@@ -24,8 +24,12 @@ vi.mock("@/lib/liveCaptures", () => ({
   getLiveCapturesForSession: vi.fn(),
   useLiveCaptures: vi.fn(() => ({ items: [], extracting: false })),
 }));
-import { useLiveCaptures } from "@/lib/liveCaptures";
-const capturesMock = vi.mocked(useLiveCaptures);
+import { useLiveCaptures, type LiveCapturesResult } from "@/lib/liveCaptures";
+// useLiveCaptures is generic over its payload; the Observer always drives the ADMIN door
+// (items + ladder), so type the mock to that shape.
+const capturesMock = vi.mocked(useLiveCaptures) as unknown as {
+  mockReturnValue: (v: LiveCapturesResult) => void;
+};
 
 function state(over: Partial<ObserverState> = {}): ObserverState {
   return {

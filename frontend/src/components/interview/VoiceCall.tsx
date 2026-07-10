@@ -10,7 +10,6 @@ import { LiveTranscript, type Turn } from "./LiveTranscript";
 import { mergeTurns } from "@/lib/transcript-display";
 import { InterviewProgress } from "./InterviewProgress";
 import { LiveRoom } from "./LiveRoom";
-import { CapturedLivePanel } from "./CapturedLivePanel";
 import { getCallVoice, getSession } from "@/lib/respondent";
 import { getLiveCapturesByToken, useLiveCaptures } from "@/lib/liveCaptures";
 
@@ -130,10 +129,12 @@ export function VoiceCall({
   const pubKey = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY;
   const estSec = Math.max(60, (estMinutes ?? 20) * 60);
 
-  // Captured-live panel data — real polling, only while the call is live (SIMPLIFY E), and
-  // never in a simulation (the panel is suppressed there — SIMPLIFY I).
+  // Live-capture COUNT — real polling, only while the call is live (SIMPLIFY E), never in a
+  // simulation (suppressed there — SIMPLIFY I). Counts only (R1): the respondent sees that
+  // capture is happening, never the captured items.
   const captures = useLiveCaptures(() => getLiveCapturesByToken(token), {
     enabled: state === "live" && !simulation,
+    initial: { count: 0, extracting: false },
   });
 
   // Always tear the call down if the component unmounts mid-conversation.
@@ -535,10 +536,8 @@ export function VoiceCall({
             />
           ) : undefined
         }
-        capturedPanel={
-          <CapturedLivePanel items={captures.items} extracting={captures.extracting} />
-        }
-        capturedCount={captures.items.length}
+        capturedCount={captures.count}
+        capturing={captures.extracting}
         hideCaptured={Boolean(simulation)}
       >
         {/* The transcript owns the middle of the room (non-negotiable 5, un-boxed). It stays

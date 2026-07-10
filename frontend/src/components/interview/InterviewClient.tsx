@@ -10,7 +10,6 @@ import { BrandMark } from "@/components";
 import { VoiceCall } from "./VoiceCall";
 import { PromisedArtifacts } from "./PromisedArtifacts";
 import { LiveRoom } from "./LiveRoom";
-import { CapturedLivePanel } from "./CapturedLivePanel";
 import { AgentStateIndicator, type RoomAgentState } from "./AgentStateIndicator";
 import {
   getSession,
@@ -47,11 +46,12 @@ export function InterviewClient({ token }: { token: string }) {
   const lastMessage = useRef<string | null>(null); // for honest retry, not a fallback
   const scroller = useRef<HTMLDivElement>(null);
 
-  // Captured-live panel data for the text room — real polling while the text chat is open,
-  // never in a simulation (the panel is suppressed there — SIMPLIFY I). (The voice room does
-  // its own polling inside VoiceCall.)
+  // Live-capture COUNT for the text room — real polling while the text chat is open, never
+  // in a simulation (suppressed there — SIMPLIFY I). Counts only (R1): the respondent sees
+  // that capture is happening, never the captured items. (The voice room polls in VoiceCall.)
   const captures = useLiveCaptures(() => getLiveCapturesByToken(token), {
     enabled: phase === "chat" && mode === "text" && !session?.simulation,
+    initial: { count: 0, extracting: false },
   });
 
   function seedFromTranscript(s: RespondentSession) {
@@ -465,10 +465,8 @@ export function InterviewClient({ token }: { token: string }) {
       <LiveRoom
         header={header}
         controls={composer}
-        capturedPanel={
-          <CapturedLivePanel items={captures.items} extracting={captures.extracting} />
-        }
-        capturedCount={captures.items.length}
+        capturedCount={captures.count}
+        capturing={captures.extracting}
         hideCaptured={Boolean(session?.simulation)}
       >
         <div ref={scroller} className="h-full space-y-4 overflow-y-auto px-1">

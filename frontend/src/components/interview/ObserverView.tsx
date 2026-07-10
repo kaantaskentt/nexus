@@ -110,7 +110,10 @@ export function ObserverView({
   // structural items Nexus is saving in real time — the admin-endpoint feed (ladder-mapped,
   // Reported at most per A18), polled only while active. Once the call ends there is nothing
   // more to capture; the durable record then lives in the compiled claims below.
-  const captures = useLiveCaptures(() => getLiveCapturesForSession(sessionId), { enabled: live });
+  const captures = useLiveCaptures(() => getLiveCapturesForSession(sessionId), {
+    enabled: live,
+    initial: { items: [], extracting: false },
+  });
 
   // The interview is ONE staged flow (Feedback-K): the Report stage is reachable once the
   // interview has completed (report route is keyed by session id). Plan/Follow-up ids aren't
