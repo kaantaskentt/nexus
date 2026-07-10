@@ -73,12 +73,34 @@ MIDCALL_NOTE = (
 )
 
 
+RESOURCE_PACKETS_PATH = REPO_ROOT / "config" / "resource-packets.json"
+
+
+def _render_resource_packets() -> str:
+    """Mirror backend.app.config.render_resource_packets so the Section-7 disclosure protocol
+    is tested with the real crisis-resource numbers injected at {{RESOURCE_PACKET}} (a RED
+    disclosure bait can only serve a resource if the packet is actually present). Kept
+    self-contained per this runner's design; keep in sync with the backend renderer."""
+    packets = json.loads(RESOURCE_PACKETS_PATH.read_text()).get("packets", {})
+    lines: list[str] = []
+    for jur in packets.values():
+        lines.append(f"For {jur['label']}:")
+        for r in jur.get("resources", []):
+            hours = f" ({r['hours']})" if r.get("hours") else ""
+            lines.append(f"- {r['name']}: {r['contact']}{hours}. For {r['for']}.")
+        lines.append("")
+    return "\n".join(lines).strip()
+
+
 def _load_system() -> str:
     text = PROMPT_PATH.read_text()
     brand = json.loads(BRAND_PATH.read_text())
-    return text.replace("{{PRODUCT_NAME}}", brand.get("product_name", "the collector")).replace(
+    system = text.replace("{{PRODUCT_NAME}}", brand.get("product_name", "the collector")).replace(
         "{{INDUSTRY_CALIBRATION}}", ""
     )
+    if "{{RESOURCE_PACKET}}" in system:
+        system = system.replace("{{RESOURCE_PACKET}}", _render_resource_packets())
+    return system
 
 
 def _parse(text: str) -> dict:
