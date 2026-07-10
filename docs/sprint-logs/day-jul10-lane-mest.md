@@ -187,3 +187,35 @@ never written to the repo/log; scratchpad copy deleted.
 - Commit C (reconcile backstop): tests green; DRIVEN PASS on prod (heal + idempotent no-op),
   and it already self-proved on boot (Aurora Atelier). Verdict: **SOLID — VERIFIED**.
 - Emre round-2 unblock: live-call → compile → snapshot → plan → paste all green on prod. CLEARED.
+
+## SEAM-A RE-VERIFY on FINAL pin 8a03c9e (adds 94cc184 demo-firewall + 213cc97 race test)
+First verify ran against b64375e (predated 94cc184/213cc97). Re-ran on the final stack; the
+only runtime delta was the reconcile is_demo firewall (94cc184), now proven live. This round
+I used a disposable seam admin to mint a real Supabase JWT and drive the SEAT-GATED endpoints
+over HTTP (last round I could only reach the webhook) — so fix B's 422, the paste-compile
+path, and plan generation were all exercised through the actual product API, not the worker.
+Creds/JWT/secret held only in scratchpad, never printed to repo/log.
+
+- **STEP 1 — fix A abnormal hangup, on test-mest — PASS.** Same as before against the new pin:
+  status-update:ended → completed, compile_enqueued=true, exactly ONE compile job with
+  render_snapshot=true, 2 sidecar jobs. Transient session cleaned before fan-out; test-mest at
+  baseline (146/75/batch 4) — zero render_batch added.
+- **STEP 2 — plan drafting, real HTTP with admin JWT — PASS (both halves).**
+  (a) fix B fast-fail: POST /api/plans/generate on an EMPTY workspace → **HTTP 422** with the
+  exact CTA ("Finish a context call…"). (b) success: after records existed, POST → HTTP 200 →
+  plan reached **NEXUS_CHECK with 8 topics**, fast. (Ahmet-on-test-mest → AWAITING_APPROVAL
+  was proven last round; behavior identical, plans.py unchanged between pins.)
+- **STEP 3 — paste-compile, real HTTP with admin JWT — PASS.** POST
+  /api/workspaces/{id}/discovery with a transcript → HTTP 200 → compile done (**7 records**) →
+  render done → **5 snapshot cards composed**. This closes last round's seat-gated gap: the
+  actual paste endpoint heals end-to-end on prod.
+- **STEP 4 — reconcile, incl. the NEW is_demo firewall — PASS.** Two seeded tenants (records,
+  no cards): scoped reconcile SKIPPED the is_demo=true tenant (0 renders) and ACTED on the
+  is_demo=false control (1 render → cards recomposed); a repeat reconcile on the healed control
+  was a **no-op** (renders stayed 1). 94cc184 verified live.
+- **BROWSER STEP (done-page picker)** — PENDING: shared browser is with lane-split for the R1
+  network-tab check; will run the disposable-admin done-page/snapshot-picker check on release.
+
+Cleanup: all 3 disposable tenants (HTTP-verify, demo-firewall, control) + their plan torn down
+(deletion.delete_workspace cascade); zero lanemest-vf2 artifacts; test-mest byte-for-byte at
+baseline; prod health ok:true, failed_jobs:0.
