@@ -28,57 +28,62 @@ export function StageRail({
   className?: string;
 }) {
   const currentIdx = STAGE_INDEX[current];
+  // The wrapper is overflow-x-auto so the rail can NEVER push the page body sideways at
+  // narrow widths (seam-2: it overflowed 390px on plan +19 and report +27). Circles and
+  // labels also shrink below sm so the four stages fit a phone without needing to scroll.
   return (
-    <nav aria-label="Interview stages" className={cn("flex items-center", className)}>
-      {STAGES.map((s, i) => {
-        const reached = i <= currentIdx;
-        const isCurrent = i === currentIdx;
-        const href = hrefs[s.key];
-        const node = (
-          <span className="flex items-center gap-2">
-            <span
-              className={cn(
-                "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold transition-colors",
-                isCurrent
-                  ? "bg-accent text-on-accent shadow-elev-1"
-                  : reached
-                    ? "bg-accent-soft text-accent-ink"
-                    : "bg-surface-sunken text-ink-faint ring-1 ring-inset ring-line",
-              )}
-            >
-              {i + 1}
-            </span>
-            <span
-              className={cn(
-                "text-sm font-medium",
-                isCurrent ? "text-ink" : reached ? "text-ink-soft" : "text-ink-faint",
-              )}
-            >
-              {s.label}
-            </span>
-          </span>
-        );
-        return (
-          <div key={s.key} className="flex flex-1 items-center last:flex-none">
-            {href && !isCurrent ? (
-              <Link href={href} className="rounded-md transition-opacity hover:opacity-70">
-                {node}
-              </Link>
-            ) : (
-              node
-            )}
-            {i < STAGES.length - 1 && (
-              <div
+    <div className={cn("min-w-0 overflow-x-auto", className)}>
+      <nav aria-label="Interview stages" className="flex items-center">
+        {STAGES.map((s, i) => {
+          const reached = i <= currentIdx;
+          const isCurrent = i === currentIdx;
+          const href = hrefs[s.key];
+          const node = (
+            <span className="flex items-center gap-1.5 sm:gap-2">
+              <span
                 className={cn(
-                  "mx-2.5 h-px flex-1",
-                  i < currentIdx ? "bg-accent/40" : "bg-line",
+                  "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold transition-colors sm:h-6 sm:w-6 sm:text-[11px]",
+                  isCurrent
+                    ? "bg-accent text-on-accent shadow-elev-1"
+                    : reached
+                      ? "bg-accent-soft text-accent-ink"
+                      : "bg-surface-sunken text-ink-faint ring-1 ring-inset ring-line",
                 )}
-              />
-            )}
-          </div>
-        );
-      })}
-    </nav>
+              >
+                {i + 1}
+              </span>
+              <span
+                className={cn(
+                  "whitespace-nowrap text-xs font-medium sm:text-sm",
+                  isCurrent ? "text-ink" : reached ? "text-ink-soft" : "text-ink-faint",
+                )}
+              >
+                {s.label}
+              </span>
+            </span>
+          );
+          return (
+            <div key={s.key} className="flex flex-1 items-center last:flex-none">
+              {href && !isCurrent ? (
+                <Link href={href} className="rounded-md transition-opacity hover:opacity-70">
+                  {node}
+                </Link>
+              ) : (
+                node
+              )}
+              {i < STAGES.length - 1 && (
+                <div
+                  className={cn(
+                    "mx-1.5 h-px flex-1 sm:mx-2.5",
+                    i < currentIdx ? "bg-accent/40" : "bg-line",
+                  )}
+                />
+              )}
+            </div>
+          );
+        })}
+      </nav>
+    </div>
   );
 }
 

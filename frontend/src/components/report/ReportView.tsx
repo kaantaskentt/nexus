@@ -66,7 +66,7 @@ export function ReportView({
 
   return (
     <>
-      <div className="mx-auto max-w-6xl px-8 py-8">
+      <div className="mx-auto max-w-6xl px-6 py-8 sm:px-8">
         <div className="flex items-center justify-between">
           {/* The label and destination agree (same class as Emre report #9): reports
               are listed on Interviews, so back goes there. */}
@@ -145,7 +145,7 @@ export function ReportView({
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_20rem]">
           {/* ── Left: workflow canvas + perception gap ─────────────── */}
           <div className="min-w-0">
-            <section className="card-hairline rounded-card border border-line bg-surface-raised p-5">
+            <section className="card-hairline min-w-0 rounded-card border border-line bg-surface-raised p-5">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className="font-display text-xl text-ink">{report.workflow_name}</h2>
                 {workflowId && (

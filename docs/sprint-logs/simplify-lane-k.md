@@ -41,3 +41,20 @@ tsc clean on the interview/plan/report surface (PlanView, InterviewsView, StageR
 AssignInterviewFlow, ReportView, ObserverView); observer-badges 5/5, badge-mapping,
 generate-plan-button green (32 tests). Browser screenshot verification at 1440/390 folds into
 the lead's seam-2 walk + Phase 4 (no local stack up this lane; audit lane holds the browser).
+
+## A28 pre-review — seam-2 fixup (StageRail 390px overflow)
+Today: seam-2's walk measured StageRail forcing the page body wider than 390px on plan detail
+(409px, +19) and report (417px, +27). Cause: the rail's four circles + full-word labels
+(Plan/Observe/Report/Follow-up) have a min-content width > the phone's content box, and nothing
+clipped it. After: StageRail wraps its `<nav>` in a `min-w-0 overflow-x-auto` div — a
+block-level scroll container that can never push the page body sideways regardless of content
+(residual width scrolls the rail, not the page) — and shrinks below sm (circles h-5, labels
+text-xs, tighter gaps/connectors, whitespace-nowrap) so on a phone the four stages just fit
+without needing to scroll at all. Report also drops `px-8` → `px-6 sm:px-8` (16px more mobile
+width, matching plan + hub) and its workflow-step `<section>` gains `min-w-0` as belt-and-
+suspenders for the existing StepRail overflow-x-auto (the 15.5rem WorkflowStepCard carousel).
+jsdom class test added (src/test/stage-rail.test.tsx): pins the overflow-x-auto/min-w-0 wrapper
++ that earlier stages render as real links. Simpler/more complex for the user? SIMPLER: the
+page stops scrolling sideways on a phone; desktop unchanged (sm+ classes match the old sizes).
+Green: tsc + eslint clean on touched files; stage-rail 2/2, observer-badges 7/7,
+generate-plan-button green. Rides the seam-3 fixup deploy.
