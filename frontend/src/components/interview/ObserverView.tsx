@@ -169,7 +169,7 @@ export function ObserverView({
           {/* Voice-presence strip (voice only): a slim version of the respondent orb —
               real signal only, pulses as turns land. Far shorter than the old dark box. */}
           {s.modality === "voice" ? (
-            <div className="flex items-center gap-3 border-b border-line bg-[#1c1712] px-4 py-2.5">
+            <div className="flex items-center gap-3 border-b border-line bg-surface-dark px-4 py-2.5">
               <div className="h-10 w-10 shrink-0">
                 <ParticleOrb volume={pulse} state={orbState} />
               </div>

@@ -67,6 +67,8 @@ export function MicWaveform({ active, className }: { active: boolean; className?
             const bh = Math.max(1.5 * dpr, amp * h * 0.92);
             const x = i * gap + (gap - bw) / 2;
             const y = (h - bh) / 2;
+            // Amber (244,168,96) — the mid stop of the --accent (#e8641b) particle ramp.
+            // Canvas 2D can't read CSS vars; retune by hand if --accent moves.
             ctx.fillStyle = `rgba(244, 168, 96, ${0.35 + amp * 0.6})`;
             ctx.beginPath();
             ctx.roundRect(x, y, bw, bh, bw / 2);

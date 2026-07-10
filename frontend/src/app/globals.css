@@ -15,6 +15,7 @@
   --surface: #fffdf8;         /* card face */
   --surface-raised: #fffefb;  /* hover/raised face */
   --surface-sunken: #f2ece0;  /* wells: inputs, insets, code */
+  --surface-dark: #1c1712;    /* dark tiles: call-room orb wells + voice-presence strips */
   --border: #e6ddcd;
   --border-strong: #d6cbb8;
   --hairline-top: rgb(255 255 255 / 0.7);  /* faux inner highlight on card top edge */
@@ -73,6 +74,7 @@
   --shadow-card: var(--elev-2);  /* legacy alias — components still say shadow-card */
 
   /* Type scale (Fraunces display + Inter body) */
+  --step--2: .6875rem;   /* 11px micro-labels/eyebrows (uppercase, tracked) */
   --step--1: .8125rem;   /* 13px captions/labels */
   --step-0:  .9375rem;   /* 15px body */
   --step-1:  1.0625rem;  /* 17px lead */
@@ -158,6 +160,15 @@ body {
   }
   @media (prefers-reduced-motion: reduce) {
     .lift:hover { transform: none; }
+  }
+
+  /* Uppercase micro-label / eyebrow — unifies the text-[11px] + tracking-[0.08em] +
+     uppercase triple repeated across surfaces. Geometry only; color stays per-use
+     (ink-faint / ink-soft / accent are all valid callers). */
+  .eyebrow {
+    font-size: var(--step--2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   /* Shared form input — used by the Send Interview flow (A4) */

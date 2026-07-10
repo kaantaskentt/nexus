@@ -431,7 +431,7 @@ export function VoiceCall({
   if (state === "connecting") {
     return (
       <div className="flex min-h-[calc(100vh-8rem)] flex-col items-center py-6">
-        <div className="relative w-full max-w-lg overflow-hidden rounded-card bg-[#1c1712] px-6 pb-6 pt-8 shadow-elev-2 ring-1 ring-inset ring-white/[0.06]">
+        <div className="relative w-full max-w-lg overflow-hidden rounded-card bg-surface-dark px-6 pb-6 pt-8 shadow-elev-2 ring-1 ring-inset ring-white/[0.06]">
           <div className="relative mx-auto h-52 w-52 sm:h-60 sm:w-60">
             <ParticleOrb volume={0} state="connecting" />
             <div className="absolute inset-0 flex items-center justify-center">
@@ -459,7 +459,7 @@ export function VoiceCall({
     const presence = (
       <>
         <div className="flex flex-wrap items-center gap-4 rounded-card border border-line bg-surface px-4 py-3 shadow-elev-1">
-          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-[#1c1712] ring-1 ring-inset ring-white/[0.08]">
+          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-surface-dark ring-1 ring-inset ring-white/[0.08]">
             <ParticleOrb volume={volume} state={orbState} />
           </div>
           <div className="h-8 w-36">

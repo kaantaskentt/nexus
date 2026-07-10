@@ -108,6 +108,10 @@ export function ParticleOrb({
       const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
 
       // Soft core glow behind the particles so the sphere reads as a body, not dust.
+      // Warm particle ramp is anchored on --accent (#e8641b = rgb(232,100,27)); the
+      // lighter stops (250,204,140 / 255,231,200 / 244,168,96) and the ember (196,92,32)
+      // are its amber neighbours. Canvas 2D can't read CSS vars — if --accent moves,
+      // retune these by hand.
       const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.5);
       glow.addColorStop(0, `rgba(250, 204, 140, ${0.10 + v * 0.16 + a * 0.04})`);
       glow.addColorStop(0.55, `rgba(232, 100, 27, ${0.05 + v * 0.08})`);
