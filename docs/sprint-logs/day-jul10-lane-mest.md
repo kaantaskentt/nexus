@@ -213,9 +213,23 @@ Creds/JWT/secret held only in scratchpad, never printed to repo/log.
   no cards): scoped reconcile SKIPPED the is_demo=true tenant (0 renders) and ACTED on the
   is_demo=false control (1 render → cards recomposed); a repeat reconcile on the healed control
   was a **no-op** (renders stayed 1). 94cc184 verified live.
-- **BROWSER STEP (done-page picker)** — PENDING: shared browser is with lane-split for the R1
-  network-tab check; will run the disposable-admin done-page/snapshot-picker check on release.
+- **BROWSER STEP (done-page / snapshot-picker) — PASS.** Real prod frontend
+  (nexus-v2-alpha.vercel.app), read-only. Workspace PICKER: Test Mest card reads "Context
+  seeded from discovery call · 1 suggested interviews · 4 areas to investigate" — the composed
+  state, NOT "awaiting first call"; a control workspace ("1% Session", no snapshot) correctly
+  still reads "Awaiting first call" — proving the picker distinguishes composed vs not. Test
+  Mest HOME: "Company snapshot ready" (143 records / 4 people / 4 workflows / 4 areas) with the
+  real "View company snapshot" CTA; opening it renders the full snapshot (story-so-far, pain
+  rankings, automation areas, sources & evidence, Trust-Center footer). This is the user-visible
+  proof costume 1 is fixed. Evidence: lanemest-testmest-snapshot-ready.png,
+  lanemest-testmest-snapshot-composed.png. (Browser left as found — read-only nav, no sign-out.)
 
 Cleanup: all 3 disposable tenants (HTTP-verify, demo-firewall, control) + their plan torn down
 (deletion.delete_workspace cascade); zero lanemest-vf2 artifacts; test-mest byte-for-byte at
-baseline; prod health ok:true, failed_jobs:0.
+baseline; prod health ok:true, failed_jobs:0. NOTE (team-lead, standing rule 0be30e2, landed
+AFTER my teardowns): verify tenants now get HIDDEN-SHELL treatment (is_internal + reap ledger)
+— no raw-SQL workspace deletes while §6-1 holds. My raw-SQL teardowns ran under prior orders
+(logged done, nothing to fix); the rule binds from now on.
+
+## SEAM A — COMPLETE. All four steps + browser proof green on final pin 8a03c9e. Emre round-2
+CLEARED end-to-end (webhook → compile → snapshot on screen → plan drafts → paste-compile).
