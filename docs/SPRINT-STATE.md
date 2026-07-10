@@ -1,3 +1,64 @@
+# DAY ATTACK — July 10 (~10:50 PDT close) — ALL LANES GREEN, EVERYTHING DRIVEN
+Prod: backend 82befa4 (Railway api+worker) · frontend f515667 (Vercel, alias
+nexus-v2-alpha.vercel.app) · migrations 0026/0027/0028 applied · /health/deep ok,
+0 failed. Full trail: docs/DAY-ORDERS-JUL10.md (verdicts inline) + per-lane logs
+docs/sprint-logs/day-jul10-*.md.
+
+**SHIPPED + DRIVEN-VERIFIED ON PROD (seams A / A.5 / B / C):**
+- IDENTITY P0 (pilot §1/F10): engine identity guard both personas+transports; the exact
+  co-founder bait REPLAYED live and refused, both session kinds. e0907c5.
+- TEST-MEST P0 (pilot §2): root cause was outage-exhausted retries, NOT the webhook path
+  (that was a real latent 2nd route, also closed). CAS compile-on-any-end + fast 422
+  precheck + is_demo-firewalled reconcile backstop (self-heals stranded snapshots; proved
+  itself on first boot). Live-call→compile→snapshot→plan→paste ALL driven green.
+- EXPORT LEAKS (pilot §3): compose-time de-identification (7 pilot names absent from the
+  real payload) · CLAIMED qualifiers · placeholder steps dead · patch-29 same-speaker
+  retraction promoted (Emre-ratified) · honest footer (Kaan R8 ships as-is).
+- SECTION 7 (Emre doc, A24-classified per point): in-room protocol + never-list,
+  {{RESOURCE_PACKET}} config (Alo-143→Swiss bug fixed), minimized harm_incidents (NO
+  verbatim BY SCHEMA, survival semantics proven), quarantine-by-counts driven on the
+  live worker, R6 in-app reviewer inbox at /incidents (Kaan: no SendGrid; email
+  optional-if-key), R7 §7.8 consent line SHIPPED + rendering live. RED-182 +
+  acuity-probe + YELLOW over-escalation all caught BY THE R3 BAIT SUITE and fixed
+  (0/50 emit 182; quality's independent gate 10/10 twice).
+  ⚠ VOICE RESIDUAL (Emre must know): voice is prompt-only by VAPI design (Nexus never
+  sees the spoken text to post-process) — the same verified prompt carries it, but the
+  structural net is the CI bait, not a runtime filter. Honest 1/50-class residuals
+  logged in day-jul10-lane-s7/quality logs.
+- INTERVIEW QUALITY (pilot §4, F1-F8): full persona package (opener, automation-behind-
+  skeleton, sequence, humor, no-rating, HEADCOUNT-FLATTER fixed response, boundary
+  must-hits, tea-break) + A30 standing ruling (automation founder-allowed, employee-
+  blinded) + permanent R3 failure-bait suite (caught 2 real safety defects same day) +
+  F7 authorization said-not-stored FIXED with unspoofable evidence-citation chain
+  (driven: real plan carries {authorized, source_session_id, evidence_record_id}).
+- R1 AUDIENCE SPLIT: respondent = counts-only AT THE WIRE (network-proven) + state
+  rail; admin panel intact. ROOM-PARITY: orb/rail/reconnect-cards live, gate-walk PASS
+  both widths; parked pending Kaan's mockups (never committed — his #1 unblock) + two
+  welcome taste calls. Kaan's crisp welcome copy live (kicker/headline redundancy
+  flagged w/ recommendation).
+- ANYTIME-CONTEXT (Kaan's knowledge-engine ask): "Add more context" (voice-primary)
+  → additive context call → CLAIMED-capped compile (first call unchanged per Kaan
+  39ce84b) → snapshot grows. DRIVEN-PROVEN: 5 claims CLAIMED, CEO-attributed, person-
+  opinion quarantined at data layer, snapshot batch 4→5.
+**EMRE: CLEAR FOR ROUND 2, UNCAVEATED** (test-mest pristine at baseline). His
+adjudications: hedged-ideation escalation line (DAY-ORDERS 3b, recommendation
+attached) · sealed-flag ruling for §6-1.
+**KAAN BATCH (DAY-ORDERS action list):** room mockups re-commit (#1) · welcome
+kicker/headline + "After the call" copy + Preview-questions scope · spoken-opener
+"tidy version" match? · count-pill + plan-void taste · naming table · reap ledger
+(3 hidden shells) · watchtower reconcile-cadence proposal.
+**RESIDUAL VERDICTS:** Marmara = suspiciously-thin extraction (43 utterances → 1
+claim, outage-era), manual read before any client sees it · automation opportunities
+NOT orphaned (absence = missing snapshot; no two-signal bar exists on automation) ·
+dup render batches are history-by-design (reads select max).
+**PROCESS (fed to lessons):** independent gate ≠ author verify (caveat softened
+prematurely once, restored, logged) · health-green ≠ new-image (poll a NEW route,
+READ-ONLY — a mutating probe minted 21 strays, cleaned) · hidden-shell teardown rule
+uniform (no raw-SQL workspace deletes while §6-1 holds) · mailboxes dropped ~6
+messages (repo files + re-relay held) · picker API hides is_internal (resolve ids
+from DB).
+
+---
 # SIMPLIFY SPRINT — July 9/10 — FINAL CLOSE (~02:05 PDT; prod = 0150dbf, round-4)
 
 **REFINE-ROUND TAIL (appended after the through-round-3 block below):**
