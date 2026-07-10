@@ -31,6 +31,13 @@ _ALLOWED_CATEGORIES = {
 }
 
 
+def _bucket_for_tier(tier: int) -> str:
+    """Section 7 coarse bucket. The agent recognizes coarsely; the reviewer assigns the
+    final tier (§7.5). tier 3 (danger to life) -> red; tier 2 (serious harm / wrongdoing)
+    -> amber. The screen never emits a lower tier, so yellow is reserved for the schema."""
+    return "red" if tier == 3 else "amber"
+
+
 def parse_screen_output(text: str) -> list[dict]:
     """Tolerant JSON-array extraction; validates tiers/categories so a malformed flag
     fails loud instead of landing half-formed in the review queue."""
@@ -94,14 +101,28 @@ async def screen_session(payload: dict) -> None:
         flags = parse_screen_output(raw)
     except (ValueError, json.JSONDecodeError) as e:
         raise AgentParseError(f"disclosure_screen output not parseable: {e}") from e
-    for f in flags:
-        await pool.execute(
-            """insert into sealed_flags
-                 (workspace_id, session_id, tier, category, reviewer_summary, turn_refs)
-               values ($1, $2, $3, $4, $5, $6)""",
-            session["workspace_id"], session["id"], f["tier"], f["category"],
-            f["reviewer_summary"], json.dumps(f.get("turn_refs") or []),
-        )
+    # Sealed flag (fuller, reviewer_summary for the Tier-2 flow) AND the Section-7
+    # minimized incident record are written together in one transaction, so a flag never
+    # exists without its incident. The incident holds ONLY {category, bucket, timestamp,
+    # session_ref} — no verbatim (§7.6). notify_status stays 'pending' here; the reviewer
+    # email is fired best-effort by the caller after this returns (never fails the job).
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            for f in flags:
+                flag_id = await conn.fetchval(
+                    """insert into sealed_flags
+                         (workspace_id, session_id, tier, category, reviewer_summary, turn_refs)
+                       values ($1, $2, $3, $4, $5, $6) returning id""",
+                    session["workspace_id"], session["id"], f["tier"], f["category"],
+                    f["reviewer_summary"], json.dumps(f.get("turn_refs") or []),
+                )
+                await conn.execute(
+                    """insert into harm_incidents
+                         (workspace_id, session_id, category, bucket, sealed_flag_id)
+                       values ($1, $2, $3, $4, $5)""",
+                    session["workspace_id"], session["id"], f["category"],
+                    _bucket_for_tier(f["tier"]), flag_id,
+                )
 
 
 @handles("screen_disclosures")

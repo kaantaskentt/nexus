@@ -57,6 +57,83 @@ async def test_flags_land_sealed_never_in_records(db, monkeypatch):
     assert n_records == 0
 
 
+async def test_flag_mints_minimized_incident_amber(db, monkeypatch):
+    """A tier-2 flag mints exactly one harm_incidents row: category + amber bucket +
+    session_ref, linked to the sealed_flag, notify pending. The record is MINIMIZED —
+    the table has no verbatim/summary/turn_refs column at all (§7.6)."""
+    ws = await make_workspace(db)
+    sess = await make_session(db, ws)
+    await _seed_utterances(db, sess, [("respondent", "we don't report the accidents")])
+    monkeypatch.setattr(disclosure, "run_agent", _mock_agent(TIER2))
+    await disclosure.screen_session({"session_id": str(sess)})
+
+    rows = await db.fetch("select * from harm_incidents where session_id = $1", sess)
+    assert len(rows) == 1
+    inc = rows[0]
+    assert inc["category"] == "safety" and inc["bucket"] == "amber"
+    assert inc["notify_status"] == "pending" and inc["notified_at"] is None
+    flag_id = await db.fetchval("select id from sealed_flags where session_id = $1", sess)
+    assert inc["sealed_flag_id"] == flag_id
+    # Schema-enforced minimization: no column can hold verbatim disclosure content.
+    cols = {r["column_name"] for r in await db.fetch(
+        "select column_name from information_schema.columns where table_name = 'harm_incidents'")}
+    assert not (cols & {"reviewer_summary", "text", "turn_refs", "verbatim", "detail"})
+
+
+async def test_tier3_incident_is_red_bucket(db, monkeypatch):
+    ws = await make_workspace(db)
+    sess = await make_session(db, ws)
+    await _seed_utterances(db, sess, [("respondent", "I don't want to be here anymore")])
+    tier3 = [{"tier": 3, "category": "imminent_harm",
+              "reviewer_summary": "Respondent expressed self-harm intent.", "turn_refs": [0]}]
+    monkeypatch.setattr(disclosure, "run_agent", _mock_agent(tier3))
+    await disclosure.screen_session({"session_id": str(sess)})
+    bucket = await db.fetchval("select bucket from harm_incidents where session_id = $1", sess)
+    assert bucket == "red"
+
+
+async def test_incident_idempotent_no_duplicate(db, monkeypatch):
+    ws = await make_workspace(db)
+    sess = await make_session(db, ws)
+    await _seed_utterances(db, sess, [("respondent", "we don't report the accidents")])
+    monkeypatch.setattr(disclosure, "run_agent", _mock_agent(TIER2))
+    await disclosure.screen_session({"session_id": str(sess)})
+    await disclosure.screen_session({"session_id": str(sess)})  # re-complete path
+    assert await db.fetchval("select count(*) from harm_incidents where session_id = $1", sess) == 1
+
+
+async def test_incident_never_crosses_into_records(db, monkeypatch):
+    """The whole point: a harm disclosure produces an incident + sealed flag and NOTHING
+    in the record store — it can never become captured process (§7.6)."""
+    ws = await make_workspace(db)
+    sess = await make_session(db, ws)
+    await _seed_utterances(db, sess, [("respondent", "we don't report the accidents")])
+    monkeypatch.setattr(disclosure, "run_agent", _mock_agent(TIER2))
+    await disclosure.screen_session({"session_id": str(sess)})
+    assert await db.fetchval("select count(*) from harm_incidents where session_id = $1", sess) == 1
+    assert await db.fetchval("select count(*) from claim_records where session_id = $1", sess) == 0
+
+
+async def test_incident_survives_interview_delete(db, monkeypatch):
+    """An admin deleting the interview must not scrub the safety layer: the incident is
+    RETAINED with session_id nulled (FK on delete set null), and the cascade does not
+    crash on the new table."""
+    from app.pipeline.deletion import delete_interview
+
+    ws = await make_workspace(db)
+    sess = await make_session(db, ws)
+    await db.execute("update interview_sessions set session_kind='interview' where id=$1", sess)
+    await _seed_utterances(db, sess, [("respondent", "we don't report the accidents")])
+    monkeypatch.setattr(disclosure, "run_agent", _mock_agent(TIER2))
+    await disclosure.screen_session({"session_id": str(sess)})
+
+    result = await delete_interview(str(sess))
+    assert result["deletable"] is True
+    # Incident survives, session ref nulled — same doctrine as sealed_flags.
+    surviving = await db.fetch("select session_id from harm_incidents where workspace_id = $1", ws)
+    assert len(surviving) == 1 and surviving[0]["session_id"] is None
+
+
 async def test_screen_idempotent_no_duplicate_flags(db, monkeypatch):
     ws = await make_workspace(db)
     sess = await make_session(db, ws)

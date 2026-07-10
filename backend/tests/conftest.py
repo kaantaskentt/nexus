@@ -45,6 +45,8 @@ MIGRATIONS = [
     BACKEND / "db" / "migrations" / "0022_workspace_sort_order.sql",
     BACKEND / "db" / "migrations" / "0023_workflow_taxonomy.sql",
     BACKEND / "db" / "migrations" / "0024_live_captures.sql",
+    # 0025_intake_agent.sql stays parked (SIMPLIFY-PARK); 0026 is independent of it.
+    BACKEND / "db" / "migrations" / "0026_harm_incidents.sql",
 ]
 
 
