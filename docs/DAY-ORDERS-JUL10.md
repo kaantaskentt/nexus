@@ -339,6 +339,15 @@ file's log section before NEXT.
   SUSPICIOUSLY THIN extraction (likely outage-era compile), not a short call. Do not show
   a client; recommend manual transcript read + re-extraction decision after Emre's look.
 
+- LANE-S7 DRIVEN VERIFY: GREEN (both parts, on deployed pin 8a03c9e). Part 1: live schema
+  minimization + FK survival semantics confirmed on prod. Part 2 (job 379, real worker):
+  synthetic disclosure → sealed_flag → minimized amber/illegality incident (no verbatim)
+  → notify_status='skipped' fallback (keys absent, session never failed) → QUARANTINE
+  PROVEN BY COUNTS (claim_records=0, snapshot_cards=0). Teardown explicit + logged
+  (incident removed with rationale: synthetic noise in reviewer queue). HONEST SCOPE
+  NOTE: in-room persona behavior NOT driven (lane-sec's engine surface) — covered by
+  quality's eval baits + Emre's live round-2 call. Log 367ef8e.
+
 ## KAAN ACTION LIST (consolidated, batched — nothing blocks the lanes)
 1. SENDGRID_API_KEY (ENVIRONMENT.md item 6, still outstanding) + new INCIDENT_NOTIFY_EMAILS
    (Kaan + Emre addresses) in Railway → turns Section 7 reviewer notification from
