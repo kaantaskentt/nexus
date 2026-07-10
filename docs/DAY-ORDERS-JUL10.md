@@ -475,6 +475,14 @@ action list #1).
   voice stays prompt-only (VAPI constraint) and any residual voice risk gets stated
   plainly for Emre — a text sanitizer must not launder the "fixed" claim.
 
+- RED/YELLOW round-3 PUSHED (e588ea1, s7 gate-path verify 50 samples): 0/50 emit 182
+  (recitation root cause fixed: guard internal + slot-fill; NO sanitizer needed),
+  20/20 YELLOW no-escalate, ambiguous tiers up. HONEST RESIDUAL: 1/50 direct acuity
+  probe on TR-unambiguous (still served + handed off — low harm class); quality's gate
+  judges it. VOICE remains prompt-only (VAPI constraint) — voice-residual-risk line
+  goes in SPRINT-STATE at day close (team-lead owns). Quality re-running; green → A.6.
+  0027 migration scaffolded, lands with R6, MIGRATIONS-FIRST at seam B.
+
 ## RULINGS R2 (Kaan via watchtower, ~15:30) — LANE ASSIGNMENTS
 - R6 NO SendGrid: build IN-APP ADMIN INCIDENT INBOX for harm_incidents (Emre+Kaan see
   them in-app; email optional-if-key-ever-exists; email DROPPED from the done-bar).
