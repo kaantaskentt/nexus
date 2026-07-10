@@ -19,6 +19,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from ..db import get_pool
+from ..pipeline import scenario as scenario_mod
+from ..pipeline import workflow_edit
 from ..pipeline.roleplay import CAST_KEYS, persona_sheet
 from ..queue import enqueue
 from ..simulation_history import SIMULATION_CAST, SIMULATION_ROUNDS
@@ -131,6 +133,55 @@ async def start_roleplay(workspace_id: str, body: RolePlayIn):
              (workspace_id, modality, language, invite_token, status, session_kind, resumable_state)
            values ($1, 'voice', 'en', $2, 'pending', 'roleplay', $3)""",
         workspace_id, token, json.dumps({"roleplay_persona": body.persona_key}),
+    )
+    return {"token": token, "invite_path": f"/i/{token}"}
+
+
+# ── Scenario run (SIMPLIFY I — lane-e Run wiring) ─────────────────────────────
+
+class ScenarioRunIn(BaseModel):
+    # ONLY workflow_id crosses the wire (locked contract). The archetype + the interviewer
+    # objectives are derived SERVER-SIDE from the workflow — a browser-supplied objective
+    # that steers the simulated interviewer would be a prompt-injection surface. pydantic
+    # drops any other field in the body (no extra=allow), which is the injection guard.
+    workflow_id: str
+
+
+@router.post("/{workspace_id}/scenario-run")
+async def scenario_run(workspace_id: str, body: ScenarioRunIn):
+    """Run a scenario: derive {archetype, interviewer objectives} from the named workflow,
+    mint a roleplay-kind session bound to them, and hand back the invite path to the room.
+    Firewall unchanged — roleplay sessions never compile/screen/list (compiler, disclosure,
+    live_capture all skip session_kind='roleplay'); nothing said here reaches client records.
+    The archetype supplies WHO the admin plays; the workflow supplies WHAT the interviewer
+    must draw out (no fabricated real-employee persona — SIMPLIFY-I-DESIGN LOCKED #1)."""
+    pool = await get_pool()
+    # Isolation: the workflow must belong to THIS workspace; a valid id from another tenant 404s.
+    if await pool.fetchval(
+        "select 1 from workflows where id = $1 and workspace_id = $2",
+        body.workflow_id, workspace_id,
+    ) is None:
+        raise HTTPException(404, "no such workflow in this workspace")
+    effective = await workflow_edit.effective_workflow(pool, body.workflow_id)
+    # Defense in depth (the page only shows qualifying cards, but a direct call must not run
+    # a 1-step "drill"): a scenario needs >= 3 visible steps.
+    if scenario_mod.visible_step_count(effective) < 3:
+        raise HTTPException(422, "a workflow needs at least 3 steps to pressure-test")
+    scenario = scenario_mod.build_scenario(effective)
+    token = secrets.token_urlsafe(24)
+    await pool.execute(
+        """insert into interview_sessions
+             (workspace_id, modality, language, invite_token, status, session_kind, resumable_state)
+           values ($1, 'voice', 'en', $2, 'pending', 'roleplay', $3)""",
+        workspace_id, token,
+        json.dumps({
+            "roleplay_persona": scenario["persona_key"],  # top-level so the debrief finds the sheet
+            "scenario": {
+                "workflow_id": scenario["workflow_id"],
+                "label": scenario["label"],
+                "objectives": scenario["objectives"],
+            },
+        }),
     )
     return {"token": token, "invite_path": f"/i/{token}"}
 

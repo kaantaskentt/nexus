@@ -100,6 +100,16 @@ async def get_by_token(token: str):
         out["test_mode"] = True
         section = "settings" if session["session_kind"] == "voice_test" else "simulations"
         out["test_back_path"] = f"/w/{slug}/{section}"
+    # SIMPLIFY I: a roleplay session minted from a workflow is a SIMULATION. Expose the
+    # scenario label so the room shows the persistent "practice run" marker + suppresses the
+    # Captured-live panel. Label only — no objectives reach the client (they'd hint the
+    # interviewer's steer to the human player, muddying the test).
+    if session["session_kind"] == "roleplay":
+        state = session["resumable_state"]
+        state = json.loads(state) if isinstance(state, str) else (state or {})
+        sc = (state or {}).get("scenario")
+        if isinstance(sc, dict) and sc.get("label"):
+            out["simulation"] = {"label": sc["label"]}
     # F7 BETA: the context call room labels itself (BETA chip in the client) — the
     # caller is the client's founder/admin, so no admin chrome, just the honest label.
     # The done page deep-links them to the snapshot their call just built, so expose the

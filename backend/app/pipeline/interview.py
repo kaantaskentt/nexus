@@ -80,6 +80,35 @@ def _context_call_block(session, elapsed_min: float) -> str:
     )
 
 
+def _session_scenario(session) -> dict | None:
+    """SIMPLIFY I: a roleplay session minted from a workflow carries {label, objectives} in
+    resumable_state.scenario. Returns it only for roleplay sessions (the interviewer probes
+    that workflow); every other kind is None and takes its normal path."""
+    if session["session_kind"] != "roleplay":
+        return None
+    state = session["resumable_state"]
+    state = json.loads(state) if isinstance(state, str) else (state or {})
+    sc = state.get("scenario")
+    return sc if isinstance(sc, dict) and sc.get("objectives") else None
+
+
+def _scenario_block(scenario: dict) -> str:
+    """The interviewer's steer for a simulation: probe THIS workflow, cover these objectives.
+    Frames like a handoff's objectives — the agent interviews for real, never told it's a
+    drill (that would change the very behavior the simulation tests)."""
+    label = scenario.get("label") or "this workflow"
+    objectives = scenario.get("objectives") or []
+    lines = "\n".join(f"- {o}" for o in objectives)
+    return (
+        "## Your focus for this interview\n"
+        f'Draw out how "{label}" really happens, end to end, in the respondent\'s own words. '
+        "Cover these objectives before you close:\n"
+        f"{lines}\n\n"
+        "Hunt for concrete episodes, surface the exceptions and what breaks it, and do not "
+        "accept a tidy summary. You were never told what anyone else said."
+    )
+
+
 async def _prepare_turn(session_id: str, respondent_text: str | None):
     """Shared setup for both the streaming and non-streaming turn paths: validate the
     session, store the respondent's verbatim turn, and assemble the model context."""
@@ -120,11 +149,20 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
     # (SIMPLIFY-EF-FINDINGS E). The model still sees byte-identical system text: the two
     # blocks concatenate exactly as the old single string did.
     is_context_call = session["session_kind"] == "context"
+    scenario = _session_scenario(session)  # SIMPLIFY I: a roleplay session bound to a workflow
     if is_context_call:
         # No plan handoff (the persona carries the exit table). The context block holds the
         # elapsed clock, so it IS the volatile part; there's no stable package prefix here.
         stable_extra = ""
         volatile_extra = _context_call_block(session, elapsed_min)
+    elif scenario:
+        # Simulation: the interviewer probes THIS workflow with the derived objectives (its
+        # stable steer, cacheable). It interviews for real — nothing tells it this is a drill;
+        # the SIMULATION marker lives on the human player's screen, not in the agent's prompt.
+        stable_extra = _scenario_block(scenario)
+        volatile_extra = (
+            f"Runtime status: about {int(elapsed_min)} minute(s) elapsed."
+        )
     else:
         stable_extra = (
             "## Your handoff package for this interview\n"
@@ -302,13 +340,14 @@ async def build_voice_system(session_id: str) -> list[dict]:
     unchanged. Context calls carry an elapsed clock, so their tail stays uncached."""
     pool = await get_pool()
     session = await pool.fetchrow(
-        "select s.plan_id, s.session_kind, s.started_at, w.industry, "
+        "select s.plan_id, s.session_kind, s.started_at, s.resumable_state, w.industry, "
         "w.name as workspace_name from interview_sessions s "
         "join workspaces w on w.id = s.workspace_id where s.id = $1",
         session_id,
     )
     if session is None:
         raise RuntimeError(f"build_voice_system: no session {session_id}")
+    scenario = _session_scenario(session)  # SIMPLIFY I: roleplay bound to a workflow
     # F7 BETA: a 'context' session binds the context-collector persona (no plan handoff;
     # the persona carries the exit-condition table). All other kinds are unchanged.
     if session["session_kind"] == "context":
@@ -319,6 +358,13 @@ async def build_voice_system(session_id: str) -> list[dict]:
         cached_stable = system
         volatile_tail = "\n\n" + _context_call_block(session, elapsed)  # has the elapsed clock
         cacheable_transcript = False
+    elif scenario:
+        # Simulation: the interviewer under test, steered to probe this workflow.
+        cfg = await get_agent_config("interviewer")
+        system = load_prompt(cfg["prompt_path"], _industry_block(session["industry"]))
+        cached_stable = f"{system}\n\n{_scenario_block(scenario)}"
+        volatile_tail = ""
+        cacheable_transcript = True
     else:
         package = await _load_package(session["plan_id"])
         cfg = await get_agent_config("interviewer")

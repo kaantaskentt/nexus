@@ -47,14 +47,26 @@ def persona_sheet(key: str, *, include_scorer: bool = False) -> str | None:
     return text.strip()
 
 
-def _build_content(sheet: str, transcript: str) -> str:
+def _build_content(sheet: str, transcript: str, objectives: list[str] | None = None) -> str:
     # Instruction last, after the transcript (quality.py precedent: instruction-after-
     # transcript prevents the transcript-echo failure observed on prod).
+    scenario_block = ""
+    if objectives:
+        # SIMPLIFY I: a workflow-scenario run. Judge objective coverage ALONGSIDE the usual
+        # craft judging — did the interviewer surface each thing this workflow was set to test.
+        obj_lines = "\n".join(f"- {o}" for o in objectives)
+        scenario_block = (
+            "\n\n# Scenario objectives the interviewer was steered to cover (SIMULATION)\n"
+            "This run pressure-tested a real workflow. Beyond the usual craft judging, assess "
+            "whether the interviewer covered each objective below: name which it surfaced and "
+            "which it missed, with evidence from the transcript.\n" + obj_lines
+        )
     return (
         "# Character sheet the human played (ground truth + hidden layers + style test)\n"
         + sheet
         + "\n\n# Role-play transcript to observe (INPUT, do not echo or continue it)\n"
         + transcript
+        + scenario_block
         + "\n\n# Task\nWrite the observation debrief of the INTERVIEWER's craft per your "
         "instructions. Respond with ONLY the single JSON object specified. Do not repeat, "
         "echo, or continue the transcript."
@@ -94,9 +106,11 @@ async def generate_roleplay_debrief(payload: dict) -> None:
                  session_id, len(utterances))
         return
     transcript = "\n".join(f"[{u['speaker']}] {u['text']}" for u in utterances)
+    objectives = ((state or {}).get("scenario") or {}).get("objectives")
 
     result = await run_agent_json(
-        "roleplay_debrief", _build_content(sheet, transcript), session_id=str(session_id)
+        "roleplay_debrief", _build_content(sheet, transcript, objectives),
+        session_id=str(session_id),
     )
     await pool.execute(
         """insert into roleplay_debriefs (session_id, persona_key, document)
