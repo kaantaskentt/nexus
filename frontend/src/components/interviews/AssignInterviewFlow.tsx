@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -30,12 +30,16 @@ type Phase = "collect" | "drafting" | "assign";
 // the normal gate (the plan detail's approve/check/send is untouched — nothing sends here).
 export function AssignInterviewFlow({ workspace }: { workspace: Workspace }) {
   const router = useRouter();
+  // Pre-seed from the URL when this flow is entered as a FOLLOW-UP from a report
+  // (?name=&role=&focus=): the report's open items become the starting focus, so
+  // Follow-up is a real stage that flows through the same draft -> gate path.
+  const params = useSearchParams();
   const [phase, setPhase] = useState<Phase>("collect");
 
   // Step 1 — who + optional focus.
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
-  const [focus, setFocus] = useState("");
+  const [name, setName] = useState(params.get("name") ?? "");
+  const [role, setRole] = useState(params.get("role") ?? "");
+  const [focus, setFocus] = useState(params.get("focus") ?? "");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 

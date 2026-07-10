@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { get_workspace } from "@/lib/live-server";
 import { AssignInterviewFlow } from "@/components/interviews/AssignInterviewFlow";
@@ -10,5 +11,10 @@ export const dynamic = "force-dynamic";
 export default async function NewInterviewPage({ params }: { params: { slug: string } }) {
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
-  return <AssignInterviewFlow workspace={workspace} />;
+  // AssignInterviewFlow reads useSearchParams (follow-up pre-seed) — needs a Suspense wrap.
+  return (
+    <Suspense>
+      <AssignInterviewFlow workspace={workspace} />
+    </Suspense>
+  );
 }

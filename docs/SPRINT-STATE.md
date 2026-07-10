@@ -261,6 +261,22 @@ there. Simpler or more complex? SIMPLER: one screen to set up an interview inste
 hops, with the voice/text choice finally honored. Note: CustomPlanDoor.tsx is now orphaned
 (no importer) — flagged for the Phase 4 dead-code sweep, not deleted here to avoid churn.
 
+**A28 pre-review — COMMIT 4 (K5 report: findings-first + follow-up becomes a real stage).**
+Today: the report leads with the workflow map; Key Findings sit in the right rail; the
+"Add to plan" buttons in "Follow Up On" are DEAD (disabled with a "being wired" tooltip), so
+Follow-up is a mystery stage. After: StageRail on top (Report lit; Plan + Observe deep-link
+back — report.plan_id + sessionId are real). Findings-first: Key findings become a prominent
+full-width section right under the header; the workflow map follows as the evidence. The
+"Follow up on" panel turns the dead buttons into a real composer — checkboxes pick the open
+items (default all), and "Create follow-up interview" routes into the K3 assign flow
+pre-seeded (/interviews/new?name&role&focus) so the follow-up drafts from the records and
+passes the SAME gate before anything sends. That makes Follow-up a real stage born from the
+report, via the one creation path (the assign flow now reads name/role/focus from the URL).
+The dead "Generate Follow-Up Template" button already died in K1 (PlanView). Simpler or more
+complex? SIMPLER: the takeaways lead, and "follow up on this" finally does something honest
+instead of being a greyed button. Gate untouched. Note: the step-drawer's "Add follow-up
+question" stays honestly-disabled (workflow-map editing, lane-C's surface, out of K scope).
+
 ---
 
 # NIGHT MARATHON — July 8/9 (docs/MARATHON-ORDERS.md; A28 binds every change)

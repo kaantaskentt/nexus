@@ -25,6 +25,7 @@ import { conflictKindMeta } from "@/lib/conflicts";
 import { scrimFade, drawerSpring } from "@/lib/variants";
 import { useEscapeClose } from "@/lib/useEscapeClose";
 import { StepRail } from "@/components/StepRail";
+import { StageRail } from "@/components/interviews/StageRail";
 import { WorkflowStepCard, toolLabel } from "./WorkflowStepCard";
 import { ArtifactsPanel } from "./ArtifactsPanel";
 
@@ -39,6 +40,11 @@ export function ReportView({
 }) {
   const [openStep, setOpenStep] = useState<WorkflowStep | null>(null);
   const [showAllFollowUps, setShowAllFollowUps] = useState(false);
+  // Follow-up composer (K5): the admin picks which open items become the focus of a new
+  // follow-up interview. Default to all selected — the common case is "chase all of these."
+  const [selectedFollowUps, setSelectedFollowUps] = useState<Set<number>>(
+    () => new Set(report.follow_ups.map((_, i) => i)),
+  );
   // Resolve this report's workflow by its session so the header can link into the
   // editor. The base workflow only exists once the canvas has fanned out, so we resolve
   // lazily off the steps landing and leave the link out until there's a target.
@@ -93,6 +99,48 @@ export function ReportView({
             {report.duration_min > 0 ? ` · ${report.duration_min} min` : ""}
           </span>
         </div>
+
+        {/* The interview as one connected workflow — Report is lit; Plan and Observe link
+            back to their stages (Follow-up becomes real via "Create follow-up interview"). */}
+        <StageRail
+          current="report"
+          className="mt-5"
+          hrefs={{
+            ...(report.plan_id ? { plan: `/w/${workspace.slug}/plans/${report.plan_id}` } : {}),
+            observe: `/w/${workspace.slug}/interviews/${sessionId}`,
+          }}
+        />
+
+        {/* Findings first (K5): the takeaways lead; the workflow map is the evidence below. */}
+        <section className="card-hairline mt-6 rounded-card border border-line bg-surface p-5">
+          <h2 className="mb-3 flex items-center gap-2 font-display text-xl text-ink">
+            <Lightbulb className="h-5 w-5 text-accent" strokeWidth={1.75} />
+            Key findings
+          </h2>
+          {report.key_findings.length === 0 ? (
+            <p className="text-sm text-ink-soft">
+              Findings land here once the interview compiles.
+            </p>
+          ) : (
+            <ul className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
+              {report.key_findings.map((f, i) => (
+                <li key={i} className="flex gap-2 text-sm text-ink-soft">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                  <span>
+                    {f.text}
+                    {f.emphasis && (
+                      <>
+                        {" ("}
+                        <span className="font-semibold text-danger">{f.emphasis}</span>
+                        {")"}
+                      </>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_20rem]">
           {/* ── Left: workflow canvas + perception gap ─────────────── */}
@@ -184,54 +232,83 @@ export function ReportView({
             )}
           </div>
 
-          {/* ── Right: findings / follow-ups / quality ─────────────── */}
+          {/* ── Right: follow-ups / artifacts / quality ────────────── */}
           <aside className="space-y-6">
-            <Panel icon={Lightbulb} title="Key Findings">
-              <ul className="space-y-3">
-                {report.key_findings.map((f, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-ink-soft">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                    <span>
-                      {f.text}
-                      {f.emphasis && (
-                        <>
-                          {" ("}
-                          <span className="font-semibold text-danger">{f.emphasis}</span>
-                          {")"}
-                        </>
-                      )}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </Panel>
-
-            <Panel icon={UserPlus} title="Follow Up On">
-              <ul className="space-y-3">
-                {(showAllFollowUps ? report.follow_ups : report.follow_ups.slice(0, 6)).map(
-                  (f, i) => (
-                    <li key={i} className="flex items-start justify-between gap-3">
-                      <span className="text-sm text-ink-soft">{f.text}</span>
-                      <button
-                        disabled
-                        title="Add-to-plan from a finding is being wired with the chat agent in this build"
-                        className="shrink-0 cursor-not-allowed rounded-md border border-line px-3 py-1.5 text-xs font-medium text-ink-faint opacity-60"
+            <Panel icon={UserPlus} title="Follow up on">
+              {report.follow_ups.length === 0 ? (
+                <p className="text-sm text-ink-soft">Nothing flagged to follow up on.</p>
+              ) : (
+                <>
+                  <p className="mb-3 text-xs leading-relaxed text-ink-faint">
+                    Pick the open items to chase, then compose them into a follow-up
+                    interview. It drafts from the records and passes the same check before
+                    anything reaches the person.
+                  </p>
+                  <ul className="space-y-2.5">
+                    {(showAllFollowUps ? report.follow_ups : report.follow_ups.slice(0, 6)).map(
+                      (f, i) => (
+                        <li key={i}>
+                          <label className="flex cursor-pointer items-start gap-2.5">
+                            <input
+                              type="checkbox"
+                              checked={selectedFollowUps.has(i)}
+                              onChange={() =>
+                                setSelectedFollowUps((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(i)) next.delete(i);
+                                  else next.add(i);
+                                  return next;
+                                })
+                              }
+                              className="mt-0.5 h-4 w-4 shrink-0 rounded border-line-strong text-accent focus:ring-accent"
+                            />
+                            <span className="text-sm text-ink-soft">{f.text}</span>
+                          </label>
+                        </li>
+                      ),
+                    )}
+                  </ul>
+                  {report.follow_ups.length > 6 && (
+                    <button
+                      onClick={() => setShowAllFollowUps((v) => !v)}
+                      className="mt-3 text-xs font-medium text-accent hover:underline"
+                    >
+                      {showAllFollowUps
+                        ? "Show fewer"
+                        : `Show ${report.follow_ups.length - 6} more`}
+                    </button>
+                  )}
+                  {(() => {
+                    const chosen = report.follow_ups
+                      .filter((_, i) => selectedFollowUps.has(i))
+                      .map((f) => f.text);
+                    if (chosen.length === 0) {
+                      return (
+                        <button
+                          disabled
+                          className="mt-4 inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-md border border-line px-4 py-2.5 text-sm font-medium text-ink-faint opacity-60"
+                        >
+                          <UserPlus className="h-4 w-4" strokeWidth={1.75} />
+                          Select items to follow up on
+                        </button>
+                      );
+                    }
+                    const query = new URLSearchParams({
+                      name: report.interviewee_name ?? "",
+                      role: report.interviewee_role ?? "",
+                      focus: `Follow up on these open items from the last interview: ${chosen.join("; ")}`,
+                    }).toString();
+                    return (
+                      <Link
+                        href={`/w/${workspace.slug}/interviews/new?${query}`}
+                        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover"
                       >
-                        Add to plan
-                      </button>
-                    </li>
-                  ),
-                )}
-              </ul>
-              {report.follow_ups.length > 6 && (
-                <button
-                  onClick={() => setShowAllFollowUps((v) => !v)}
-                  className="mt-3 text-xs font-medium text-accent hover:underline"
-                >
-                  {showAllFollowUps
-                    ? "Show fewer"
-                    : `Show ${report.follow_ups.length - 6} more`}
-                </button>
+                        <UserPlus className="h-4 w-4" strokeWidth={2} />
+                        Create follow-up interview ({chosen.length})
+                      </Link>
+                    );
+                  })()}
+                </>
               )}
             </Panel>
 
