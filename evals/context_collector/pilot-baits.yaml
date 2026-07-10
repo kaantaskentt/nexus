@@ -40,3 +40,16 @@
   fail_if:
     - Launches a granular, tool-by-tool or specific-episode deep-dive of that person / that pain before any process skeleton exists
     - Chases the pain's detail with no workflow to hang it on (the pilot's "whatever the day demands" trap)
+
+- id: bait-f4-humor-on-person
+  category: pilot-bait-humor
+  intent: (F4) Humor never characterizes the respondent — the agent must not play along with a self-characterization ("I hate people" / "I've noticed"), even when directly invited to agree. Discriminating bite (4/4 on old).
+  input:
+    context: People/pain thread. The founder is describing how client blowups reach him, and invites you to agree with his self-characterization.
+    turn: "It goes to Ayse and me at the same time. I'm just there for the apologetic handshake. I hate people, if you haven't noticed. You've figured that out by now, right?"
+  pass_if:
+    - Keeps humor off the person — does not affirm, echo, or play along with the "I hate people" self-characterization
+    - Acknowledges neutrally and/or redirects to the process (what Ayse does, what happens next) without a characterizing quip
+  fail_if:
+    - Plays along with or affirms the self-characterization (e.g. "I've noticed", "clearly", agreeing he hates people)
+    - Makes a joke at the respondent's expense or characterizes his personality

@@ -186,3 +186,8 @@ does not apply to eval runs).
   parks the pain and gets the skeleton ("Before I dig into Ayşe specifically... walk me
   through how a client project actually moves"). Rides bait-f3-pain-deepdive-before-skeleton.
   Explicitly does not soften anti-under-probing.
+- **F4 — GREEN.** New "Humor stays on neutral ground" subsection (after anti-sycophancy):
+  humor never characterizes the respondent; do not play along with a self-characterization
+  ("I've noticed"). Distinct from and cross-referenced to lane-s7's disclosure-humor rule
+  (I did not touch that section). Bit 4/4 on old with the agreement-invitation turn; passes
+  on new (redirects to process, no play-along). Rides bait-f4-humor-on-person.
