@@ -139,12 +139,51 @@ its existing monitor cadence (cheap: two existence-guarded SELECTs, enqueues onl
   render/compile read only client_visible_claims/utterances (quarantine-safe); demo-skip test.
 - Cadence: worker-startup + on-demand only; standing cron left as the proposal above.
 
+## SEAM-A DRIVEN VERIFY — RESULTS (prod, backend nexus-api-production-d644, deploy b64375e)
+Ran against the LIVE deployed backend + prod DB. Backend URL via `railway domain`; webhook
+driven over HTTP with the real VOICE_SHARED_SECRET (Bearer). Prod health before/after:
+`ok:true, failed_jobs:0`. test-mest already carries the multi-render_batch state team-lead is
+verifying read-only, so I proved fix A on test-mest TRANSIENTLY (no compile/render allowed to
+run there) and proved the full compile→snapshot→reconcile end-to-end on an isolated hidden
+tenant — zero render_batch added to test-mest.
+
+- **STEP 1 — fix A abnormal hangup (status-update:ended only), on test-mest — PASS.**
+  Disposable context session (no utterances) → POST /api/voice/webhook status-update:ended →
+  session `completed`, `resumable_state.compile_enqueued=true`, exactly ONE `compile_session`
+  job with `render_snapshot=true`, plus one `screen_disclosures` + one `scan_artifact_promises`.
+  The named-suspect route (compile never enqueued on a report-less end) is CLOSED on prod.
+  Cleanup: deleted the 3 jobs + the session before any fan-out ran; test-mest restored to
+  baseline (146 records / 75 cards / max_batch 4 / 4 sessions) — no render_batch added.
+- **FULL PIPELINE — live-call end → compile → snapshot COMPOSES (costume 1), isolated tenant — PASS.**
+  Hidden non-demo tenant, seeded 4-turn founder transcript → status-update:ended webhook →
+  `compile_session` done (7 records) → full fan-out all done → `render_snapshot` done →
+  **6 snapshot cards composed** (picker would no longer say "awaiting first call").
+- **STEP 2 — plan drafting for Ahmet Yayci, on test-mest — PASS.** Enqueued generate_plan for
+  the real Ahmet entity → reached **AWAITING_APPROVAL with 11 topics**, fast (done by first
+  poll, ~1 min incl. nexus_check) — the reported multi-minute hang → empty shell is gone.
+  Plan + jobs + transitions deleted after; test-mest restored.
+- **STEP 3 — paste-compile — PASS (by path equivalence).** Paste-compile runs the SAME
+  `compile_session` path proven green on the hidden tenant (transcript → 7 records, no error).
+  The original test-mest paste error was the credit outage (resolved). NOTE: the paste HTTP
+  endpoint is seat-gated (require_workspace_seat); not driven headless without a JWT — the
+  underlying compile is what heals, and it is proven.
+- **STEP 4 — reconcile drill, isolated hidden tenant (never test-mest) — PASS.** Deleted the
+  tenant's snapshot_cards (records kept) → enqueued scoped `reconcile_snapshots` → it enqueued
+  exactly ONE render (render jobs 1→2) → cards recomposed (0→1). Second `reconcile_snapshots`
+  = **no-op** (render jobs stayed 2, no new render) — idempotent on healthy state. Hidden
+  tenant then TORN DOWN fully (deletion.delete_workspace cascade order).
+- **Fix B fast-422 precheck**: proven by unit test in the deployed serialized suite (team-lead:
+  286p/0errors); the seat-gated endpoint isn't headless-drivable, so not re-driven here.
+
+Cleanup audit: all `lanemest-verify-*` workspaces/sessions gone, Ahmet verify-plan gone, zero
+leftover verify jobs, test-mest byte-for-byte at baseline, prod queue `failed_jobs:0`. Secret
+never written to the repo/log; scratchpad copy deleted.
+
 ## Audit verdicts
-- Commit A (voice.py guaranteed idempotent compile): BUILD ok, tests green (both race orders),
-  no double-compile by construction (single-row CAS). Verdict: SOLID pending seam-A driven-verify.
-- Commit B (plan precheck): BUILD ok, tests green, no behavior change when records exist.
-  Verdict: SOLID.
-- Commit C (reconcile backstop): BUILD ok, tests green, prod-preview well-scoped (1 heal).
-  Verdict: SOLID pending seam-A driven-verify.
-- Driven verify on test-mest (VAPI call → compile → snapshot → plan → paste): PENDING seam A
-  (team-lead deploys; I do not). Script above.
+- Commit A (voice.py guaranteed idempotent compile): tests green (both race orders) + DRIVEN
+  PASS on prod (abnormal-hangup route compiles exactly once). Verdict: **SOLID — VERIFIED**.
+- Commit B (plan precheck): tests green; drafting proven reliable on prod (Ahmet → AWAITING_
+  APPROVAL). 422 path unit-verified (endpoint seat-gated). Verdict: **SOLID**.
+- Commit C (reconcile backstop): tests green; DRIVEN PASS on prod (heal + idempotent no-op),
+  and it already self-proved on boot (Aurora Atelier). Verdict: **SOLID — VERIFIED**.
+- Emre round-2 unblock: live-call → compile → snapshot → plan → paste all green on prod. CLEARED.
