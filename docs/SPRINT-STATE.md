@@ -90,6 +90,19 @@ dismiss persists. Kaan removed the co-primary Generate-plan / Review-transcript 
 the intro carries a single CTA. Simpler? SIMPLER: one clear next step at the one moment it
 matters, shown once.
 
+**AUDIT verdicts (Lane DBG).**
+- COMMIT 1 (D welcome copy) LANDED 0123f83. Frontend 62/62 (+6 new consent-copy.test),
+  drift guard 18 lines in sync, em-dash lint clean, tsc clean. Interview page byte-identical
+  + test-pinned; context branch asserts no role-only-promise leakage. Copy relayed to lead
+  for Kaan confirm #2 before commit. VERDICT: approved, ships now (wording pass invited).
+- COMMIT 2 (D coherence) LANDED. Opener aligned to the welcome spine ("context call, where
+  I learn how your company actually works ... fits the real thing, not a tidy version");
+  glossary checklist already carried the file (WIRE-TIME FLAG was pre-actioned); persona
+  self-note de-staled. No eval case touched: every context_collector case runs mid-call
+  (MIDCALL_NOTE), so the opener edit is orthogonal — proven live (fixed slice 2/3 then 3/3;
+  the one miss was the documented anti-sycophancy 4/5 flake class, cleared on re-run).
+  VERDICT: approved, coherent, zero regression.
+
 ## Lane EF — voice drops + text latency (Feedback F/E; findings docs/SIMPLIFY-EF-FINDINGS.md)
 
 **A28 pre-review — COMMIT 1 (silence-timeout 30 → 60 + re-provision).**
