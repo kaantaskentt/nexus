@@ -11,6 +11,7 @@ const config: Config = {
         surface: "var(--surface)",
         "surface-raised": "var(--surface-raised)",
         "surface-sunken": "var(--surface-sunken)",
+        "surface-dark": "var(--surface-dark)",
         line: "var(--border)",
         "line-strong": "var(--border-strong)",
         ink: "var(--ink)",
