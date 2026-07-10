@@ -209,3 +209,34 @@ Screenshot ref: the New interview form (name / role-optional / focus-optional).
    decision honest (fact stored+chip shown; opinion about a person quarantined; vague
    input plan-only).
 4. This is a tonight deliverable alongside the refine round - lane it accordingly.
+
+## ADDENDUM 5 — Bug-hunt + cleaner + stress + design pass (Kaan, ~22:45 July 9). START ~23:45 PDT.
+Begins ~1 hour after this lands (watchtower fires a cron kick). Runs in PARALLEL lanes:
+1. **Bug detector lane.** Go through the product looking for real bugs and things that
+   DON'T ADD UP: dead buttons, broken nav, states that contradict the data, empty panels
+   that should have content, copy that lies about behavior, off-by-one counts, anything
+   that would embarrass us in front of Emre or a CEO. Reproduce, log, fix, verify. Not a
+   theoretical audit - drive the actual flows.
+2. **Code-cleaner lane (parallel).** Whole-codebase pass for over-engineering, dead code,
+   duplicated logic, leftover scaffolding from the sprint's fast merges. Simplify without
+   changing behavior (A28: quality-only, no bug hunting in THIS lane - that's lane 1).
+   Anything risky becomes a proposal, not a silent rewrite.
+3. **Stress tests.** Push the surfaces: large record counts, long transcripts, rapid
+   turn submission, reconnect storms in the live room, many workflows/departments,
+   concurrent sessions. Find where it breaks or slows; fix or log.
+4. **Screenshot every page** at 1440 + 390 as you go (docs/audit-screens/), and **check
+   each against the design system via the Figma connector** (get_design_context /
+   get_screenshot / search_design_system - authenticated as Kaan, read access confirmed).
+   Where a page diverges from the Nexus system, align it. This is the "check in with the
+   design guy" loop - the design reference is Figma + the one cohesive Nexus system.
+5. Seam discipline, both-width verify, honest verdicts, evals move with behavior changes.
+
+## ADDENDUM 6 — Emre Section 7 (Imminent harm & adverse events). SAFETY-CRITICAL. TONIGHT.
+Emre sent docs/emre-inbox/section-7-imminent-harm.md (watchtower extracting - file access
+pending). This is the imminent-harm / adverse-event protocol we have been waiting on (the
+Tier-3 class of blocker before real employee interviews). Read it CAREFULLY and implement
+the RIGHT way - do not skim, do not pattern-match to existing safety code. When the
+extracted doc lands in emre-inbox, classify each point (ADOPT/CONVERGENT/CONFLICT/OPEN per
+A24), design the implementation, flag anything that touches the sealed-flag / disclosure /
+gate machinery to Kaan+Emre, and build the clear-adopt items tonight. Treat as the highest-
+care item in the queue - it concerns real people's safety.
