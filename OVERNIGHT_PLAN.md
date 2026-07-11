@@ -230,7 +230,17 @@ conflicts view check (WS-12) · dedupe verification (WS-6 report).
 - ✅ P1-1 worker concurrency ×4 — 611ede0
 - ✅ P1-2 single-shot prompt caching — 2d111da
 - ✅ P1-3 extractor → Haiku — 7d6ab6b + migration 0030 on prod
-- ▶ WS-6 execution — staged above, announced, awaiting the one-commit watchtower window
+- ✅ WS-6 EXECUTED (watchtower-approved) — backups first
+  (claim_records/claim_conflicts/pain_scores + live_captures `*_dedup_backup_jul10`
+  tables: 46+5+1 rows), supersedes repointed to kept originals, 5 duplicate-minted
+  conflicts deleted, 46 duplicate records deleted. Verified: workspace total 222→176
+  (exact staged arithmetic), re-run report = 0 duplicates. Two extra FK referencers found
+  and handled beyond the staged list (pain_scores: backed up + deleted, double-count
+  noise; live_captures.claim_ref: 0 rows needed repointing).
+- ✅ WS-2 DRIVEN PROD VERIFY — real refine on a disposable plan: retired the must-hit,
+  added replacement topic, rewrote goal + DoD as effective-package edits, rechecked=true,
+  plan flipped AWAITING_APPROVAL→NEXUS_CHECK with system transition + check job enqueued.
+  Plan + jobs torn down after.
 - ☐ WS-4c counter driven repro · WS-8 after-numbers · WS-9 cuts · WS-10/11 evals · WS-12 residuals
 - NOTE (new finding): a job claimed as 'running' by a worker killed mid-job has no lease
   recovery — candidate small fix (requeue running jobs whose locked_at is ancient) listed P2.
