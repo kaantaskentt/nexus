@@ -198,6 +198,11 @@ async def enqueue_sweep_once(delay_seconds: int = 0) -> None:
 @handles("sweep_stale_sessions")
 async def _sweep_stale_sessions_job(payload: dict) -> None:
     try:
+        # Lease recovery rides the same heartbeat: a worker killed mid-job (deploy
+        # restart) leaves a zombie 'running' claim nothing else would ever re-drive.
+        from ..queue import requeue_zombie_jobs
+
+        await requeue_zombie_jobs()
         await sweep_stale_sessions(payload.get("idle_minutes", SWEEP_IDLE_MINUTES))
     finally:
         # Self-rescheduling heartbeat: the next sweep queues even when this one failed.

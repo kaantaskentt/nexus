@@ -90,3 +90,22 @@ async def test_concurrent_loops_never_double_claim(db):
     claimed = [j for j in (a, b) if j is not None]
     assert len(claimed) == 1
     assert claimed[0]["kind"] == "_test_race_job"
+
+
+async def test_zombie_running_jobs_requeued(db):
+    """Lease recovery: a 'running' job whose worker died (stale locked_at) is requeued;
+    a genuinely-running fresh claim is left alone."""
+    from app.queue import requeue_zombie_jobs
+
+    await db.execute(
+        "insert into jobs (kind, payload, status, locked_at, locked_by, attempts) "
+        "values ('compile_session', '{}', 'running', now() - interval '45 minutes', 'dead-worker', 1)")
+    await db.execute(
+        "insert into jobs (kind, payload, status, locked_at, locked_by, attempts) "
+        "values ('compile_session', '{}', 'running', now() - interval '2 minutes', 'alive-worker', 1)")
+
+    n = await requeue_zombie_jobs(older_than_minutes=30)
+    assert n == 1
+    rows = await db.fetch("select status, locked_by from jobs where kind='compile_session' order by id")
+    assert [r["status"] for r in rows] == ["queued", "running"]
+    assert rows[0]["locked_by"] is None

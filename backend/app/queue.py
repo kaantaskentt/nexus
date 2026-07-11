@@ -56,6 +56,31 @@ async def _claim_one(worker_id: str):
     )
 
 
+ZOMBIE_RUNNING_MINUTES = 30
+
+
+async def requeue_zombie_jobs(older_than_minutes: int = ZOMBIE_RUNNING_MINUTES) -> int:
+    """Lease recovery (July 10 night finding): a worker killed mid-job (deploy restart,
+    crash) leaves its claim stuck at 'running' forever — nothing ever re-drove it. Requeue
+    any 'running' job whose lock is older than the threshold; 30 min sits far above the
+    slowest real job (compile p95 ~3 min). Attempts already counted on claim, so a job
+    that keeps dying still exhausts max_attempts instead of looping forever. Idempotent;
+    called at worker boot and from the periodic sweep."""
+    pool = await get_pool()
+    rows = await pool.fetch(
+        """update jobs set status = 'queued', locked_by = null
+            where status = 'running'
+              and locked_at < now() - ($1 || ' minutes')::interval
+            returning id, kind""",
+        str(int(older_than_minutes)),
+    )
+    for r in rows:
+        import logging
+        logging.getLogger("nexus.queue").warning(
+            "requeued zombie job %s (%s) — worker died holding the claim", r["id"], r["kind"])
+    return len(rows)
+
+
 async def worker_loop(worker_id: str = "worker-1", poll_seconds: float = 1.0) -> None:
     pool = await get_pool()
     while True:
