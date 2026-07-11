@@ -49,6 +49,7 @@ MIGRATIONS = [
     BACKEND / "db" / "migrations" / "0026_harm_incidents.sql",
     BACKEND / "db" / "migrations" / "0027_harm_incident_review.sql",
     BACKEND / "db" / "migrations" / "0028_session_compile_max_tag.sql",
+    BACKEND / "db" / "migrations" / "0029_role_schema_seat.sql",
 ]
 
 

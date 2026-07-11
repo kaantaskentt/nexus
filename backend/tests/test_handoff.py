@@ -4,8 +4,24 @@ assert the package is built ONLY from permitted fields."""
 
 import json
 
+import pytest
+
+from app.pipeline import handoff as handoff_mod
 from app.pipeline.handoff import build_handoff_package
 from tests.conftest import make_workspace
+
+
+@pytest.fixture(autouse=True)
+def _no_live_prime(monkeypatch):
+    """WS-1b: the industry prime makes an LLM call at build time. Tests never touch the
+    API — the default mock RAISES, which doubles as a standing proof that the prime is
+    fail-open (every package in this file still builds). Tests that want a prime
+    override this with their own mock."""
+
+    async def _boom(*a, **k):
+        raise RuntimeError("no live LLM in tests")
+
+    monkeypatch.setattr(handoff_mod, "run_agent", _boom)
 
 
 async def _make_plan(pool, workspace_id):
@@ -158,3 +174,64 @@ async def test_handoff_artifact_authorization_fail_closed(db):
         plan_id = await _plan_with_mission(db, ws, mission)
         package = await build_handoff_package(str(plan_id))
         assert package["artifact_sharing_authorized"] is False
+
+
+async def test_industry_prime_built_from_role_and_industry_only(db, monkeypatch):
+    """WS-1b: the prime seat receives ONLY {role, industry} — never records, never
+    mission text (non-negotiable #2: nothing anyone said travels through the prime).
+    The result lands on the package, capped."""
+    ws = await make_workspace(db, industry="jewelry")
+    person = await db.fetchval(
+        "insert into entities (workspace_id, entity_type, canonical_name, role, source) "
+        "values ($1,'person','Ahmet Yayci','data scientist','interview') returning id", ws)
+    plan_id = await _make_plan(db, ws)
+    await db.execute(
+        "update interview_plans set interviewee_id=$2 where id=$1", plan_id, person)
+    await _claim(db, ws, topic="pain", claim_text="SECRET_PAIN the founder said returns pile up")
+
+    seen: dict = {}
+
+    async def _fake(agent_name, user_content, **kw):
+        seen["agent"] = agent_name
+        seen["content"] = user_content
+        return "Consulting data scientists typically run intake, cleaning, analysis. " * 40
+
+    monkeypatch.setattr(handoff_mod, "run_agent", _fake)
+    package = await build_handoff_package(str(plan_id))
+
+    assert seen["agent"] == "role_schema"
+    assert "data scientist" in seen["content"] and "jewelry" in seen["content"]
+    # Nothing anyone said reaches the prime seat.
+    assert "SECRET_PAIN" not in seen["content"]
+    assert "returns workflow" not in seen["content"]  # mission goal stays out too
+    # On the package, hard-capped.
+    assert package["industry_prime"]
+    assert len(package["industry_prime"]) <= handoff_mod.PRIME_MAX_CHARS
+
+
+async def test_industry_prime_reused_on_rebuild(db, monkeypatch):
+    """Send rebuilds the package synchronously after the approval-time build — the prime
+    must be reused, never re-billed, for the same plan."""
+    ws = await make_workspace(db, industry="jewelry")
+    plan_id = await _make_plan(db, ws)
+
+    calls = {"n": 0}
+
+    async def _fake(agent_name, user_content, **kw):
+        calls["n"] += 1
+        return "The territory map."
+
+    monkeypatch.setattr(handoff_mod, "run_agent", _fake)
+    p1 = await build_handoff_package(str(plan_id))
+    p2 = await build_handoff_package(str(plan_id))
+    assert p1["industry_prime"] == p2["industry_prime"] == "The territory map."
+    assert calls["n"] == 1
+
+
+async def test_industry_prime_fail_open(db):
+    """A prime failure never blocks the handoff (the autouse mock raises)."""
+    ws = await make_workspace(db, industry="jewelry")
+    plan_id = await _make_plan(db, ws)
+    package = await build_handoff_package(str(plan_id))
+    assert package["industry_prime"] is None
+    assert package["goal"]  # the rest of the package built normally

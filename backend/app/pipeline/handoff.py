@@ -16,10 +16,14 @@ import logging
 import re
 
 from ..db import get_pool
+from ..llm import run_agent
 from ..queue import handles
 
 log = logging.getLogger("nexus.handoff")
 DEFAULT_TIME_BUDGET_MIN = 30
+# WS-1b: the industry prime is a small per-turn tax (it rides the cached prefix of every
+# interview turn), so it is HARD-capped. ~1400 chars ≈ 350 tokens.
+PRIME_MAX_CHARS = 1400
 
 # Attribution guard (QA F1). A plan's free-text may be dirty — "Founder quotes ~10
 # days; production describes ~3 weeks" is exactly the who-said-what that non-negotiable
@@ -91,6 +95,44 @@ def _as_dict(v) -> dict:
     return v or {}
 
 
+async def _industry_prime(pool, plan, workspace_id: str) -> str | None:
+    """WS-1b (Emre: schema, NOT hypothesis): a compact map of the profession's territory
+    for this role at this kind of firm, generated from {role, industry} ONLY — the seat
+    never sees records or mission text, so nothing anyone said can travel through it
+    (non-negotiable #2). Reused from the existing package when present (a role doesn't
+    change between approval and send; send's synchronous rebuild must not re-bill).
+    Fail-open: a prime is a sharpener, never a blocker — on any failure the package
+    builds without one, exactly as before WS-1b."""
+    role = None
+    if plan["interviewee_id"]:
+        role = await pool.fetchval(
+            "select role from entities where id = $1", plan["interviewee_id"])
+    industry = await pool.fetchval(
+        "select industry from workspaces where id = $1", workspace_id)
+    if not role and not industry:
+        return None
+    prior = await pool.fetchval(
+        "select package from handoff_packages where plan_id = $1", plan["id"])
+    if prior:
+        prior = json.loads(prior) if isinstance(prior, str) else prior
+        if prior.get("industry_prime"):
+            return prior["industry_prime"]
+    try:
+        text = await run_agent(
+            "role_schema",
+            f"Role: {role or 'unknown'}\nIndustry / kind of firm: {industry or 'unknown'}\n\n"
+            "Write the industry prime for this role now.",
+            workspace_id=workspace_id,
+            max_tokens=600,
+        )
+        text = text.strip()
+        return text[:PRIME_MAX_CHARS] if text else None
+    except Exception:
+        log.warning("handoff: industry prime failed for plan %s — building without it",
+                    plan["id"], exc_info=True)
+        return None
+
+
 async def build_handoff_package(plan_id: str) -> dict:
     pool = await get_pool()
     plan = await pool.fetchrow("select * from interview_plans where id = $1", plan_id)
@@ -144,6 +186,9 @@ async def build_handoff_package(plan_id: str) -> dict:
     artifact_sharing_authorized = bool(_auth.get("authorized")) if isinstance(_auth, dict) else bool(_auth)
 
     package = {
+        # WS-1b: the profession's territory map (role+industry only — see _industry_prime).
+        # First key deliberately: the interviewer reads the territory before the mission.
+        "industry_prime": await _industry_prime(pool, plan, workspace_id),
         "goal": _strip_attribution(mission.get("goal")),
         "objectives": _strip_attribution(mission.get("topics", mission.get("objectives", []))),
         "suggested_questions": _strip_attribution(_as_list(plan["suggested_questions"])),
