@@ -121,18 +121,26 @@ async def run_agent(
         )
     cfg = await get_agent_config(agent_name)
     system = load_prompt(cfg["prompt_path"], industry_block)
+    # P1-2 (WS-8): big stable system prompts on single-shot seats are cache-marked, so a
+    # same-seat re-run within the 5m TTL (compile fan-outs, retry storms, busy demo flows)
+    # reprocesses only the user content. The threshold keeps small prompts out — a cache
+    # write costs a premium, and tiny systems have nothing to amortize. Byte-identical
+    # system text either way.
+    system_arg: str | list = [cache_block(system)] if len(system) > 4000 else system
     started = time.monotonic()
     status, error, text = "ok", None, ""
-    usage_in = usage_out = None
+    usage_in = usage_out = cache_read = cache_write = None
     try:
         resp = await client().messages.create(
             model=cfg["model"],
             max_tokens=max_tokens,
-            system=system,
+            system=system_arg,
             messages=[{"role": "user", "content": user_content}],
         )
         text = "".join(b.text for b in resp.content if b.type == "text")
         usage_in, usage_out = resp.usage.input_tokens, resp.usage.output_tokens
+        cache_read = getattr(resp.usage, "cache_read_input_tokens", None)
+        cache_write = getattr(resp.usage, "cache_creation_input_tokens", None)
         return text
     except Exception as e:
         status, error = "error", str(e)
@@ -149,7 +157,8 @@ async def run_agent(
             cfg["prompt_version"],
             workspace_id,
             session_id,
-            json.dumps({"chars": len(user_content)}),
+            # cache counts ride input_ref like run_chat, so warm hits are visible in prod.
+            json.dumps({"chars": len(user_content), "cache_read": cache_read, "cache_write": cache_write}),
             # Persist the raw output, not just its length, so a parse failure downstream
             # is debuggable from the audit row instead of unrecoverable (#22).
             json.dumps({"chars": len(text), "text": text}),
