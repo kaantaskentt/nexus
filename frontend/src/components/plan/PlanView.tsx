@@ -435,6 +435,32 @@ export function PlanView({
                 </p>
               </CollapsibleSection>
             )}
+
+            {/* WS-7 (round-2 addendum §3.3): the approval gate shows EVERYTHING the
+                interviewer will obey — Emre could not verify the White Wall exclusion
+                before approving. Rendered even when empty: "no exclusions" is itself a
+                fact the approver must be able to see, never infer. */}
+            <CollapsibleSection n={6} icon={Ban} title="Never list">
+              {plan.never_list.length > 0 ? (
+                <ul className="space-y-1.5">
+                  {plan.never_list.map((n, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-ink-soft">
+                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-danger" />
+                      <span>{n}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-ink-faint">
+                  No exclusions on this plan. Anything added here outranks every objective.
+                </p>
+              )}
+              {plan.never_list.length > 0 && (
+                <p className="mt-2.5 text-xs text-ink-faint">
+                  hard exclusions, they outrank every objective at runtime
+                </p>
+              )}
+            </CollapsibleSection>
           </div>
 
           {/* ── Right: refine + grouped questions ─────────────────────── */}
