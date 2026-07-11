@@ -54,7 +54,7 @@ on Sonnet for display-only extraction. Interviewer turn path is healthy: p50 2.7
 
 ## P0 — broken, or promised-and-missing (execution order)
 
-### ▶ WS-2 REFINE-REWRITE — refine must rewrite topics/goal/DoD, not append notes — CODE SHIPPED 1b7a836 (11+30 tests green; prod driven verify pending below)
+### ✅ WS-2 REFINE-REWRITE — SHIPPED 1b7a836 (11+30 tests green; deployed to Railway; driven refine verify below in the proof ledger)
 Root cause verified: `_REFINE_TARGETS = {never_list, suggested_questions, handling_notes}`
 (routers/plans.py). Topics/goal/definition_of_done are structurally uneditable; the contract
 tells the agent to shove real edits into handling_notes → "PLAN REBUILD NOTE" → stale DoD
@@ -138,7 +138,22 @@ backoff for credit errors; /health/deep gains provider_error fields; AppShell sh
 admin banner ("AI provider credits exhausted — work is queued and resumes after top-up").
 Verify: unit test with a faked 400 credit error + banner render + health/deep fields.
 
-### ☐ WS-6 DEDUPE-SWEEP — report first, staged deletions, reversible
+### ▶ WS-6 DEDUPE-SWEEP — REPORT DONE; STAGED LIST BELOW; EXECUTION ANNOUNCED (GATE-1)
+**Report (read-only, scripts/dedupe_report.sql, run on prod):** 46 exact-claim-text
+duplicate records in Test Mest, all later copies of an earlier record with identical text:
+19 in paste-session 001ee881, 27 in paste-session cdb756a8 (the two paste-uploads of the
+context-call conversation during the outage). 5 claim_conflicts rows cite a duplicate
+(duplication-driven noise, e.g. the "coffee and food vs desserts" fake conflict); 1 record
+supersedes a duplicate (link will be repointed to the kept original first).
+**STAGED EXECUTION (announced this commit; watchtower reviews before the next):**
+1. `create table claim_records_dedup_backup_jul10 as select * from claim_records where id in (<the 46 ids>)`
+   — full reversible copy, same for the 5 conflict rows into claim_conflicts_dedup_backup_jul10.
+2. Repoint the 1 supersedes_id from its duplicate target to the kept (earliest) same-text original.
+3. Delete the 5 duplicate-citing claim_conflicts rows (noise minted by duplication).
+4. Delete the 46 duplicate claim_records (keep rule: earliest created_at per claim_text survives).
+5. Verify: workspace count 185+37(Ahmet)−46 = 176; re-run report → 0 duplicates; conflicts view sane.
+Selection is EXACT-text-only (no near-match deletion tonight — near-identicals are listed
+for Kaan in the morning, not touched). Records are the product; the backup table is the undo.
 Evidence (prod): Test Mest 185 records, 139 distinct texts. The 57→143 jump = the SAME
 conversation compiled 3× — context call bcd1385e (57 recs) + two paste-sessions 001ee881
 (38) + cdb756a8 (49) created 5 min apart during the outage, identical claim texts across
@@ -194,5 +209,28 @@ conflicts view check (WS-12) · dedupe verification (WS-6 report).
 
 ---
 
-## Commit ledger (append per commit)
-(none yet)
+## Status snapshot (updated as items land)
+- ✅ WS-2 refine-rewrite — 1b7a836
+- ✅ WS-3 entity-bleed thin-person guard — 2998a9c
+- ✅ WS-7 NEVER list on approval surface — ccf5b1c
+- ✅ WS-1a/c interviewer stance + hypothesis pre-reads + register rules — 4baaee2
+  (safety gate: 42/44; both fails reproduce on OLD prompt = pre-existing flake)
+- ✅ WS-1b industry prime (schema-not-hypothesis) — f041db7 + migration 0029 on prod
+- ✅ WS-4a stale-session sweeper — 7d5bf8c · **PROD-PROVEN**: swept Ahmet's real session
+  (34b8f7da active→completed, plan SENT→COMPLETED, 37 records compiled, workflow building)
+- ✅ WS-4b interviews-list phantom rows — 2ba91b7
+- ✅ WS-5 named provider errors + admin banner — 65430be
+- ✅ WS-12a empty-session compile no-op — 4008bf0
+- ✅ WS-6-prevention compile idempotency — 221da50
+- ✅ GATE-2 — pre-proof eval aa61adc PASS **and PROD PROOF PASS**: after Ahmet's real
+  compile, 0 records in the workspace match launder/law-abiding/money-laundering/illegal/
+  criminal across claim_text+evidence_quote+approach_note; his one White Wall record is the
+  legitimate formatting/addressing workflow fact. Disclosure-screen job queued; sealed-flag
+  check recorded below when the queue drains.
+- ✅ P1-1 worker concurrency ×4 — 611ede0
+- ✅ P1-2 single-shot prompt caching — 2d111da
+- ✅ P1-3 extractor → Haiku — 7d6ab6b + migration 0030 on prod
+- ▶ WS-6 execution — staged above, announced, awaiting the one-commit watchtower window
+- ☐ WS-4c counter driven repro · WS-8 after-numbers · WS-9 cuts · WS-10/11 evals · WS-12 residuals
+- NOTE (new finding): a job claimed as 'running' by a worker killed mid-job has no lease
+  recovery — candidate small fix (requeue running jobs whose locked_at is ancient) listed P2.
