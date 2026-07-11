@@ -335,6 +335,19 @@ export function PlanView({
               </div>
             </div>
 
+            {plan.mission.records_thin && (
+              <div className="card-hairline flex items-start gap-2.5 rounded-card border border-line bg-surface-sunken p-4">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-ink-faint" strokeWidth={1.75} />
+                <div className="text-sm text-ink-soft">
+                  <span className="font-medium text-ink">
+                    Nexus knows very little about {plan.interviewee_name ?? "this person"} yet.
+                  </span>{" "}
+                  This plan is built from their role, not from records about them. The chat on
+                  the right is the fastest way to tell Nexus more before you approve.
+                </div>
+              </div>
+            )}
+
             <CollapsibleSection n={1} icon={Target} title="Goal">
               <p className="text-sm leading-relaxed text-ink-soft">{plan.mission.goal}</p>
               {plan.mission.custom_focus && (

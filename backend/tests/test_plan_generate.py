@@ -329,3 +329,58 @@ async def test_f7_generate_plan_sets_mission_authorization(db, monkeypatch):
     assert auth["authorized"] is True
     assert auth["source_session_id"] == str(sess)
     assert auth["evidence_record_id"] == str(rec_id)
+
+
+async def test_generate_plan_thin_person_instruction_and_marker(db, monkeypatch):
+    """WS-3 (round-2 3.1): a workspace rich in records about OTHER people + a person the
+    store barely knows must (a) tell the generator the person's records are THIN with the
+    no-borrowing instruction, (b) mark the mission records_thin so the review surface says
+    so. Control: a person with enough records about them gets neither."""
+    ws = await make_workspace(db, industry="jewelry")
+    thin = await _person(db, ws, name="Ahmet Yayci", role="office assistant")
+    rich = await _person(db, ws, name="Berk Bilmemne", role="delivery lead")
+    # Rich workspace: several records ABOUT Berk, none about Ahmet.
+    for txt in (
+        "Berk Bilmemne reviews every deck before it ships",
+        "Berk Bilmemne heads three delivery teams",
+        "Berk Bilmemne re-ran the analysis during the glass manufacturer crisis",
+    ):
+        await db.execute(
+            "insert into claim_records (workspace_id, kind, topic, tag, claim_text, subject_id, quarantined) "
+            "values ($1,'statement','person','CLAIMED',$2,$3,false)",
+            ws, txt, rich,
+        )
+
+    seen: dict[str, str] = {}
+    generated = {
+        "goal": "g", "interview_topic": "t", "known_context": [], "topics": [],
+        "definition_of_done": [], "handling_notes": [], "never_list": [],
+        "vocabulary": [], "suggested_questions": [], "time_budget_minutes": 30,
+    }
+
+    async def _capture(agent_name, user_content, **kw):
+        seen["content"] = user_content
+        return generated
+
+    monkeypatch.setattr("app.pipeline.plan.run_agent_json", _capture)
+
+    # Thin person: instruction present + mission marked.
+    thin_plan = await db.fetchval(
+        "insert into interview_plans (workspace_id, interviewee_id, state) "
+        "values ($1,$2,'DRAFT') returning id", ws, thin)
+    await plan_pipeline.generate_plan({"plan_id": str(thin_plan), "workspace_id": str(ws)})
+    assert "THIN" in seen["content"]
+    assert "Do NOT transfer any other individual's duties" in seen["content"]
+    mission = await db.fetchval("select mission from interview_plans where id=$1", thin_plan)
+    assert mission["records_thin"] is True
+    assert mission["person_record_count"] == 0
+
+    # Rich person (3 records about them): no thin instruction, honest marker false.
+    rich_plan = await db.fetchval(
+        "insert into interview_plans (workspace_id, interviewee_id, state) "
+        "values ($1,$2,'DRAFT') returning id", ws, rich)
+    await plan_pipeline.generate_plan({"plan_id": str(rich_plan), "workspace_id": str(ws)})
+    assert "THIN" not in seen["content"]
+    mission = await db.fetchval("select mission from interview_plans where id=$1", rich_plan)
+    assert mission["records_thin"] is False
+    assert mission["person_record_count"] == 3

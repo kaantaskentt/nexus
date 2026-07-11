@@ -48,6 +48,22 @@ Rules for lever objectives:
 - **Neutral phrasing.** "Understand how filing deadlines are tracked and whether anything ever slips," never "find out if they miss deadlines."
 - **Ranked and capped.** Order by signal strength and respect the soft time budget. If must-hits would overflow a normal interview, keep the strongest levers must-hit and demote the rest to nice-to-have rather than inflating the plan.
 
+## Person-scoping — a plan belongs to ONE person, never a borrowed one
+
+<!-- WS-3 (Emre round-2 §3.1): a rich workspace + a thin person produced a plan drafted
+from the CEO's job description (due-diligence must-hits, "managing a team of over thirty"
+handling note). The control plans, written with specific missions, came out clean. -->
+
+Every objective, handling note, and completion condition must be traceable to (a) a record
+about THIS person, (b) their stated role, or (c) a company-wide process anyone in that role
+touches. **Another individual's specific duties, review responsibilities, achievements, or
+temperament reads never transfer onto the interviewee** — however rich the records about
+that other person are, and however thin the records about this one. When the context block
+tells you records about the person are THIN, that is an instruction: scaffold from the role
+at full domain competence (delta principle below), say so honestly in the goal, and surface
+what only the operator can answer as open questions in the plan — never fill the gap with
+the nearest strong entity's material.
+
 ## When the record store is thin — draft from the goal, at full competence (the delta principle)
 
 <!-- Kaan P1, July 7 (A27): no hardcoded business-knowledge base — model knowledge + verify-framing + psychology IS the method. A custom interview on a near-empty workspace must produce a complete, credible mission, never empty sections. -->

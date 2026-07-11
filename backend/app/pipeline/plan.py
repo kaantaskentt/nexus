@@ -70,6 +70,27 @@ async def _person(pool, entity_id) -> tuple[str | None, str | None]:
     return (row["canonical_name"], row["role"]) if row else (None, None)
 
 
+# WS-3 (Emre round-2 §3.1): below this many person-specific records, the store is THIN on
+# the named person and the generator must scaffold from the role, never borrow the nearest
+# strong entity's material (Ahmet got the CEO's due-diligence must-hits + "managing thirty").
+THIN_PERSON_THRESHOLD = 3
+
+
+async def _person_record_count(pool, workspace_id: str, entity_id, name: str | None) -> int:
+    """How many client-visible records are actually ABOUT this person — by subject link
+    or by name in the claim text. Speaker rows don't count: what the person SAID elsewhere
+    isn't evidence about their own work here."""
+    if entity_id is None and not name:
+        return 0
+    return await pool.fetchval(
+        """select count(*) from client_visible_claims
+           where workspace_id = $1
+             and (($2::uuid is not null and subject_id = $2)
+                  or ($3::text is not null and claim_text ilike '%' || $3 || '%'))""",
+        workspace_id, entity_id, name,
+    ) or 0
+
+
 async def _records_block(pool, workspace_id: str) -> str:
     # Deny-by-default: client_visible_claims omits quarantined rows, so sentiment about a
     # named person can never reach the plan generator (non-negotiable #4).
@@ -135,10 +156,31 @@ async def generate_plan(payload: dict) -> None:
     name, role = await _person(pool, plan["interviewee_id"])
     records = await _records_block(pool, workspace_id)
 
+    # WS-3 entity-bleed guard: measure how much the store actually knows about THIS person
+    # and say so to the generator explicitly. The instruction (not the count alone) is what
+    # prevents borrowing — the round-2 failure drafted Ahmet's plan from the CEO's job
+    # description because the workspace records were rich while the person's were thin.
+    person_records = await _person_record_count(pool, workspace_id, plan["interviewee_id"], name)
+    records_thin = person_records < THIN_PERSON_THRESHOLD
+    person_line = (
+        f"\n\nRecords specifically about this person: {person_records}."
+        + (
+            " THIN. The store barely knows this person: scaffold objectives from their ROLE"
+            " at full domain competence, framed to-verify (the delta principle), and say so"
+            " honestly in the goal. Do NOT transfer any other individual's duties, review"
+            " responsibilities, temperament reads, or handling notes onto them: an objective"
+            " or handling note is only theirs if a record about THEM (or their stated role)"
+            " supports it. Where only the operator can close the gap, surface it as an open"
+            " question in the plan rather than guessing."
+            if records_thin else ""
+        )
+    )
+
     context = (
         "# Person to interview\n"
         + (name or "the suggested person")
         + (f" ({role})" if role else "")
+        + person_line
         + "\n\n# Compiled records (client-visible; derive neutral objectives, never transmit content)\n"
         + records
     )
@@ -178,6 +220,10 @@ async def generate_plan(payload: dict) -> None:
         # Honest provenance: the admin's own focus text, kept on the mission so the
         # review screen shows what this plan was aimed at. None for record-derived plans.
         "custom_focus": custom_goal or None,
+        # WS-3: honest thinness marker — the review surface tells the admin the store
+        # barely knows this person, so they enrich via intake instead of approving a guess.
+        "records_thin": records_thin,
+        "person_record_count": person_records,
         # F7: validated sponsor authorization for employees to share artifacts. Structural,
         # fail-closed, auditable ({authorized, source_session_id, evidence_record_id}).
         "artifact_sharing_authorized": artifact_auth,

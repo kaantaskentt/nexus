@@ -199,6 +199,10 @@ export interface PlanMission {
   handling_notes: string[];
   // Custom interviews (July 7): the admin's own focus text, honest provenance on review.
   custom_focus?: string | null;
+  // WS-3: the store barely knows this person — the review surface says so, so the admin
+  // enriches (intake chat) instead of approving role-scaffolded guesses unaware.
+  records_thin?: boolean;
+  person_record_count?: number;
   // Assign-flow delivery intent (K3): captured once on the assign screen, reused at send
   // (post-approval) so nothing is re-asked. Admin-only draft metadata, never respondent-facing.
   delivery?: { email?: string; job_title?: string; modality?: "voice" | "text"; language?: string };
