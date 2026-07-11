@@ -91,15 +91,19 @@ an offline eval.
 
 ## 6. Current known gaps (as of the task #12 run; July 10 night additions marked)
 
-- **[July 10 night] Stacked questions under time pressure remain intermittent.** New case
-  `whatif-17-stacked-question-under-pressure` (mined from round-2 [B7]) fails ~half of runs
-  even after an explicit "two-part questions count as stacking" rule: under a push-through,
-  the model still sometimes bundles ("how did it reach you, and what did you do first?").
-  Prompt tightened (improved from consistent-fail to intermittent); not brute-forced further
-  on limited credits. Harmless with organized respondents, loses the last clause with
-  scattered ones — exactly Emre's endnote. Candidate for class-level review with the freeze
-  family below. The other three mined cases (whatif-16 [A5] never-caught safety net,
-  whatif-18 [A9] first-irritation register shift, whatif-19 verbatim-repeat probe) PASS.
+- **[July 11 morning] Stacked-questions FIXED.** `whatif-17` now passes **5/5** after the
+  one-interrogative-per-turn rule moved from prose to hard rule 10 (an explicit pre-send
+  FORMAT check, fixed-response scripts exempt) and the bus-factor closer exemplar was
+  reshaped to single-clause so the prompt no longer models the violation. Regression sweep:
+  whatif-16/19 pass, full fixed suite 46/48 with only the two pre-characterized
+  intermittents below.
+- **[July 11 morning] whatif-18 (first-irritation register shift) is INTERMITTENT, and
+  always was.** Measured: 2/3 fail on the NEW prompt and 2/3 fail on the July-10-night
+  prompt (same rate — last night's single pass was a lucky draw). Failure shape: after
+  "stop asking stupid questions" the model reaches for an episode anchor ("walk me through
+  the last yıldırım sipariş") instead of moving up to judgment/stakes altitude. Real
+  capability gap, same family as the freeze cluster — queued for class-level review, not
+  hotfixed.
 - **[July 10 night] fixed-pleaser + whatif-12-emotional-venting are flaky on BOTH old and
   new prompts** (3-run baseline on the pre-WS-1 prompt: 2/3 and 1/3 fails) — judge
   calibration suspects, not regressions. Left un-gamed; adjudicate when convenient.
