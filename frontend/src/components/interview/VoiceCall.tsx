@@ -556,6 +556,7 @@ export function VoiceCall({
         }
         capturedCount={captures.count}
         capturing={captures.extracting}
+        captureFeedDegraded={captures.degraded}
         agentState={railState}
         connectionEvents={railEvents}
         hideCaptured={Boolean(simulation)}

@@ -64,14 +64,20 @@ export async function getLiveCapturesForSession(sessionId: string): Promise<Live
 
 // Poll a live-captures endpoint on an interval while `enabled`. Generic over the payload
 // shape so the respondent (counts) and admin (items) doors share one honest poller. Honest
-// about failure: a fetch error keeps the last good data (the panel never blanks on a
-// transient blip) and the next tick retries. Pauses while the tab is hidden — no reason to
-// poll a call the user isn't watching — and resumes on focus.
+// about failure BOTH ways (July 11 morning order): a single blip keeps the last good data
+// (no flicker), but consecutive failures flip `degraded` so the UI can say "reconnecting"
+// instead of presenting a stale number as live — a counter stuck at 0 behind a dead fetch
+// is a fabricated count. Pauses while the tab is hidden — no reason to poll a call the
+// user isn't watching — and resumes on focus.
+const DEGRADED_AFTER_FAILURES = 2;
+
 export function useLiveCaptures<T extends Extracting>(
   fetcher: () => Promise<T>,
   { enabled, intervalMs = 2500, initial }: { enabled: boolean; intervalMs?: number; initial: T },
-): T {
+): T & { degraded: boolean } {
   const [result, setResult] = useState<T>(initial);
+  const [degraded, setDegraded] = useState(false);
+  const failsRef = useRef(0);
   // Keep the latest fetcher without retriggering the effect each render (the caller passes
   // a fresh closure every render; we only want the interval to depend on enabled/interval).
   const fetcherRef = useRef(fetcher);
@@ -85,9 +91,16 @@ export function useLiveCaptures<T extends Extracting>(
       if (document.hidden) return;
       try {
         const next = await fetcherRef.current();
-        if (alive) setResult(next);
+        if (alive) {
+          failsRef.current = 0;
+          setDegraded(false);
+          setResult(next);
+        }
       } catch {
-        /* keep the last good data; the next tick retries */
+        // Keep the last good data for one blip; after consecutive failures, tell the
+        // truth that the feed is down rather than freezing a number on screen.
+        failsRef.current += 1;
+        if (alive && failsRef.current >= DEGRADED_AFTER_FAILURES) setDegraded(true);
       }
     }
 
@@ -99,5 +112,5 @@ export function useLiveCaptures<T extends Extracting>(
     };
   }, [enabled, intervalMs]);
 
-  return result;
+  return { ...result, degraded };
 }

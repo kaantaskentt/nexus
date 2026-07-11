@@ -483,6 +483,7 @@ export function InterviewClient({ token }: { token: string }) {
         controls={composer}
         capturedCount={captures.count}
         capturing={captures.extracting}
+        captureFeedDegraded={captures.degraded}
         agentState={roomState}
         hideCaptured={Boolean(session?.simulation)}
       >

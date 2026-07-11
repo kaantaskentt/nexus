@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Loader2 } from "lucide-react";
+import { Activity, Loader2, WifiOff } from "lucide-react";
 import { BrandMark } from "@/components";
 import { StateTimeline, type RoomAgentState } from "./AgentStateIndicator";
 
@@ -28,6 +28,7 @@ export function LiveRoom({
   controls,
   capturedCount,
   capturing = false,
+  captureFeedDegraded = false,
   agentState,
   connectionEvents = [],
   banner,
@@ -38,6 +39,10 @@ export function LiveRoom({
   controls: React.ReactNode; // docked bottom: Mute/Switch/End (voice) or composer (text)
   capturedCount: number; // how many structural items Nexus has saved — a COUNT, never content
   capturing?: boolean; // a real in-flight extraction — pulses the heartbeat, never faked
+  // July 11 honesty fix: the count poller reports consecutive fetch failures. When true,
+  // the readout says "reconnecting" instead of freezing a stale number as if it were live —
+  // the counter never fabricates, in either direction.
+  captureFeedDegraded?: boolean;
   // The room's current agent state + any reconnect events this session — drives the vertical
   // rail. Omitted on surfaces that don't derive a state; the rail then simply doesn't render.
   agentState?: RoomAgentState;
@@ -73,7 +78,7 @@ export function LiveRoom({
         <div className="shrink-0 border-t border-line pt-3">
           {!hideCaptured && (
             <div className={"mb-2 flex justify-end " + (showRail ? "lg:hidden" : "")}>
-              <CaptureCount count={capturedCount} capturing={capturing} />
+              <CaptureCount count={capturedCount} capturing={capturing} degraded={captureFeedDegraded} />
             </div>
           )}
           {controls}
@@ -93,7 +98,7 @@ export function LiveRoom({
             <StateTimeline current={agentState} connectionEvents={connectionEvents} />
           </div>
           <div className="border-t border-line pt-3">
-            <CaptureCount count={capturedCount} capturing={capturing} />
+            <CaptureCount count={capturedCount} capturing={capturing} degraded={captureFeedDegraded} />
           </div>
         </aside>
       )}
@@ -103,7 +108,25 @@ export function LiveRoom({
 
 // The respondent's only window onto capture: a live count + an honest heartbeat. No item
 // content — proves the agent is alive and working without asking the respondent to perform.
-function CaptureCount({ count, capturing }: { count: number; capturing: boolean }) {
+function CaptureCount({
+  count,
+  capturing,
+  degraded = false,
+}: {
+  count: number;
+  capturing: boolean;
+  degraded?: boolean;
+}) {
+  // Feed down → say so. A number frozen behind a dead fetch reads as "nothing is being
+  // captured", which is a lie in both directions; the dash + reconnecting is the truth.
+  if (degraded) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-faint">
+        <WifiOff className="h-3.5 w-3.5" strokeWidth={2} />
+        &ndash;&ndash; reconnecting
+      </span>
+    );
+  }
   return (
     <span className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-faint">
       {capturing ? (
