@@ -260,3 +260,38 @@ async def test_directive_stores_with_null_tag(db, monkeypatch):
     assert len(candidates) == 1
     assert "Harrods" in candidates[0]["instruction"]
     assert any("SEQUENCING" in t for t in candidates[0]["triggers"])
+
+
+async def test_compile_session_is_idempotent_on_existing_records(db, monkeypatch):
+    """WS-6 prevention: a session that already produced records never compiles again
+    (retry storms / double-enqueues re-inserted whole record sets during the July 10
+    outage). force=true stays available for a deliberate recompile."""
+    from tests.conftest import make_workspace
+    from app.pipeline.compiler import compile_session
+
+    ws = await make_workspace(db, industry="jewelry")
+    sid = await db.fetchval(
+        "insert into interview_sessions (workspace_id, modality, status, session_kind) "
+        "values ($1, 'text', 'completed', 'context') returning id", ws)
+    await db.execute(
+        "insert into utterances (session_id, turn_index, speaker, text) "
+        "values ($1, 0, 'respondent', 'we clean data every morning')", sid)
+    await db.execute(
+        "insert into claim_records (workspace_id, session_id, kind, topic, tag, claim_text, quarantined) "
+        "values ($1, $2, 'statement', 'process_step', 'CLAIMED', 'existing record', false)",
+        ws, sid)
+
+    called = {"n": 0}
+
+    async def _agent(*a, **k):
+        called["n"] += 1
+        return '{"records": [], "mentions": []}'
+
+    monkeypatch.setattr("app.pipeline.compiler.run_agent", _agent)
+    await compile_session({"session_id": str(sid)})
+    assert called["n"] == 0  # skipped before any model call
+    assert await db.fetchval(
+        "select count(*) from claim_records where session_id=$1", sid) == 1
+
+    await compile_session({"session_id": str(sid), "force": True})
+    assert called["n"] == 1  # deliberate recompile still possible

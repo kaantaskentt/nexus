@@ -189,6 +189,20 @@ async def compile_session(payload: dict) -> None:
                  session_id, session["session_kind"])
         return
     workspace_id = str(session["workspace_id"])
+    # Idempotency guard (WS-6 prevention): records are immutable and compile is not —
+    # a retry storm, a double-enqueue, or a paste re-submitted during an outage used to
+    # re-insert the whole record set (Test Mest's 57→143 jump compiled one conversation
+    # three times). A session that already produced records is DONE; a deliberate
+    # re-compile passes force=true (no caller does today — deletion wipes records first,
+    # so a legitimate recompile-after-delete sails through this check untouched).
+    if not payload.get("force"):
+        already = await pool.fetchval(
+            "select count(*) from claim_records where session_id = $1", session_id
+        )
+        if already:
+            log.info("compile_session: session %s already has %d records — skipping (idempotent)",
+                     session_id, already)
+            return
     default_speaker_id = session["interviewee_id"]
     # Unverified sources cap here: admin "add as context" compiles CLAIMED-at-best,
     # never CONFIRMED/VERIFIED (V2-PLAN #20). None = the normal transcript path. An ADDITIVE
