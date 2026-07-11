@@ -105,6 +105,130 @@ async def test_refine_structurally_rejects_attribution_never_list(db, monkeypatc
     log = json.loads(log) if isinstance(log, str) else log
     assert log[0]["rejected"] and "attribution" in log[0]["rejected"][0]["reason"]
 
+async def _rich_plan(db, ws, state="AWAITING_APPROVAL"):
+    """A plan shaped like the generator emits it — topics with must_hits + a DoD."""
+    return await db.fetchval(
+        "insert into interview_plans (workspace_id, state, mission, suggested_questions, never_list) "
+        "values ($1, $2, $3, '[]', '[]') returning id",
+        ws, state,
+        json.dumps({
+            "goal": "map the data cleaning workflow",
+            "topics": [
+                {"label": "Data cleaning steps", "must_hit": True,
+                 "detail": "input, steps, tool, performer, time estimate, redo trigger"},
+                {"label": "Client communication", "must_hit": False, "detail": None},
+            ],
+            "definition_of_done": ["cleaning steps covered to spine-completeness"],
+            "handling_notes": [],
+        }),
+    )
+
+
+async def test_refine_rewrites_topics_goal_and_dod(db, monkeypatch):
+    """WS-2 (Emre round-2 §3.2): retiring a must-hit + rewriting goal/DoD lands on the
+    EFFECTIVE package — the visible plan changes; nothing is stashed as a handling note.
+    A material edit on an AWAITING_APPROVAL plan re-enters NEXUS_CHECK so the reviewer
+    validates what the admin will actually approve."""
+    ws = await make_workspace(db, industry="jewelry")
+    plan_id = await _rich_plan(db, ws)
+
+    async def fake_agent(agent_name, user_content, **kw):
+        return json.dumps({
+            "accepted": True,
+            "reply": "Retired the cleaning checklist topic and refocused the plan.",
+            "changes": [
+                {"target": "topics", "op": "remove", "value": "Data cleaning steps"},
+                {"target": "topics", "op": "add", "value": "How analysis actually flows",
+                 "must_hit": True, "detail": "one real episode end to end"},
+                {"target": "goal", "op": "set",
+                 "value": "understand how analysis work actually flows"},
+                {"target": "definition_of_done", "op": "remove",
+                 "value": "cleaning steps covered to spine-completeness"},
+                {"target": "definition_of_done", "op": "add",
+                 "value": "one concrete analysis episode captured end to end"},
+            ],
+        })
+
+    monkeypatch.setattr(plans, "run_agent", fake_agent)
+    async with _client() as c:
+        r = await c.post(f"/api/plans/{plan_id}/refine-chat",
+                         json={"instruction": "drop the cleaning checklist, focus on analysis flow"})
+    body = r.json()
+    assert r.status_code == 200 and body["accepted"]
+    assert len(body["applied"]) == 5 and body["rejected"] == []
+    assert body["rechecked"] is True
+
+    row = await db.fetchrow(
+        "select state, mission, change_log from interview_plans where id=$1", plan_id)
+    mission = json.loads(row["mission"]) if isinstance(row["mission"], str) else row["mission"]
+    labels = [t["label"] for t in mission["topics"]]
+    assert "Data cleaning steps" not in labels
+    assert "How analysis actually flows" in labels
+    assert mission["goal"] == "understand how analysis work actually flows"
+    assert mission["definition_of_done"] == ["one concrete analysis episode captured end to end"]
+    assert mission["handling_notes"] == []  # nothing smuggled into notes
+    # Back through the gate + audit trail preserved underneath.
+    assert row["state"] == "NEXUS_CHECK"
+    log = json.loads(row["change_log"]) if isinstance(row["change_log"], str) else row["change_log"]
+    assert len(log) == 1 and len(log[0]["applied"]) == 5
+    check_queued = await db.fetchval(
+        "select count(*) from jobs where kind='nexus_check' and payload->>'plan_id' = $1",
+        str(plan_id))
+    assert check_queued == 1
+
+
+async def test_refine_material_edit_refused_after_approval(db, monkeypatch):
+    """Past the human gate (APPROVED+), objectives/goal/DoD are locked: refine refuses
+    with an audited rejection instead of silently rewriting an approved package."""
+    ws = await make_workspace(db, industry="jewelry")
+    plan_id = await _rich_plan(db, ws, state="APPROVED")
+
+    async def fake_agent(agent_name, user_content, **kw):
+        return json.dumps({
+            "accepted": True, "reply": "Retired the topic.",
+            "changes": [{"target": "topics", "op": "remove", "value": "Data cleaning steps"}],
+        })
+
+    monkeypatch.setattr(plans, "run_agent", fake_agent)
+    async with _client() as c:
+        r = await c.post(f"/api/plans/{plan_id}/refine-chat",
+                         json={"instruction": "drop the cleaning topic"})
+    body = r.json()
+    assert body["applied"] == [] and body["rejected"]
+    assert "APPROVED" in body["rejected"][0]["reason"]
+    mission = await db.fetchval("select mission from interview_plans where id=$1", plan_id)
+    mission = json.loads(mission) if isinstance(mission, str) else mission
+    assert [t["label"] for t in mission["topics"]] == ["Data cleaning steps", "Client communication"]
+    state = await db.fetchval("select state from interview_plans where id=$1", plan_id)
+    assert state == "APPROVED"
+
+
+async def test_refine_attribution_guard_covers_topics_and_detail(db, monkeypatch):
+    """The #4 guard extends to every add/set target: an attribution-shaped topic (or its
+    completion-condition detail) is structurally rejected, same as a never_list add."""
+    ws = await make_workspace(db, industry="jewelry")
+    plan_id = await _rich_plan(db, ws, state="DRAFT")
+
+    async def fake_agent(agent_name, user_content, **kw):
+        return json.dumps({
+            "accepted": True, "reply": "Added.",
+            "changes": [
+                {"target": "topics", "op": "add",
+                 "value": "why the founder said the repricing is slow", "must_hit": True},
+                {"target": "definition_of_done", "op": "add",
+                 "value": "confirm what the manager claims about Burak"},
+            ],
+        })
+
+    monkeypatch.setattr(plans, "run_agent", fake_agent)
+    async with _client() as c:
+        r = await c.post(f"/api/plans/{plan_id}/refine-chat",
+                         json={"instruction": "chase down what the founder said"})
+    body = r.json()
+    assert body["applied"] == [] and len(body["rejected"]) == 2
+    assert all("attribution" in rj["reason"] for rj in body["rejected"])
+
+
 async def test_refine_carries_conversation_memory_across_turns(db, monkeypatch):
     """July 8 (Emre doc-2 P1): 'yes, add that version' must work. Turn 1 the agent
     refuses and OFFERS a compliant rewrite; turn 2's request context must contain the

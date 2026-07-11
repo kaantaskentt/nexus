@@ -40,11 +40,21 @@ async def _has_compiled_records(pool, workspace_id: str) -> bool:
         workspace_id,
     ))
 
-# Refine-chat applies only these bounded, well-understood edits; anything else the
-# agent proposes is logged as a proposal (audited) but never blind-applied to the plan.
-# never_list overrides objectives, so adds there are always safe; the rest are additive
-# plan shaping. Claim text / who-said-what / sentiment are refused by the prompt upstream.
-_REFINE_TARGETS = {"never_list", "suggested_questions", "handling_notes"}
+# Refine-chat applies these bounded, well-understood edits; anything else the agent
+# proposes is logged as a proposal (audited) but never blind-applied to the plan.
+# WS-2 (Emre round-2 §3.2): topics, goal, and definition_of_done are FIRST-CLASS targets —
+# refine REWRITES the effective package the approval surface renders and the handoff
+# builds from, with the audit trail in change_log. The old contract forced real edits
+# into handling_notes ("PLAN REBUILD NOTE"), leaving the visible plan and the reviewer's
+# verdict stale while the stale definition-of-done drove interview behavior.
+_REFINE_TARGETS = {
+    "never_list", "suggested_questions", "handling_notes",
+    "topics", "goal", "definition_of_done",
+}
+# Editing these rewrites what the reviewer validated and what the admin approves — a plan
+# already through the gate must go back through it (or be redrafted), never edited in place.
+_MATERIAL_TARGETS = {"topics", "goal", "definition_of_done"}
+_MATERIAL_EDITABLE_STATES = {"DRAFT", "NEXUS_CHECK", "AWAITING_APPROVAL"}
 
 _REFINE_OUTPUT_CONTRACT = """
 ## Output — return ONE json object, nothing else
@@ -55,17 +65,24 @@ _REFINE_OUTPUT_CONTRACT = """
   "reply": "what you say back to the admin (client-facing; no em-dashes)",
   "changes": [                        // the machine rules to apply (empty if refused)
     {
-      "target": "never_list | suggested_questions | handling_notes",
-      "op": "add | remove",
-      "value": "the exact string (never_list / handling_notes) or the open-form question text",
+      "target": "never_list | suggested_questions | handling_notes | topics | goal | definition_of_done",
+      "op": "add | remove | set",
+      "value": "the exact string; for topics the topic LABEL",
+      "must_hit": true,               // topics add only (default true)
+      "detail": "topics add only: the completion condition for this topic, or null",
       "before": "prior value or null",
       "after": "new value"
     }
   ]
 }
-Only use the three targets above. If the true edit is elsewhere, set accepted=false and
-explain, or express it as a handling_note. Never put claim text, quotes, who-said-what,
-or a person-judgment into any value (reformulate to open-form process language instead).
+Ops per target: never_list/handling_notes/suggested_questions/definition_of_done take
+add|remove; topics takes add|remove (remove = retire, matched by exact label); goal takes
+set only. A request to retire, replace, or rewrite objectives, the goal, or the definition
+of done is a NORMAL edit: emit the topics/goal/definition_of_done changes so the plan
+package itself is rewritten. NEVER express a plan restructure as a handling note — the
+approval surface must always match the effective plan. Never put claim text, quotes,
+who-said-what, or a person-judgment into any value (reformulate to open-form process
+language instead).
 """
 
 # One source of truth for legal transitions (MERGE_PLAN Phase 3).
@@ -371,6 +388,21 @@ async def save_delivery(plan_id: str, body: DeliveryIn):
     return {"plan_id": plan_id, "delivery": delivery}
 
 
+def _reject_reason(change: dict) -> str | None:
+    """Structural guard shared by refine + intake (non-negotiable #4, backstopped again in
+    handoff): NO add/set on ANY target may carry attribution-shaped text — who-said-what
+    about a person smuggled into a guardrail, topic, goal, or completion condition reaches
+    the interviewer identically wherever it rides. Remove ops are exempt (they only name
+    existing text to delete)."""
+    if change.get("op") == "remove":
+        return None
+    for text in (change.get("value"), change.get("detail")):
+        if text and _has_attribution(str(text)):
+            return ("attribution/sentiment: carries who-said-what about a person; "
+                    "rephrase as a neutral topic prohibition or open process language")
+    return None
+
+
 def _apply_change(mission: dict, questions: list, never: list, change: dict) -> bool:
     """Apply one bounded refine change in place. Returns True if it touched the plan."""
     target, op, value = change.get("target"), change.get("op"), change.get("value")
@@ -393,6 +425,31 @@ def _apply_change(mission: dict, questions: list, never: list, change: dict) -> 
             questions.append({"text": value, "topic": "process_step"}); return True
         if op == "remove" and value in texts:
             questions[:] = [q for q in questions if q.get("text") != value]; return True
+    # WS-2: the effective package is rewritable. Topics carry {label, must_hit, detail}
+    # exactly like the generator emits them; remove (retire) matches the exact label the
+    # agent saw in the plan JSON, so a retired must-hit leaves the visible plan too.
+    elif target == "topics":
+        topics = mission.setdefault("topics", [])
+        labels = [t.get("label") for t in topics if isinstance(t, dict)]
+        if op == "add" and value not in labels:
+            topics.append({
+                "label": value,
+                "must_hit": bool(change.get("must_hit", True)),
+                "detail": change.get("detail"),
+            })
+            return True
+        if op == "remove" and value in labels:
+            topics[:] = [t for t in topics if not (isinstance(t, dict) and t.get("label") == value)]
+            return True
+    elif target == "goal":
+        if op == "set" and value != mission.get("goal"):
+            mission["goal"] = value; return True
+    elif target == "definition_of_done":
+        dod = mission.setdefault("definition_of_done", [])
+        if op == "add" and value not in dod:
+            dod.append(value); return True
+        if op == "remove" and value in dod:
+            dod.remove(value); return True
     return False
 
 
@@ -408,8 +465,9 @@ async def refine_chat(plan_id: str, body: RefineIn):
     record everything — accepted or refused — to the plan's change_log. Never silent."""
     pool = await get_pool()
     plan = await pool.fetchrow(
-        "select p.mission, p.suggested_questions, p.never_list, p.change_log, w.industry "
-        "from interview_plans p join workspaces w on w.id = p.workspace_id where p.id = $1",
+        "select p.state, p.mission, p.suggested_questions, p.never_list, p.change_log, "
+        "w.industry from interview_plans p join workspaces w on w.id = p.workspace_id "
+        "where p.id = $1",
         plan_id,
     )
     if plan is None:
@@ -459,13 +517,21 @@ async def refine_chat(plan_id: str, body: RefineIn):
     applied, rejected = [], []
     if result.get("accepted"):
         for ch in result.get("changes") or []:
-            # Structural guard (non-negotiable #4, backstopped in handoff): a never_list
-            # add that names who-said-what about a person is refused here, regardless of
-            # what the agent proposed — the prompt-level refusal is not the enforcement.
-            if (ch.get("target") == "never_list" and ch.get("op") == "add"
-                    and _has_attribution(str(ch.get("value") or ""))):
-                rejected.append({**ch, "reason": "attribution/sentiment: carries who-said-what "
-                                 "about a person; rephrase as a neutral topic prohibition"})
+            # Structural guard (non-negotiable #4, backstopped in handoff): an add/set on
+            # ANY target that names who-said-what about a person is refused here,
+            # regardless of what the agent proposed — the prompt-level refusal is not the
+            # enforcement.
+            reason = _reject_reason(ch)
+            if reason:
+                rejected.append({**ch, "reason": reason})
+                continue
+            # WS-2 state gate: topics/goal/DoD rewrite what the reviewer validated and the
+            # admin approves. Past the gate (APPROVED/SENT/...), those edits are refused —
+            # revoke or redraft instead. Bounded additive targets stay editable.
+            if ch.get("target") in _MATERIAL_TARGETS and plan["state"] not in _MATERIAL_EDITABLE_STATES:
+                rejected.append({**ch, "reason": f"plan is {plan['state']}: objectives, goal, and "
+                                 "definition of done can only change before approval; revoke or "
+                                 "redraft to restructure it"})
                 continue
             if _apply_change(mission, questions, never, ch):
                 applied.append(ch)
@@ -492,12 +558,38 @@ async def refine_chat(plan_id: str, body: RefineIn):
         plan_id, json.dumps(mission), json.dumps(questions), json.dumps(never),
         json.dumps(change_log),
     )
+
+    # WS-2: a material edit (topics/goal/DoD) invalidates a standing reviewer verdict —
+    # the plan the check PASSED is not the plan the admin would now approve. Send it back
+    # through the gate so the approval surface, the reviewer verdict, and the effective
+    # package can never diverge again. DRAFT/NEXUS_CHECK plans re-check on their normal path.
+    rechecked = False
+    if plan["state"] == "AWAITING_APPROVAL" and any(
+        ch.get("target") in _MATERIAL_TARGETS for ch in applied
+    ):
+        ws = await pool.fetchval("select workspace_id from interview_plans where id = $1", plan_id)
+        async with pool.acquire() as conn, conn.transaction():
+            await conn.execute(
+                "update interview_plans set state='NEXUS_CHECK', updated_at=now() "
+                "where id=$1 and state='AWAITING_APPROVAL'",
+                plan_id,
+            )
+            await conn.execute(
+                "insert into plan_state_transitions (plan_id, from_state, to_state, actor, note) "
+                "values ($1, 'AWAITING_APPROVAL', 'NEXUS_CHECK', 'system', "
+                "'refine rewrote objectives/goal/definition of done; re-running the check')",
+                plan_id,
+            )
+        await enqueue("nexus_check", {"plan_id": plan_id, "workspace_id": str(ws)}, priority=90)
+        rechecked = True
+
     return {
         "accepted": entry["accepted"],
         "reply": result.get("reply", ""),
         "alternative": result.get("alternative"),
         "applied": applied,
         "rejected": rejected,
+        "rechecked": rechecked,
         "change_log_entry": entry,
     }
 
@@ -605,12 +697,12 @@ async def intake_chat(plan_id: str, body: IntakeIn):
     result = extract_json(raw)
 
     # Apply bounded plan edits — SAME targets + attribution guard as refine-chat (#4 backstop).
+    # Intake only runs on DRAFT plans, so no material-state gate is needed here.
     applied, rejected = [], []
     for ch in result.get("plan_changes") or []:
-        if (ch.get("target") == "never_list" and ch.get("op") == "add"
-                and _has_attribution(str(ch.get("value") or ""))):
-            rejected.append({**ch, "reason": "attribution/sentiment: names who-said-what about a "
-                             "person; rephrase as a neutral topic prohibition"})
+        reason = _reject_reason(ch)
+        if reason:
+            rejected.append({**ch, "reason": reason})
             continue
         if _apply_change(mission, questions, never, ch):
             applied.append(ch)
