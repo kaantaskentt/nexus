@@ -89,7 +89,20 @@ transcript, (c) first-token latency budget, (d) pause/resume on the same link mi
 register on the anxious-operator and skeptical-foreman scripts. These check items become a live-run checklist, not
 an offline eval.
 
-## 6. Current known gaps (as of the task #12 run)
+## 6. Current known gaps (as of the task #12 run; July 10 night additions marked)
+
+- **[July 10 night] Stacked questions under time pressure remain intermittent.** New case
+  `whatif-17-stacked-question-under-pressure` (mined from round-2 [B7]) fails ~half of runs
+  even after an explicit "two-part questions count as stacking" rule: under a push-through,
+  the model still sometimes bundles ("how did it reach you, and what did you do first?").
+  Prompt tightened (improved from consistent-fail to intermittent); not brute-forced further
+  on limited credits. Harmless with organized respondents, loses the last clause with
+  scattered ones — exactly Emre's endnote. Candidate for class-level review with the freeze
+  family below. The other three mined cases (whatif-16 [A5] never-caught safety net,
+  whatif-18 [A9] first-irritation register shift, whatif-19 verbatim-repeat probe) PASS.
+- **[July 10 night] fixed-pleaser + whatif-12-emotional-venting are flaky on BOTH old and
+  new prompts** (3-run baseline on the pre-WS-1 prompt: 2/3 and 1/3 fails) — judge
+  calibration suspects, not regressions. Left un-gamed; adjudicate when convenient.
 
 - **Freeze family under-generalizes.** On 12 freshly generated cases the persona failed all 4 freeze cases and 2/4
   flatter: it accepts polished summaries/timelines, paraphrases-back-as-confirmation, under-probes numbers on novel
