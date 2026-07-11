@@ -212,6 +212,12 @@ stale-link landing (nav folded into Workflows). Nothing cut → nothing broken; 
 "every built thing is wired" discipline held. Deeper speculative cuts deferred — orders
 say when unsure, leave it and list it.
 Bonus reliability fix from this lane: zombie-job lease recovery (3ca2ed5).
+CORROBORATED by an independent exhaustive read-only sweep (separate agent, full-repo):
+all 15 routers registered, all 22 job kinds both registered AND enqueued, all 22 prompt
+files wired via agent_configs, every frontend component/lib imported, and the 4
+old-route pages (skills/insights/snapshot/knowledge) are deliberate 6-line redirect
+stubs catching stale bookmarks — leave them. Two independent passes, same answer:
+nothing to cut.
 
 ## P3 — polish
 ### ☐ WS-10 REGISTER-SHIFT (into stage7-interviewer.md with WS-1 — single safety-eval run):
