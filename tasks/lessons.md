@@ -19,3 +19,9 @@
    escalating a "stalled" lane — one prepared handoff would have destroyed live work.
 5. VERIFY-TENANT NAMES: realistic demo names (Kaan), never "X (internal)" — names
    render in screenshots.
+
+## July 10→11 night session
+- **Push ≠ deploy, verified empirically.** The night orders said "push = deploy (Vercel/Railway)" but both services sat on 10:28am builds while 7 commits stacked. Rule: after any push meant for prod, CHECK the platform's latest-deploy timestamp; deploy Railway with `railway up --service <name>` (both services) and Vercel with `vercel deploy --prod` from repo root. Never assume the webhook fired.
+- **A "shipped" claim is a docs claim until the diff says otherwise.** Commit c329cca described the empty-session compile fix and changed only a docs file. The gap list must diff code, not commit messages (Kaan's "assume nothing is done until you verify it in the code" — validated the very first hour).
+- **Test-fixture DDL must be single-connection.** `pool.execute` per statement interleaves connections; drop-schema + migration replay across connections raced on the vector extension. Pin one connection for any reset+replay fixture.
+- **When a monitored 'running' job survives its worker, nothing recovers it.** Deploy restarts strand claims; lease recovery (requeue stale running jobs) belongs next to any SKIP LOCKED queue from day one.
