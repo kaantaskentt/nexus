@@ -22,13 +22,17 @@ def handles(kind: str):
     return deco
 
 
-async def enqueue(kind: str, payload: dict, priority: int = 100) -> int:
+async def enqueue(kind: str, payload: dict, priority: int = 100, delay_seconds: int = 0) -> int:
+    """delay_seconds > 0 sets run_after into the future — used by self-rescheduling
+    backstop jobs (the stale-session sweeper); 0 keeps today's run-now behavior."""
     pool = await get_pool()
     row = await pool.fetchrow(
-        "insert into jobs (kind, payload, priority) values ($1, $2, $3) returning id",
+        "insert into jobs (kind, payload, priority, run_after) "
+        "values ($1, $2, $3, now() + ($4 || ' seconds')::interval) returning id",
         kind,
         json.dumps(payload),
         priority,
+        str(int(delay_seconds)),
     )
     return row["id"]
 

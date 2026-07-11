@@ -6,6 +6,7 @@ import logging
 
 from . import pipeline  # noqa: F401  (registers compile_session / rate_pain)
 from .db import close_pool
+from .pipeline.reconcile import enqueue_sweep_once
 from .queue import enqueue, worker_loop
 
 
@@ -14,6 +15,9 @@ async def main() -> None:
     # Self-heal sweep on every boot: re-drive any context call stranded before its snapshot
     # (records saved, snapshot never composed) — idempotent, so a clean queue is a no-op.
     await enqueue("reconcile_snapshots", {})
+    # Stale-session sweeper (WS-4a): auto-completes abandoned interviews so "In progress
+    # forever + no report" can't happen. Self-rescheduling; guarded against stacking.
+    await enqueue_sweep_once()
     try:
         await worker_loop()
     finally:

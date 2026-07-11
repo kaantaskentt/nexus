@@ -116,3 +116,89 @@ async def reconcile_stuck_snapshots(workspace_id: str | None = None) -> dict:
 @handles("reconcile_snapshots")
 async def _reconcile_snapshots_job(payload: dict) -> None:
     await reconcile_stuck_snapshots(payload.get("workspace_id"))
+
+
+# ── Session completion, one shared path (WS-4a) ─────────────────────────────────────
+# The respondent's Finish click and the stale-session sweeper below MUST do the same
+# thing — the endpoint used to own this inline, and a session nobody clicked Finish on
+# stayed 'active' forever: no compile, "In progress" on the list, report unreachable
+# (Ahmet, round-2 addendum §3.4).
+
+
+async def finish_session(session_id: str, session_kind: str, *, note: str) -> None:
+    """Mark a session completed and fan out exactly what the Finish endpoint fans out:
+    plan reconcile, compile (with snapshot render for a context call), the disclosure
+    screen, and the artifact-promise scan. Idempotent at the caller (check status first)."""
+    pool = await get_pool()
+    plan_id = await pool.fetchval(
+        "select plan_id from interview_sessions where id = $1", session_id
+    )
+    await pool.execute(
+        "update interview_sessions set status = 'completed', ended_at = now() where id = $1",
+        session_id,
+    )
+    # Local import: routers.plans imports pipeline modules (cycle guard, same as compiler).
+    from ..routers.plans import reconcile_plan_state
+
+    await reconcile_plan_state(pool, plan_id, "COMPLETED", note)
+    compile_payload: dict = {"session_id": str(session_id)}
+    if session_kind == "context":
+        compile_payload["render_snapshot"] = True
+    await enqueue("compile_session", compile_payload)
+    # Disclosure screen runs beside the compile, never inside it — a failed compile must
+    # not skip the Tier-2 sealed-flag pass (Emre stage-7 §7, A24). Same for promises.
+    await enqueue("screen_disclosures", {"session_id": str(session_id)})
+    await enqueue("scan_artifact_promises", {"session_id": str(session_id)})
+
+
+SWEEP_IDLE_MINUTES = 60
+SWEEP_INTERVAL_SECONDS = 15 * 60
+
+
+async def sweep_stale_sessions(idle_minutes: int = SWEEP_IDLE_MINUTES) -> int:
+    """Auto-complete real sessions abandoned mid-air: status 'active', no turn for
+    idle_minutes. A respondent who reaches the interviewer's goodbye and just closes the
+    tab (or drops mid-interview and never returns) must still get their transcript
+    compiled and their session honestly closed — the transcript is the product, and a
+    partial one is still data. 'paused' is deliberate and resumable: never touched.
+    Scope guards mirror reconcile above: real kinds only, never demo tenants."""
+    pool = await get_pool()
+    rows = await pool.fetch(
+        """select s.id, s.session_kind
+             from interview_sessions s
+             join workspaces w on w.id = s.workspace_id
+            where s.status = 'active'
+              and s.session_kind in ('interview', 'context')
+              and w.is_demo = false
+              and coalesce(
+                    (s.resumable_state ->> 'last_turn_at')::timestamptz,
+                    s.started_at
+                  ) < now() - ($1 || ' minutes')::interval""",
+        str(int(idle_minutes)),
+    )
+    for row in rows:
+        log.warning("sweep: session %s idle past %d min — completing + compiling",
+                    row["id"], idle_minutes)
+        await finish_session(str(row["id"]), row["session_kind"],
+                             note="auto-completed by stale-session sweep")
+    return len(rows)
+
+
+async def enqueue_sweep_once(delay_seconds: int = 0) -> None:
+    """Schedule the next sweep iff none is already queued — worker boots and the job's
+    own re-scheduling would otherwise stack parallel sweep chains."""
+    pool = await get_pool()
+    exists = await pool.fetchval(
+        "select 1 from jobs where kind = 'sweep_stale_sessions' and status = 'queued'"
+    )
+    if not exists:
+        await enqueue("sweep_stale_sessions", {}, priority=150, delay_seconds=delay_seconds)
+
+
+@handles("sweep_stale_sessions")
+async def _sweep_stale_sessions_job(payload: dict) -> None:
+    try:
+        await sweep_stale_sessions(payload.get("idle_minutes", SWEEP_IDLE_MINUTES))
+    finally:
+        # Self-rescheduling heartbeat: the next sweep queues even when this one failed.
+        await enqueue_sweep_once(delay_seconds=SWEEP_INTERVAL_SECONDS)

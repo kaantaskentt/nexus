@@ -11,11 +11,9 @@ from pydantic import BaseModel
 from ..auth import require_admin
 from ..config import get_settings
 from ..db import get_pool
-from ..pipeline import deletion
+from ..pipeline import deletion, reconcile
 from ..pipeline.interview import run_interview_turn, stream_interview_turn
 from ..pipeline.live_capture import extraction_in_flight
-from ..queue import enqueue
-from .plans import reconcile_plan_state
 
 router = APIRouter()
 
@@ -246,36 +244,18 @@ async def pause(token: str):
 
 @router.post("/by-token/{token}/complete")
 async def complete(token: str):
-    """Finish a text interview: mark it completed and enqueue the Stage 4 compile
-    (the voice path does this from the end-of-call webhook; text needs an explicit
-    finish). Idempotent — a re-complete won't double-enqueue an already-closed one."""
+    """Finish a text interview: mark it completed and fan out compile + disclosure screen
+    + promise scan (the voice path does this from the end-of-call webhook; text needs an
+    explicit finish). The completion verbs live in pipeline.reconcile.finish_session —
+    ONE shared path with the stale-session sweeper (WS-4a), so a clicked Finish and an
+    abandoned tab produce byte-identical lifecycle behavior. Idempotent — a re-complete
+    won't double-enqueue an already-closed one."""
     session = await _session_for_token(token)
-    pool = await get_pool()
     if session["status"] == "completed":
         return {"status": "completed", "compile": "already queued"}
-    plan_id = await pool.fetchval(
-        "select plan_id from interview_sessions where id = $1", session["id"]
+    await reconcile.finish_session(
+        str(session["id"]), session["session_kind"], note="interview completed"
     )
-    await pool.execute(
-        "update interview_sessions set status = 'completed', ended_at = now() where id = $1",
-        session["id"],
-    )
-    # Advance the plan in lockstep so it can't read "Sent" while its interview is done
-    # (YC-AUDIT #7). COMPILED lands when the compile job finishes, in compiler.py.
-    await reconcile_plan_state(pool, plan_id, "COMPLETED", "interview completed")
-    # F7: a context call is the CEO/discovery-class call (plan-less by construction),
-    # so its compile auto-renders the snapshot exactly like the transcript upload does.
-    # The A3 guardrail in _should_render_snapshot still holds (flag + plan-less both).
-    compile_payload = {"session_id": str(session["id"])}
-    if session["session_kind"] == "context":
-        compile_payload["render_snapshot"] = True
-    await enqueue("compile_session", compile_payload)
-    # Disclosure screen runs beside the compile, never inside it — a failed compile
-    # must not skip the Tier-2 sealed-flag pass (Emre stage-7 §7, A24).
-    await enqueue("screen_disclosures", {"session_id": str(session["id"])})
-    # Artifact promises (Kaan F1, July 8): same seam — offers to share materials are
-    # recorded even when the compile fails, so the done page can honor them.
-    await enqueue("scan_artifact_promises", {"session_id": str(session["id"])})
     return {"status": "completed", "compile": "queued"}
 
 
