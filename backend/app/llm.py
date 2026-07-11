@@ -24,6 +24,37 @@ class AgentParseError(RuntimeError):
     Deliberately NOT a ValueError, so a stray `except ValueError` can't re-swallow it."""
 
 
+class ProviderError(RuntimeError):
+    """A NAMED AI-provider failure (WS-5 / round-2 addendum §1). The July 10 credit
+    exhaustion failed silently in three costumes (snapshot never composing, plan drafting
+    hanging, paste-compile erroring) because every provider error was an anonymous string
+    in last_error. This type carries a machine-readable kind so the queue can label the
+    job, back off sensibly, and the admin UI can say the true thing: the tank is empty."""
+
+    def __init__(self, kind: str, detail: str):
+        super().__init__(f"PROVIDER_{kind.upper()}: {detail}")
+        self.kind = kind        # credits_exhausted | auth | rate_limited | overloaded
+        self.detail = detail
+
+
+def classify_provider_error(e: Exception) -> "ProviderError | None":
+    """Map an anthropic SDK exception onto a named ProviderError, or None for anything
+    that isn't a recognizably-provider failure (those keep today's generic handling).
+    Matching is deliberately conservative: status codes first, the documented
+    credit-balance message as the one string match."""
+    status = getattr(e, "status_code", None)
+    text = str(e).lower()
+    if status == 400 and "credit balance is too low" in text:
+        return ProviderError("credits_exhausted", "Anthropic API credit balance is too low")
+    if status in (401, 403):
+        return ProviderError("auth", f"provider auth failed (HTTP {status})")
+    if status == 429:
+        return ProviderError("rate_limited", "provider rate limit hit")
+    if status in (500, 529) or isinstance(e, anthropic.APIConnectionError):
+        return ProviderError("overloaded", f"provider unavailable ({type(e).__name__})")
+    return None
+
+
 def extract_json(text: str):
     """Tolerant JSON extraction shared by pipeline agents — the model may wrap the
     object/array in prose or a ```json fence. Returns the parsed value."""

@@ -69,14 +69,32 @@ async def worker_loop(worker_id: str = "worker-1", poll_seconds: float = 1.0) ->
                 raise RuntimeError(f"no handler registered for job kind {job['kind']!r}")
             await handler(job["payload"])
             await pool.execute("update jobs set status = 'done' where id = $1", job["id"])
-        except Exception:
-            err = traceback.format_exc()
-            failed = job["attempts"] >= job["max_attempts"]
-            await pool.execute(
-                """update jobs set status = $2, last_error = $3,
-                          run_after = now() + interval '30 seconds'
-                   where id = $1""",
-                job["id"],
-                "failed" if failed else "queued",
-                err[-4000:],
-            )
+        except Exception as e:
+            await record_job_failure(pool, job, e)
+
+
+async def record_job_failure(pool, job, exc: Exception) -> None:
+    """WS-5: a provider failure gets a NAMED prefix on last_error (health/deep and the
+    admin banner read it) and a backoff matched to how it actually heals — an empty tank
+    doesn't refill in 30s, so credit/auth errors wait 5 minutes between retries instead
+    of thrashing the queue. Retries stay: the July 10 top-up proved queued work
+    completing afterward is the right behavior. Anything unrecognized keeps the classic
+    30s retry with the traceback tail."""
+    from .llm import classify_provider_error
+
+    named = classify_provider_error(exc)
+    err = traceback.format_exc()
+    if named:
+        err = f"{named}\n{err}"
+    backoff = {"credits_exhausted": 300, "auth": 300, "rate_limited": 60}.get(
+        named.kind, 30) if named else 30
+    failed = job["attempts"] >= job["max_attempts"]
+    await pool.execute(
+        """update jobs set status = $2, last_error = $3,
+                  run_after = now() + ($4 || ' seconds')::interval
+           where id = $1""",
+        job["id"],
+        "failed" if failed else "queued",
+        err[:4000] if named else err[-4000:],
+        str(backoff),
+    )

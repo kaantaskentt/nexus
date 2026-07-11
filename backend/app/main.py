@@ -105,10 +105,23 @@ async def health_deep():
              extract(epoch from (now() - max(coalesce(locked_at, created_at)) filter (where status = 'failed'))) as last_error_age_s
            from jobs"""
     )
+    # WS-5 (round-2 addendum §1): a provider outage is a LOUD, NAMED state. The worker
+    # prefixes provider failures as PROVIDER_<KIND> on last_error; surface the freshest
+    # one seen in the last 30 minutes so the admin banner can say the true thing
+    # ("credits exhausted, work is queued") instead of three silent costumes.
+    prov = await pool.fetchrow(
+        """select substring(last_error from 'PROVIDER_[A-Z_]+') as kind, count(*) over () as n
+             from jobs
+            where last_error like 'PROVIDER_%'
+              and coalesce(locked_at, created_at) > now() - interval '30 minutes'
+            order by coalesce(locked_at, created_at) desc limit 1"""
+    )
     return {
         "ok": row["failed"] == 0,
         "failed_jobs": row["failed"],
         "queued_jobs": row["queued"],
         "running_jobs": row["running"],
         "last_error_age_s": int(row["last_error_age_s"]) if row["last_error_age_s"] is not None else None,
+        "provider_error": prov["kind"] if prov else None,
+        "provider_error_jobs": prov["n"] if prov else 0,
     }

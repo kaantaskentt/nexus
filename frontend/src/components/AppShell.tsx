@@ -260,6 +260,7 @@ export function AppShell({
             {initials(userName, "?")}
           </div>
         </header>
+        <ProviderHealthBanner />
         <main className="min-w-0 flex-1">{children}</main>
       </div>
     </div>
@@ -447,6 +448,59 @@ function WorkspaceSwitcher({ current, all }: { current: Workspace; all: Workspac
           </Link>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Provider health banner (WS-5, round-2 addendum §1) ────────────────────────────────
+// The July 10 credit exhaustion failed silently in three costumes; nobody should spend an
+// evening diagnosing an empty tank. The worker names provider failures on the queue and
+// /health/deep surfaces the freshest one — this banner says the true thing, in product
+// language, on every admin screen. Polls once a minute; renders nothing when healthy.
+const PROVIDER_COPY: Record<string, string> = {
+  PROVIDER_CREDITS_EXHAUSTED:
+    "AI provider credits are exhausted. Nothing is lost: work is queued and resumes automatically after a top-up.",
+  PROVIDER_AUTH:
+    "The AI provider is rejecting our credentials. Queued work will resume once the key is fixed.",
+  PROVIDER_RATE_LIMITED:
+    "The AI provider is rate-limiting us. Work is queued and retrying automatically.",
+  PROVIDER_OVERLOADED:
+    "The AI provider is temporarily unavailable. Work is queued and retrying automatically.",
+};
+
+function ProviderHealthBanner() {
+  const [kind, setKind] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    async function tick() {
+      try {
+        const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+        const res = await fetch(`${base}/health/deep`, { cache: "no-store" });
+        if (!res.ok) return;
+        const d = (await res.json()) as { provider_error?: string | null };
+        if (alive) setKind(d.provider_error ?? null);
+      } catch {
+        /* health probe failing is not a provider outage; keep the last state */
+      }
+    }
+    void tick();
+    const id = window.setInterval(tick, 60_000);
+    return () => {
+      alive = false;
+      window.clearInterval(id);
+    };
+  }, []);
+
+  if (!kind) return null;
+  return (
+    <div
+      role="status"
+      className="border-b border-danger/30 bg-danger-soft px-6 py-2.5 text-sm text-ink"
+    >
+      <span className="font-semibold text-danger">AI provider issue.</span>{" "}
+      {PROVIDER_COPY[kind] ??
+        "The AI provider is failing requests. Work is queued and retrying automatically."}
     </div>
   );
 }
