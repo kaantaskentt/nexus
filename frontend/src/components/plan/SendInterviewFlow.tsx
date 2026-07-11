@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import brand from "@/lib/brand";
 import { BrandMark } from "@/components";
-import { send_interview, type SendResult } from "@/lib/live";
+import { save_plan_delivery, send_interview, type SendResult } from "@/lib/live";
 import { useEscapeClose } from "@/lib/useEscapeClose";
 import type { InterviewPlan, Workspace } from "@/lib/types";
 
@@ -44,9 +44,24 @@ export function SendInterviewFlow({
   const [sendError, setSendError] = useState(false);
   const [result, setResult] = useState<SendResult | null>(null);
 
+  // Persist the admin's choices as they make them (round-2 addendum §3 minor: the modal
+  // "re-asserted Voice after Text was selected" — a plan that never went through the
+  // assign flow has no saved delivery, so every fresh open fell back to the voice
+  // default and a typed email evaporated). Fire-and-forget: a failed save just means
+  // the old prefill; the send itself still carries the on-screen values.
+  function persistDelivery(patch: { modality?: "voice" | "text"; email?: string; job_title?: string }) {
+    void save_plan_delivery(plan.id, patch).catch(() => {});
+  }
+
+  function pickModality(m: "voice" | "text") {
+    setModality(m);
+    persistDelivery({ modality: m });
+  }
+
   function handleClose() {
     setStep("details");
-    setEmail("");
+    // Keep what the admin entered — wiping the email on close was exactly the
+    // carry-over loss the addendum flagged. Sent state still resets via `result`.
     setResult(null);
     setSendError(false);
     onClose();
@@ -137,12 +152,13 @@ export function SendInterviewFlow({
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        onBlur={() => email.trim() && persistDelivery({ email: email.trim() })}
                         placeholder="name@company.com"
                         className="input"
                       />
                     </Field>
                     <Field label="Job title">
-                      <input value={role} onChange={(e) => setRole(e.target.value)} className="input" />
+                      <input value={role} onChange={(e) => setRole(e.target.value)} onBlur={() => role.trim() && persistDelivery({ job_title: role.trim() })} className="input" />
                     </Field>
                   </div>
 
@@ -153,13 +169,13 @@ export function SendInterviewFlow({
                     <div className="grid grid-cols-2 gap-3">
                       <TypeCard
                         selected={modality === "voice"}
-                        onClick={() => setModality("voice")}
+                        onClick={() => pickModality("voice")}
                         icon={Mic}
                         label="Voice"
                       />
                       <TypeCard
                         selected={modality === "text"}
-                        onClick={() => setModality("text")}
+                        onClick={() => pickModality("text")}
                         icon={MessageSquare}
                         label="Text"
                       />
