@@ -78,9 +78,15 @@ async def db():
         dbmod._pool = None
 
     pool = await get_pool()
-    await pool.execute("drop schema public cascade; create schema public;")
-    for m in MIGRATIONS:
-        await pool.execute(m.read_text())
+    # The reset + replay runs on ONE pinned connection. pool.execute checks out a
+    # different connection per statement; interleaving `drop schema public cascade`
+    # (which drops the vector extension living in public) with the replay across
+    # connections produced intermittent "pg_extension_name_index duplicate key" races
+    # under fast successive runs (July 10 night). Single-connection = strictly serial.
+    async with pool.acquire() as conn:
+        await conn.execute("drop schema public cascade; create schema public;")
+        for m in MIGRATIONS:
+            await conn.execute(m.read_text())
     yield pool
     await pool.close()
     dbmod._pool = None
