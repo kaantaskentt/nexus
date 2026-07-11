@@ -289,6 +289,23 @@ conflicts view check (WS-12) · dedupe verification (WS-6 report).
   Trust Center promise held through the full auto-complete → compile → screen chain.
 - ✅ Teardown — verify users deleted, credentials shredded, verify sessions/plans removed.
 
+## MORNING ORDERS (July 11, Kaan) — both corrected, with proof
+1. ✅ **whatif-17 stacked questions FIXED — stable.** The one-interrogative-per-turn rule
+   moved from prose into hard rule 10 as an explicit pre-send FORMAT check (fixed-response
+   scripts exempt), and the bus-factor closer exemplar was reshaped single-clause so the
+   prompt stopped modeling the violation (its follow-up is now its own turn). Proof:
+   whatif-17 **5/5 consecutive passes** (was ~50%); whatif-16/19 pass; full fixed suite
+   **46/48**, and both remaining fails are measured pre-existing intermittents —
+   whatif-18 fails 2/3 on BOTH the new and the old prompt (same rate; queued for
+   class-level review in EVALS.md §6), nav-two-strike passes 2/2 isolated. Shipped
+   3a21300; Railway redeployed (prompt bakes into the image).
+2. ✅ **Respondent counter honesty FIXED.** The poller no longer holds a stale number
+   behind a dead fetch: one blip keeps last data (no flicker), two consecutive failures
+   flip `degraded` and the readout renders a dash + "reconnecting" (text AND voice rooms);
+   recovery resets instantly; a count is never fabricated in either direction. Proof:
+   new poller-transition + render tests (125/125 frontend tests), tsc clean, `next build`
+   clean before push. Shipped e9f911c; Vercel production redeployed.
+
 ## Open for Kaan / Emre in the morning (decisions, not tasks)
 - Snapshot render output trim (68s avg is output-bound) — taste call on the format.
 - pain_rater / artifact_promise_scan Haiku downshifts — proposed, not applied.
