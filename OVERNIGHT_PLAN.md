@@ -54,7 +54,7 @@ on Sonnet for display-only extraction. Interviewer turn path is healthy: p50 2.7
 
 ## P0 — broken, or promised-and-missing (execution order)
 
-### ☐ WS-2 REFINE-REWRITE — refine must rewrite topics/goal/DoD, not append notes
+### ▶ WS-2 REFINE-REWRITE — refine must rewrite topics/goal/DoD, not append notes — CODE SHIPPED 1b7a836 (11+30 tests green; prod driven verify pending below)
 Root cause verified: `_REFINE_TARGETS = {never_list, suggested_questions, handling_notes}`
 (routers/plans.py). Topics/goal/definition_of_done are structurally uneditable; the contract
 tells the agent to shove real edits into handling_notes → "PLAN REBUILD NOTE" → stale DoD
@@ -103,7 +103,18 @@ c) Pre-reads become HYPOTHESES: handling-note register pre-reads explicitly over
 Safety gate: re-run disclosure/fixed-response/scope-lock/anti-fluency evals BEFORE push
 (§4 of night orders binds; frugal runs).
 
-### ☐ WS-4 LIST-TRUTH — three verified sub-bugs
+### WATCHTOWER GATES (accepted)
+- **GATE-1 (WS-6)**: no deletion until staged list is in this file + rows copied to a backup
+  table + announced one commit ahead. Will comply exactly.
+- **GATE-2 (WS-4a)**: ✅ PRE-PROOF PASSED before any sweeper work — new live eval
+  `evals/compiler/disclosure_boundary.py` (2 frugal calls, deterministic string judge):
+  allegation-mixed transcript → 7 records, 4 workflow, **0 leak tokens** in any field;
+  ordinary-vent control → pain compiles (no over-suppression). Compiler prompt carries the
+  boundary at stage4-compiler.md §"Disclosure boundary". Second half of the proof (prod
+  assertion of zero laundering/White-Wall-allegation records after Ahmet's real compile)
+  runs right after the sweeper completes his session — recorded below when done.
+
+### ▶ WS-4 LIST-TRUTH — three verified sub-bugs
 a) **No auto-complete**: text interviews only complete via the Finish click. Ahmet's session
    (34b8f7da) is STILL active/uncompiled on prod — his records never compiled (Emre's "both
    compiles ran" was the two CEO paste-sessions). FIX: idle-session sweeper job (active +
