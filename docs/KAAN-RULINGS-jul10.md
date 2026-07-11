@@ -63,3 +63,11 @@ failed-job monitor and clears orphaned post-teardown jobs — do not chase those
   record. This is exactly the confirm-before-destructive case. Keep gated; Emre rules first.
 
 ## KAAN APPROVAL (ANYTIME deviations, ~09:40): proceed as recommended. v1 call-level honesty + v2 post-call confirm-gate; voice-primary; first-call CONFIRMED vs additive CLAIMED asymmetry kept (Emre can still weigh in). No vetoes.
+
+## WATCHTOWER FINDING (post-close, ~12:20 PDT) — empty-session compile crash
+compile_session raises RuntimeError on a session with NO utterances (someone started a
+context call, said nothing, compile fired → crash → failed job). Same graceful-skip class
+as the missing-session sweep (199ec8c) but for EMPTY (0-utterance) sessions. Next session:
+make compile_session (and any handler that reads utterances) NO-OP cleanly on an empty
+session instead of raising. Watchtower cleared the dead job (435); prod green. Low priority,
+not client-facing, but it's a real edge the sweep missed.
