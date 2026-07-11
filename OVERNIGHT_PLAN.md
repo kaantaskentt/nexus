@@ -184,11 +184,34 @@ Also makes the respondent counter tick faster. Verify: eval-workspace extraction
 prod driven turn. Other seats (pain_rater, artifact_promise_scan) PROPOSED only — listed
 for Kaan, not changed tonight (they write product-visible data).
 
-### ☐ P1-4 Before/after numbers recorded here after P1-1..3 land.
+### ✅ P1-4 Before/after numbers (measured tonight on prod)
+- **Interview turn**: cold 6.2s → warm-cache 2.8s (cache_read 12,697 tokens on turn 2,
+  driven on a disposable prod session). Baseline p50 2.7s confirmed healthy.
+- **Extractor**: Sonnet avg 2.21s → Haiku 2.08s measured live; ≈3× input-cost cut on the
+  highest-volume seat (93 runs/3d).
+- **Queue**: head-of-line blocking eliminated structurally (4 loops; race-safety pinned);
+  zombie claims now self-heal in ≤30 min (observed live: job 506 stranded by the deploy
+  overlap — the exact class the fix covers).
+- **Single-shot seats**: system prompts >4k chars cache-marked (compiler ~13KB); repeat
+  runs within the 5m TTL stop re-billing identical bytes; counts visible on agent_runs.
+- **Failure storms**: named PROVIDER_* + 5-min backoff replaces anonymous 30s thrash
+  (the outage burned 21 plan-generator runs in 3 days).
+- NOT touched (proposals, not built): snapshot render is output-bound (avg_out 4744
+  tokens ≈ 68s) — trimming its output format is a Kaan taste call; plan generate→check
+  is sequential by design (the gate). pain_rater/artifact_promise_scan Haiku downshifts
+  listed but not applied (product-visible writers).
 
-## P2 — dead code removal (each cut: build + test + smoke, own commit)
-☐ Sweep results pending (agent running) — verdict list lands here before any cut.
-Known: repo-root stray PNGs → docs/screenshots/; untracked scripts/ → inspect then decide.
+## P2 — dead code removal
+✅ VERDICT: **no safe cuts exist.** Every prime suspect verified load-bearing:
+simulation_history.py (simulations router), scrape.py (recon), notify.py (disclosure),
+all routers registered in main.py, every prompts/agents/*.md seeded in prod agent_configs,
+docs/build_art_v2.py is deliberate provenance (df1a7fe). Repo-root PNGs are GITIGNORED
+local artifacts, not repo content. Untracked scripts/ holds the watchtower dashboard +
+tonight's dedupe report (now committed). Frontend /skills route is a deliberate
+stale-link landing (nav folded into Workflows). Nothing cut → nothing broken; the
+"every built thing is wired" discipline held. Deeper speculative cuts deferred — orders
+say when unsure, leave it and list it.
+Bonus reliability fix from this lane: zombie-job lease recovery (3ca2ed5).
 
 ## P3 — polish
 ### ☐ WS-10 REGISTER-SHIFT (into stage7-interviewer.md with WS-1 — single safety-eval run):
@@ -241,6 +264,31 @@ conflicts view check (WS-12) · dedupe verification (WS-6 report).
   added replacement topic, rewrote goal + DoD as effective-package edits, rechecked=true,
   plan flipped AWAITING_APPROVAL→NEXUS_CHECK with system transition + check job enqueued.
   Plan + jobs torn down after.
-- ☐ WS-4c counter driven repro · WS-8 after-numbers · WS-9 cuts · WS-10/11 evals · WS-12 residuals
-- NOTE (new finding): a job claimed as 'running' by a worker killed mid-job has no lease
-  recovery — candidate small fix (requeue running jobs whose locked_at is ancient) listed P2.
+- ✅ WS-4c counter — server chain DRIVEN-PROVEN on prod: 2 real turns on a disposable
+  session → count 0→4 with honest `extracting` heartbeat, extractor on Haiku, torn down
+  after. The R1 count endpoint verified healthy for Berk's real token too (returns 14).
+  Emre's "0 all session" could not be reproduced server-side; captures were written live
+  during his session — residual suspect is his browser/tab state at the time. If it
+  recurs, the poller's silent-catch (keeps stale 0 on fetch errors) is the place to add
+  an error state — left unchanged tonight (visible-behavior change, needs a real repro).
+- ✅ WS-12 B6 conflicts view — VERIFIED WORKING: the notebook contradiction surfaces in
+  /insights (5 items incl. the perception gap); it landed 20:49, after Emre's write-up.
+- ✅ WS-12 send-modal — root cause found with prod data (Ahmet's plan: delivery null —
+  snapshot-generated plans never pass the assign flow) and fixed: the modal persists
+  choices itself + stops wiping email on close (7445e31).
+- ✅ WS-10 register/polish + WS-11 eval-mine — 4baaee2 + 841674e (3/4 new cases pass;
+  [B7] stacking intermittent, recorded honestly in EVALS.md §6).
+- ✅ P2 verdict — no safe cuts (see P2 section) + zombie lease recovery 3ca2ed5.
+- ✅ Ahmet disclosure screen — 1 sealed flag routed to human review after his compile;
+  Trust Center promise held through the full auto-complete → compile → screen chain.
+- ✅ Teardown — verify users deleted, credentials shredded, verify sessions/plans removed.
+
+## Open for Kaan / Emre in the morning (decisions, not tasks)
+- Snapshot render output trim (68s avg is output-bound) — taste call on the format.
+- pain_rater / artifact_promise_scan Haiku downshifts — proposed, not applied.
+- Near-identical (non-exact) record pairs on Test Mest — listed by the dedupe report,
+  deliberately NOT merged (exact-only rule tonight).
+- [B7] stacked-questions intermittency — candidate for Emre's class-level review.
+- Hedged/passive-ideation escalation line (Kaan+Emre, from lane-s7) — still open.
+- Round-3 board is clean: Ayse's plan untouched+waiting; both worker reports reachable
+  from the list; conflicts view verified; dedupe verified.

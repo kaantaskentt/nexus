@@ -1186,3 +1186,15 @@ next seam; **audit-walk** has the commit list to re-verify post-deploy. (2) back
 raise-on-missing-session sweep ROUTED to **lane-a** (compiler.py L178 + workflow.py L70; copy
 disclosure.py's guard). (3) Kaan taste: "View full transcript" needs a real context-call
 transcript route before un-hiding. Full detail in docs/sprint-logs/simplify-lane-shell.md.
+
+## NIGHT CLOSE — July 10→11 overnight (audit + fix, solo session per night orders)
+Verdict: GREEN. Phase 1 audit → OVERNIGHT_PLAN.md (root) → P0-P3 executed. 17 commits,
+every one tested before push; prod redeployed 3× (Railway manual `up` — NOTE: push did
+NOT auto-deploy Railway tonight; Vercel also needed manual deploys) and verified after
+each. Both watchtower gates passed with independent confirmation (GATE-2 disclosure
+compile: 0 leaks after Ahmet's real compile + sealed flag routed; GATE-1 dedupe:
+backup-first, 222→176, 0 dupes remain). Headline: refine now rewrites the effective
+plan (driven-proven on prod), interviewer walks in domain-competent with a role schema
+prime (safety suite 42/44, fails are pre-existing flake), abandoned sessions self-heal,
+provider outages are loud and named, worker runs 4-wide with lease recovery. Full
+ledger + morning decision list in OVERNIGHT_PLAN.md.
