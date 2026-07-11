@@ -39,3 +39,19 @@ async def test_render_snapshot_noops_on_missing_workspace(db):
     # render_snapshot is workspace-scoped (no session): a deleted tenant has no claims, so
     # it returns rather than raising. Pinned as part of the same failure class.
     await render_snapshot({"workspace_id": _GONE})
+
+
+async def test_compile_session_noops_on_empty_session(db):
+    """WS-12 (watchtower, KAAN-RULINGS post-close): a 0-utterance session compiles to a
+    clean no-op — never a RuntimeError that parks a failed job. Same terminal class as a
+    gone session."""
+    from tests.conftest import make_workspace
+
+    ws = await make_workspace(db, industry="jewelry")
+    sid = await db.fetchval(
+        "insert into interview_sessions (workspace_id, modality, status, session_kind) "
+        "values ($1, 'voice', 'completed', 'context') returning id",
+        ws,
+    )
+    await compile_session({"session_id": str(sid)})
+    assert await db.fetchval("select count(*) from claim_records where session_id=$1", sid) == 0

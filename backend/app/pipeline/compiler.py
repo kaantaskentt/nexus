@@ -203,7 +203,11 @@ async def compile_session(payload: dict) -> None:
         session_id,
     )
     if not utterances:
-        raise RuntimeError(f"compile_session: session {session_id} has no utterances")
+        # Watchtower finding (KAAN-RULINGS §post-close): someone opens a call, says
+        # nothing, compile fires. An empty session is a terminal no-op like a gone
+        # session — never a retryable crash that parks a failed job on the queue.
+        log.info("compile_session: session %s has no utterances — skipping", session_id)
+        return
 
     user_content = (
         "# Transcript to compile\n\n"
