@@ -569,8 +569,15 @@ async def list_sessions(workspace_id: str, kind: str = "interview"):
     if kind not in ("interview", "eval", "context"):
         raise HTTPException(422, "unknown session kind")
     pool = await get_pool()
+    # WS-4b: discovery paste-uploads mint sessions with session_kind='interview' but no
+    # plan and no invite token (upload_discovery below). They are compile vehicles, not
+    # interviews anyone can open or observe — on the Interviews hub they rendered as
+    # phantom "CEO · Completed" rows and threw the counters off the rendered list
+    # (round-2 addendum §3.4). The interviews list shows only real, invite-keyed runs;
+    # eval/context listings are unchanged.
+    real_only = "and (s.plan_id is not null or s.invite_token is not null)" if kind == "interview" else ""
     rows = await pool.fetch(
-        """select s.id, s.status, s.modality, s.session_kind, s.plan_id,
+        f"""select s.id, s.status, s.modality, s.session_kind, s.plan_id,
                   coalesce(se.canonical_name, pe.canonical_name) as interviewee,
                   coalesce(se.role, pe.role) as interviewee_role,
                   exists(select 1 from workflows w where w.session_id = s.id) as has_report
@@ -578,7 +585,7 @@ async def list_sessions(workspace_id: str, kind: str = "interview"):
            left join entities se on se.id = s.interviewee_id
            left join interview_plans p on p.id = s.plan_id
            left join entities pe on pe.id = p.interviewee_id
-           where s.workspace_id = $1 and s.session_kind = $2
+           where s.workspace_id = $1 and s.session_kind = $2 {real_only}
            order by s.created_at""",
         workspace_id, kind,
     )

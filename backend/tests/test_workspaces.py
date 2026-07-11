@@ -4,6 +4,7 @@ zero records (A12 firewall), industry on the column for A14, slugs stay unique."
 from httpx import ASGITransport, AsyncClient
 
 from app.main import app
+from tests.conftest import make_workspace
 
 
 def _client():
@@ -50,3 +51,24 @@ async def test_create_workspace_requires_name(db):
     async with _client() as c:
         r = await c.post("/api/workspaces", json={"name": "   "})
     assert r.status_code == 422
+
+
+async def test_interviews_list_excludes_paste_upload_sessions(db):
+    """WS-4b: a discovery paste-upload (session_kind='interview', no plan, no invite
+    token) is a compile vehicle, not an interview — it must not render as a phantom row
+    on the Interviews hub. Real invite-keyed and plan-backed sessions still list."""
+    ws = await make_workspace(db, industry="jewelry")
+    # Phantom: paste-upload shape (no plan, no token).
+    await db.execute(
+        "insert into interview_sessions (workspace_id, modality, status, session_kind) "
+        "values ($1, 'text', 'completed', 'interview')", ws)
+    # Real: invite-keyed run.
+    real = await db.fetchval(
+        "insert into interview_sessions (workspace_id, modality, status, session_kind, invite_token) "
+        "values ($1, 'text', 'active', 'interview', 'tok-real-1') returning id", ws)
+
+    async with _client() as c:
+        r = await c.get(f"/api/workspaces/{ws}/sessions")
+    assert r.status_code == 200
+    ids = [row["id"] for row in r.json()]
+    assert ids == [str(real)]

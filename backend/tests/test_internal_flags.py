@@ -25,12 +25,15 @@ async def test_list_workspaces_hides_internal(db):
 
 
 async def test_list_sessions_excludes_non_interview_kinds(db):
+    # The interview-kind row carries an invite token: since WS-4b the interviews list also
+    # drops plan-less token-less rows (paste-upload compile vehicles), and this test's
+    # subject is the KIND filter, so its interview row is a real invite-keyed one.
     ws = await make_workspace(db, industry="jewelry")
-    for kind in ("interview", "context", "eval"):
+    for kind, token in (("interview", "tok-kind-test"), ("context", None), ("eval", None)):
         await db.execute(
-            "insert into interview_sessions (workspace_id, modality, status, session_kind) "
-            "values ($1, 'text', 'completed', $2)",
-            ws, kind,
+            "insert into interview_sessions (workspace_id, modality, status, session_kind, invite_token) "
+            "values ($1, 'text', 'completed', $2, $3)",
+            ws, kind, token,
         )
     async with _client() as c:
         rows = (await c.get(f"/api/workspaces/{ws}/sessions")).json()
