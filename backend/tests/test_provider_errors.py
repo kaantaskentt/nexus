@@ -78,3 +78,15 @@ async def test_health_deep_surfaces_provider_error(db):
     body = r.json()
     assert body["provider_error"] == "PROVIDER_CREDITS_EXHAUSTED"
     assert body["provider_error_jobs"] >= 1
+
+
+async def test_concurrent_loops_never_double_claim(db):
+    """P1-1: N loops share the queue via SKIP LOCKED — the same job can never be claimed
+    twice. Simulate two loops racing _claim_one on a single queued job."""
+    import asyncio
+
+    await enqueue("_test_race_job", {})
+    a, b = await asyncio.gather(_claim_one("w-1"), _claim_one("w-2"))
+    claimed = [j for j in (a, b) if j is not None]
+    assert len(claimed) == 1
+    assert claimed[0]["kind"] == "_test_race_job"
