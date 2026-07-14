@@ -10,6 +10,7 @@ import type {
   KnowledgeRecord,
 } from "@/lib/types";
 import { ConfidenceBadge, EvidenceQuoteCard } from "@/components";
+import { ContextChat } from "@/components/knowledge/ContextChat";
 import { topicMeta } from "@/lib/topics";
 import { confidenceForTag } from "@/lib/trust";
 import { foldText } from "@/lib/fold";
@@ -71,9 +72,18 @@ function keep(r: KnowledgeRecord, f: Filters, skip?: keyof Filters): boolean {
   return true;
 }
 
-export function KnowledgeBaseView({ records }: { records: KnowledgeRecord[] }) {
+export function KnowledgeBaseView({
+  records,
+  workspaceId,
+}: {
+  records: KnowledgeRecord[];
+  workspaceId: string;
+}) {
   const [f, setF] = useState<Filters>(EMPTY);
   const set = <K extends keyof Filters>(k: K, v: Filters[K]) => setF((p) => ({ ...p, [k]: v }));
+  // Topic is the browse gate: no topic → ask door; a topic → quoted records for that facet.
+  // Clicking the active topic again clears it (FacetButton below) so ask returns.
+  const browsingTopic = f.topic !== "all";
 
   const filtered = useMemo(() => records.filter((r) => keep(r, f)), [records, f]);
 
@@ -137,7 +147,10 @@ export function KnowledgeBaseView({ records }: { records: KnowledgeRecord[] }) {
         </motion.div>
 
         {records.length === 0 ? (
-          <EmptyStore />
+          <div className="mt-8 space-y-6">
+            <ContextChat workspaceId={workspaceId} />
+            <EmptyStore />
+          </div>
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[15rem_1fr]">
             {/* ── Filter rail ─────────────────────────────────────────── */}
@@ -217,42 +230,46 @@ export function KnowledgeBaseView({ records }: { records: KnowledgeRecord[] }) {
               )}
             </aside>
 
-            {/* ── Records ─────────────────────────────────────────────── */}
+            {/* ── Ask door / records ──────────────────────────────────── */}
             <div className="min-w-0">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <span className="text-sm text-ink-soft">
-                  <span className="tabular font-semibold text-ink">{filtered.length}</span>
-                  {filtered.length === 1 ? " record" : " records"}
-                  {activeCount > 0 && " match your filters"}
-                </span>
-                {activeCount > 0 && (
-                  <button
-                    onClick={() => setF(EMPTY)}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-accent transition-colors hover:text-accent-hover"
-                  >
-                    <X className="h-3.5 w-3.5" strokeWidth={2} /> Clear filters
-                  </button>
-                )}
-              </div>
-
-              {filtered.length === 0 ? (
-                <NoMatches onClear={() => setF(EMPTY)} />
+              {!browsingTopic ? (
+                <ContextChat workspaceId={workspaceId} />
               ) : (
-                // One fade for the whole list — a per-card stagger over 56 records reads
-                // as a 2.5s cascade and re-fires on every filter keystroke. The list is
-                // the data; it should arrive at once, snappily.
-                <motion.div variants={rise} initial="hidden" animate="show" className="space-y-4">
-                  {filtered.map((r) => (
-                    <RecordCard key={r.id} record={r} />
-                  ))}
-                  {/* End signal (feedback queue, July 7): the reader always knows where
-                      the bottom is — no infinite-feel scroll. */}
-                  <p className="pb-2 pt-4 text-center text-xs text-ink-faint">
-                    {filtered.length === records.length
-                      ? `That's all ${records.length} record${records.length === 1 ? "" : "s"}.`
-                      : `End of matches: ${filtered.length} of ${records.length} records shown.`}
-                  </p>
-                </motion.div>
+                <>
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <span className="text-sm text-ink-soft">
+                      <span className="tabular font-semibold text-ink">{filtered.length}</span>
+                      {filtered.length === 1 ? " record" : " records"}
+                      {activeCount > 0 && " match your filters"}
+                    </span>
+                    <button
+                      onClick={() => setF(EMPTY)}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-accent transition-colors hover:text-accent-hover"
+                    >
+                      <X className="h-3.5 w-3.5" strokeWidth={2} /> Clear filters
+                    </button>
+                  </div>
+
+                  {filtered.length === 0 ? (
+                    <NoMatches onClear={() => setF(EMPTY)} />
+                  ) : (
+                    // One fade for the whole list — a per-card stagger over 56 records reads
+                    // as a 2.5s cascade and re-fires on every filter keystroke. The list is
+                    // the data; it should arrive at once, snappily.
+                    <motion.div variants={rise} initial="hidden" animate="show" className="space-y-4">
+                      {filtered.map((r) => (
+                        <RecordCard key={r.id} record={r} />
+                      ))}
+                      {/* End signal (feedback queue, July 7): the reader always knows where
+                          the bottom is — no infinite-feel scroll. */}
+                      <p className="pb-2 pt-4 text-center text-xs text-ink-faint">
+                        {filtered.length === records.length
+                          ? `That's all ${records.length} record${records.length === 1 ? "" : "s"}.`
+                          : `End of matches: ${filtered.length} of ${records.length} records shown.`}
+                      </p>
+                    </motion.div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -385,7 +402,7 @@ function NoMatches({ onClear }: { onClear: () => void }) {
 
 function EmptyStore() {
   return (
-    <div className="card-hairline mt-8 flex flex-col items-center rounded-card border border-line bg-surface px-8 py-20 text-center">
+    <div className="card-hairline flex flex-col items-center rounded-card border border-line bg-surface px-8 py-20 text-center">
       <Layers className="h-9 w-9 text-ink-faint/60" strokeWidth={1.5} />
       <p className="mt-4 font-display text-xl text-ink">No records yet</p>
       <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">

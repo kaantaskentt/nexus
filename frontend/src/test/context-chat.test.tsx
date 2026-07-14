@@ -22,10 +22,11 @@ const askMock = vi.mocked(ask_context);
 
 function answer(over: Partial<ChatAnswer> = {}): ChatAnswer {
   return {
-    answer: "Burak reprices every morning on his personal Excel.",
+    answer:
+      "Burak reprices every morning on his personal Excel (record a1b2c3d4).",
     citations: [
       {
-        record_id: "r-1",
+        record_id: "a1b2c3d4-0000-4000-8000-000000000001",
         tag: "CLAIMED",
         claim_text: "Burak runs the repricing.",
         evidence_quote: "I do the prices before anyone gets in",
@@ -79,6 +80,10 @@ describe("ContextChat", () => {
     expect(await screen.findByText("Burak runs the repricing.")).toBeInTheDocument();
     expect(screen.getByText(/before anyone gets in/i)).toBeInTheDocument();
     expect(screen.getByText("Reported")).toBeInTheDocument(); // CLAIMED renders as Reported
+    // Inline `(record …)` becomes a numbered chip; the source card carries [C1].
+    expect(screen.getByRole("button", { name: /citation c1/i })).toBeInTheDocument();
+    expect(screen.getByText("[C1]")).toBeInTheDocument();
+    expect(screen.queryByText(/\(record a1b2c3d4\)/i)).not.toBeInTheDocument();
   });
 
   it("shows an honest error line when the ask fails, keeping the page alive", async () => {

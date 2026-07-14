@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { CornerDownLeft, Loader2, MessageCircleQuestion, PlusCircle } from "lucide-react";
-import { ask_context, add_context, type ChatAnswer } from "@/lib/live";
+import { ask_context, add_context, type ChatAnswer, type ChatCitation } from "@/lib/live";
 import { ConfidenceBadge } from "@/components";
 import { confidenceForTag } from "@/lib/trust";
 
@@ -11,6 +12,147 @@ import { confidenceForTag } from "@/lib/trust";
 // its trust badge (never a hallucinated id; the backend enforces that). Add: an admin
 // statement compiled through the STANDARD pipeline, capped at CLAIMED — it becomes
 // comparable records, never a hand-edit of existing ones.
+
+type IndexedCitation = ChatCitation & { n: number; label: string };
+
+function indexCitations(citations: ChatCitation[]): IndexedCitation[] {
+  return citations.map((c, i) => ({ ...c, n: i + 1, label: `C${i + 1}` }));
+}
+
+function resolveCitation(
+  token: string,
+  indexed: IndexedCitation[],
+): IndexedCitation | null {
+  const needle = token.replace(/-/g, "").toLowerCase();
+  if (!needle) return null;
+  return (
+    indexed.find((c) => {
+      const compact = c.record_id.replace(/-/g, "").toLowerCase();
+      return (
+        compact === needle ||
+        compact.startsWith(needle) ||
+        needle.startsWith(compact.slice(0, Math.min(8, compact.length)))
+      );
+    }) ?? null
+  );
+}
+
+// Models often paste `(record <uuid-or-prefix>)` into the answer prose. Turn those into
+// numbered chips that map onto the citation list below (never invent ids the API didn't
+// return — unresolved markers stay as plain text).
+const INLINE_CITATION_RE = /\(record\s+([0-9a-fA-F-]{6,36})\)/gi;
+
+function CitedAnswer({
+  answer,
+  citations,
+}: {
+  answer: string;
+  citations: IndexedCitation[];
+}) {
+  const parts: ReactNode[] = [];
+  let last = 0;
+  let key = 0;
+  INLINE_CITATION_RE.lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = INLINE_CITATION_RE.exec(answer)) !== null) {
+    if (match.index > last) {
+      parts.push(<span key={key++}>{answer.slice(last, match.index)}</span>);
+    }
+    const hit = resolveCitation(match[1], citations);
+    parts.push(
+      hit ? (
+        <CitationChip key={key++} citation={hit} />
+      ) : (
+        <span key={key++}>{match[0]}</span>
+      ),
+    );
+    last = match.index + match[0].length;
+  }
+  if (last < answer.length) {
+    parts.push(<span key={key++}>{answer.slice(last)}</span>);
+  }
+  return <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">{parts}</p>;
+}
+
+const PREVIEW_WIDTH = 288; // w-72
+const PREVIEW_PAD = 12;
+
+function CitationChip({ citation }: { citation: IndexedCitation }) {
+  const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    placeAbove: boolean;
+  } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open || !anchorRef.current) {
+      setPos(null);
+      return;
+    }
+    const rect = anchorRef.current.getBoundingClientRect();
+    const width = Math.min(PREVIEW_WIDTH, window.innerWidth - PREVIEW_PAD * 2);
+    const maxLeft = window.innerWidth - width - PREVIEW_PAD;
+    const left = Math.max(PREVIEW_PAD, Math.min(rect.left, maxLeft));
+    // Prefer below the chip; flip above when there isn't room under it.
+    const placeAbove = rect.bottom + 180 > window.innerHeight && rect.top > 180;
+    const top = placeAbove ? rect.top - 6 : rect.bottom + 6;
+    setPos({ top, left, width, placeAbove });
+  }, [open]);
+
+  return (
+    <span
+      className="relative mx-0.5 inline-block align-baseline"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        ref={anchorRef}
+        type="button"
+        aria-label={`Citation ${citation.label}`}
+        aria-expanded={open}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        className="inline-flex translate-y-[-1px] items-center rounded-chip border border-accent/35 bg-accent-soft px-1.5 py-px text-[10px] font-semibold tracking-tight text-accent-ink transition-colors hover:border-accent/60"
+      >
+        {citation.label}
+      </button>
+      {open &&
+        pos &&
+        createPortal(
+          <div
+            role="tooltip"
+            style={{
+              top: pos.top,
+              left: pos.left,
+              width: pos.width,
+              transform: pos.placeAbove ? "translateY(-100%)" : undefined,
+            }}
+            className="fixed z-50 rounded-card border border-line bg-surface p-3 text-left shadow-elev-2"
+            onMouseEnter={() => setOpen(true)}
+            onMouseLeave={() => setOpen(false)}
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-accent-ink">[{citation.label}]</span>
+              {citation.tag ? (
+                <ConfidenceBadge confidence={confidenceForTag(citation.tag)} />
+              ) : null}
+            </div>
+            <p className="mt-1.5 text-xs leading-snug text-ink">{citation.claim_text}</p>
+            {citation.evidence_quote && (
+              <p className="mt-2 border-t border-line pt-2 text-[11px] italic leading-relaxed text-ink-soft">
+                &ldquo;{citation.evidence_quote}&rdquo;
+              </p>
+            )}
+          </div>,
+          document.body,
+        )}
+    </span>
+  );
+}
+
 export function ContextChat({ workspaceId }: { workspaceId: string }) {
   const [question, setQuestion] = useState("");
   const [asking, setAsking] = useState(false);
@@ -53,8 +195,10 @@ export function ContextChat({ workspaceId }: { workspaceId: string }) {
     }
   }
 
+  const indexed = result ? indexCitations(result.citations) : [];
+
   return (
-    <section className="mb-8 rounded-card border border-line bg-surface p-5">
+    <section className="rounded-card border border-line bg-surface p-5">
       <div className="flex items-center gap-2">
         <MessageCircleQuestion className="h-5 w-5 text-ink-faint" strokeWidth={1.5} />
         <h2 className="font-display text-lg text-ink">Ask the company context</h2>
@@ -90,23 +234,24 @@ export function ContextChat({ workspaceId }: { workspaceId: string }) {
 
       {result && (
         <div className="mt-4 space-y-3">
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">{result.answer}</p>
-          {result.citations.length > 0 && (
+          <CitedAnswer answer={result.answer} citations={indexed} />
+          {indexed.length > 0 && (
             <ul className="space-y-2">
-              {result.citations.map((c) => (
+              {indexed.map((c) => (
                 <li
                   key={c.record_id}
-                  className="flex items-start gap-2.5 rounded-lg border border-line bg-surface-sunken/40 px-3 py-2"
+                  className="rounded-lg border border-line bg-surface-sunken/40 px-3 py-2.5"
                 >
-                  {c.tag && <ConfidenceBadge confidence={confidenceForTag(c.tag)} />}
-                  <div className="min-w-0">
-                    <p className="text-xs leading-snug text-ink">{c.claim_text}</p>
-                    {c.evidence_quote && (
-                      <p className="mt-0.5 truncate text-[11px] italic text-ink-faint">
-                        &ldquo;{c.evidence_quote}&rdquo;
-                      </p>
-                    )}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-accent-ink">[{c.label}]</span>
+                    {c.tag && <ConfidenceBadge confidence={confidenceForTag(c.tag)} />}
                   </div>
+                  <p className="mt-1.5 text-xs leading-snug text-ink">{c.claim_text}</p>
+                  {c.evidence_quote && (
+                    <p className="mt-2 border-t border-line/80 pt-2 text-[11px] italic leading-relaxed text-ink-soft">
+                      &ldquo;{c.evidence_quote}&rdquo;
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
