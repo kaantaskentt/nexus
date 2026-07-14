@@ -160,9 +160,24 @@ export interface DiscoveryStatus {
 export async function discovery_status(
   workspace_id: string,
   session_id: string,
+  token?: string,
 ): Promise<DiscoveryStatus> {
   return api<DiscoveryStatus>(
     `/api/workspaces/${workspace_id}/discovery/${session_id}/status`,
+    undefined,
+    token,
+  );
+}
+
+// In-flight discovery/context compile for Home resume (refresh mid-compile keeps the board).
+export async function get_active_discovery(
+  workspace_id: string,
+  token?: string,
+): Promise<DiscoveryStatus | null> {
+  return api<DiscoveryStatus | null>(
+    `/api/workspaces/${workspace_id}/discovery/active`,
+    undefined,
+    token,
   );
 }
 

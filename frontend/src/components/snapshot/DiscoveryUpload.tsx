@@ -45,6 +45,11 @@ const STAGES: { kind: string; label: string }[] = [
 
 type Phase = "idle" | "compiling" | "done" | "error";
 
+// Browser-local backup for refresh when the RSC active lookup hasn't landed yet.
+function compileStorageKey(workspaceId: string) {
+  return `nexus:discovery-compile:${workspaceId}`;
+}
+
 export function DiscoveryUpload({
   workspaceId,
   defaultSpeaker,
@@ -54,6 +59,7 @@ export function DiscoveryUpload({
   append = false,
   scrapedCount = 0,
   contextCallBeta = false,
+  resumeSessionId,
 }: {
   workspaceId: string;
   defaultSpeaker?: string;
@@ -72,12 +78,15 @@ export function DiscoveryUpload({
   // F7 BETA (creation-time opt-in): offer the live context call as an alternative to
   // the transcript upload. The upload stays; the beta is one extra labeled door.
   contextCallBeta?: boolean;
+  // Server / URL resume: an in-flight discovery session so the progress board survives
+  // refresh and reconnect (compile itself never needed the tab open).
+  resumeSessionId?: string;
 }) {
   const router = useRouter();
   const [transcript, setTranscript] = useState("");
   const [speaker, setSpeaker] = useState(defaultSpeaker ?? "");
   const [fileName, setFileName] = useState<string | null>(null);
-  const [phase, setPhase] = useState<Phase>("idle");
+  const [phase, setPhase] = useState<Phase>(resumeSessionId ? "compiling" : "idle");
   const [status, setStatus] = useState<DiscoveryStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mintingCall, setMintingCall] = useState(false);
@@ -165,11 +174,98 @@ export function DiscoveryUpload({
     }
   }
 
-  useEffect(() => {
-    return () => {
+  const clearCompileMarkers = useCallback(() => {
+    try {
+      localStorage.removeItem(compileStorageKey(workspaceId));
+    } catch {
+      /* private mode / denied — ignore */
+    }
+    // Drop ?compiling= so a later Home load isn't forced into the board after done.
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("compiling")) {
+        url.searchParams.delete("compiling");
+        router.replace(url.pathname + url.search + url.hash);
+      }
+    }
+  }, [workspaceId, router]);
+
+  const rememberCompile = useCallback(
+    (sessionId: string) => {
+      try {
+        localStorage.setItem(compileStorageKey(workspaceId), sessionId);
+      } catch {
+        /* ignore */
+      }
+      if (typeof window === "undefined") return;
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("compiling") === sessionId) return;
+      url.searchParams.set("compiling", sessionId);
+      router.replace(url.pathname + url.search + url.hash);
+    },
+    [workspaceId, router],
+  );
+
+  const beginPolling = useCallback(
+    (sessionId: string) => {
       if (pollRef.current) clearInterval(pollRef.current);
+      setPhase("compiling");
+      setError(null);
+      // Immediate tick so a resumed board isn't blank for 1.2s.
+      const tick = async () => {
+        try {
+          const s = await discovery_status(workspaceId, sessionId);
+          setStatus(s);
+          if (s.state === "done") {
+            if (pollRef.current) clearInterval(pollRef.current);
+            pollRef.current = null;
+            clearCompileMarkers();
+            setPhase("done");
+            // api() is no-store, so the server re-render shows the fresh cards.
+            setTimeout(() => router.refresh(), 900);
+          } else if (s.state === "failed") {
+            if (pollRef.current) clearInterval(pollRef.current);
+            pollRef.current = null;
+            clearCompileMarkers();
+            setError("The compile hit an error. The transcript is saved; you can retry.");
+            setPhase("error");
+          }
+        } catch {
+          // transient poll error — keep polling
+        }
+      };
+      void tick();
+      pollRef.current = setInterval(tick, 1200);
+    },
+    [workspaceId, router, clearCompileMarkers],
+  );
+
+  // Re-attach an in-flight compile: server resumeSessionId, else browser localStorage.
+  // pollingSid guards Strict Mode double-mount and URL replace remounts.
+  const pollingSid = useRef<string | null>(null);
+  useEffect(() => {
+    let sid = resumeSessionId?.trim() || null;
+    if (!sid) {
+      try {
+        sid = localStorage.getItem(compileStorageKey(workspaceId));
+      } catch {
+        sid = null;
+      }
+    }
+    if (!sid) return;
+    if (pollingSid.current === sid && pollRef.current) {
+      return;
+    }
+    pollingSid.current = sid;
+    rememberCompile(sid);
+    beginPolling(sid);
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
     };
-  }, []);
+  }, [workspaceId, resumeSessionId, beginPolling, rememberCompile]);
 
   const readFile = useCallback((file: File) => {
     // Verbatim: we read the raw text and never transform it — hedges are data.
@@ -208,24 +304,9 @@ export function DiscoveryUpload({
         speakerName,
         isSynthetic ? "demo" : undefined,
       );
-      pollRef.current = setInterval(async () => {
-        try {
-          const s = await discovery_status(workspaceId, session_id);
-          setStatus(s);
-          if (s.state === "done") {
-            if (pollRef.current) clearInterval(pollRef.current);
-            setPhase("done");
-            // api() is no-store, so the server re-render shows the fresh cards.
-            setTimeout(() => router.refresh(), 900);
-          } else if (s.state === "failed") {
-            if (pollRef.current) clearInterval(pollRef.current);
-            setError("The compile hit an error. The transcript is saved; you can retry.");
-            setPhase("error");
-          }
-        } catch {
-          // transient poll error — keep polling
-        }
-      }, 1200);
+      pollingSid.current = session_id;
+      rememberCompile(session_id);
+      beginPolling(session_id);
     } catch {
       setError("Could not start the compile. Check the API is reachable and try again.");
       setPhase("error");

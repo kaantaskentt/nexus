@@ -4,6 +4,7 @@ import json
 import re
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from ..auth import require_admin, resolve_seat
@@ -725,12 +726,19 @@ async def generate_demo_transcript(workspace_id: str):
     return {"transcript": raw.strip(), "synthetic": True, "session_kind": "demo"}
 
 
-@router.get("/{workspace_id}/discovery/{session_id}/status")
-async def discovery_status(workspace_id: str, session_id: str):
-    """Honest progress for the compile of one discovery session (#6). Reads the real jobs
-    table + record/card counts — no fabricated percentages. The UI polls this to animate
-    cards in as claims compile and the snapshot renders."""
-    pool = await get_pool()
+# Session kinds that auto-render a Company Snapshot (discovery paste + context call).
+# Plan-backed employee interviews are excluded — they never take this progress board.
+_DISCOVERY_RESUME_KINDS = ("interview", "demo", "people_map", "context")
+
+
+async def _discovery_status_payload(pool, workspace_id: str, session_id: str) -> dict:
+    """Honest per-stage progress for one discovery/compile session (shared by status + active)."""
+    owned = await pool.fetchval(
+        "select 1 from interview_sessions where id = $1 and workspace_id = $2",
+        session_id, workspace_id,
+    )
+    if owned is None:
+        raise HTTPException(404, "discovery session not found")
 
     # Every fan-out job carries session_id in its payload (render_snapshot too), so one
     # query captures the whole pipeline for this session.
@@ -761,6 +769,59 @@ async def discovery_status(workspace_id: str, session_id: str):
         "claims": claims,
         "cards": cards,
     }
+
+
+@router.get("/{workspace_id}/discovery/active")
+async def discovery_active(workspace_id: str):
+    """Resume hook for Home (refresh / reconnect): the newest in-flight discovery or
+    context compile for this workspace, or null. Progress UI is React state today — without
+    this, a tab close mid-compile drops the board even though the worker keeps going.
+    Server truth: a compile_session was enqueued, render_snapshot is not done, no stage failed."""
+    pool = await get_pool()
+    if await pool.fetchval("select 1 from workspaces where id = $1", workspace_id) is None:
+        raise HTTPException(404, "workspace not found")
+
+    sid = await pool.fetchval(
+        """select s.id
+           from interview_sessions s
+           where s.workspace_id = $1
+             and s.session_kind = any($2::text[])
+             and s.plan_id is null
+             and exists (
+               select 1 from jobs j
+               where j.payload->>'session_id' = s.id::text
+                 and j.kind = 'compile_session'
+             )
+             and not exists (
+               select 1 from jobs j
+               where j.payload->>'session_id' = s.id::text
+                 and j.kind = 'render_snapshot'
+                 and j.status = 'done'
+             )
+             and not exists (
+               select 1 from jobs j
+               where j.payload->>'session_id' = s.id::text
+                 and j.kind = any($3::text[])
+                 and j.status = 'failed'
+             )
+           order by s.created_at desc
+           limit 1""",
+        workspace_id,
+        list(_DISCOVERY_RESUME_KINDS),
+        list(_DISCOVERY_STAGES),
+    )
+    if sid is None:
+        return JSONResponse(content=None)
+    return await _discovery_status_payload(pool, workspace_id, str(sid))
+
+
+@router.get("/{workspace_id}/discovery/{session_id}/status")
+async def discovery_status(workspace_id: str, session_id: str):
+    """Honest progress for the compile of one discovery session (#6). Reads the real jobs
+    table + record/card counts — no fabricated percentages. The UI polls this to animate
+    cards in as claims compile and the snapshot renders."""
+    pool = await get_pool()
+    return await _discovery_status_payload(pool, workspace_id, session_id)
 
 
 class ReconIn(BaseModel):

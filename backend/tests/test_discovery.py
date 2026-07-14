@@ -163,3 +163,49 @@ async def test_status_reports_stages_from_jobs(db):
     assert kinds["compile_session"] == "done"
     assert kinds["render_snapshot"] == "queued"
     assert st["state"] == "running"
+
+
+async def test_active_returns_in_flight_discovery(db):
+    """Home resume: after upload, /discovery/active points at the running compile so a
+    refresh can re-attach the progress board without a client-only session_id."""
+    ws = await _make_company(name="Resume Co")
+    async with _client() as c:
+        out = (
+            await c.post(
+                f"/api/workspaces/{ws['id']}/discovery",
+                json={"transcript": "Ece: the morning is all Excel."},
+            )
+        ).json()
+        active = (await c.get(f"/api/workspaces/{ws['id']}/discovery/active")).json()
+    assert active is not None
+    assert active["session_id"] == out["session_id"]
+    assert active["state"] == "running"
+    assert active["stages"][0]["kind"] == "compile_session"
+
+
+async def test_active_clears_when_render_done(db):
+    ws = await _make_company(name="Done Co")
+    async with _client() as c:
+        out = (
+            await c.post(
+                f"/api/workspaces/{ws['id']}/discovery",
+                json={"transcript": "Ece: Harrods is renegotiating."},
+            )
+        ).json()
+    sid = out["session_id"]
+    await db.execute("update jobs set status = 'done' where id = $1", out["job_id"])
+    await db.execute(
+        "insert into jobs (kind, payload, status) values "
+        "('render_snapshot', $1, 'done')",
+        json.dumps({"session_id": sid, "workspace_id": ws["id"]}),
+    )
+    async with _client() as c:
+        active = (await c.get(f"/api/workspaces/{ws['id']}/discovery/active")).json()
+    assert active is None
+
+
+async def test_active_none_when_nothing_in_flight(db):
+    ws = await _make_company(name="Fresh Co")
+    async with _client() as c:
+        active = (await c.get(f"/api/workspaces/{ws['id']}/discovery/active")).json()
+    assert active is None
