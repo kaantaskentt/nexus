@@ -69,18 +69,16 @@ async def require_admin(authorization: str | None = Header(default=None)) -> str
     return user_id
 
 
-# ── F6 client seats (DORMANT) ─────────────────────────────────────────────────
-# A seat maps a verified user to a role. While CLIENT_SEATS is off (default), the
-# resolver returns admin with ZERO extra IO, so the auth path is exactly the one that
-# shipped before F6. When on: a 'client' row scopes that user to one workspace; a user
-# with no row stays an admin (we are the only users today — auth must not break).
+# ── F6 client seats ───────────────────────────────────────────────────────────
+# A seat maps a verified user to a role. Explicit user_roles rows always win —
+# otherwise "Grant workspace access" would mint a login that is still a full admin
+# while CLIENT_SEATS was off. No row ⇒ admin (operators provisioned without a seat
+# row keep today's full access). The CLIENT_SEATS env flag is retired as a resolver
+# short-circuit; presence of rows is the source of truth.
 
 
 async def resolve_seat(user_id: str) -> dict:
     """Return {"role": "admin"|"client", "workspace_id": str|None} for a verified user."""
-    settings = get_settings()
-    if not settings.client_seats:
-        return {"role": "admin", "workspace_id": None}
     from .db import get_pool  # local import: auth must stay importable without a pool
 
     pool = await get_pool()
@@ -101,11 +99,20 @@ async def require_workspace_seat(
     """Router-level dependency for workspace-scoped admin routers: a client seat may
     only touch its own workspace. Reads the {workspace_id} path param generically, so
     one dependency serves every router. Detail routes keyed by other ids (plan_id,
-    workflow_id) pass through in this DORMANT v1 — full per-resource resolution is the
-    flag-on follow-up, documented in the F6 plan. No-op while CLIENT_SEATS is off."""
+    workflow_id) pass through without a workspace_id check in v1."""
     seat = await resolve_seat(user_id)
     if seat["role"] == "client":
         ws = request.path_params.get("workspace_id")
         if ws and ws != seat["workspace_id"]:
             raise HTTPException(403, "this seat is scoped to its own workspace")
+    return user_id
+
+
+async def require_operator(
+    user_id: str = Depends(require_admin),
+) -> str:
+    """Admins/operators may manage seats; client seats may not invite further clients."""
+    seat = await resolve_seat(user_id)
+    if seat["role"] == "client":
+        raise HTTPException(403, "workspace members cannot manage seats")
     return user_id

@@ -279,6 +279,16 @@ export interface PersonRef {
   entity_id?: string;
 }
 
+// Durable person from the entity registry (GET /people). Home joins these onto
+// suggested_person rows so a corrected name survives beyond the card face.
+export interface PersonEntity {
+  id: string;
+  canonical_name: string;
+  aliases: string[];
+  role: string | null;
+  source: string;
+}
+
 // A single belief line inside an area, each carrying its own confidence.
 export interface BeliefLine {
   text: string;

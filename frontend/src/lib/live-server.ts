@@ -31,6 +31,10 @@ export const get_plan = async (workspace_id: string, plan_id: string) =>
   live.get_plan(workspace_id, plan_id, (await tok()) ?? undefined);
 export const list_snapshot_cards = async (workspace_id: string) =>
   live.list_snapshot_cards(workspace_id, (await tok()) ?? undefined);
+export const list_people = async (workspace_id: string) =>
+  live.list_people(workspace_id, (await tok()) ?? undefined);
+export const list_seats = async (workspace_id: string) =>
+  live.list_seats(workspace_id, (await tok()) ?? undefined);
 export const get_active_discovery = async (workspace_id: string) =>
   live.get_active_discovery(workspace_id, (await tok()) ?? undefined);
 export const list_claims = async (workspace_id: string, topic?: string) =>

@@ -48,3 +48,9 @@ The K3 assign flow's refine box borrows the shape of your `components/reviewer/k
 
 ## #24 — ANYTIME-CONTEXT rides your queue + compile chassis (July 10)
 The knowledge-engine loop (CEO adds context any time) is almost entirely ride-don't-rebuild: the additive compile that folds a second context call into the existing snapshot rides your queue + Stage-4 compile seam (supersede/append across sessions via the prior-records UUID block), and the mint reuses the existing context-call session creation. Net-new is only the entry button on the snapshot and a per-session compile cap (an additive founder call is capped at CLAIMED — a single account never compiles above CLAIMED — via a new `interview_sessions.compile_max_tag` the compiler honors). No new pipeline.
+
+## #25 — People sidebar is the entity roster, not app seats (July 14)
+Sidebar People → `GET/POST/PATCH …/people` over your `entities` table (source=manual on add). Invite deep-links the existing assign flow (`/interviews/new?name&role`), not `user_roles` / F6 client seats. Adaptation: keep seat invites dormant until that product surface is real; this page only manages interview subjects.
+
+## #26 — Grant workspace access activates F6 seats (July 14)
+People "Grant access" → `POST …/seats` mints GoTrue login (same insert shape as `create_admin`) + `user_roles` client row (`entity_id` via 0032). Temp password returned once (email still deferred). `resolve_seat` always honors explicit client rows — CLIENT_SEATS short-circuit retired so a grant can't leave a full-admin login. Adaptation: empty `user_roles` still means everyone is admin; only granted emails become scoped clients.

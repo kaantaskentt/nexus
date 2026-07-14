@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   House,
   Users,
+  ContactRound,
   Network,
   BookOpen,
   FlaskConical,
@@ -26,6 +27,7 @@ import { SignOutButton } from "./SignOutButton";
 
 type NavKey =
   | "home"
+  | "people"
   | "interviews"
   | "workflows"
   | "context"
@@ -34,11 +36,11 @@ type NavKey =
   | "settings";
 
 // The adopted sidebar IA (A21 — Kaan, July 7, from the taste-approved A19 reference set),
-// after the ADD-3.3 Insights fold: Home / Interviews / Workflows / Company Context / Agent
-// Skills / Simulations / Settings, plus a workspace switcher. Insights folded into Home
-// (its findings/conflicts/opportunities live on the Company Snapshot now). Every item
-// routes to a live screen (every-button-works); surfaces without data yet render designed,
-// honest empty states, never bare headings and never fake content.
+// after the ADD-3.3 Insights fold + People roster: Home / People / Interviews / Workflows /
+// Company Context / Simulations / Settings, plus a workspace switcher. Insights folded into
+// Home (findings/conflicts/opportunities on the Company Snapshot). People is the durable
+// entity roster (edit info, invite to interview) — not F6 app seats. Every item routes to a
+// live screen (every-button-works); empty states stay designed and honest.
 const NAV: {
   key: NavKey;
   label: string;
@@ -46,6 +48,7 @@ const NAV: {
   href: (slug: string) => string;
 }[] = [
   { key: "home", label: "Home", icon: House, href: (s) => `/w/${s}/home` },
+  { key: "people", label: "People", icon: ContactRound, href: (s) => `/w/${s}/people` },
   { key: "interviews", label: "Interviews", icon: Users, href: (s) => `/w/${s}/interviews` },
   { key: "workflows", label: "Workflows", icon: Network, href: (s) => `/w/${s}/workflows` },
   { key: "context", label: "Company Context", icon: BookOpen, href: (s) => `/w/${s}/context` },
@@ -59,6 +62,7 @@ const NAV: {
 const SEG_TO_NAV: Record<string, NavKey> = {
   home: "home",
   snapshot: "home",
+  people: "people",
   interviews: "interviews",
   plans: "interviews",
   report: "interviews",
@@ -109,9 +113,8 @@ export function AppShell({
   workspace: Workspace;
   workspaces?: Workspace[];
   user?: ShellUser | null;
-  // F6 (dormant): a client seat hides the internal machinery (Simulations, Agent
-  // Skills, Settings). Defaults to admin — nothing changes unless a caller passes
-  // "client", which only the flag-gated layout ever does.
+  // F6: a client seat hides the internal machinery (Simulations, Settings).
+  // Defaults to admin when no user_roles row exists.
   role?: "admin" | "client";
   children: ReactNode;
 }) {

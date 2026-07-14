@@ -7,12 +7,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from ..auth import require_admin, resolve_seat
+from ..auth import require_admin, require_operator, resolve_seat
 from ..config import get_settings
 from ..db import get_pool, loads
 from ..pipeline import deletion, entities
 from ..pipeline.transcript import parse_transcript
 from ..queue import enqueue
+from .. import seats as seats_mod
 
 router = APIRouter()
 
@@ -102,8 +103,8 @@ _PICKER_COUNTS = """,
 @router.get("")
 async def list_workspaces(user_id: str = Depends(require_admin)):
     pool = await get_pool()
-    # F6 (dormant): a client seat sees ONLY its own workspace in the picker. Admins
-    # (everyone while CLIENT_SEATS is off) keep today's full list, same query.
+    # F6: a client seat sees ONLY its own workspace in the picker. Operators
+    # (no user_roles row, or role=admin) keep the full list.
     seat = await resolve_seat(user_id)
     # Internal scaffolding (eval/e2e/voice tenants, demo-respondent dup) is hidden by
     # default — it must never render as a real client workspace in the picker (#22).
@@ -190,6 +191,275 @@ async def get_snapshot(workspace_id: str):
     )
     return [{"id": str(r["id"]), "card_type": r["card_type"], "confidence": r["confidence"],
              "render_batch": r["render_batch"], "content": loads(r["content"])} for r in rows]
+
+
+# ── People (entity registry, EK 2.1) ──────────────────────────────────────────
+# Home's "People to interview" often ships role-only labels. When the admin later
+# learns a real name, we correct the durable entity (old name → aliases) and refresh
+# the latest suggested_person card face — older batches stay append-only history.
+
+
+class PersonRenameIn(BaseModel):
+    name: str
+    role: str | None = None
+
+
+class PersonFromCardIn(BaseModel):
+    card_id: str
+    name: str
+    role: str | None = None
+
+
+class PersonCreateIn(BaseModel):
+    name: str
+    role: str | None = None
+
+
+class SeatGrantIn(BaseModel):
+    email: str
+    entity_id: str | None = None
+    name: str | None = None  # display name for new auth user metadata
+
+
+def _person_row(r) -> dict:
+    return {
+        "id": str(r["id"]),
+        "canonical_name": r["canonical_name"],
+        "aliases": list(r["aliases"] or []),
+        "role": r["role"],
+        "source": r["source"],
+    }
+
+
+async def _patch_latest_suggested_person_cards(
+    pool, workspace_id: str, entity_id: str, *, name: str, role: str | None
+) -> int:
+    """Update latest-batch suggested_person cards for this entity so Home shows the
+    corrected name without a full snapshot re-render."""
+    rows = await pool.fetch(
+        """select id, content from snapshot_cards
+           where workspace_id = $1 and card_type = 'suggested_person'
+             and render_batch = (
+               select max(render_batch) from snapshot_cards where workspace_id = $1
+             )""",
+        workspace_id,
+    )
+    n = 0
+    for r in rows:
+        content = loads(r["content"]) or {}
+        if str(content.get("entity_id") or "") != entity_id:
+            continue
+        content["name"] = name
+        if role is not None:
+            content["role"] = role
+        await pool.execute(
+            "update snapshot_cards set content = $2::jsonb where id = $1",
+            r["id"],
+            json.dumps(content),
+        )
+        n += 1
+    return n
+
+
+@router.get("/{workspace_id}/people")
+async def list_people(workspace_id: str):
+    """Durable person entities for this workspace (what the snapshot feeds as Known people)."""
+    pool = await get_pool()
+    if not await pool.fetchval("select 1 from workspaces where id = $1", workspace_id):
+        raise HTTPException(404, "workspace not found")
+    rows = await pool.fetch(
+        """select id, canonical_name, aliases, role, source from entities
+           where workspace_id = $1 and entity_type = 'person'
+           order by canonical_name""",
+        workspace_id,
+    )
+    return [_person_row(r) for r in rows]
+
+
+@router.get("/{workspace_id}/seats", dependencies=[Depends(require_operator)])
+async def list_seats(workspace_id: str):
+    """Client seats that can log into this workspace (not interview invites)."""
+    return await seats_mod.list_workspace_seats(workspace_id)
+
+
+@router.post("/{workspace_id}/seats", dependencies=[Depends(require_operator)])
+async def grant_seat(workspace_id: str, body: SeatGrantIn):
+    """Grant workspace login access. Returns a temporary_password once when a new
+    login is minted (email sending still deferred — admin copies it to the person)."""
+    return await seats_mod.grant_workspace_seat(
+        workspace_id,
+        email=body.email,
+        entity_id=body.entity_id,
+        display_name=body.name,
+    )
+
+
+@router.delete(
+    "/{workspace_id}/seats/{user_id}",
+    dependencies=[Depends(require_operator)],
+)
+async def revoke_seat(workspace_id: str, user_id: str):
+    return await seats_mod.revoke_workspace_seat(workspace_id, user_id)
+
+
+@router.post("/{workspace_id}/people")
+async def create_person(workspace_id: str, body: PersonCreateIn):
+    """Add a person to the workspace roster by hand (People sidebar). Matches an
+    existing entity when the name/alias already resolves; otherwise mints source=manual."""
+    name = (body.name or "").strip()
+    if not name:
+        raise HTTPException(422, "name is required")
+    role = (body.role or "").strip() or None
+    pool = await get_pool()
+    if not await pool.fetchval("select 1 from workspaces where id = $1", workspace_id):
+        raise HTTPException(404, "workspace not found")
+
+    entity_id, is_new = await entities.resolve_or_create(
+        workspace_id, name, role=role
+    )
+    if not is_new:
+        # Match found — apply admin role/name corrections via the rename path.
+        return await rename_person(
+            workspace_id, str(entity_id), PersonRenameIn(name=name, role=body.role)
+        )
+
+    # resolve_or_create inserts source=interview; admin-added people are manual.
+    updated = await pool.fetchrow(
+        """update entities set source = 'manual', role = coalesce($2, role)
+           where id = $1
+           returning id, canonical_name, aliases, role, source""",
+        entity_id,
+        role,
+    )
+    out = _person_row(updated)
+    out["created"] = True
+    return out
+
+
+@router.patch("/{workspace_id}/people/{entity_id}")
+async def rename_person(workspace_id: str, entity_id: str, body: PersonRenameIn):
+    """Set/correct a person's canonical name. Previous name is kept as an alias so
+    matching and alias-aware snapshot stitching still bind the same identity."""
+    name = (body.name or "").strip()
+    if not name:
+        raise HTTPException(422, "name is required")
+    pool = await get_pool()
+    row = await pool.fetchrow(
+        """select id, canonical_name, aliases, role, source from entities
+           where id = $1 and workspace_id = $2 and entity_type = 'person'""",
+        entity_id,
+        workspace_id,
+    )
+    if not row:
+        raise HTTPException(404, "person not found")
+
+    old = (row["canonical_name"] or "").strip()
+    aliases = list(row["aliases"] or [])
+    if old and old.casefold() != name.casefold():
+        # Keep prior labels as aliases (deduped, case-insensitive).
+        seen = {a.strip().casefold() for a in aliases if isinstance(a, str)}
+        seen.add(name.casefold())
+        if old.casefold() not in seen:
+            aliases.append(old)
+        # Drop the new name if it was previously listed as an alias.
+        aliases = [a for a in aliases if isinstance(a, str) and a.strip().casefold() != name.casefold()]
+
+    role = body.role if body.role is not None else row["role"]
+    # Unique (workspace, type, canonical_name) — collide with another person → 409.
+    clash = await pool.fetchval(
+        """select id from entities
+           where workspace_id = $1 and entity_type = 'person'
+             and lower(canonical_name) = lower($2) and id <> $3""",
+        workspace_id,
+        name,
+        entity_id,
+    )
+    if clash:
+        raise HTTPException(409, "another person already has that name")
+
+    updated = await pool.fetchrow(
+        """update entities
+           set canonical_name = $2, aliases = $3, role = $4
+           where id = $1
+           returning id, canonical_name, aliases, role, source""",
+        entity_id,
+        name,
+        aliases,
+        role,
+    )
+    cards_updated = await _patch_latest_suggested_person_cards(
+        pool, workspace_id, str(entity_id), name=name, role=role if body.role is not None else None,
+    )
+    out = _person_row(updated)
+    out["cards_updated"] = cards_updated
+    return out
+
+
+@router.post("/{workspace_id}/people/from-card")
+async def person_from_card(workspace_id: str, body: PersonFromCardIn):
+    """Attach a real name to a suggested_person card that has no entity_id yet
+    (role-only roster rows). Resolves/creates the entity and stitches it onto the card."""
+    name = (body.name or "").strip()
+    if not name:
+        raise HTTPException(422, "name is required")
+    pool = await get_pool()
+    card = await pool.fetchrow(
+        """select id, content, render_batch from snapshot_cards
+           where id = $1 and workspace_id = $2 and card_type = 'suggested_person'""",
+        body.card_id,
+        workspace_id,
+    )
+    if not card:
+        raise HTTPException(404, "suggested person card not found")
+    content = loads(card["content"]) or {}
+    role = body.role if body.role is not None else (content.get("role") or None)
+
+    existing_id = content.get("entity_id")
+    if existing_id:
+        # Card already linked — treat as rename of that entity.
+        return await rename_person(
+            workspace_id, str(existing_id), PersonRenameIn(name=name, role=body.role)
+        )
+
+    # Prefer matching the role-only label already on the card (often the entity
+    # canonical), then fall back to the admin-entered name.
+    prior_label = (content.get("name") or "").strip()
+    try:
+        if prior_label:
+            entity_id, _ = await entities.resolve_or_create(
+                workspace_id, prior_label, role=role
+            )
+        else:
+            entity_id, _ = await entities.resolve_or_create(workspace_id, name, role=role)
+    except ValueError:
+        entity_id, _ = await entities.resolve_or_create(workspace_id, name, role=role)
+
+    # Admin-entered name wins over a role-only canonical.
+    renamed = await rename_person(
+        workspace_id, str(entity_id), PersonRenameIn(name=name, role=body.role)
+    )
+
+    # rename_person patches cards by entity_id — this card may not have had one yet,
+    # so always write entity_id + name onto THIS card.
+    content = loads(
+        (
+            await pool.fetchrow(
+                "select content from snapshot_cards where id = $1", card["id"]
+            )
+        )["content"]
+    ) or content
+    content["name"] = name
+    content["entity_id"] = str(entity_id)
+    if role is not None:
+        content["role"] = role
+    await pool.execute(
+        "update snapshot_cards set content = $2::jsonb where id = $1",
+        card["id"],
+        json.dumps(content),
+    )
+    renamed["cards_updated"] = max(int(renamed.get("cards_updated") or 0), 1)
+    renamed["card_id"] = str(card["id"])
+    return renamed
 
 
 @router.get("/{workspace_id}/insights")

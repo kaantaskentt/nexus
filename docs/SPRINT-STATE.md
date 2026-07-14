@@ -1,3 +1,6 @@
+# July 14 — People sidebar + workspace seat grant
+**AUDIT:** People roster + Grant access (`POST/GET/DELETE …/seats`); resolve_seat honors client rows; temp password shown once. Interview invite CTA removed from People.
+
 # DAY ATTACK — July 10 (~10:50 PDT close) — ALL LANES GREEN, EVERYTHING DRIVEN
 Prod: backend 82befa4 (Railway api+worker) · frontend f515667 (Vercel, alias
 nexus-v2-alpha.vercel.app) · migrations 0026/0027/0028 applied · /health/deep ok,

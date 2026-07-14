@@ -64,7 +64,8 @@ async def render_snapshot(payload: dict) -> None:
         log.info("snapshot: no claims for %s", workspace_id)
         return
     people = await pool.fetch(
-        "select canonical_name, role, id from entities where workspace_id=$1 and entity_type='person'",
+        "select id, canonical_name, aliases, role from entities "
+        "where workspace_id=$1 and entity_type='person'",
         workspace_id,
     )
     lines = "\n".join(
@@ -79,10 +80,17 @@ async def render_snapshot(payload: dict) -> None:
 
     # Entity ids are stitched MECHANICALLY, never trusted from the model (July 8, Emre
     # doc-2 P1: the renderer mistranscribed one hex digit of Melis's uuid, and every
-    # Generate-plan on her card 500'd on the FK). Match by name against the real people
-    # list; overwrite on match, drop otherwise — a missing id downgrades gracefully to
-    # the name-resolve path at plan time, a corrupted one never persists.
-    ids_by_name = {p["canonical_name"].strip().casefold(): str(p["id"]) for p in people}
+    # Generate-plan on her card 500'd on the FK). Match by canonical_name OR aliases
+    # (so a renamed person still binds after the old role-only label becomes an alias);
+    # overwrite on match, drop otherwise — a missing id downgrades gracefully to the
+    # name-resolve path at plan time, a corrupted one never persists.
+    ids_by_name: dict[str, str] = {}
+    for p in people:
+        pid = str(p["id"])
+        ids_by_name[p["canonical_name"].strip().casefold()] = pid
+        for alias in (p.get("aliases") or []):
+            if isinstance(alias, str) and alias.strip():
+                ids_by_name.setdefault(alias.strip().casefold(), pid)
 
     def _stitch(holder: dict | None) -> None:
         if not isinstance(holder, dict):
@@ -112,6 +120,16 @@ async def render_snapshot(payload: dict) -> None:
                values ($1,$2,$3,$4,$5,$6)""",
             workspace_id, round_id, ctype, json.dumps(card_content), conf, batch,
         )
+
+    # PRD-DEEP-RESEARCH-KB.md §5: fires once the founder/discovery call's snapshot exists
+    # (round_id is None is the same "this is the discovery call" signal compiler.py's
+    # _should_render_snapshot already uses). Best-effort and idempotent — run_deep_research
+    # reuses an already-dod_met case rather than re-researching, so a re-render of the same
+    # workspace's discovery snapshot is cheap, not a re-trigger of the expensive pass.
+    if round_id is None:
+        from ..queue import enqueue
+
+        await enqueue("deep_research", {"workspace_id": workspace_id})
 
 
 @handles("render_snapshot")

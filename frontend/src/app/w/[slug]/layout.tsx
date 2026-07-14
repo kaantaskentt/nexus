@@ -20,13 +20,12 @@ export default async function WorkspaceLayout({
   children: React.ReactNode;
   params: { slug: string };
 }) {
-  // F6 (dormant): the seat fetch happens ONLY when NEXT_PUBLIC_CLIENT_SEATS=1 — with
-  // the flag unset (today), this layout does exactly what it did before F6.
-  const seatsOn = process.env.NEXT_PUBLIC_CLIENT_SEATS === "1";
+  // F6: always resolve the seat so a granted client gets the cut-down shell
+  // (Simulations / Settings hidden). No row ⇒ admin.
   const [workspaces, user, seat] = await Promise.all([
     list_workspaces().catch(() => []),
     signedInUser(),
-    seatsOn ? get_me().catch(() => null) : Promise.resolve(null),
+    get_me().catch(() => null),
   ]);
   const workspace = workspaces.find((w) => w.slug === params.slug);
   if (!workspace) notFound();

@@ -50,8 +50,8 @@ app.add_middleware(
 # Exceptions: `sessions` (mixed — its interviewee by-token routes are public, so it gates
 # only eval-bootstrap internally) and `voice` (shared-secret gated).
 _admin = [Depends(require_admin)]
-# F6 (dormant): workspace-scoped routers take the seat dependency instead. It wraps the
-# same require_admin, and while CLIENT_SEATS is off it adds nothing (no IO, no checks) —
+# F6: workspace-scoped routers take the seat dependency. It wraps require_admin and
+# scopes client seats to their own workspace (no row ⇒ admin, unchanged for operators) —
 # flag on, a 'client' seat is confined to its own {workspace_id} routes.
 _seat = [Depends(require_workspace_seat)]
 app.include_router(workspaces.router, prefix="/api/workspaces", tags=["workspaces"], dependencies=_seat)
@@ -80,8 +80,8 @@ app.include_router(company_report.router, prefix="/api/company-report", tags=["c
 
 @app.get("/api/me")
 async def me(user_id: str = Depends(require_admin)):
-    """Who am I + which seat (F6). Today every user resolves to admin; a client seat
-    appears only when CLIENT_SEATS is on and a user_roles row exists."""
+    """Who am I + which seat (F6). No user_roles row ⇒ admin; an explicit client
+    row scopes the caller to that workspace."""
     seat = await resolve_seat(user_id)
     return {"user_id": user_id, **seat}
 

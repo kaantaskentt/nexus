@@ -11,12 +11,14 @@ import type {
   ConflictContent,
   KeyFinding,
   LearnedContent,
+  PersonEntity,
   PlanState,
   SnapshotCard,
   SuggestedPersonContent,
   Workspace,
 } from "@/lib/types";
 import type { AutomationOpportunity } from "@/lib/live";
+import { person_from_card, rename_person } from "@/lib/live";
 import {
   ConfidenceBadge,
   EvidenceQuoteCard,
@@ -109,13 +111,14 @@ function replaceFindingParam(slug: string | null) {
 
 export function SnapshotView({
   workspace,
-  cards,
+  cards: cardsProp,
   claims,
   personPlans = {},
   workflowCount = 0,
   keyFindings = [],
   automation = [],
   workflowIds = [],
+  peopleEntities = [],
   // Deep-link from ?finding= (hard refresh / shared URL) — opens the matching area drawer.
   finding: findingFromUrl = null,
 }: {
@@ -135,17 +138,75 @@ export function SnapshotView({
   keyFindings?: KeyFinding[];
   automation?: AutomationOpportunity[];
   workflowIds?: string[];
+  // Durable people registry — preferred display name when a card has entity_id.
+  peopleEntities?: PersonEntity[];
   finding?: string | null;
 }) {
   const claimsById = useMemo(() => new Map(claims.map((c) => [c.id, c])), [claims]);
+  const peopleById = useMemo(
+    () => new Map(peopleEntities.map((p) => [p.id, p])),
+    [peopleEntities],
+  );
   // Evidence is demoted to a drill-down (3.2): the old competing right rail becomes a drawer
   // opened on demand from "What Nexus learned", so the reading column owns the page.
   const [evidenceOpen, setEvidenceOpen] = useState(false);
+  // Local card overrides after inline rename so Home updates without a full RSC reload.
+  const [cardOverrides, setCardOverrides] = useState<Record<string, SuggestedPersonContent>>(
+    {},
+  );
+
+  const cards = useMemo(
+    () =>
+      cardsProp.map((card) => {
+        if (card.card_type !== "suggested_person") return card;
+        const patch = cardOverrides[card.id];
+        return patch ? { ...card, content: patch } : card;
+      }),
+    [cardsProp, cardOverrides],
+  );
 
   const learned = cards.filter((c) => c.card_type === "learned");
   const areas = cards.filter((c) => c.card_type === "area_to_investigate");
   const people = cards.filter((c) => c.card_type === "suggested_person");
   const conflicts = cards.filter((c) => c.card_type === "conflict_point");
+
+  function personForCard(card: SnapshotCard): SuggestedPersonContent {
+    const raw = card.content as SuggestedPersonContent;
+    // A just-saved override already has the corrected name — don't let a stale
+    // peopleById (SSR props) overwrite it before the next full reload.
+    if (cardOverrides[card.id]) return raw;
+    const ent = raw.entity_id ? peopleById.get(raw.entity_id) : undefined;
+    if (!ent) return raw;
+    return {
+      ...raw,
+      name: ent.canonical_name,
+      role: raw.role || ent.role || "",
+      entity_id: ent.id,
+    };
+  }
+
+  async function savePersonName(card: SnapshotCard, name: string) {
+    const p = card.content as SuggestedPersonContent;
+    let entityId = p.entity_id;
+    if (entityId) {
+      await rename_person(workspace.id, entityId, { name, role: p.role || undefined });
+    } else {
+      const out = await person_from_card(workspace.id, {
+        card_id: card.id,
+        name,
+        role: p.role || undefined,
+      });
+      entityId = out.id;
+    }
+    setCardOverrides((prev) => ({
+      ...prev,
+      [card.id]: {
+        ...p,
+        name,
+        entity_id: entityId,
+      },
+    }));
+  }
 
   // undefined = follow ?finding= from the server; after the user opens/closes, we own it
   // locally so a replaceState URL write doesn't need an RSC round-trip.
@@ -418,12 +479,17 @@ export function SnapshotView({
           <Section title="People to interview" count={people.length}>
             <div className="card-hairline divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
               {people.map((card) => {
-                const p = card.content as SuggestedPersonContent;
-                const existing = personPlans[(p.name ?? "").trim().toLowerCase()];
+                const p = personForCard(card);
+                const existing =
+                  personPlans[(p.name ?? "").trim().toLowerCase()] ||
+                  personPlans[((card.content as SuggestedPersonContent).name ?? "")
+                    .trim()
+                    .toLowerCase()];
                 return (
                   <PersonRow
                     key={card.id}
                     person={p}
+                    onSaveName={(name) => savePersonName(card, name)}
                     action={
                       existing ? (
                         // A plan already exists — show its real state, never a stale

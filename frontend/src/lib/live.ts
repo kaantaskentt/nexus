@@ -13,6 +13,7 @@ import type {
   InsightsData,
   InterviewPlan,
   PainBand,
+  PersonEntity,
   TrustTag,
   PlanMission,
   PlanTopic,
@@ -295,6 +296,48 @@ export async function list_snapshot_cards(
   token?: string,
 ): Promise<SnapshotCard[]> {
   return api<SnapshotCard[]>(`/api/workspaces/${workspace_id}/snapshot`, undefined, token);
+}
+
+// ── People (entity registry — set/correct names when role-only labels learn a name) ─
+export async function list_people(
+  workspace_id: string,
+  token?: string,
+): Promise<PersonEntity[]> {
+  return api<PersonEntity[]>(`/api/workspaces/${workspace_id}/people`, undefined, token);
+}
+
+export async function create_person(
+  workspace_id: string,
+  body: { name: string; role?: string | null },
+  token?: string,
+): Promise<PersonEntity & { created?: boolean; cards_updated?: number }> {
+  return api(`/api/workspaces/${workspace_id}/people`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  }, token);
+}
+
+export async function rename_person(
+  workspace_id: string,
+  entity_id: string,
+  body: { name: string; role?: string | null },
+  token?: string,
+): Promise<PersonEntity & { cards_updated?: number }> {
+  return api(`/api/workspaces/${workspace_id}/people/${entity_id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  }, token);
+}
+
+export async function person_from_card(
+  workspace_id: string,
+  body: { card_id: string; name: string; role?: string | null },
+  token?: string,
+): Promise<PersonEntity & { cards_updated?: number; card_id?: string }> {
+  return api(`/api/workspaces/${workspace_id}/people/from-card`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  }, token);
 }
 
 // ── Plans (GET /api/plans/{workspace_id}) ────────────────────────────────────
@@ -999,15 +1042,56 @@ export async function set_pulse_config(
   }, token);
 }
 
-// ── Seats (F6, dormant) ───────────────────────────────────────────────────────
+// ── Seats (F6 — workspace login access) ───────────────────────────────────────
 export interface Seat {
   user_id: string;
   role: "admin" | "client";
   workspace_id: string | null;
 }
 
+export interface WorkspaceSeat {
+  user_id: string;
+  email: string | null;
+  role: "admin" | "client";
+  workspace_id: string | null;
+  entity_id: string | null;
+  created_at: string | null;
+}
+
 export async function get_me(token?: string): Promise<Seat> {
   return api<Seat>(`/api/me`, undefined, token);
+}
+
+export async function list_seats(
+  workspace_id: string,
+  token?: string,
+): Promise<WorkspaceSeat[]> {
+  return api<WorkspaceSeat[]>(
+    `/api/workspaces/${workspace_id}/seats`,
+    undefined,
+    token,
+  );
+}
+
+export async function grant_seat(
+  workspace_id: string,
+  body: { email: string; entity_id?: string; name?: string },
+  token?: string,
+): Promise<WorkspaceSeat & { created?: boolean; temporary_password?: string | null }> {
+  return api(`/api/workspaces/${workspace_id}/seats`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  }, token);
+}
+
+export async function revoke_seat(
+  workspace_id: string,
+  user_id: string,
+  token?: string,
+): Promise<{ ok: boolean; user_id: string }> {
+  return api(`/api/workspaces/${workspace_id}/seats/${user_id}`, {
+    method: "DELETE",
+  }, token);
 }
 
 // ── Role-play simulations (F8) ────────────────────────────────────────────────

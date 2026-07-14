@@ -5,6 +5,7 @@ import {
   list_snapshot_cards,
   list_claims,
   list_plans,
+  list_people,
   get_workflows,
   get_insights,
   get_automation,
@@ -38,7 +39,7 @@ export default async function HomePage({
   if (!workspace) notFound();
 
   const findingParam = searchParams?.finding?.trim() || null;
-  const [cards, claims, plans, workflows, insights, automation, activeDiscovery] =
+  const [cards, claims, plans, workflows, insights, automation, activeDiscovery, peopleEntities] =
     await Promise.all([
       list_snapshot_cards(workspace.id),
       list_claims(workspace.id),
@@ -56,6 +57,8 @@ export default async function HomePage({
       // In-flight compile resume (refresh mid-extract keeps the progress board). Fail-soft:
       // a hiccup here must never blank Home.
       get_active_discovery(workspace.id).catch(() => null),
+      // Durable people registry for inline name correction on the roster.
+      list_people(workspace.id).catch(() => []),
     ]);
 
   // Latest plan per person (list is newest-first) — keyed by folded name because the
@@ -128,6 +131,7 @@ export default async function HomePage({
         keyFindings={insights?.key_findings ?? []}
         automation={automation}
         workflowIds={workflows.map((w) => w.workflow_id)}
+        peopleEntities={peopleEntities}
         finding={findingParam}
       />
       {pulse?.enabled && <WeeklyPulseCard pulse={pulse} />}
