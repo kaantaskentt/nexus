@@ -36,6 +36,7 @@ with no error, just a missing artifact.
 |---|---|---|---|---|
 | 7 | **Apify** | API token + confirm LinkedIn-people actor budget | SDK/HTTP | Stage 1 people scrape. Names + roles only (policy F4). |
 | 8 | **Fireflies** | API key | HTTP API (my MCP covers interactive; backend needs its own key for auto-ingest) | CEO-call transcript ingestion into Stage 4. |
+| 8b | **Twelve Labs** | API key (`TWELVELABS_API_KEY`) | HTTP API | Mid-interview screen/video extract. Screenshots/files use Anthropic vision. Also needs Supabase **service role** + private Storage bucket `media-shares` (raw blobs retained). Setup guide: [`docs/SUPABASE-MEDIA-SHARES-SETUP.md`](SUPABASE-MEDIA-SHARES-SETUP.md). Tests use `MEDIA_STORAGE_BACKEND=memory`. |
 | 9 | **Vercel** | Account + team, then `vercel login` on this machine or a token | **CLI** (`vercel`) | Frontend deploy. |
 | 10 | **Railway** | Token or `railway login` | **CLI** (`railway`) | FastAPI backend + queue worker deploy. (Postgres itself lives on Supabase, so Railway only runs the app processes.) |
 | 11 | **GitHub** | Nothing — `gh` already authed | CLI | I'll create the fresh `nexus` repo under your account when you say go. |

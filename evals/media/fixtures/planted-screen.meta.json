@@ -1,0 +1,7 @@
+{
+  "kind": "screen",
+  "planted_tools": ["Excel", "Export CSV"],
+  "planted_steps": ["Open workbook", "Export CSV"],
+  "forbidden_tools": ["Salesforce", "Jira"],
+  "notes": "Synthetic walkthrough: open Excel then export CSV."
+}

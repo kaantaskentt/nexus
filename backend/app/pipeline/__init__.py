@@ -13,6 +13,7 @@ from . import (  # noqa: F401  (importing registers each @handles job)
     heuristics,
     interview,
     live_capture,
+    media_share,
     pain,
     plan,
     quality,

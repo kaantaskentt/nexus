@@ -22,10 +22,15 @@ class Settings(BaseSettings):
     sendgrid_api_key: str = ""
     apify_token: str = ""
     fireflies_api_key: str = ""
+    twelvelabs_api_key: str = ""
 
     database_url: str = ""
     supabase_url: str = ""
     supabase_service_role_key: str = ""
+    # media-shares Storage: "supabase" (default in prod) or "memory" (tests only).
+    # Missing service role with backend=supabase is a hard failure — never silent /tmp.
+    media_storage_backend: str = "supabase"
+    media_storage_bucket: str = "media-shares"
     # Anon (publishable) key — sent as the `apikey` header when we verify a caller's
     # admin JWT against GoTrue (app/auth.py). Same key the browser client uses.
     supabase_anon_key: str = ""

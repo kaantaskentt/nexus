@@ -337,3 +337,118 @@ export function consentCopy(session: RespondentSession) {
     hasContext: Boolean(session.context),
   };
 }
+
+// ── Mid-interview media shares (file / screenshot / screen) ─────────────────
+// Status-only payloads — never extraction text (R1). Public by-token, no JWT.
+
+export type MediaShareKind = "file" | "screenshot" | "screen";
+export type MediaShareStatus = "uploading" | "extracting" | "ready" | "failed" | "discarded";
+
+export interface MediaShare {
+  id: string;
+  kind: MediaShareKind;
+  status: MediaShareStatus;
+  file_name: string | null;
+  byte_size: number;
+  error: string | null;
+  created_at: string | null;
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const i = result.indexOf(",");
+      resolve(i >= 0 ? result.slice(i + 1) : result);
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("read failed"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+export async function listMediaShares(token: string): Promise<MediaShare[]> {
+  const res = await fetch(`${API_BASE}/api/media/by-token/${encodeURIComponent(token)}`);
+  if (!res.ok) throw new Error(`media list failed (${res.status})`);
+  return res.json();
+}
+
+export async function createMediaShare(
+  token: string,
+  body: {
+    kind: MediaShareKind;
+    file_name: string;
+    file_mime: string;
+    content_base64?: string;
+  },
+): Promise<MediaShare> {
+  const res = await fetch(`${API_BASE}/api/media/by-token/${encodeURIComponent(token)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let detail = `upload failed (${res.status})`;
+    try {
+      const j = await res.json();
+      if (typeof j?.detail === "string") detail = j.detail;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
+export async function uploadMediaShare(
+  token: string,
+  shareId: string,
+  content_base64: string,
+  append = false,
+): Promise<MediaShare> {
+  const res = await fetch(
+    `${API_BASE}/api/media/by-token/${encodeURIComponent(token)}/${shareId}/upload`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content_base64, append }),
+    },
+  );
+  if (!res.ok) throw new Error(`media upload failed (${res.status})`);
+  return res.json();
+}
+
+export async function completeMediaShare(token: string, shareId: string): Promise<MediaShare> {
+  const res = await fetch(
+    `${API_BASE}/api/media/by-token/${encodeURIComponent(token)}/${shareId}/complete`,
+    { method: "POST" },
+  );
+  if (!res.ok) throw new Error(`media complete failed (${res.status})`);
+  return res.json();
+}
+
+export async function discardMediaShare(token: string, shareId: string): Promise<MediaShare> {
+  const res = await fetch(
+    `${API_BASE}/api/media/by-token/${encodeURIComponent(token)}/${shareId}/discard`,
+    { method: "POST" },
+  );
+  if (!res.ok) throw new Error(`media discard failed (${res.status})`);
+  return res.json();
+}
+
+/** Upload a File/Blob as file or screenshot and start extract. */
+export async function shareFileOrScreenshot(
+  token: string,
+  kind: "file" | "screenshot",
+  file: Blob,
+  fileName: string,
+  mime: string,
+): Promise<MediaShare> {
+  const content_base64 = await blobToBase64(file);
+  return createMediaShare(token, {
+    kind,
+    file_name: fileName,
+    file_mime: mime || file.type || "application/octet-stream",
+    content_base64,
+  });
+}

@@ -8,6 +8,7 @@ import { Lock, Mic, MicOff, Pause, SendHorizontal, Check, RefreshCw, WifiOff, Fl
 import brand from "@/lib/brand";
 import { BrandMark } from "@/components";
 import { VoiceCall } from "./VoiceCall";
+import { MediaShareDock } from "./MediaShareDock";
 import { PromisedArtifacts } from "./PromisedArtifacts";
 import { LiveRoom } from "./LiveRoom";
 import { ParticleOrb } from "./ParticleOrb";
@@ -446,6 +447,9 @@ export function InterviewClient({ token }: { token: string }) {
 
   const composer = (
     <>
+      <div className="mb-2">
+        <MediaShareDock token={token} />
+      </div>
       <div className="flex items-end gap-2 rounded-2xl border border-line bg-surface px-3 py-2">
         <textarea
           ref={composerRef}

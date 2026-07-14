@@ -1,0 +1,10 @@
+{
+  "summary": "Respondent opens an Excel workbook and exports CSV.",
+  "observations": [
+    "Excel workbook is the active window",
+    "Export CSV action is used"
+  ],
+  "tools_seen": ["Excel", "Export CSV"],
+  "steps": ["Open workbook", "Export CSV"],
+  "open_questions": ["Where is the CSV saved after export?"]
+}

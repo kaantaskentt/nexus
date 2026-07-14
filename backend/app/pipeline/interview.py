@@ -243,6 +243,14 @@ async def _prepare_turn(session_id: str, respondent_text: str | None):
                 + attention.build_fade_nudge(fade["signals"], elapsed_min, budget)
             )
 
+    # Mid-interview media shares (file / screenshot / screen): ready extractions ground
+    # the next questions. Pending shares stay invisible. Never invent beyond the summary.
+    if not is_context_call:
+        from .media_share import grounding_for_session
+        media_block = await grounding_for_session(session_id)
+        if media_block:
+            volatile_extra = f"{volatile_extra}\n\n{media_block}"
+
     return {
         "session": session,
         "persona": "context_collector" if is_context_call else "interviewer",

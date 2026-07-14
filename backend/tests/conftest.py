@@ -12,6 +12,7 @@ os.environ["DATABASE_URL"] = os.environ.get(
     "TEST_DATABASE_URL", "postgresql://postgres:nexus@localhost:55432/nexus_test"
 )
 os.environ["OPENAI_API_KEY"] = ""  # keep embeddings offline in tests
+os.environ["MEDIA_STORAGE_BACKEND"] = "memory"  # media shares — no Supabase in CI
 
 from app.config import get_settings  # noqa: E402
 
@@ -53,6 +54,7 @@ MIGRATIONS = [
     BACKEND / "db" / "migrations" / "0030_extractor_right_size.sql",
     BACKEND / "db" / "migrations" / "0031_research_kb.sql",
     BACKEND / "db" / "migrations" / "0032_seat_entity.sql",
+    BACKEND / "db" / "migrations" / "0033_media_shares.sql",
 ]
 
 

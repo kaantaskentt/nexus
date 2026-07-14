@@ -1,0 +1,9 @@
+{
+  "summary": "Salesforce list view with an Export CSV control visible in the toolbar.",
+  "observations": [
+    "Salesforce chrome and list columns are visible",
+    "Export CSV button is present in the toolbar"
+  ],
+  "tools_seen": ["Salesforce", "Export CSV"],
+  "open_questions": ["Which object or report is being exported?"]
+}

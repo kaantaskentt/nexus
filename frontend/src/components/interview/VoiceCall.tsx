@@ -10,6 +10,7 @@ import { LiveTranscript, type Turn } from "./LiveTranscript";
 import { mergeTurns } from "@/lib/transcript-display";
 import { InterviewProgress } from "./InterviewProgress";
 import { LiveRoom } from "./LiveRoom";
+import { MediaShareDock } from "./MediaShareDock";
 import { type RoomAgentState } from "./AgentStateIndicator";
 import { getCallVoice, getSession } from "@/lib/respondent";
 import { getLiveCapturesByToken, useLiveCaptures } from "@/lib/liveCaptures";
@@ -495,32 +496,35 @@ export function VoiceCall({
     );
 
     const controls = (
-      <div className="flex items-center justify-center gap-3">
-        <button
-          onClick={toggleMute}
-          className={
-            "inline-flex items-center gap-2 rounded-md border px-4 py-2.5 text-sm font-medium transition-colors " +
-            (muted
-              ? "border-accent bg-accent-soft text-accent-ink"
-              : "border-line-strong text-ink hover:bg-surface-raised")
-          }
-        >
-          {muted ? <MicOff className="h-4 w-4" strokeWidth={1.75} /> : <Mic className="h-4 w-4" strokeWidth={1.75} />}
-          {muted ? "Unmute" : "Mute"}
-        </button>
-        <button
-          onClick={switchToText}
-          title="Continue this same conversation by text. Nothing is lost"
-          className="inline-flex items-center gap-2 rounded-md border border-line-strong px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-surface-raised"
-        >
-          <MessageSquare className="h-4 w-4" strokeWidth={1.75} /> Switch to text
-        </button>
-        <button
-          onClick={endCall}
-          className="inline-flex items-center gap-2 rounded-md bg-danger px-4 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:shadow-elev-2"
-        >
-          <PhoneOff className="h-4 w-4" strokeWidth={1.75} /> End call
-        </button>
+      <div className="flex flex-col items-center gap-3">
+        <MediaShareDock token={token} />
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={toggleMute}
+            className={
+              "inline-flex items-center gap-2 rounded-md border px-4 py-2.5 text-sm font-medium transition-colors " +
+              (muted
+                ? "border-accent bg-accent-soft text-accent-ink"
+                : "border-line-strong text-ink hover:bg-surface-raised")
+            }
+          >
+            {muted ? <MicOff className="h-4 w-4" strokeWidth={1.75} /> : <Mic className="h-4 w-4" strokeWidth={1.75} />}
+            {muted ? "Unmute" : "Mute"}
+          </button>
+          <button
+            onClick={switchToText}
+            title="Continue this same conversation by text. Nothing is lost"
+            className="inline-flex items-center gap-2 rounded-md border border-line-strong px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-surface-raised"
+          >
+            <MessageSquare className="h-4 w-4" strokeWidth={1.75} /> Switch to text
+          </button>
+          <button
+            onClick={endCall}
+            className="inline-flex items-center gap-2 rounded-md bg-danger px-4 py-2.5 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:shadow-elev-2"
+          >
+            <PhoneOff className="h-4 w-4" strokeWidth={1.75} /> End call
+          </button>
+        </div>
       </div>
     );
 

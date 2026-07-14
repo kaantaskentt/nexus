@@ -1,0 +1,6 @@
+{
+  "kind": "screenshot",
+  "planted_tools": ["Salesforce", "Export CSV"],
+  "forbidden_tools": ["SAP", "Workday", "Notion"],
+  "notes": "Synthetic UI: CRM list view with an Export CSV button labeled Salesforce."
+}

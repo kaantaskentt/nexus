@@ -1,3 +1,6 @@
+# July 15 — Mid-interview media → context (file / screenshot / screen)
+**AUDIT:** `media_shares` + by-token `/api/media` + `extract_media_share` (Claude docs/images, Twelve Labs video) → CLAIMED compile; LiveRoom Share dock; raw blobs retained in Storage (memory backend in tests). Offline eval: `python -m evals.media.run_offline`. Manual smoke: see `evals/media/README.md`.
+
 # July 14 — People sidebar + workspace seat grant
 **AUDIT:** People roster + Grant access (`POST/GET/DELETE …/seats`); resolve_seat honors client rows; temp password shown once. Interview invite CTA removed from People.
 
