@@ -10,10 +10,12 @@ import {
   get_insights,
   get_automation,
   get_active_discovery,
+  get_me,
 } from "@/lib/live-server";
 import { SnapshotView } from "@/components/snapshot/SnapshotView";
 import { DiscoveryUpload } from "@/components/snapshot/DiscoveryUpload";
 import { AddTranscriptDoor } from "@/components/snapshot/AddTranscriptDoor";
+import { DeepResearchTrigger } from "@/components/snapshot/DeepResearchTrigger";
 import { WeeklyPulseCard } from "@/components/snapshot/WeeklyPulseCard";
 import {
   SnapshotIntro,
@@ -39,7 +41,7 @@ export default async function HomePage({
   if (!workspace) notFound();
 
   const findingParam = searchParams?.finding?.trim() || null;
-  const [cards, claims, plans, workflows, insights, automation, activeDiscovery, peopleEntities] =
+  const [cards, claims, plans, workflows, insights, automation, activeDiscovery, peopleEntities, seat] =
     await Promise.all([
       list_snapshot_cards(workspace.id),
       list_claims(workspace.id),
@@ -59,7 +61,11 @@ export default async function HomePage({
       get_active_discovery(workspace.id).catch(() => null),
       // Durable people registry for inline name correction on the roster.
       list_people(workspace.id).catch(() => []),
+      // F6: no row ⇒ admin (matches the layout's seat resolution) — gates the deep-
+      // research trigger, which is internal calibration tooling, never client-visible.
+      get_me().catch(() => null),
     ]);
+  const isAdmin = (seat?.role ?? "admin") === "admin";
 
   // Latest plan per person (list is newest-first) — keyed by folded name because the
   // card content carries name+entity_id but plans resolve people by entity.
@@ -139,6 +145,9 @@ export default async function HomePage({
         workspaceId={workspace.id}
         defaultSpeaker={cfg.contact_person ?? cfg.founder}
       />
+      {isAdmin && (
+        <DeepResearchTrigger workspaceId={workspace.id} industry={workspace.industry} />
+      )}
     </>
   );
 

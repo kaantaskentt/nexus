@@ -1133,3 +1133,68 @@ async def recon_status(workspace_id: str, job_id: int):
         "scraped_records": scraped,
         "people": people,
     }
+
+
+async def _latest_deep_research_job(pool, workspace_id: str):
+    """The most recent deep_research job enqueued for this workspace, if any. Used to
+    detect an in-flight run on page load/refresh — a browser tab has no memory of a job_id
+    across a reload, so without this lookup a refresh mid-run looks identical to "never
+    started" and the button would happily fire a second, fully duplicate (billable) pass
+    racing the first one."""
+    return await pool.fetchrow(
+        """select id, status from jobs
+           where kind = 'deep_research' and payload->>'workspace_id' = $1
+           order by id desc limit 1""",
+        workspace_id,
+    )
+
+
+@router.post("/{workspace_id}/research/regenerate")
+async def trigger_deep_research(workspace_id: str):
+    """Manual admin trigger for the Deep Research Knowledge Base
+    (docs/PRD-DEEP-RESEARCH-KB.md §5, Phase 1: "manual trigger only, admin button"). Fires
+    the same job render_snapshot enqueues automatically on the discovery call — this lets
+    an admin (re)run it for a workspace whose snapshot predates the feature, or force a
+    fresh pass. If this workspace already has a queued/running deep_research job, returns
+    THAT job's id instead of enqueueing a new one — the one guard against the race a
+    same-workspace double-click (or a stale tab refreshed mid-run) would otherwise cause;
+    run_deep_research's own case-reuse only protects against re-researching an
+    ALREADY-COMPLETE case, not two runs racing each other before either has written one."""
+    pool = await get_pool()
+    existing = await _latest_deep_research_job(pool, workspace_id)
+    if existing and existing["status"] in ("queued", "running"):
+        return {"enqueued": "deep_research", "job_id": existing["id"], "already_running": True}
+    job_id = await enqueue("deep_research", {"workspace_id": workspace_id})
+    return {"enqueued": "deep_research", "job_id": job_id, "already_running": False}
+
+
+@router.get("/{workspace_id}/research/status")
+async def deep_research_status(workspace_id: str, job_id: int | None = None):
+    """Best-effort progress for the research button (mirrors recon_status above). When
+    job_id is omitted (the page-load/refresh case), resolves it from the workspace's own
+    latest deep_research job so a refresh mid-run can correctly resume the "running" state
+    instead of falling back to "nothing happened yet". Reports that job's real state plus
+    whatever case the workspace is CURRENTLY linked to — dod_met, status, and finding count
+    come straight from the DoD enforcement in deep_research.py (§5b), never re-derived here."""
+    pool = await get_pool()
+    if job_id is None:
+        latest = await _latest_deep_research_job(pool, workspace_id)
+        job_id = latest["id"] if latest else None
+    job_status = None
+    if job_id is not None:
+        job = await pool.fetchrow("select status from jobs where id = $1", job_id)
+        job_status = job["status"] if job else "unknown"
+    case = await pool.fetchrow(
+        """select rc.id, rc.title, rc.dod_met, rc.status, rc.generation_attempts,
+                  (select count(*) from research_findings where case_id = rc.id) as findings
+           from workspace_research_links wrl
+           join research_cases rc on rc.id = wrl.case_id
+           where wrl.workspace_id = $1 and wrl.relation = 'own'
+           order by rc.updated_at desc limit 1""",
+        workspace_id,
+    )
+    return {
+        "job_id": job_id,
+        "job_status": job_status,
+        "case": dict(case) if case else None,
+    }

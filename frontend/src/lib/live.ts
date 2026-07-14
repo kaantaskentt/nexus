@@ -205,6 +205,37 @@ export async function recon_status(
   return api<ReconStatus>(`/api/workspaces/${workspace_id}/recon/status?job_id=${job_id}`);
 }
 
+// ── Deep Research Knowledge Base (PRD-DEEP-RESEARCH-KB.md §5, Phase 1 admin button) ──
+export async function trigger_deep_research(
+  workspace_id: string,
+): Promise<{ job_id: number; already_running: boolean }> {
+  return api(`/api/workspaces/${workspace_id}/research/regenerate`, { method: "POST" });
+}
+
+export interface DeepResearchCase {
+  id: string;
+  title: string;
+  dod_met: boolean;
+  status: "draft" | "approved" | "stale";
+  generation_attempts: number;
+  findings: number;
+}
+export interface DeepResearchStatus {
+  // job_id is resolved server-side from the workspace's own latest job when omitted from
+  // the request — this is what lets a page refresh mid-run detect "still going" instead
+  // of looking identical to "never started" (see workspaces.py::deep_research_status).
+  job_id: number | null;
+  job_status: "queued" | "running" | "done" | "failed" | "unknown" | null;
+  case: DeepResearchCase | null;
+}
+export async function deep_research_status(
+  workspace_id: string,
+  job_id?: number,
+): Promise<DeepResearchStatus> {
+  const q = job_id ? `?job_id=${job_id}` : "";
+  return api<DeepResearchStatus>(`/api/workspaces/${workspace_id}/research/status${q}`);
+}
+
 // ── Voice settings (GET/PUT /api/voice-config/{id}) — Sprint-2 Lane B / #39 ───
 // Per-workspace interview voice. The private VAPI key stays server-side; the editor
 // only ever sees config + an honest sync status (never the key). Uncustomized workspaces

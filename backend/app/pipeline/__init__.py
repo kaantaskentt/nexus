@@ -6,6 +6,7 @@ from . import (  # noqa: F401  (importing registers each @handles job)
     automation,
     compiler,
     conflicts,
+    deep_research,
     disclosure,
     entities,
     handoff,
