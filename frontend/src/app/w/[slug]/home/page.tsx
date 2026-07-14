@@ -32,11 +32,12 @@ export default async function HomePage({
   searchParams,
 }: {
   params: { slug: string };
-  searchParams?: { compiling?: string };
+  searchParams?: { compiling?: string; finding?: string };
 }) {
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
 
+  const findingParam = searchParams?.finding?.trim() || null;
   const [cards, claims, plans, workflows, insights, automation, activeDiscovery] =
     await Promise.all([
       list_snapshot_cards(workspace.id),
@@ -127,6 +128,7 @@ export default async function HomePage({
         keyFindings={insights?.key_findings ?? []}
         automation={automation}
         workflowIds={workflows.map((w) => w.workflow_id)}
+        finding={findingParam}
       />
       {pulse?.enabled && <WeeklyPulseCard pulse={pulse} />}
       <AddTranscriptDoor

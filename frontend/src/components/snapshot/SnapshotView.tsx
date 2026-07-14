@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Rocket, Lock, ArrowRight, X, Quote, ClipboardCheck, Flame, Calculator } from "lucide-react";
 import Link from "next/link";
@@ -73,6 +73,40 @@ function attributionLabel(
   return role;
 }
 
+// Deep-link id for an area card: short hex prefix of the UUID so URLs stay shareable
+// (?finding=e122e4a2) while still resolving uniquely across a tenant's open questions.
+function findingSlug(cardId: string): string {
+  return cardId.replace(/-/g, "").slice(0, 8);
+}
+
+function resolveAreaCardId(
+  areaCards: SnapshotCard[],
+  raw: string | null | undefined,
+): string | null {
+  if (!raw) return null;
+  const needle = raw.replace(/-/g, "").toLowerCase();
+  const match = areaCards.find((c) => {
+    const compact = c.id.replace(/-/g, "").toLowerCase();
+    return c.id === raw || compact === needle || compact.startsWith(needle);
+  });
+  return match?.id ?? null;
+}
+
+// Write ?finding= without a Next soft-nav (Home re-fetches snapshot/claims on searchParams
+// change). history.replaceState keeps the drawer snappy and still survives a hard refresh.
+function replaceFindingParam(slug: string | null) {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  if (slug) url.searchParams.set("finding", slug);
+  else url.searchParams.delete("finding");
+  const next = url.pathname + url.search + url.hash;
+  const current =
+    window.location.pathname + window.location.search + window.location.hash;
+  if (next !== current) {
+    window.history.replaceState(window.history.state, "", next);
+  }
+}
+
 export function SnapshotView({
   workspace,
   cards,
@@ -82,6 +116,8 @@ export function SnapshotView({
   keyFindings = [],
   automation = [],
   workflowIds = [],
+  // Deep-link from ?finding= (hard refresh / shared URL) — opens the matching area drawer.
+  finding: findingFromUrl = null,
 }: {
   workspace: Workspace;
   cards: SnapshotCard[];
@@ -99,9 +135,9 @@ export function SnapshotView({
   keyFindings?: KeyFinding[];
   automation?: AutomationOpportunity[];
   workflowIds?: string[];
+  finding?: string | null;
 }) {
   const claimsById = useMemo(() => new Map(claims.map((c) => [c.id, c])), [claims]);
-  const [openArea, setOpenArea] = useState<AreaContent | null>(null);
   // Evidence is demoted to a drill-down (3.2): the old competing right rail becomes a drawer
   // opened on demand from "What Nexus learned", so the reading column owns the page.
   const [evidenceOpen, setEvidenceOpen] = useState(false);
@@ -110,6 +146,30 @@ export function SnapshotView({
   const areas = cards.filter((c) => c.card_type === "area_to_investigate");
   const people = cards.filter((c) => c.card_type === "suggested_person");
   const conflicts = cards.filter((c) => c.card_type === "conflict_point");
+
+  // undefined = follow ?finding= from the server; after the user opens/closes, we own it
+  // locally so a replaceState URL write doesn't need an RSC round-trip.
+  const [overrideFindingId, setOverrideFindingId] = useState<string | null | undefined>(
+    undefined,
+  );
+  const urlFindingId = resolveAreaCardId(areas, findingFromUrl);
+  const openAreaId = overrideFindingId === undefined ? urlFindingId : overrideFindingId;
+
+  const openArea = useMemo(() => {
+    if (!openAreaId) return null;
+    const card = areas.find((c) => c.id === openAreaId);
+    return card ? (card.content as AreaContent) : null;
+  }, [areas, openAreaId]);
+
+  const openFinding = useCallback((cardId: string) => {
+    setOverrideFindingId(cardId);
+    replaceFindingParam(findingSlug(cardId));
+  }, []);
+
+  const closeFinding = useCallback(() => {
+    setOverrideFindingId(null);
+    replaceFindingParam(null);
+  }, []);
 
   // Evidence anchor: verbatim CEO-call quotes (his own words — A3). Dedup overlapping spans
   // so a fragment and the fuller quote that contains it never appear as two cards. Shown in
@@ -257,7 +317,7 @@ export function SnapshotView({
                     <motion.button
                       key={card.id}
                       variants={rise}
-                      onClick={() => setOpenArea(a)}
+                      onClick={() => openFinding(card.id)}
                       className="lift group flex flex-col rounded-card border border-line bg-surface p-4 text-left hover:border-line-strong"
                     >
                       <div className="flex items-start gap-2">
@@ -435,7 +495,7 @@ export function SnapshotView({
         </p>
       </div>
 
-      <AreaDrawer area={openArea} claimsById={claimsById} slug={workspace.slug} onClose={() => setOpenArea(null)} />
+      <AreaDrawer area={openArea} claimsById={claimsById} slug={workspace.slug} onClose={closeFinding} />
       <EvidenceDrawer
         open={evidenceOpen}
         evidence={railEvidence}
@@ -567,12 +627,15 @@ function AreaDrawer({
                   <PainBandChip band={area.pain_band} />
                 </motion.div>
 
-                {/* Pain signals — qualitative, no decimals */}
-                <motion.div variants={drawerSection} className="mb-5 grid grid-cols-3 gap-2">
-                  <SignalStat label="Frequency" value={area.signals.frequency} />
-                  <SignalStat label="Emotional weight" value={area.signals.emotional_weight} />
-                  <SignalStat label="Mentions" value={area.signals.mentions} />
-                </motion.div>
+                {/* Pain signals — qualitative, no decimals. Guard nullish signals from
+                    older/partial compiles so the drawer never blank-screens Home. */}
+                {area.signals && (
+                  <motion.div variants={drawerSection} className="mb-5 grid grid-cols-3 gap-2">
+                    <SignalStat label="Frequency" value={area.signals.frequency} />
+                    <SignalStat label="Emotional weight" value={area.signals.emotional_weight} />
+                    <SignalStat label="Mentions" value={area.signals.mentions} />
+                  </motion.div>
+                )}
 
                 <motion.div variants={drawerSection}>
                   <DrawerBlock title="Why ranked here">
@@ -580,23 +643,25 @@ function AreaDrawer({
                   </DrawerBlock>
                 </motion.div>
 
-                <motion.div variants={drawerSection}>
-                  <DrawerBlock title="What we believe so far">
-                    <ul className="space-y-2">
-                      {area.beliefs.map((b, i) => (
-                        <li
-                          key={i}
-                          className="flex items-start justify-between gap-3 text-sm text-ink-soft"
-                        >
-                          <span>{b.text}</span>
-                          <ConfidenceBadge confidence={b.confidence} context="Trust" className="shrink-0" />
-                        </li>
-                      ))}
-                    </ul>
-                  </DrawerBlock>
-                </motion.div>
+                {(area.beliefs?.length ?? 0) > 0 && (
+                  <motion.div variants={drawerSection}>
+                    <DrawerBlock title="What we believe so far">
+                      <ul className="space-y-2">
+                        {area.beliefs.map((b, i) => (
+                          <li
+                            key={i}
+                            className="flex items-start justify-between gap-3 text-sm text-ink-soft"
+                          >
+                            <span>{b.text}</span>
+                            <ConfidenceBadge confidence={b.confidence} context="Trust" className="shrink-0" />
+                          </li>
+                        ))}
+                      </ul>
+                    </DrawerBlock>
+                  </motion.div>
+                )}
 
-                {area.evidence_claim_ids.length > 0 && (
+                {(area.evidence_claim_ids?.length ?? 0) > 0 && (
                   <motion.div variants={drawerSection}>
                     <DrawerBlock title="Evidence">
                       <div className="space-y-3">
@@ -616,24 +681,33 @@ function AreaDrawer({
                   </motion.div>
                 )}
 
-                <motion.div variants={drawerSection}>
-                  <DrawerBlock title="What we don't know yet">
-                    <ul className="space-y-2">
-                      {area.what_we_dont_know.map((q, i) => (
-                        <li key={i} className="flex gap-2 text-sm text-ink-soft">
-                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full border border-accent" />
-                          <span>{q}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </DrawerBlock>
-                </motion.div>
+                {(area.what_we_dont_know?.length ?? 0) > 0 && (
+                  <motion.div variants={drawerSection}>
+                    <DrawerBlock title="What we don't know yet">
+                      <ul className="space-y-2">
+                        {area.what_we_dont_know.map((q, i) => (
+                          <li key={i} className="flex gap-2 text-sm text-ink-soft">
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full border border-accent" />
+                            <span>{q}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </DrawerBlock>
+                  </motion.div>
+                )}
 
                 {area.who_holds && (
                   <motion.div variants={drawerSection}>
                     <DrawerBlock title="Who holds this knowledge">
                       <div className="card-hairline rounded-card border border-line bg-surface">
-                        <PersonRow person={area.who_holds} />
+                        <PersonRow
+                          person={{
+                            ...area.who_holds,
+                            name: area.who_holds.name ?? null,
+                            role: area.who_holds.role ?? "",
+                            why_line: area.who_holds.why_line ?? "",
+                          }}
+                        />
                       </div>
                     </DrawerBlock>
                   </motion.div>

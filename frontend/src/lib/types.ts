@@ -270,7 +270,8 @@ export interface LearnedContent {
 // A responsibility-only person reference (F34) used both as a suggested person and
 // as the "who holds this knowledge" row inside an area.
 export interface PersonRef {
-  name: string;
+  // Name can be null when the compile only knows a role (role-only who_holds).
+  name: string | null;
   role: string;
   why_line: string;
   // discovery tag: FIRST (interview first) / call-discovered / new-person.

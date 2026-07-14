@@ -55,7 +55,7 @@ export function GeneratePlanButton({
     try {
       const { plan_id } = await generate_plan(workspaceId, {
         entity_id: person.entity_id,
-        person_name: person.name,
+        person_name: person.name ?? undefined,
         person_role: person.role,
       });
       for (let i = 0; i < MAX_POLLS; i++) {

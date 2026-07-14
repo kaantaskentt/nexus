@@ -221,7 +221,7 @@ function HubCard({ workspace, item }: { workspace: Workspace; item: HubItem }) {
             : "bg-accent-soft text-accent-ink ring-accent/15",
         )}
       >
-        {initials(item.name)}
+        {initials(item.name, "?")}
       </div>
 
       <div className="min-w-0 flex-1">

@@ -26,11 +26,13 @@ export function PersonRow({
       )}
     >
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-ink ring-1 ring-inset ring-accent/15">
-        {initials(person.name)}
+        {initials(person.name, "?")}
       </div>
       <div className="w-28 shrink-0">
-        <div className="font-medium text-ink">{person.name}</div>
-        <div className="text-xs text-ink-faint">{person.role}</div>
+        <div className="font-medium text-ink">{person.name || person.role || "Unknown"}</div>
+        {person.name && person.role ? (
+          <div className="text-xs text-ink-faint">{person.role}</div>
+        ) : null}
       </div>
       <p className="min-w-[12rem] flex-1 text-sm text-ink-soft">
         <span className="font-medium text-accent-ink">Why: </span>
