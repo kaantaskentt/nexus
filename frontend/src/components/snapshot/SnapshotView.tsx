@@ -399,7 +399,7 @@ export function SnapshotView({
               records it rests on; the time figures are estimates built from stated
               assumptions, not measurements.
             </p>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid items-start gap-3 sm:grid-cols-2">
               {automation.map((o) => (
                 <OpportunityCard
                   key={o.id}
@@ -878,8 +878,12 @@ function OpportunityCard({
   workflowIds: string[];
   claimsById: Map<string, ClaimRecord>;
 }) {
+  // Per-card expand state — native <details> in a shared CSS grid was leaking open
+  // state across siblings (click one "See the evidence", the neighbor looked open too).
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
+
   return (
-    <article className="card-hairline flex flex-col rounded-card border border-line bg-surface p-4">
+    <article className="card-hairline flex h-fit flex-col rounded-card border border-line bg-surface p-4">
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-semibold leading-snug text-ink">{o.title}</h3>
         <span className="shrink-0 rounded-chip bg-surface-sunken px-2 py-0.5 text-[11px] text-ink-faint ring-1 ring-inset ring-ink/[0.04]">
@@ -922,29 +926,51 @@ function OpportunityCard({
           See it in the workflow <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
         </Link>
       ) : (
-        <details className="mt-3">
-          <summary className="cursor-pointer text-sm font-medium text-accent hover:text-accent-hover">
+        <div className="mt-3">
+          <button
+            type="button"
+            aria-expanded={evidenceOpen}
+            onClick={() => setEvidenceOpen((v) => !v)}
+            className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:text-accent-hover"
+          >
+            <span aria-hidden className="inline-block w-3 text-[10px]">
+              {evidenceOpen ? "▼" : "▶"}
+            </span>
             See the evidence ({o.claim_ids.length} record{o.claim_ids.length === 1 ? "" : "s"})
-          </summary>
-          <ul className="mt-2 space-y-1.5">
-            {o.claim_ids.map((cid) => {
-              const c = claimsById.get(cid);
-              if (!c) return null;
-              return (
-                <li key={cid} className="rounded-md border border-line bg-surface-sunken/40 px-2.5 py-1.5 text-xs leading-relaxed text-ink-soft">
-                  {c.claim_text}
-                </li>
-              );
-            })}
-          </ul>
-          <p className="mt-2 text-xs leading-relaxed text-ink-faint">
-            No mapped workflow holds these steps yet.{" "}
-            <Link href={`/w/${slug}/context`} className="font-medium text-accent-ink hover:underline">Add context</Link>{" "}
-            or{" "}
-            <Link href={`/w/${slug}/interviews/new`} className="font-medium text-accent-ink hover:underline">schedule an interview</Link>{" "}
-            to map it.
-          </p>
-        </details>
+          </button>
+          {evidenceOpen && (
+            <>
+              <ul className="mt-2 space-y-1.5">
+                {o.claim_ids.map((cid) => {
+                  const c = claimsById.get(cid);
+                  if (!c) return null;
+                  return (
+                    <li
+                      key={cid}
+                      className="rounded-md border border-line bg-surface-sunken/40 px-2.5 py-1.5 text-xs leading-relaxed text-ink-soft"
+                    >
+                      {c.claim_text}
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="mt-2 text-xs leading-relaxed text-ink-faint">
+                No mapped workflow holds these steps yet.{" "}
+                <Link href={`/w/${slug}/context`} className="font-medium text-accent-ink hover:underline">
+                  Add context
+                </Link>{" "}
+                or{" "}
+                <Link
+                  href={`/w/${slug}/interviews/new`}
+                  className="font-medium text-accent-ink hover:underline"
+                >
+                  schedule an interview
+                </Link>{" "}
+                to map it.
+              </p>
+            </>
+          )}
+        </div>
       )}
     </article>
   );
