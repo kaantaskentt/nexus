@@ -143,23 +143,27 @@ export function SendInterviewFlow({
                     Choose who should receive this interview and finalize delivery settings.
                   </p>
 
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Field label="Name">
                       <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
-                    </Field>
-                    <Field label="Email">
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        onBlur={() => email.trim() && persistDelivery({ email: email.trim() })}
-                        placeholder="name@company.com"
-                        className="input"
-                      />
                     </Field>
                     <Field label="Job title">
                       <input value={role} onChange={(e) => setRole(e.target.value)} onBlur={() => role.trim() && persistDelivery({ job_title: role.trim() })} className="input" />
                     </Field>
+                    {/* Email gets the full row — addresses routinely outgrow a third of
+                        max-w-2xl, and equal 3-col cells were clipping the local-part. */}
+                    <div className="sm:col-span-2">
+                      <Field label="Email">
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          onBlur={() => email.trim() && persistDelivery({ email: email.trim() })}
+                          placeholder="name@company.com"
+                          className="input"
+                        />
+                      </Field>
+                    </div>
                   </div>
 
                   <div>
