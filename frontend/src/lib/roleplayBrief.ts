@@ -20,7 +20,28 @@ export interface ParsedBrief {
   sections: BriefSection[]; // in document order
 }
 
-const HTML_COMMENT = /<!--[\s\S]*?-->/g;
+function stripHtmlComments(input: string): string {
+  let output = "";
+  let cursor = 0;
+
+  while (cursor < input.length) {
+    const start = input.indexOf("<!--", cursor);
+    if (start === -1) {
+      output += input.slice(cursor);
+      break;
+    }
+
+    output += input.slice(cursor, start);
+    const end = input.indexOf("-->", start + 4);
+    if (end === -1) break;
+
+    // Keep removed ranges separated so adjacent fragments cannot synthesize a new opener.
+    output += "\n";
+    cursor = end + 3;
+  }
+
+  return output;
+}
 
 // Friendly relabels + overview/details tiering, matched on the section heading (first
 // match wins). The persona files share a stable shape (How you speak / Your real workflow
@@ -51,7 +72,7 @@ function finishSection(heading: string, bodyLines: string[]): BriefSection {
 }
 
 export function parseBrief(raw: string): ParsedBrief {
-  const text = (raw ?? "").replace(HTML_COMMENT, "").replace(/\r\n/g, "\n").trim();
+  const text = stripHtmlComments(raw ?? "").replace(/\r\n/g, "\n").trim();
   if (!text) return { title: null, intro: null, sections: [] };
 
   let title: string | null = null;
