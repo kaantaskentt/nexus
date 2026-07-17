@@ -94,6 +94,33 @@ async def test_put_with_vapi_creates_dedicated_assistant(db, monkeypatch):
     assert body["sync_error"] is None
 
 
+async def test_put_vapi_failure_does_not_expose_exception_details(
+    db, monkeypatch, caplog
+):
+    ws = await make_workspace(db, industry="jewelry")
+    monkeypatch.setattr(voice_config, "get_settings", lambda: _settings(vapi_api_key="k"))
+
+    async def failing_sync(workspace_id, row):
+        raise RuntimeError("upstream body contained secret-token-123")
+
+    monkeypatch.setattr(voice_config, "_sync_to_vapi", failing_sync)
+    async with _client() as c:
+        r = await c.put(
+            f"/api/voice-config/{ws}",
+            json={"voice_id": "luna", "speed": 1.0},
+        )
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["vapi_synced"] is False
+    assert body["sync_error"] == (
+        "Saved, but the voice service did not accept the update. Please try again."
+    )
+    assert "secret-token-123" not in r.text
+    assert "secret-token-123" not in caplog.text
+    assert "RuntimeError" in caplog.text
+
+
 async def test_put_rejects_unknown_voice(db):
     ws = await make_workspace(db, industry="jewelry")
     async with _client() as c:

@@ -38,7 +38,7 @@ const BUCKETS: { test: RegExp; label: string; tier: BriefTier }[] = [
 
 // Drop a trailing scorer-style parenthetical, e.g. "How you speak (PROUD MAKER)".
 function cleanHeading(h: string): string {
-  return h.replace(/\s*\([^)]*\)\s*$/, "").trim();
+  return h.replace(/\s*(?:\([^()]*\)\s*)+$/, "").trim();
 }
 
 function finishSection(heading: string, bodyLines: string[]): BriefSection {
