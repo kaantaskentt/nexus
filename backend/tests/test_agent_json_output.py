@@ -86,7 +86,6 @@ def test_quality_content_puts_the_output_instruction_after_the_transcript():
 def test_transcript_echo_output_is_rejected_by_the_parser():
     # The observed failure shape: the model echoed the transcript, no JSON at all. extract_json
     # must RAISE (so run_agent_json fails the job and #22 retries) rather than return garbage.
-    import pytest
 
     echoed = "[respondent] Not yet. That's the honest answer.\n\n[END OF TRANSCRIPT]"
     with pytest.raises(ValueError):
