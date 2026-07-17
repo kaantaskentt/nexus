@@ -8,7 +8,6 @@ from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 from app.pipeline import compiler
-from tests.conftest import make_workspace
 
 
 def _client():

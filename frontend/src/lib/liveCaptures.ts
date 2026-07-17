@@ -81,7 +81,10 @@ export function useLiveCaptures<T extends Extracting>(
   // Keep the latest fetcher without retriggering the effect each render (the caller passes
   // a fresh closure every render; we only want the interval to depend on enabled/interval).
   const fetcherRef = useRef(fetcher);
-  fetcherRef.current = fetcher;
+
+  useEffect(() => {
+    fetcherRef.current = fetcher;
+  }, [fetcher]);
 
   useEffect(() => {
     if (!enabled) return;

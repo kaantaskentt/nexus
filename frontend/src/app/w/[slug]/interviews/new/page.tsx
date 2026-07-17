@@ -8,7 +8,8 @@ import { AssignInterviewFlow } from "@/components/interviews/AssignInterviewFlow
 // client flow drafts the plan, shapes delivery, refines it, and hands off to the gate.
 export const dynamic = "force-dynamic";
 
-export default async function NewInterviewPage({ params }: { params: { slug: string } }) {
+export default async function NewInterviewPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
   // Known-role suggestions for the (now required) Role field: the distinct roles of people

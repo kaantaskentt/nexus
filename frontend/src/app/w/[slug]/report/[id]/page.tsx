@@ -5,11 +5,12 @@ import { ReportLoader } from "@/components/report/ReportLoader";
 // Post-Interview Report (Phase 6 / stage8). The [id] segment is the interview
 // session_id (the report is keyed by session, not plan). Server-fetches the first
 // snapshot; the client loader polls while the report is still compiling.
-export default async function ReportPage({
-  params,
-}: {
-  params: { slug: string; id: string };
-}) {
+export default async function ReportPage(
+  props: {
+    params: Promise<{ slug: string; id: string }>;
+  }
+) {
+  const params = await props.params;
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
 

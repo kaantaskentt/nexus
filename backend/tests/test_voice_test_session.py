@@ -1,7 +1,6 @@
 """'Hear it live' voice test sessions (premium audit P1-3): admin-minted, and firewalled
 by KIND at the pipeline choke points — never compiled, never disclosure-screened."""
 
-import pytest
 
 from app.pipeline import compiler, disclosure
 from tests.conftest import make_workspace

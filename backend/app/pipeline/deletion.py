@@ -135,30 +135,30 @@ async def preview_workspace_delete(workspace_id: str) -> dict | None:
     return {
         "workspace_id": str(workspace_id),
         "name": name,
-        "sessions": await n(f"select count(*) from interview_sessions where workspace_id = $1"),
+        "sessions": await n("select count(*) from interview_sessions where workspace_id = $1"),
         "turns": await n(f"select count(*) from utterances where session_id in ({sess})"),
-        "records": await n(f"select count(*) from claim_records where workspace_id = $1"),
-        "conflicts": await n(f"select count(*) from claim_conflicts where workspace_id = $1"),
+        "records": await n("select count(*) from claim_records where workspace_id = $1"),
+        "conflicts": await n("select count(*) from claim_conflicts where workspace_id = $1"),
         "pain_scores": await n(f"select count(*) from pain_scores where claim_id in ({claims})"),
-        "workflows": await n(f"select count(*) from workflows where workspace_id = $1"),
+        "workflows": await n("select count(*) from workflows where workspace_id = $1"),
         "workflow_steps": await n(f"select count(*) from workflow_steps where workflow_id in ({wfs})"),
         "sops": await n(f"select count(*) from workflow_sops where workflow_id in ({wfs})"),
-        "snapshot_cards": await n(f"select count(*) from snapshot_cards where workspace_id = $1"),
-        "plans": await n(f"select count(*) from interview_plans where workspace_id = $1"),
+        "snapshot_cards": await n("select count(*) from snapshot_cards where workspace_id = $1"),
+        "plans": await n("select count(*) from interview_plans where workspace_id = $1"),
         "plan_transitions": await n(
             f"select count(*) from plan_state_transitions where plan_id in ({plans})"),
-        "entities": await n(f"select count(*) from entities where workspace_id = $1"),
-        "scrape_sources": await n(f"select count(*) from scrape_sources where workspace_id = $1"),
-        "heuristics": await n(f"select count(*) from heuristics where workspace_id = $1"),
-        "promises": await n(f"select count(*) from artifact_promises where workspace_id = $1"),
+        "entities": await n("select count(*) from entities where workspace_id = $1"),
+        "scrape_sources": await n("select count(*) from scrape_sources where workspace_id = $1"),
+        "heuristics": await n("select count(*) from heuristics where workspace_id = $1"),
+        "promises": await n("select count(*) from artifact_promises where workspace_id = $1"),
         "opportunities": await n(
-            f"select count(*) from automation_opportunities where workspace_id = $1"),
-        "voice_config": await n(f"select count(*) from voice_configs where workspace_id = $1"),
-        "report_shares": await n(f"select count(*) from report_shares where workspace_id = $1"),
+            "select count(*) from automation_opportunities where workspace_id = $1"),
+        "voice_config": await n("select count(*) from voice_configs where workspace_id = $1"),
+        "report_shares": await n("select count(*) from report_shares where workspace_id = $1"),
         # Departure from the interview precedent — flagged to Emre (see module note).
-        "sealed_flags": await n(f"select count(*) from sealed_flags where workspace_id = $1"),
+        "sealed_flags": await n("select count(*) from sealed_flags where workspace_id = $1"),
         # Survives the delete with its workspace/session refs nulled (audit history).
-        "retained_agent_runs": await n(f"select count(*) from agent_runs where workspace_id = $1"),
+        "retained_agent_runs": await n("select count(*) from agent_runs where workspace_id = $1"),
     }
 
 

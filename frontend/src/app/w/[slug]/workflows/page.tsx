@@ -10,7 +10,8 @@ import { WorkflowsList } from "@/components/workflow/WorkflowsList";
 // the action that produces one.
 export const dynamic = "force-dynamic";
 
-export default async function WorkflowsPage({ params }: { params: { slug: string } }) {
+export default async function WorkflowsPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
 

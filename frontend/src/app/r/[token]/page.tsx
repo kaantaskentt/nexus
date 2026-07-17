@@ -51,7 +51,8 @@ function SectionTitle({ n, children }: { n: number; children: React.ReactNode })
   );
 }
 
-export default async function CompanyReportPage({ params }: { params: { token: string } }) {
+export default async function CompanyReportPage(props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   let report: CompanyReport;
   try {
     report = await get_company_report(params.token);

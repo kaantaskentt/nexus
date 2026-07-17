@@ -9,13 +9,14 @@ import { WorkflowEditor } from "@/components/workflow/WorkflowEditor";
 // point declares itself via ?from= (report:<sessionId> | skills | default workflows) —
 // and ?panel=sop deep-opens the SOP drawer so the report's Generate SOP lands on the
 // working feature, not a stub.
-export default async function WorkflowEditorPage({
-  params,
-  searchParams,
-}: {
-  params: { slug: string; id: string };
-  searchParams?: { from?: string; panel?: string; highlight?: string };
-}) {
+export default async function WorkflowEditorPage(
+  props: {
+    params: Promise<{ slug: string; id: string }>;
+    searchParams?: Promise<{ from?: string; panel?: string; highlight?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
 

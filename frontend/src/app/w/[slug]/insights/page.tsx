@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 // Snapshot (Home), its one canonical surface; admissions/open questions live in Company
 // Context + Home's attention list. This route survives only as a redirect so old links,
 // bookmarks, and any lingering deep-links land on Home instead of a 404.
-export default function InsightsPage({ params }: { params: { slug: string } }) {
+export default async function InsightsPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   redirect(`/w/${params.slug}/home`);
 }

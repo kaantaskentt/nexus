@@ -7,8 +7,9 @@ import "server-only";
 import { createClient } from "./supabase/server";
 
 export async function serverAccessToken(): Promise<string | null> {
+  const supabase = await createClient();
   const {
     data: { session },
-  } = await createClient().auth.getSession();
+  } = await supabase.auth.getSession();
   return session?.access_token ?? null;
 }

@@ -8,8 +8,16 @@
 set -euo pipefail
 cd "$(dirname "$0")/backend"
 
+if [ -z "${PYTHON_BIN:-}" ]; then
+  if [ -x ".venv/bin/python" ]; then
+    PYTHON_BIN=".venv/bin/python"
+  else
+    PYTHON_BIN="python"
+  fi
+fi
+
 if [ "${NEXUS_PROC:-api}" = "worker" ]; then
-  exec python -m app.worker
+  exec "$PYTHON_BIN" -m app.worker
 else
-  exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}"
+  exec "$PYTHON_BIN" -m uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}"
 fi

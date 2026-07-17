@@ -9,7 +9,8 @@ import { PulseSettings } from "@/components/PulseSettings";
 // F3: the Weekly Pulse toggle sits below the voice section (off by default).
 export const dynamic = "force-dynamic";
 
-export default async function SettingsPage({ params }: { params: { slug: string } }) {
+export default async function SettingsPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
   const voice = await get_voice_config(workspace.id);
