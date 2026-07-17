@@ -45,11 +45,35 @@ The one place capture inverts: if a respondent discloses harm, danger, or illega
 - `prompts/` — the IP: per-seat system prompts (`agents/stage7-interviewer.md` is the interviewer), personas, rubrics, hedge lexicons
 - `evals/` — harness + suites (interviewer, compiler, e2e) + transcript fixtures
 - `backend/` — FastAPI + asyncpg · in-DB job queue + worker (`python -m app.worker`) · `db/migrations/` numbered SQL (0001…0030) · tests (`pytest`, dockerized Postgres on :55432)
-- `frontend/` — Next.js 14 app router; design tokens in `src/app/globals.css`
+- `frontend/` — Next.js 16 app router; design tokens in `src/app/globals.css`
 - `config/` — `brand.json` (product name lives ONLY here) · `resource-packets.json` (crisis resources, per jurisdiction)
 - `reference/` — pointers to vendoring sources (never edited here)
 
 **Deploy:** frontend on Vercel, API + worker on Railway, Postgres + pgvector on Supabase. Push to `main` deploys. Migrations are applied by hand.
+
+## Local development
+
+Requirements: Python 3.12+, Node.js 22, and PostgreSQL with pgvector. Copy `.env.example` to `.env`, configure the local database and Supabase values, then install each application:
+
+```bash
+python -m venv backend/.venv
+backend/.venv/bin/pip install -e 'backend[dev]'
+npm --prefix frontend ci
+```
+
+Run the API with `./start.sh`, the worker with `NEXUS_PROC=worker ./start.sh`, and the frontend with `npm --prefix frontend run dev`.
+
+## Quality gates
+
+```bash
+backend/.venv/bin/ruff check backend/app backend/tests
+PYTHONPATH=backend backend/.venv/bin/pytest -q backend/tests
+npm --prefix frontend run lint
+npm --prefix frontend test
+npm --prefix frontend run build
+```
+
+Pull requests run the full backend suite against an isolated pgvector service plus frontend lint, tests, build, npm audit, and Python dependency audit. CodeQL, Dependabot, secret scanning, push protection, and private vulnerability reporting are enabled.
 
 ## Ground rules (unchanged since the spec)
 
