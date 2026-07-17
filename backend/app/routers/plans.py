@@ -410,21 +410,27 @@ def _apply_change(mission: dict, questions: list, never: list, change: dict) -> 
         return False
     if target == "never_list":
         if op == "add" and value not in never:
-            never.append(value); return True
+            never.append(value)
+            return True
         if op == "remove" and value in never:
-            never.remove(value); return True
+            never.remove(value)
+            return True
     elif target == "handling_notes":
         notes = mission.setdefault("handling_notes", [])
         if op == "add" and value not in notes:
-            notes.append(value); return True
+            notes.append(value)
+            return True
         if op == "remove" and value in notes:
-            notes.remove(value); return True
+            notes.remove(value)
+            return True
     elif target == "suggested_questions":
         texts = [q.get("text") for q in questions]
         if op == "add" and value not in texts:
-            questions.append({"text": value, "topic": "process_step"}); return True
+            questions.append({"text": value, "topic": "process_step"})
+            return True
         if op == "remove" and value in texts:
-            questions[:] = [q for q in questions if q.get("text") != value]; return True
+            questions[:] = [q for q in questions if q.get("text") != value]
+            return True
     # WS-2: the effective package is rewritable. Topics carry {label, must_hit, detail}
     # exactly like the generator emits them; remove (retire) matches the exact label the
     # agent saw in the plan JSON, so a retired must-hit leaves the visible plan too.
@@ -443,13 +449,16 @@ def _apply_change(mission: dict, questions: list, never: list, change: dict) -> 
             return True
     elif target == "goal":
         if op == "set" and value != mission.get("goal"):
-            mission["goal"] = value; return True
+            mission["goal"] = value
+            return True
     elif target == "definition_of_done":
         dod = mission.setdefault("definition_of_done", [])
         if op == "add" and value not in dod:
-            dod.append(value); return True
+            dod.append(value)
+            return True
         if op == "remove" and value in dod:
-            dod.remove(value); return True
+            dod.remove(value)
+            return True
     return False
 
 
@@ -653,7 +662,7 @@ async def intake_chat(plan_id: str, body: IntakeIn):
     # Bounded records digest: the real (non-scraped) records so the agent aims at what the
     # store is THIN on, never re-asking what it already covers.
     recs = await pool.fetch(
-        "select claim_text, topic from claim_records where workspace_id = $1 "
+        "select claim_text, topic from client_visible_claims where workspace_id = $1 "
         "and (tag is null or tag <> 'SCRAPED') order by created_at desc limit 40",
         plan["workspace_id"],
     )

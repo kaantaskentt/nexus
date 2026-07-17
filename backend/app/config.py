@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     app_base_url: str = "http://localhost:8000"
     # Comma-separated browser origins allowed to call the API (CORS). Localhost dev by
     # default; deploy sets the Vercel origin(s). "*" allows any (used only if explicit).
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     email_from: str = ""
     default_anthropic_chat_model: str = "claude-sonnet-4-6"
     openai_embedding_model: str = "text-embedding-3-small"

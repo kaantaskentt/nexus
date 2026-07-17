@@ -166,7 +166,8 @@ async def build_handoff_package(plan_id: str) -> dict:
     # interviewer, e.g. "don't mention the Harrods renegotiation"). Directives are
     # prohibitions the agent must honor; the persona is told never to raise them.
     directive_rows = await pool.fetch(
-        "select claim_text from claim_records where workspace_id = $1 and kind = 'directive'",
+        "select claim_text from claim_records where workspace_id = $1 "
+        "and kind = 'directive' and quarantined = false",
         workspace_id,
     )
     never_list = _as_list(plan["never_list"]) + [r["claim_text"] for r in directive_rows]
