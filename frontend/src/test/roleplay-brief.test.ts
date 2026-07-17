@@ -41,6 +41,17 @@ describe("parseBrief", () => {
     expect(p.intro).not.toMatch(/task #16|fictional/); // comment stripped
   });
 
+  it("removes repeated and adversarial HTML comments without synthesizing a new opener", () => {
+    const p = parseBrief(
+      "# You are Sam\n\nPrefix <!<!-- hidden -->--> <!-- second --> suffix",
+    );
+    expect(p.intro).not.toContain("hidden");
+    expect(p.intro).not.toContain("second");
+    expect(p.intro).not.toContain("<!--");
+    expect(p.intro).toContain("Prefix");
+    expect(p.intro).toContain("suffix");
+  });
+
   it("relabels recognized sections and tiers them overview vs details", () => {
     const { sections } = parseBrief(SHEET);
     const byHeading = Object.fromEntries(sections.map((s) => [s.heading, s]));
