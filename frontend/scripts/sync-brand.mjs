@@ -7,7 +7,7 @@
 // refresh it from the canonical source on every local dev/build/test (predev,
 // prebuild, pretest). Drift shows up as a git diff to commit — never edit the copy
 // by hand. On Vercel the committed copy is used as-is (the source may be absent).
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 

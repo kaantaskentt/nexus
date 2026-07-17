@@ -26,7 +26,8 @@ import {
 // completes (A3).
 export const dynamic = "force-dynamic";
 
-export default async function HomePage({ params }: { params: { slug: string } }) {
+export default async function HomePage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
 

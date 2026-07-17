@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 // Blueprint / Generate SOP actions already live on the workflow view, and this page
 // only pointed there. Old links and bookmarks land on Workflows instead of a 404.
 // If runnable skills ship later, this route can grow back into a real page.
-export default function AgentSkillsRedirect({ params }: { params: { slug: string } }) {
+export default async function AgentSkillsRedirect(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   redirect(`/w/${params.slug}/workflows`);
 }

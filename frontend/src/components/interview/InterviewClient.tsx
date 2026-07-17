@@ -2,7 +2,8 @@
 
 import { displaySpokenText, mergeTurns } from "@/lib/transcript-display";
 
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Lock, Mic, MicOff, Pause, SendHorizontal, Check, RefreshCw, WifiOff, Flag, FlaskConical } from "lucide-react";
 import brand from "@/lib/brand";
@@ -65,7 +66,7 @@ export function InterviewClient({ token }: { token: string }) {
     initial: { count: 0, extracting: false },
   });
 
-  function seedFromTranscript(s: RespondentSession) {
+  const seedFromTranscript = useCallback((s: RespondentSession) => {
     // The server transcript is the one truth — reloads, drops, and modality switches
     // all re-enter the conversation from here, never from a blank thread.
     // mergeTurns: voice transcripts store one row per speech chunk (verbatim); display
@@ -78,9 +79,9 @@ export function InterviewClient({ token }: { token: string }) {
         })),
       ),
     );
-  }
+  }, []);
 
-  function loadSession() {
+  const loadSession = useCallback(() => {
     setPhase("loading");
     getSession(token)
       .then((s) => {
@@ -97,9 +98,12 @@ export function InterviewClient({ token }: { token: string }) {
         );
       })
       .catch(() => setPhase("load_error"));
-  }
+  }, [seedFromTranscript, token]);
 
-  useEffect(loadSession, [token]);
+  useEffect(() => {
+    const frame = requestAnimationFrame(loadSession);
+    return () => cancelAnimationFrame(frame);
+  }, [loadSession]);
 
   // Voice → text switch: re-pull the authoritative transcript (voice turns land via
   // server webhooks), then open the text door on the same session.
@@ -319,18 +323,18 @@ export function InterviewClient({ token }: { token: string }) {
               <p className="mt-2 text-sm leading-relaxed text-ink-soft">{snapshotBody}</p>
               {slug && (
                 <div className="mt-6 flex flex-col items-center gap-3">
-                  <a
+                  <Link
                     href={`/w/${slug}/home`}
                     className="inline-flex w-full items-center justify-center rounded-md bg-accent px-6 py-3 text-sm font-semibold text-on-accent shadow-elev-1 transition-all duration-150 ease-standard hover:-translate-y-px hover:bg-accent-hover hover:shadow-elev-2 sm:w-auto sm:px-8"
                   >
                     {snapshotCta}
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/"
                     className="text-sm font-medium text-ink-faint transition-colors hover:text-ink"
                   >
                     Return home
-                  </a>
+                  </Link>
                 </div>
               )}
             </>

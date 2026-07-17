@@ -14,7 +14,6 @@ vi.mock("framer-motion", () => ({
     {
       get:
         (_target, tag: string) =>
-        // eslint-disable-next-line react/display-name
         React.forwardRef(function Motion(props: Record<string, unknown>, ref: unknown) {
           const {
             initial,

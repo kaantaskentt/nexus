@@ -20,9 +20,10 @@ function nameFromEmail(email: string): string {
 }
 
 export async function signedInUser(): Promise<SignedInUser | null> {
+  const supabase = await createClient();
   const {
     data: { user },
-  } = await createClient().auth.getUser();
+  } = await supabase.auth.getUser();
   if (!user?.email) return null;
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
   const metaName =

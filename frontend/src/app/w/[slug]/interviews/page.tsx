@@ -8,7 +8,8 @@ import { InterviewsView } from "@/components/interviews/InterviewsView";
 // force-dynamic: session + plan status is live data, never cache it.
 export const dynamic = "force-dynamic";
 
-export default async function InterviewsPage({ params }: { params: { slug: string } }) {
+export default async function InterviewsPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
 

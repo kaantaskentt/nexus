@@ -46,11 +46,6 @@ export function RolePlaySection({
   const parsed = useMemo(() => (brief ? parseBrief(brief) : null), [brief]);
   const overviewSections = parsed?.sections.filter((s) => s.tier === "overview") ?? [];
   const detailSections = parsed?.sections.filter((s) => s.tier === "details") ?? [];
-  useEffect(() => {
-    setBriefTab("overview");
-    setDetailsOpen(false);
-  }, [briefFor]);
-
   async function play(member: SimulationCastMember) {
     setBusyKey(member.key);
     setError(null);
@@ -59,6 +54,8 @@ export function RolePlaySection({
         start_roleplay(workspaceId, member.key),
         get_roleplay_brief(member.key),
       ]);
+      setBriefTab("overview");
+      setDetailsOpen(false);
       setInvitePath(minted.invite_path);
       setBrief(b.sheet);
       setBriefFor(member);

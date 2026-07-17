@@ -5,11 +5,12 @@ import { PlanView } from "@/components/plan/PlanView";
 // Interview Plan detail (Phase 3 / A4). Server-fetches the workspace + plan (and, once
 // the interview has completed and compiled, the session whose report this plan links to)
 // then hands off to the client view that owns approve → send → status.
-export default async function PlanDetailPage({
-  params,
-}: {
-  params: { slug: string; id: string };
-}) {
+export default async function PlanDetailPage(
+  props: {
+    params: Promise<{ slug: string; id: string }>;
+  }
+) {
+  const params = await props.params;
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
   const plan = await get_plan(workspace.id, params.id);

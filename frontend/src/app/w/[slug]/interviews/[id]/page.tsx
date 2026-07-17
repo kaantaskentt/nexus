@@ -7,11 +7,12 @@ import { ObserverView } from "@/components/interview/ObserverView";
 // Server-fetches the initial state; the client view polls from there.
 export const dynamic = "force-dynamic";
 
-export default async function ObserverPage({
-  params,
-}: {
-  params: { slug: string; id: string };
-}) {
+export default async function ObserverPage(
+  props: {
+    params: Promise<{ slug: string; id: string }>;
+  }
+) {
+  const params = await props.params;
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
   const initial = await observe_session(workspace.id, params.id).catch(() => null);

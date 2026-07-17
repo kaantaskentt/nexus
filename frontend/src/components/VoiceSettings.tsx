@@ -39,8 +39,15 @@ export function VoiceSettings({
   const [playing, setPlaying] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Tear down any sample playback on unmount.
-  useEffect(() => () => { audioRef.current?.pause(); }, []);
+  // Create one player for the component lifetime and tear it down on unmount.
+  useEffect(() => {
+    const audio = new Audio();
+    audioRef.current = audio;
+    return () => {
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, []);
 
   const voicesForGender = useMemo(
     () => initial.voices.filter((v) => v.gender === gender),
@@ -64,8 +71,8 @@ export function VoiceSettings({
 
   function togglePreview(v: VoiceOption) {
     if (!v.preview_url) return; // no clip exists — the card renders no play button
-    const audio = audioRef.current ?? new Audio();
-    audioRef.current = audio;
+    const audio = audioRef.current;
+    if (!audio) return;
     if (playing === v.voice_id) {
       audio.pause();
       setPlaying(null);

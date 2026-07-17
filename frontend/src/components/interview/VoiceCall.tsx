@@ -144,7 +144,6 @@ export function VoiceCall({
     stopMicWatchdog();
     if (recoveredTimer.current) window.clearTimeout(recoveredTimer.current);
     if (reconnectTimer.current) window.clearTimeout(reconnectTimer.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Real elapsed-time timer — drives the neutral "time remaining" only. Runs while live.

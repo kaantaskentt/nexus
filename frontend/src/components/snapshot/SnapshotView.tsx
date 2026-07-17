@@ -133,9 +133,11 @@ export function SnapshotView({
     { key: "gaps", label: "perception gaps", value: conflicts.length },
   ].filter((s) => s.value > 0);
 
-  // "Awaiting your approval" for the attention block: plans that reached NEXUS_CHECK (the
-  // human gate) and need the admin before they can send. Real plan state, never assumed.
-  const awaitingApproval = Object.values(personPlans).filter((p) => p.state === "NEXUS_CHECK");
+  // "Awaiting your approval" means the automated check has completed and the plan is
+  // now at the explicit human gate.
+  const awaitingApproval = Object.values(personPlans).filter(
+    (p) => p.state === "AWAITING_APPROVAL"
+  );
 
   return (
     <>

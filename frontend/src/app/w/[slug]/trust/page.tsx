@@ -73,7 +73,8 @@ const SECTIONS = [
   },
 ];
 
-export default async function TrustPage({ params }: { params: { slug: string } }) {
+export default async function TrustPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const workspace = await get_workspace(params.slug);
   if (!workspace) notFound();
 

@@ -13,13 +13,18 @@ import { AppShell } from "@/components";
 // never the workspace founder) and the full workspace list for the switcher (target 3).
 export const dynamic = "force-dynamic";
 
-export default async function WorkspaceLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: { slug: string };
-}) {
+export default async function WorkspaceLayout(
+  props: {
+    children: React.ReactNode;
+    params: Promise<{ slug: string }>;
+  }
+) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   // F6 (dormant): the seat fetch happens ONLY when NEXT_PUBLIC_CLIENT_SEATS=1 — with
   // the flag unset (today), this layout does exactly what it did before F6.
   const seatsOn = process.env.NEXT_PUBLIC_CLIENT_SEATS === "1";

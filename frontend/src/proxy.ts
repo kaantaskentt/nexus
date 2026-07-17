@@ -3,7 +3,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 
 // Admin-auth gate (A17). Delegates to updateSession, which refreshes the Supabase
 // session and redirects unauthenticated visitors off admin surfaces to /login.
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return updateSession(request);
 }
 

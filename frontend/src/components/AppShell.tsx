@@ -135,8 +135,9 @@ export function AppShell({
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
   useEscapeClose(drawerOpen, closeDrawer);
   useEffect(() => {
-    setDrawerOpen(false);
-  }, [pathname]);
+    const frame = requestAnimationFrame(closeDrawer);
+    return () => cancelAnimationFrame(frame);
+  }, [closeDrawer, pathname]);
 
   return (
     <div className="flex min-h-screen bg-canvas">
