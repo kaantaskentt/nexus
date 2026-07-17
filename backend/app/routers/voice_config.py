@@ -18,6 +18,7 @@ Router is mounted WITHOUT the blanket admin dependency (main.py); the editor rou
 require_admin themselves and the by-token resolver stays public, mirroring sessions.py."""
 
 import json
+import logging
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -40,6 +41,7 @@ from ..vapi_assistant import (
 )
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def _public_base_url() -> str:
@@ -214,8 +216,13 @@ async def put_voice_config(workspace_id: str, body: VoiceConfigIn):
                    where workspace_id = $1 returning *""",
                 workspace_id, assistant_id,
             )
-        except Exception as e:  # noqa: BLE001 — surface the reason, never crash the save
-            sync_error = f"Saved, but the voice service did not accept the update: {e}"
+        except Exception as exc:  # noqa: BLE001 — save succeeds even when the remote push fails
+            logger.warning(
+                "Voice service sync failed for workspace %s (%s)",
+                workspace_id,
+                type(exc).__name__,
+            )
+            sync_error = "Saved, but the voice service did not accept the update. Please try again."
 
     return {**_editor_state(row), "sync_error": sync_error}
 

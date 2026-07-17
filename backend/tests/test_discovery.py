@@ -72,6 +72,12 @@ def test_parse_preserves_the_harrods_line_verbatim():
     assert turns[0]["speaker"] == "respondent"
 
 
+def test_parse_handles_a_long_label_like_prefix_without_regex_backtracking():
+    line = "Speaker: " + (" " * 100_000)
+    turns = parse_transcript(line)
+    assert turns == [{"turn_index": 0, "speaker": "respondent", "text": "Speaker:"}]
+
+
 # ── upload endpoint ──────────────────────────────────────────────────────────
 
 async def test_upload_stores_verbatim_and_enqueues_standard_compile(db):

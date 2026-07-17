@@ -60,6 +60,14 @@ describe("parseBrief", () => {
     expect(custom?.tier).toBe("details");
   });
 
+  it("removes every trailing scorer annotation from an unmatched heading", () => {
+    const parsed = parseBrief(
+      "## Something Bespoke (INTERNAL) (DO NOT SHOW)\nVisible body.",
+    );
+    expect(parsed.sections[0].heading).toBe("Something Bespoke");
+    expect(parsed.sections[0].body).toBe("Visible body.");
+  });
+
   it("omits absent sections — never fabricates a goals/context row", () => {
     const minimal = parseBrief("# You are Sam — Clerk\n\nJust a background line, no sections.");
     expect(minimal.title).toBe("Sam — Clerk");

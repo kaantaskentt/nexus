@@ -2,12 +2,24 @@
 client_visible_claims view — never the claim_records base table (non-negotiable #4)."""
 
 import json
+from urllib.parse import urlsplit
 
 import asyncpg
 
 from .config import get_settings
 
 _pool: asyncpg.Pool | None = None
+
+
+def _uses_transaction_pooler(dsn: str) -> bool:
+    """Detect the transaction pooler from parsed connection components only."""
+    parsed = urlsplit(dsn)
+    hostname = parsed.hostname or ""
+    return (
+        parsed.port == 6543
+        or hostname == "pooler.supabase.com"
+        or hostname.endswith(".pooler.supabase.com")
+    )
 
 
 def _jsonb_encode(value):
@@ -47,7 +59,7 @@ async def get_pool() -> asyncpg.Pool:
         # statements across checkouts; asyncpg's implicit statement cache then throws
         # "prepared statement already exists". Disable the cache only for the pooler —
         # local direct connections keep it for speed.
-        pooled = "pooler.supabase.com" in dsn or ":6543" in dsn
+        pooled = _uses_transaction_pooler(dsn)
         _pool = await asyncpg.create_pool(
             dsn, min_size=1, max_size=10,
             statement_cache_size=0 if pooled else 100,

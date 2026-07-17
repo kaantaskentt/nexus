@@ -14,12 +14,12 @@ _AGENT_LABELS = {
     "nexus", "facilitator", "me",
 }
 
-# "Name:" or "Name -" at the very start of a line. The label must be a SINGLE token (no
-# internal spaces) so a normal sentence with a colon — "One thing: don't mention Harrods"
-# — is never misread as a speaker label and silently truncated. Losing a label to verbatim
-# text is safe (the compiler attributes turns to the session's interviewee anyway); losing
-# spoken words is not.
-_LABEL_RE = re.compile(r"^\s*([A-Za-z][\w.'&/-]{0,23})\s*[:\-–—]\s+(.*\S.*)$")
+# "Name:" or "Name -" at the very start of a line. The bounded expression identifies only
+# the label and delimiter; the unbounded spoken text is handled with linear string
+# operations below. The label must be a SINGLE token (no internal spaces) so a normal
+# sentence with a colon — "One thing: don't mention Harrods" — is never misread as a
+# speaker label and silently truncated.
+_LABEL_RE = re.compile(r"^\s*([A-Za-z][\w.'&/-]{0,23})\s*[:\-–—]")
 
 
 def parse_transcript(text: str) -> list[dict]:
@@ -35,10 +35,11 @@ def parse_transcript(text: str) -> list[dict]:
         if not raw.strip():
             continue
         m = _LABEL_RE.match(raw)
-        if m:
+        remainder = raw[m.end():] if m else ""
+        if m and remainder[:1].isspace() and remainder.strip():
             label = m.group(1).strip().lower()
             speaker = "agent" if label in _AGENT_LABELS else "respondent"
-            spoken = m.group(2)  # verbatim — never trimmed of hedges/fillers
+            spoken = remainder.lstrip()  # only delimiter whitespace is removed
         else:
             speaker = "respondent"
             spoken = raw.strip()
